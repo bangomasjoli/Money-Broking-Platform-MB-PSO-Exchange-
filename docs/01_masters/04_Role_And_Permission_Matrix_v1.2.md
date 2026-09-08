@@ -1,3 +1,18 @@
+---
+document_id: ARC-04
+title: Role & Permission Matrix
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: RBAC / role governance
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 04 Role and Permission Matrix  
 # AIX Money Broking Platform
 

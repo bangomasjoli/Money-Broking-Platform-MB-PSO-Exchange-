@@ -1,3 +1,18 @@
+---
+document_id: STATE-002
+title: AIX Platform — Module Status
+version: N/A
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Module implementation status tracking (not blueprint-version authority)
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AIX Platform — Module Status
 
 Status legend: ✅ accepted · 🔁 in review · ⬜ next · — not started.

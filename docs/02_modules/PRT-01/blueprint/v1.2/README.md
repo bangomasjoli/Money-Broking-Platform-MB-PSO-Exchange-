@@ -1,3 +1,18 @@
+---
+document_id: PRT-01-BP-v1.2
+title: PRT-01 Blueprint Pack — Client / Staff / Admin Portal Workflows
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: PRT-01
+control: Client/staff/admin portal workflows
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # PRT-01 Client / Staff / Admin Portal Workflows Blueprint Pack v1.2
 
 ## Module

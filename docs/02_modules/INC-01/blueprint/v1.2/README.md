@@ -1,3 +1,18 @@
+---
+document_id: INC-01-BP-v1.2
+title: INC-01 Blueprint Pack — Incident / Freeze / Recovery
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: INC-01
+control: Incident, freeze, recovery
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # INC-01 Incident / Freeze / Recovery Blueprint Pack v1.2
 
 ## Module

@@ -1,3 +1,18 @@
+---
+document_id: ARC-09
+title: Master Security Architecture
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Security architecture
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 09 Master Security Architecture  
 # AIX Money Broking Platform
 

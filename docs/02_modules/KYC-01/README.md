@@ -1,3 +1,18 @@
+---
+document_id: KYC-01-IDX
+title: KYC-01 — KYC / KYB Verification
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: KYC-01
+control: KYC / KYB verification
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # KYC-01 — KYC / KYB Verification
 
 **Module ID:** KYC-01

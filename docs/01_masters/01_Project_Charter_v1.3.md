@@ -1,3 +1,18 @@
+---
+document_id: ARC-01
+title: Project Charter
+version: v1.3
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Project charter / scope
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.1, v1.2 (archived)
+baseline_commit: 780e116
+---
+
 # 01 Project Charter  
 # AIX Money Broking Platform
 

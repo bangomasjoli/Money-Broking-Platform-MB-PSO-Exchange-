@@ -1,3 +1,18 @@
+---
+document_id: IAM-02-ACC-002
+title: IAM-02 Security Review Reverify (Opus, v0.2)
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: IAM-02
+control: RBAC, permission guard, segregation of duties
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IAM-02 — Opus Short Re-Review (v0.2): F1/F2 Closure Only
 
 | Item | Detail |

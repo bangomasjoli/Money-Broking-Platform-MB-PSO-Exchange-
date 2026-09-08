@@ -1,3 +1,18 @@
+---
+document_id: SEC-01-ACC-002
+title: SEC-01 Phase 3 Security Review Reverify (Opus, v0.2)
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: SEC-01
+control: Audit log, security monitoring
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # SEC-01 Phase 3 — Opus Short Re-Review (v0.2): P3-F1 Closure (+ P3-L1, P3-L3)
 
 | Item | Detail |

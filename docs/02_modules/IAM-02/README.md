@@ -1,3 +1,18 @@
+---
+document_id: IAM-02-IDX
+title: IAM-02 — RBAC / Permission Guard / SoD
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: IAM-02
+control: RBAC, permission guard, segregation of duties
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IAM-02 — RBAC / Permission Guard / SoD
 
 **Module ID:** IAM-02

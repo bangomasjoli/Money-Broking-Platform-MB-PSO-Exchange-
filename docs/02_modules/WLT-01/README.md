@@ -1,3 +1,18 @@
+---
+document_id: WLT-01-IDX
+title: WLT-01 — Wallet Screening / Payout-Destination Whitelist
+version: N/A
+document_status: APPROVED
+implementation_status: IN_PROGRESS
+module: WLT-01
+control: Wallet screening, payout-destination whitelist
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # WLT-01 — Wallet Screening / Payout-Destination Whitelist
 
 **Module ID:** WLT-01

@@ -1,3 +1,19 @@
+---
+document_id: WLT-01-BP-v1.2
+title: WLT-01 Blueprint Pack — Wallet Screening / Payout-Destination Whitelist
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: WLT-01
+control: Wallet screening, payout-destination whitelist
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+authority_note: REVIEW_REQUIRED — CONFLICT; see DOCUMENT_REGISTER.md BP-WLT-01-v1.2 and OPEN_FINDINGS.md before treating this version as controlling
+---
+
 # WLT-01 Wallet Screening / Payout Destination Whitelist Blueprint Pack v1.2
 
 ## Module

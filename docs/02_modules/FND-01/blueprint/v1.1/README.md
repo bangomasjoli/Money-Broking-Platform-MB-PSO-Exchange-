@@ -1,3 +1,18 @@
+---
+document_id: FND-01-BP-v1.1
+title: FND-01 Blueprint Pack — Platform Foundation
+version: v1.1
+document_status: SUPERSEDED
+implementation_status: N/A
+module: FND-01
+control: Platform foundation (scheduler/RLS/audit-outbox/correlation)
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # FND-01 Platform Foundation Blueprint Pack v1.1
 
 ## Module

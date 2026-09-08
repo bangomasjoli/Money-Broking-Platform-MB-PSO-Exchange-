@@ -1,3 +1,18 @@
+---
+document_id: GOV-004
+title: AIX Full Compliance — Documentation
+version: 1.0
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Documentation navigation entry point
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AIX Full Compliance — Documentation
 
 Labuan FSA Money Broking + PSO (Exchange application pending). This is the navigation

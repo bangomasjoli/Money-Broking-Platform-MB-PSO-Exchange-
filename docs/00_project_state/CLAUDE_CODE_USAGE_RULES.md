@@ -1,3 +1,18 @@
+---
+document_id: STATE-004
+title: AIX Platform — Claude Code Usage Rules
+version: N/A
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Model selection / working-discipline rules
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # Claude Code Usage Rules
 
 ## Model selection

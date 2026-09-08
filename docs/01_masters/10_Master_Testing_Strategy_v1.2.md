@@ -1,3 +1,18 @@
+---
+document_id: ARC-10
+title: Master Testing Strategy
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Testing strategy
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 10 Master Testing Strategy  
 # AIX Money Broking Platform
 

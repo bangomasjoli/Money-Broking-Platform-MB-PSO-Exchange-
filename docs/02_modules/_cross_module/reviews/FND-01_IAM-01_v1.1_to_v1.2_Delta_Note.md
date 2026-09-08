@@ -1,3 +1,18 @@
+---
+document_id: XMOD-001
+title: FND-01 / IAM-01 v1.1 to v1.2 Delta Note
+version: 1
+document_status: APPROVED
+implementation_status: N/A
+module: FND-01, IAM-01
+control: "Certification evidence for both modules' v1.2 promotion"
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # Base-Version Delta Note — IAM-01 & FND-01, v1.1 → v1.2
 
 ## Purpose

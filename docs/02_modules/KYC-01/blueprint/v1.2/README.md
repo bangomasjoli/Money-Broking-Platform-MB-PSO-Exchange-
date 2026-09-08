@@ -1,3 +1,18 @@
+---
+document_id: KYC-01-BP-v1.2
+title: KYC-01 Blueprint Pack — KYC / KYB Verification
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: KYC-01
+control: KYC / KYB verification
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # KYC-01 KYC / KYB Verification Blueprint Pack v1.2
 
 ## Module

@@ -1,3 +1,18 @@
+---
+document_id: ARC-00
+title: Licence Scope & Feature Lock
+version: v1.3
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Licence scope / feature-lock governance
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1, v1.2 (archived)
+baseline_commit: 780e116
+---
+
 # 00 Licence Scope and Feature Lock  
 # AIX Money Broking Platform
 

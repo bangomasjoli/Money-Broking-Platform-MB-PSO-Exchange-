@@ -1,3 +1,18 @@
+---
+document_id: SEC-01-ACC-001
+title: SEC-01 Phase 3 Security Review (Opus, v0.1)
+version: N/A
+document_status: APPROVED
+implementation_status: BLOCKED
+module: SEC-01
+control: Audit log, security monitoring
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # SEC-01 Audit Log / Security Monitoring — Phase 3 Independent Security/Compliance Review (Opus, v0.1)
 
 | Item | Detail |

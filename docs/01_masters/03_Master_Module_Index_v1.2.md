@@ -1,3 +1,18 @@
+---
+document_id: ARC-03
+title: Master Module Index
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Module index / build order
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 03 Master Module Index  
 # AIX Money Broking Platform
 

@@ -1,3 +1,18 @@
+---
+document_id: GOV-002
+title: AIX Full Compliance — Open Findings Register
+version: 1.0
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Open findings, blockers, deferrals tracking
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AIX Full Compliance — Open Findings Register
 
 This is the single current register for unresolved findings, deferred controls, known

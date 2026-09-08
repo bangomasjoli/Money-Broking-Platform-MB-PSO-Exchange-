@@ -1,3 +1,18 @@
+---
+document_id: WDR-01-BP-v1.2
+title: WDR-01 Blueprint Pack — Withdrawal / Payout Execution Rail
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: WDR-01
+control: Withdrawal, payout execution rail
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # WDR-01 Withdrawal / Payout Execution Rail Blueprint Pack v1.2
 
 ## Module

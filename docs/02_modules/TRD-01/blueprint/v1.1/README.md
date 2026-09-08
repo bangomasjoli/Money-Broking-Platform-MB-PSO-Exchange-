@@ -1,3 +1,18 @@
+---
+document_id: TRD-01-BP-v1.1
+title: TRD-01 Blueprint Pack — Quote / Trade / LP Execution
+version: v1.1
+document_status: SUPERSEDED
+implementation_status: N/A
+module: TRD-01
+control: Quote, trade, LP execution
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # TRD-01 Quote / Trade / LP Execution Blueprint Pack v1.1
 
 ## Module

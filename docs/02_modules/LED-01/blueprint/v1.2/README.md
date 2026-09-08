@@ -1,3 +1,18 @@
+---
+document_id: LED-01-BP-v1.2
+title: LED-01 Blueprint Pack — Ledger / Settlement / Safeguarding
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: LED-01
+control: Ledger, settlement, safeguarding
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # LED-01 Ledger / Settlement / Safeguarding Blueprint Pack v1.2
 
 ## Module

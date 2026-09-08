@@ -1,3 +1,18 @@
+---
+document_id: SEC-01-ACC-003
+title: SEC-01 Security Review (Opus, v0.1)
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: SEC-01
+control: Audit log, security monitoring
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # SEC-01 Audit Log / Security Monitoring — Independent Security/Compliance Review (Opus, v0.1)
 
 | Item | Detail |

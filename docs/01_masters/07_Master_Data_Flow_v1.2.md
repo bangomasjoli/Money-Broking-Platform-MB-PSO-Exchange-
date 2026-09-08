@@ -1,3 +1,18 @@
+---
+document_id: ARC-07
+title: Master Data Flow
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Cross-module data flow
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 07 Master Data Flow  
 # AIX Money Broking Platform
 

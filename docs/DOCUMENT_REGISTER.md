@@ -1,3 +1,18 @@
+---
+document_id: GOV-001
+title: AIX Full Compliance — Document Register
+version: 1.0
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Controlled-document version and status authority
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: INDEX.md
+baseline_commit: 780e116
+---
+
 # AIX Full Compliance — Document Register
 
 This document is the **sole authority** for controlled-document version, document status,

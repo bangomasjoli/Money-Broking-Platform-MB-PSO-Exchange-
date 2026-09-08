@@ -1,3 +1,18 @@
+---
+document_id: GOV-003
+title: AIX Full Compliance — Decision Log
+version: 1.0
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Governance decision record
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AIX Full Compliance — Decision Log
 
 Concise ADR-style entries for high-value, already-established governance decisions.

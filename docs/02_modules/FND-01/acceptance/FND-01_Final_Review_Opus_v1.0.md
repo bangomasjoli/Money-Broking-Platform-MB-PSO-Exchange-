@@ -1,3 +1,18 @@
+---
+document_id: FND-01-ACC-001
+title: FND-01 Independent Final Review (Opus, v1.0)
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: FND-01
+control: Platform foundation (scheduler/RLS/audit-outbox/correlation)
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # FND-01 Platform Foundation — Independent Final Review (Opus, v1.0)
 
 | Item | Detail |

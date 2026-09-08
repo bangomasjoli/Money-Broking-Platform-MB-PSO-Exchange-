@@ -1,3 +1,18 @@
+---
+document_id: INC-01-IDX
+title: INC-01 — Incident / Freeze / Recovery
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: INC-01
+control: Incident, freeze, recovery
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # INC-01 — Incident / Freeze / Recovery
 
 **Module ID:** INC-01

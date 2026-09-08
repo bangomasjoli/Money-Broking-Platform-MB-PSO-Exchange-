@@ -1,3 +1,18 @@
+---
+document_id: WDR-01-IDX
+title: WDR-01 — Withdrawal / Payout Execution Rail
+version: N/A
+document_status: APPROVED
+implementation_status: BLOCKED
+module: WDR-01
+control: Withdrawal, payout execution rail
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # WDR-01 — Withdrawal / Payout Execution Rail
 
 **Module ID:** WDR-01

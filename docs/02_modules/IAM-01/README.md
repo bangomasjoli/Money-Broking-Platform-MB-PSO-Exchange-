@@ -1,3 +1,18 @@
+---
+document_id: IAM-01-IDX
+title: IAM-01 — Authentication / MFA / Session
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: IAM-01
+control: Auth, MFA, session, step-up
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IAM-01 — Authentication / MFA / Session
 
 **Module ID:** IAM-01

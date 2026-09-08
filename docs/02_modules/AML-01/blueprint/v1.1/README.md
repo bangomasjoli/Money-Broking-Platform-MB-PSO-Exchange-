@@ -1,3 +1,18 @@
+---
+document_id: AML-01-BP-v1.1
+title: AML-01 Blueprint Pack — Sanctions / PEP / Adverse-Media / Travel Rule
+version: v1.1
+document_status: APPROVED
+implementation_status: N/A
+module: AML-01
+control: Sanctions, PEP, adverse media, travel rule
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # AML-01 Sanctions / PEP / Adverse Media / Travel Rule Screening Blueprint Pack v1.1
 
 ## Module

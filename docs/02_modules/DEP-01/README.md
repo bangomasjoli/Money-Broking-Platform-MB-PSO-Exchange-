@@ -1,3 +1,18 @@
+---
+document_id: DEP-01-IDX
+title: DEP-01 — Deposit Execution / Inbound Receipt
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: DEP-01
+control: Deposit execution, inbound receipt
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # DEP-01 — Deposit Execution / Inbound Receipt
 
 **Module ID:** DEP-01

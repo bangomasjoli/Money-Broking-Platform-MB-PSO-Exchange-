@@ -1,3 +1,18 @@
+---
+document_id: IAM-01-ACC-002
+title: IAM-01 Security Review (Opus, v0.1)
+version: N/A
+document_status: APPROVED
+implementation_status: BLOCKED
+module: IAM-01
+control: Auth, MFA, session, step-up
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IAM-01 Authentication / MFA / Session — Independent Security/Compliance Review (Opus, v0.1)
 
 | Item | Detail |

@@ -1,3 +1,18 @@
+---
+document_id: LED-01-IDX
+title: LED-01 — Ledger / Settlement / Safeguarding
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: LED-01
+control: Ledger, settlement, safeguarding
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # LED-01 — Ledger / Settlement / Safeguarding
 
 **Module ID:** LED-01

@@ -1,3 +1,18 @@
+---
+document_id: DEP-01-BP-v1.1
+title: DEP-01 Blueprint Pack — Deposit Execution / Inbound Receipt
+version: v1.1
+document_status: APPROVED
+implementation_status: N/A
+module: DEP-01
+control: Deposit execution, inbound receipt
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # DEP-01 Deposit Execution / Inbound Receipt Blueprint Pack v1.1
 
 ## Module

@@ -1,3 +1,18 @@
+---
+document_id: IAM-02-BP-v1.2
+title: IAM-02 Blueprint Pack — RBAC / Permission Guard / SoD
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: IAM-02
+control: RBAC, permission guard, segregation of duties
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.1 (superseded, retained)
+baseline_commit: 780e116
+---
+
 # IAM-02 RBAC / Permission Guard / SoD Blueprint Pack v1.2
 
 ## Module

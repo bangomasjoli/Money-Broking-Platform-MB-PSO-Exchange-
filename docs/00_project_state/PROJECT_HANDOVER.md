@@ -1,3 +1,18 @@
+---
+document_id: STATE-001
+title: AIX Platform — Project Handover
+version: N/A
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Project narrative, chronology, current checkpoint
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AIX Platform — Project Handover
 
 Read this file **first** in any new session, together with [MODULE_STATUS.md](MODULE_STATUS.md). Do not scan the whole repository.

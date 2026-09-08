@@ -1,3 +1,18 @@
+---
+document_id: CFG-01-BP-v1.1
+title: CFG-01 Blueprint Pack — Feature Flag / Licence Lock
+version: v1.1
+document_status: APPROVED
+implementation_status: N/A
+module: CFG-01
+control: Feature flags, licence-lock source-of-truth
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # CFG-01 Feature Flag / Licence Lock Blueprint Pack v1.1
 
 ## Module

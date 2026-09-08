@@ -1,3 +1,18 @@
+---
+document_id: IMP-01
+title: AIX Master Implementation Handover
+version: v1.0
+document_status: DRAFT
+implementation_status: IN_PROGRESS
+module: N/A
+control: Build order, dependency map, migration order, go-live roadmap
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IMP-01 AIX Master Implementation Handover Pack v1.0
 
 ## Purpose

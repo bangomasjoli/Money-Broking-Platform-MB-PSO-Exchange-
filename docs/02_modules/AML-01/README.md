@@ -1,3 +1,18 @@
+---
+document_id: AML-01-IDX
+title: AML-01 — Sanctions / PEP / Adverse-Media / Travel Rule
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: AML-01
+control: Sanctions, PEP, adverse media, travel rule
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # AML-01 — Sanctions / PEP / Adverse-Media / Travel Rule
 
 **Module ID:** AML-01

@@ -1,3 +1,18 @@
+---
+document_id: IAM-01-ACC-001
+title: IAM-01 Independent Final Security/Compliance Review (Opus, v1.0)
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: IAM-01
+control: Auth, MFA, session, step-up
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # IAM-01 Authentication / MFA / Session — Independent Final Security/Compliance Review (Opus, v1.0)
 
 | Item | Detail |

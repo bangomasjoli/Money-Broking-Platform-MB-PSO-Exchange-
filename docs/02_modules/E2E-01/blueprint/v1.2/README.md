@@ -1,3 +1,18 @@
+---
+document_id: E2E-01-BP-v1.2
+title: E2E-01 Blueprint Pack — Cross-Module End-to-End Fund-Flow Review
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: E2E-01
+control: Cross-module end-to-end fund flow
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # E2E-01 Cross-Module End-to-End Fund-Flow Review Pack v1.2
 
 ## Purpose

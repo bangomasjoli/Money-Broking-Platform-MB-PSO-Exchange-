@@ -1,3 +1,18 @@
+---
+document_id: CFG-01-IDX
+title: CFG-01 — Feature Flag / Licence Lock
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: CFG-01
+control: Feature flags, licence-lock source-of-truth
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # CFG-01 — Feature Flag / Licence Lock
 
 **Module ID:** CFG-01

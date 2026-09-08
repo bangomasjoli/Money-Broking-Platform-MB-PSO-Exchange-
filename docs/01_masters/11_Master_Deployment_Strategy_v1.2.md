@@ -1,3 +1,18 @@
+---
+document_id: ARC-11
+title: Master Deployment Strategy
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Deployment strategy
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 11 Master Deployment Strategy  
 # AIX Money Broking Platform
 

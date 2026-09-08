@@ -1,3 +1,18 @@
+---
+document_id: TRD-01-IDX
+title: TRD-01 — Quote / Trade / LP Execution
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: TRD-01
+control: Quote, trade, LP execution
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # TRD-01 — Quote / Trade / LP Execution
 
 **Module ID:** TRD-01

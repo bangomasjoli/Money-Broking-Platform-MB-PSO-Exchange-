@@ -1,3 +1,18 @@
+---
+document_id: REC-01-IDX
+title: REC-01 — Reconciliation / Finance Reporting
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: REC-01
+control: Reconciliation, finance reporting
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # REC-01 — Reconciliation / Finance Reporting
 
 **Module ID:** REC-01

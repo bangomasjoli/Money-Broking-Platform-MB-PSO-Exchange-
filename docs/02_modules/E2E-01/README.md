@@ -1,3 +1,18 @@
+---
+document_id: E2E-01-IDX
+title: E2E-01 — Cross-Module End-to-End Fund-Flow Review
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: E2E-01
+control: Cross-module end-to-end fund flow
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # E2E-01 — Cross-Module End-to-End Fund-Flow Review
 
 **Module ID:** E2E-01

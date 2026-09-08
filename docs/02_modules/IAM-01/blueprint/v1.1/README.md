@@ -1,3 +1,18 @@
+---
+document_id: IAM-01-BP-v1.1
+title: IAM-01 Blueprint Pack — Authentication / MFA / Session
+version: v1.1
+document_status: SUPERSEDED
+implementation_status: N/A
+module: IAM-01
+control: Auth, MFA, session, step-up
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # IAM-01 Authentication / MFA / Session Blueprint Pack v1.1
 
 ## Module

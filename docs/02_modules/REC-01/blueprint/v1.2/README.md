@@ -1,3 +1,18 @@
+---
+document_id: REC-01-BP-v1.2
+title: REC-01 Blueprint Pack — Reconciliation / Finance Reporting
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: REC-01
+control: Reconciliation, finance reporting
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # REC-01 Reconciliation / Finance Reporting Blueprint Pack v1.2
 
 ## Module

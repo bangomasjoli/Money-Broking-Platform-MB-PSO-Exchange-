@@ -1,3 +1,18 @@
+---
+document_id: SEC-01-BP-v1.1
+title: SEC-01 Blueprint Pack — Audit Log / Security Monitoring
+version: v1.1
+document_status: SUPERSEDED
+implementation_status: N/A
+module: SEC-01
+control: Audit log, security monitoring
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0 (archived)
+baseline_commit: 780e116
+---
+
 # SEC-01 Audit Log / Security Monitoring Blueprint Pack v1.1
 
 ## Module

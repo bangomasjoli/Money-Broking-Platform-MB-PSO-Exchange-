@@ -1,3 +1,18 @@
+---
+document_id: ARC-02
+title: Software Requirement Specification
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Platform-wide SRS
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 02 Software Requirement Specification  
 # AIX Money Broking Platform
 

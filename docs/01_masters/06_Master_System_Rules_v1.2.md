@@ -1,3 +1,18 @@
+---
+document_id: ARC-06
+title: Master System Rules
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Platform business rules
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 06 Master System Rules  
 # AIX Money Broking Platform
 

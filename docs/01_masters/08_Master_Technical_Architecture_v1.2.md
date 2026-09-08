@@ -1,3 +1,18 @@
+---
+document_id: ARC-08
+title: Master Technical Architecture
+version: v1.2
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Technical architecture
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: v1.0, v1.1 (archived)
+baseline_commit: 780e116
+---
+
 # 08 Master Technical Architecture  
 # AIX Money Broking Platform
 

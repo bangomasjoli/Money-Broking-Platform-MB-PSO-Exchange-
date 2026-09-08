@@ -1,3 +1,18 @@
+---
+document_id: CLT-01-BP-v1.2
+title: CLT-01 Blueprint Pack — Client Onboarding / Client Profile
+version: v1.2
+document_status: DRAFT
+implementation_status: N/A
+module: CLT-01
+control: Client onboarding, client profile
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none (uncertified)
+baseline_commit: 780e116
+---
+
 # CLT-01 Client Onboarding / Client Profile Blueprint Pack v1.2
 
 ## Module

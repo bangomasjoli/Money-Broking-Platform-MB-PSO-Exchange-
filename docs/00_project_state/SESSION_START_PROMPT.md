@@ -1,3 +1,18 @@
+---
+document_id: STATE-003
+title: AIX Platform — Session Start Prompt
+version: N/A
+document_status: APPROVED
+implementation_status: N/A
+module: N/A
+control: Session bootstrap prompt
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # Session Start Prompt
 
 Copy-paste this into a new Claude Code session in this workspace.

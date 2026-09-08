@@ -1,3 +1,18 @@
+---
+document_id: PRT-01-IDX
+title: PRT-01 — Client / Staff / Admin Portal Workflows
+version: N/A
+document_status: APPROVED
+implementation_status: NOT_STARTED
+module: PRT-01
+control: Client/staff/admin portal workflows
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # PRT-01 — Client / Staff / Admin Portal Workflows
 
 **Module ID:** PRT-01

@@ -1,3 +1,18 @@
+---
+document_id: CLT-01-IDX
+title: CLT-01 — Client Onboarding / Client Profile
+version: N/A
+document_status: APPROVED
+implementation_status: ACCEPTED
+module: CLT-01
+control: Client onboarding, client profile
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 780e116
+---
+
 # CLT-01 — Client Onboarding / Client Profile
 
 **Module ID:** CLT-01

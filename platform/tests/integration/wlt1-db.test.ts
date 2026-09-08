@@ -431,10 +431,8 @@ describe("WLT-01 Phase 1B integration", () => {
       ]);
     });
 
-    it("migration head is 066 (Limits / Velocity / Concentration / First-Use)", async () => {
+    it("WLT-01's own migrations 055-066 are all present exactly once (066_wlt1_limits — Limits / Velocity / Concentration / First-Use — is WLT-01's latest owned migration); deliberately does NOT pin the platform-wide global migration head, since a later migration from another module (e.g. CLT-01) legitimately advances it without touching WLT-01", async () => {
       if (!schemaReady) return;
-      const r = await verifyPool.query(`SELECT name FROM pgmigrations ORDER BY id DESC LIMIT 1`);
-      expect(r.rows[0]?.name).toBe("066_wlt1_limits");
       for (const prefix of ["055", "056", "057", "058", "059", "060", "061", "062", "063", "064", "065", "066"]) {
         const r2 = await verifyPool.query(`SELECT count(*) FROM pgmigrations WHERE name LIKE $1`, [`${prefix}%`]);
         expect(Number(r2.rows[0]?.count), `migration ${prefix} missing`).toBe(1);

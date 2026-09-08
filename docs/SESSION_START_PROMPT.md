@@ -3676,3 +3676,52 @@ surface may not reopen until all three are independently accepted.
 **NEXT: independent Opus acceptance review of the Authenticated Principal →
 Client Membership Authority candidate (CLT-01, migration 067).** Only after
 that closes does prerequisite (1) above actually clear.
+
+---
+
+**AUTHENTICATED PRINCIPAL → CLIENT MEMBERSHIP AUTHORITY (CLT-01): COMPLETE /
+ACCEPTED.** Independent Opus final review first returned REVISE BEFORE
+ACCEPTANCE on exactly one HIGH finding: the candidate's own fresh-canonical
+run reported 4659/4660 passing, and the one failure was
+`tests/integration/wlt1-db.test.ts` pinning the platform-wide GLOBAL
+migration head to `066_wlt1_limits`, broken by this candidate's own
+migration 067 legitimately advancing the head. **Remediated** (commit
+`033534034720739f36954fbca0d05d8dcfbf9f8a`, short `0335340`) — one file, test
+only: removed the two-line global-head assertion, kept the existing loop
+that independently verifies each of WLT-01's own migrations 055-066 exists
+exactly once. No production, migration, CLT, IAM, or WLT source code
+changed. **Independent Opus re-review** reproduced the fix from its own
+fresh disposable database and additionally simulated a hypothetical future
+migration 068 on a probe database, empirically confirming the remediated WLT
+test survives it (proving genuine decoupling, not a re-pin). **Final
+independent canonical verification: 178 files / 4660 tests / 4660 passing /
+0 failures; `tsc -b --force` 0 errors; 67 migrations, head
+`067_clt1_authorised_user_iam_binding`, all 9 grant files clean.**
+
+**Prerequisite (1) of the WLT-01 Public `/wlt1/*` Surface addendum is now
+CLEARED.** Prerequisites (2) API rate limiting and (3) public perimeter
+remain not started — the addendum may not reopen until both are also
+independently accepted.
+
+**Findings carried forward, none blocking:**
+- **LOW** — bound `iam_user_id` is not directly named in
+  `authorised_user_added` audit metadata (evidence remains durable via two
+  independent immutable joins on `entity_id` and `decision_id`).
+- **INFORMATIONAL** — the future consumer of
+  `GET /internal/clt1/principals/:iam_user_id/client-memberships` must
+  source `iam_user_id` from its own authenticated session and enforce
+  `userClass ∈ {client, client_approver}` — CLT cannot see `userClass` and
+  makes no IAM call.
+- **INFORMATIONAL** — migration 067's unique index is a non-`CONCURRENTLY`
+  build (deployment-planning note only).
+- **LOW, newly identified during re-review, NOT fixed this turn** —
+  `tests/integration/clt1-db.test.ts` (~line 3015) pins the SAME global
+  migration head to `067` — the identical anti-pattern just removed from
+  WLT. Empirically proven (same probe-DB technique) to break the moment
+  migration 068 lands; currently green only because 067 genuinely is the
+  head today. **TRACKED AS CLT-SCOPED TECHNICAL DEBT — MUST BE FIXED BEFORE
+  MIGRATION 068**, in its own narrowly-scoped turn.
+
+**NEXT: fix the `clt1-db.test.ts` global-head-pin ahead of migration 068;
+separately, resume the WLT-01 Public Surface prerequisites (API rate
+limiting, then public perimeter) whenever that addendum is reprioritised.**

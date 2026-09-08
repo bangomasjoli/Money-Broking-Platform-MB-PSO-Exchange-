@@ -17,10 +17,25 @@ baseline_commit: 780e116
 
 Copy-paste this into a new Claude Code session in this workspace.
 
+**AUTHORITATIVE REPOSITORY ROOT:** `/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-`
+**AUTHORITATIVE DOCS:** `<repo>/docs` (i.e. `/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-/docs`)
+
+`/Users/AimanRahimi/aix-platform-docs` is now only a **compatibility symlink** to
+`<repo>/docs` (established in Turn D of the Document Control Reorganisation,
+commit range starting `d647dc1`). It is not a second copy — edits through either
+path land in the same physical files, and Git sees them immediately. **No manual
+rsync/copy workflow is permitted or required any more.** Work directly from the
+Git repository. The retired original directory (pre-cutover) is preserved,
+untouched, at `/Users/AimanRahimi/aix-platform-docs.RETIRED-2026-09-08` for
+rollback only — it is not authoritative and must not be edited or read as a
+source of truth.
+
 ---
 
 ```
 You are working in the AIX Money Broking + PSO Platform documentation workspace.
+Workspace root: /Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange- (git repo).
+Docs live at <repo>/docs; the legacy path is a compatibility symlink only.
 
 Before doing anything else, read these files:
   1. PROJECT_HANDOVER.md            (this directory — project narrative, checkpoints)

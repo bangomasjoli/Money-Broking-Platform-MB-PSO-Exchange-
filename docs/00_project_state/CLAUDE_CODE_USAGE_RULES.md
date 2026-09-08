@@ -12,7 +12,7 @@
 - **Focused diffs only.** Change the minimum; do not rewrite whole packs.
 - **One module per session.** Finish, accept, then move on.
 - Run **`/compact`** (or start a fresh session) after each module completes.
-- Maintain the short handover docs: update [MODULE_STATUS.md](MODULE_STATUS.md) and [INDEX.md](INDEX.md) on acceptance; keep [PROJECT_HANDOVER.md](PROJECT_HANDOVER.md) current.
+- Maintain the short handover docs: update [MODULE_STATUS.md](MODULE_STATUS.md) and [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) on acceptance; keep [PROJECT_HANDOVER.md](PROJECT_HANDOVER.md) current.
 - **Do not upload or analyse unrelated files** or deep-scan the whole repository.
 
 ## Guardrails

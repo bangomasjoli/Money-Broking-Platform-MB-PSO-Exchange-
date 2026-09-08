@@ -7,9 +7,11 @@ Copy-paste this into a new Claude Code session in this workspace.
 ```
 You are working in the AIX Money Broking + PSO Platform documentation workspace.
 
-Before doing anything else, read ONLY these two files:
-  1. PROJECT_HANDOVER.md
-  2. MODULE_STATUS.md
+Before doing anything else, read these files:
+  1. PROJECT_HANDOVER.md            (this directory — project narrative, checkpoints)
+  2. MODULE_STATUS.md               (this directory — implementation status, owns this only)
+  3. ../DOCUMENT_REGISTER.md        (sole authority for document version/status)
+  4. ../OPEN_FINDINGS.md            (current unresolved findings / blockers / deferrals)
 
 Rules for this session:
 - Do NOT scan or deep-analyse the whole repository. Search/list first, then open
@@ -23,7 +25,11 @@ Rules for this session:
 - Use focused diffs. Do not rewrite accepted packs or unrelated content.
 - Follow CLAUDE_CODE_USAGE_RULES.md for model selection (Sonnet for build,
   Opus for architecture/security/compliance/fund-flow review, Fable for UX copy).
-- After the module is accepted, update MODULE_STATUS.md and INDEX.md, then /compact.
+- A blueprint version is authoritative only when DOCUMENT_REGISTER.md says so —
+  never infer authority from version number or presence on disk alone.
+- After the module is accepted, update MODULE_STATUS.md, DOCUMENT_REGISTER.md
+  (if a document's version/status changed), and OPEN_FINDINGS.md (if a finding
+  opened/closed), then /compact.
 
 Tell me which module is next per MODULE_STATUS.md, then wait for my go-ahead.
 ```
@@ -3725,3 +3731,18 @@ independently accepted.
 **NEXT: fix the `clt1-db.test.ts` global-head-pin ahead of migration 068;
 separately, resume the WLT-01 Public Surface prerequisites (API rate
 limiting, then public perimeter) whenever that addendum is reprioritised.**
+
+---
+
+## Document Control Reorganisation (Turn C1): governance layer established
+
+`INDEX.md` has been renamed/merged (via `git mv`, history preserved) into
+**`../DOCUMENT_REGISTER.md`**, now the sole authority for document version,
+status, and supersession. Two new registers exist at the same level:
+**`../OPEN_FINDINGS.md`** (current unresolved findings — the three findings
+above are now tracked there as `CLT-FIND-001/002/003/004`) and
+**`../DECISION_LOG.md`** (governance decisions). Every module now also has
+`../02_modules/<MODULE>/README.md` for quick navigation. The copy-paste
+prompt at the top of this file has been updated to point a new session at
+all four current-state files; do not read this historical section into a
+fresh session — it is retained for continuity only.

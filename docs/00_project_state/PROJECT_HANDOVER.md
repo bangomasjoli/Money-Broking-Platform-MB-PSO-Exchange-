@@ -13,7 +13,7 @@ AIX Money Broking + PSO (Payment System Operator) platform documentation workspa
 - Third-party custody; client-money safeguarding (full-backing). Institutional/HNWI only; retail off by default.
 
 ## Completed master docs
-Master SDLC pack **00 → 11 complete** (latest authoritative versions in [INDEX.md](INDEX.md)). 00/01 at v1.3; 02–11 at v1.2. All reviewed/final-verified.
+Master SDLC pack **00 → 11 complete** (latest authoritative versions in [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md)). 00/01 at v1.3; 02–11 at v1.2. All reviewed/final-verified.
 
 ## Accepted modules
 | Module | Version | Status |
@@ -1102,7 +1102,7 @@ Master SDLC pack **00 → 11 complete** (latest authoritative versions in [INDEX
 - Use **Sonnet** for coding/testing/refactoring.
 - Use **Opus** only for final architecture/security/ledger/compliance review.
 
-(For the full accepted-module list and versions, see [MODULE_STATUS.md](MODULE_STATUS.md) and [INDEX.md](INDEX.md). The "Accepted modules" table above is a legacy snapshot from the review phase.)
+(For the full accepted-module list and versions, see [MODULE_STATUS.md](MODULE_STATUS.md) and [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md). The "Accepted modules" table above is a legacy snapshot from the review phase.)
 
 ## Implementation progress
 - **FND-01 implementation accepted** (independent Opus final review; `tsc -b` clean; 44/44 tests passing against fresh PostgreSQL). F1 (idempotency wiring) and F2 (readiness licence-lock placeholder) confirmed closed. F3 (module-boundary / cross-schema isolation) carried into and closed by IAM-01.
@@ -1178,5 +1178,10 @@ Master SDLC pack **00 → 11 complete** (latest authoritative versions in [INDEX
 - See [CLAUDE_CODE_USAGE_RULES.md](CLAUDE_CODE_USAGE_RULES.md) for model selection.
 
 ## What Claude should / should not do
-**Should:** work one module at a time; enforce the licence lock in every review; use the standard review format (Critical Gaps → Corrections → Additional Parameters → Consistency Note → Top Priorities); save module reviews into `modules/`, master reviews into `reviews/`; update MODULE_STATUS.md + INDEX.md after acceptance.
+**Should:** work one module at a time; enforce the licence lock in every review; use the standard review format (Critical Gaps → Corrections → Additional Parameters → Consistency Note → Top Priorities); save module reviews into `../02_modules/<MODULE>/reviews/`, master reviews into `../01_masters/reviews/`; update MODULE_STATUS.md + [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) + [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) after acceptance.
 **Should not:** introduce any locked exchange feature; scan/upload unrelated files; deep-analyse the whole repo; produce code during architecture reviews; rewrite accepted packs.
+
+## Document Control Reorganisation (Turn C1) — governance layer established
+- **Turns A, A.1, and B** (directory-structure moves, structure cleanup, and evidence consolidation) are COMPLETE. **Turn C1** establishes the governance/navigation layer: [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) (formerly `INDEX.md`, moved via `git mv` — sole authority for blueprint/master document version, status, and supersession), [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) (single current register for unresolved findings, deferred controls, environment issues, and blockers — findings previously scattered across this file's prose and MODULE_STATUS.md table cells now have stable IDs there), [DECISION_LOG.md](../DECISION_LOG.md) (concise ADR-style governance decisions), [docs/README.md](../README.md) (navigation entry point), and one `README.md` per module under `../02_modules/<MODULE>/`.
+- **This file's historical narrative above is left intact** — findings described in past entries are not deleted or rewritten. For **current** open-finding status, consult [OPEN_FINDINGS.md](../OPEN_FINDINGS.md), not this narrative.
+- `MODULE_STATUS.md` no longer carries a competing blueprint-version-authority column; it owns implementation status only. The WLT-01 blueprint-version conflict noted in earlier entries of this document (INDEX.md said v1.1, MODULE_STATUS.md said v1.2 was "controlling for implementation") is now explicitly tracked, unresolved, as `BP-WLT-01-v1.2` (`REVIEW_REQUIRED — CONFLICT`) in `DOCUMENT_REGISTER.md` — not silently decided in this turn.

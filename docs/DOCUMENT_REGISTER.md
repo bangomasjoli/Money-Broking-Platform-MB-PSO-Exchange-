@@ -129,7 +129,7 @@ adjudicate any of these; adjudication requires a dedicated Opus review per modul
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| XMOD-01 | FND-01 / IAM-01 v1.1→v1.2 Delta Note | FND-01, IAM-01 | Certification evidence for both modules' v1.2 promotion | 1 (single physical copy) | APPROVED | N/A | [`02_modules/_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md`](02_modules/_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md) | Unassigned | N/A | N/A | — | c1765f5 |
+| XMOD-001 | FND-01 / IAM-01 v1.1→v1.2 Delta Note | FND-01, IAM-01 | Certification evidence for both modules' v1.2 promotion | 1 (single physical copy) | APPROVED | N/A | [`02_modules/_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md`](02_modules/_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md) | Unassigned | N/A | N/A | — | c1765f5 |
 
 This document applies to two modules and is deliberately **not duplicated**. Both
 `02_modules/FND-01/README.md` and `02_modules/IAM-01/README.md` reference it by link.

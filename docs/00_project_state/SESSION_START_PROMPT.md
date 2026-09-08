@@ -30,6 +30,25 @@ untouched, at `/Users/AimanRahimi/aix-platform-docs.RETIRED-2026-09-08` for
 rollback only — it is not authoritative and must not be edited or read as a
 source of truth.
 
+**AUTHORITATIVE CODE ROOT:** `<repo>/platform` (i.e.
+`/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-/platform`).
+
+`/Users/AimanRahimi/aix-platform` is now only a **compatibility symlink** to
+`<repo>/platform` (code source-of-truth cutover, recovered/completed
+2026-09-09 after an interrupted session — Git HEAD `ff84a5a` unchanged
+throughout). It is not a second copy — edits through either path land in the
+same physical files under Git, and Git sees them immediately. **No manual
+rsync/copy workflow is permitted or required.** Work directly from the Git
+repository at `<repo>/platform`. The retired original directory (pre-cutover)
+is preserved, untouched, at `/Users/AimanRahimi/aix-platform.RETIRED-2026-09-09`
+for rollback only — it is not authoritative and must not be edited or read as
+a source of truth. Before this cutover, `aix-platform` was itself the
+authoritative code directory outside Git; that convention is now retired.
+Symlink runtime parity was independently verified (`npx tsc -b --force`, one
+representative unit test, one representative integration test — all matched
+direct-repo results) before this note was written; `NODE_PRESERVE_SYMLINKS`
+must remain unset.
+
 ---
 
 ```

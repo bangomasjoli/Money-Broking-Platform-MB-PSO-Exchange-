@@ -1,0 +1,15 @@
+{
+  "name": "@aix/service-sec1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SEC-01 Audit Log / Security Monitoring service (Fastify). Phase 0-2 slice: scaffold, sec1 schema/grants/core tables, audit ingestion core (schema validation, source identity binding, hash-chain, idempotency).",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@aix/foundation": "*",
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

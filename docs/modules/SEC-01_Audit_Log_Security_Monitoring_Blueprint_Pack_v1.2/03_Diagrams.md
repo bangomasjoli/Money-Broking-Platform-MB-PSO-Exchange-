@@ -1,0 +1,171 @@
+# SEC-01 Audit Log / Security Monitoring  
+## 03 Diagrams
+
+## 1. Audit Event Ingestion
+
+```mermaid
+sequenceDiagram
+  participant MOD as Source Module
+  participant FND as FND Outbox
+  participant SEC as SEC-01
+  participant STORE as Audit Store
+  participant ALERT as Alert Engine
+
+  MOD->>FND: enqueue audit event
+  FND->>SEC: deliver event
+  SEC->>SEC: validate schema + idempotency
+  SEC->>SEC: sequence + hash chain
+  SEC->>STORE: immutable persist
+  SEC->>ALERT: evaluate rules
+```
+
+---
+
+## 2. Hash Chain
+
+```mermaid
+flowchart LR
+  E1[Event 1] --> H1[Hash 1]
+  H1 --> E2[Event 2 includes previous_hash]
+  E2 --> H2[Hash 2]
+  H2 --> E3[Event 3 includes previous_hash]
+  E3 --> H3[Hash 3]
+  H3 --> S[Batch Seal]
+```
+
+---
+
+## 3. Security Monitoring
+
+```mermaid
+flowchart TD
+  A[Audit Event] --> B[Security Rule Engine]
+  B --> C{Rule Triggered?}
+  C -->|No| D[Store Metrics]
+  C -->|Yes| E[Create Alert]
+  E --> F[Route by Severity]
+  F --> G[Notify Reviewer]
+  G --> H[Triage]
+  H --> I[Close / Escalate Incident]
+```
+
+---
+
+## 4. Sensitive Audit Read
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant IAM2 as IAM-02
+  participant SEC as SEC-01
+  participant AUD as SEC-01 Audit Store
+
+  U->>SEC: Search/read/export request
+  SEC->>IAM2: Permission/step-up/approval check
+  IAM2-->>SEC: allow / deny
+  SEC->>AUD: Log sensitive read
+  SEC-->>U: Return permitted evidence
+```
+
+---
+
+## 5. Interim Audit Handoff
+
+```mermaid
+flowchart TD
+  A[IAM-01/IAM-02 Local Audit Index] --> B[SEC-01 Handoff Job]
+  C[FND Outbox Events] --> B
+  B --> D[SEC-01 Authoritative Store]
+  B --> E{Missing Sensitive Event?}
+  E -->|Yes| F[Critical Alert]
+  E -->|No| G[Reconciled]
+```
+
+---
+
+## 6. Audit Failure Fail-Closed
+
+```mermaid
+flowchart TD
+  A[Sensitive Business Action] --> B[Required Audit Event]
+  B --> C{Audit Persist/Outbox OK?}
+  C -->|Yes| D[Business Commit Allowed]
+  C -->|No| E[Fail Closed]
+  E --> F[Security Alert]
+```
+
+
+---
+
+## 7. External Seal Anchoring
+
+```mermaid
+flowchart TD
+  A[SEC-01 Audit Events] --> B[Hash Chain]
+  B --> C[Batch Seal]
+  C --> D[WORM / Object-Lock Storage]
+  C --> E[Trusted Timestamp Authority]
+  C --> F[Independent Seal Reference]
+  D --> G[Integrity Verification]
+  E --> G
+  F --> G
+```
+
+---
+
+## 8. Source Emission Sequence / Expected Event Reconciliation
+
+```mermaid
+flowchart TD
+  A[IAM-02 Protected Action Registry] --> B[Expected Event Reconciler]
+  C[Source Module Emission Sequence] --> B
+  D[SEC-01 Audit Events] --> B
+  B --> E{Missing / Late / Sequence Gap?}
+  E -->|Yes| F[Critical Alert]
+  E -->|No| G[Completeness Evidence]
+```
+
+---
+
+## 9. Ingestion Authenticity
+
+```mermaid
+sequenceDiagram
+  participant MOD as Source Module
+  participant SEC as SEC-01
+  participant IAM as Ingestion Identity Registry
+
+  MOD->>SEC: Submit event source_module=MOD
+  SEC->>IAM: Verify credential scope
+  IAM-->>SEC: Bound to MOD
+  SEC->>SEC: Accept only if source_module matches identity
+```
+
+---
+
+## 10. Incident Break-Glass Audit Read
+
+```mermaid
+flowchart TD
+  A[Incident Response Need] --> B[Emergency Read Request]
+  B --> C[Dual Approval / IAM-02 Break-Glass]
+  C --> D[Scoped Read-Only Access]
+  D --> E[All Reads Logged]
+  E --> F[Externally Sealed]
+  F --> G[Post-Event Review]
+```
+
+---
+
+## 11. Recovery Integrity
+
+```mermaid
+flowchart TD
+  A[Restore From Backup] --> B[Hash Chain Verify]
+  B --> C[External Seal Verify]
+  C --> D[Trusted Timestamp Verify]
+  D --> E[Expected Event Reconciliation]
+  E --> F{Pass?}
+  F -->|Yes| G[Authoritative]
+  F -->|No| H[Critical Alert + Sign-Off Required]
+```

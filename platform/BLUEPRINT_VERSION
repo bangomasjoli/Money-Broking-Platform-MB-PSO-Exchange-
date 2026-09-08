@@ -1,0 +1,39 @@
+# Blueprint version pin — code <-> regulated source-of-truth traceability.
+#
+# Repository model: TWO sibling repos.
+#   aix-platform/        (this repo) — implementation code
+#   aix-platform-docs/   (sibling)   — SDLC masters, module blueprints, reviews, compliance evidence
+#
+# Rationale: the blueprints/reviews/evidence are controlled, auditor-facing artifacts with their
+# own change-control and retention; keeping them out of the code repo preserves a clean audit
+# boundary while this file makes the code -> blueprint linkage explicit and versioned.
+
+docs_repo: ../aix-platform-docs
+handover_pack: aix-platform-docs/implementation/IMP-01_AIX_Master_Implementation_Handover  # v1.0
+
+# Master SDLC pack the platform is built against
+masters:
+  00_licence_scope: v1.3
+  01_project_charter: v1.3
+  02_to_11: v1.2
+
+# Per-module accepted blueprint version each implementation slice targets.
+# Update the row when a module's implementation lands / is re-pinned.
+modules:
+  FND-01: { blueprint: v1.2, implemented: true,  slice: "foundation baseline + F1/F2 patch", review: docs/FND-01_Final_Review_Opus_v1.0.md }
+  IAM-01: { blueprint: v1.2, implemented: true,  slice: "auth/MFA/session baseline + S1/S2/password-reset + C1 grant tightening", review: docs/IAM-01_Final_Review_Opus_v1.0.md }
+  IAM-02: { blueprint: v1.2, implemented: false, next: true }
+  SEC-01: { blueprint: v1.2, implemented: false }
+  CFG-01: { blueprint: v1.1, implemented: false }
+  CLT-01: { blueprint: v1.1, implemented: false }
+  KYC-01: { blueprint: v1.1, implemented: false }
+  AML-01: { blueprint: v1.1, implemented: false }
+  WLT-01: { blueprint: v1.1, implemented: false }
+  LED-01: { blueprint: v1.1, implemented: false }
+  TRD-01: { blueprint: v1.2, implemented: false }
+  E2E-01: { blueprint: v1.1, implemented: false }
+  DEP-01: { blueprint: v1.1, implemented: false }
+  WDR-01: { blueprint: v1.1, implemented: false }
+  REC-01: { blueprint: v1.1, implemented: false }
+  INC-01: { blueprint: v1.1, implemented: false }
+  PRT-01: { blueprint: v1.1, implemented: false }

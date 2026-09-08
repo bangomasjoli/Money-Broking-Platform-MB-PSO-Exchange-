@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/foundation" },
+    { "path": "./services/fnd" },
+    { "path": "./services/iam" },
+    { "path": "./services/iam2" },
+    { "path": "./services/sec1" },
+    { "path": "./services/cfg1" },
+    { "path": "./services/clt1" },
+    { "path": "./services/aml1" },
+    { "path": "./services/kyc1" },
+    { "path": "./services/wlt1" }
+  ]
+}

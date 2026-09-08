@@ -1,0 +1,18 @@
+{
+  "name": "@aix/service-wlt1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WLT-01 Wallet Screening / Payout-Destination Whitelist service (Fastify). Phase 1B slice: wallet-destination registration/read, deterministic Ethereum/TRON address canonicalisation. No fiat payout, no screening, no whitelist workflow.",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@aix/foundation": "*",
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@noble/curves": "1.9.7",
+    "@noble/hashes": "1.8.0",
+    "@scure/base": "1.2.6",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

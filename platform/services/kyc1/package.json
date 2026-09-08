@@ -1,0 +1,15 @@
+{
+  "name": "@aix/service-kyc1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "KYC-01 KYC / KYB Verification service (Fastify). Phase 0+1 slice: scaffold + deterministic evidence baseline — no IAM-02, no maker-checker, no CLT-01 delivery, no UBO/vendor/EDD.",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@aix/foundation": "*",
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

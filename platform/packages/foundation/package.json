@@ -1,0 +1,13 @@
+{
+  "name": "@aix/foundation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FND-01 shared foundation contracts: request context, envelope, time, db, idempotency, outbox, audit, no-exchange guard. Consumed by all modules.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}

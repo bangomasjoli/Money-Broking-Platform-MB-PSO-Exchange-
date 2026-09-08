@@ -1,0 +1,15 @@
+{
+  "name": "@aix/service-fnd",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FND-01 Platform Foundation service (Fastify).",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@aix/foundation": "*",
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

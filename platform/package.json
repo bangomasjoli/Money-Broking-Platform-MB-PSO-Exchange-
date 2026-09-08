@@ -1,0 +1,54 @@
+{
+  "name": "aix-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AIX Money Broking + PSO Platform — implementation monorepo. FND-01 Platform Foundation first.",
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate:up": "node-pg-migrate -m infra/migrations --no-check-order up",
+    "migrate:down": "node-pg-migrate -m infra/migrations --no-check-order down",
+    "dev:fnd": "tsx watch services/fnd/src/index.ts",
+    "start:fnd": "tsx services/fnd/src/index.ts",
+    "dev:iam": "tsx watch services/iam/src/index.ts",
+    "start:iam": "tsx services/iam/src/index.ts",
+    "dev:iam2": "tsx watch services/iam2/src/index.ts",
+    "start:iam2": "tsx services/iam2/src/index.ts",
+    "dev:sec1": "tsx watch services/sec1/src/index.ts",
+    "start:sec1": "tsx services/sec1/src/index.ts",
+    "dev:cfg1": "tsx watch services/cfg1/src/index.ts",
+    "start:cfg1": "tsx services/cfg1/src/index.ts",
+    "dev:clt1": "tsx watch services/clt1/src/index.ts",
+    "start:clt1": "tsx services/clt1/src/index.ts",
+    "dev:aml1": "tsx watch services/aml1/src/index.ts",
+    "start:aml1": "tsx services/aml1/src/index.ts",
+    "dev:kyc1": "tsx watch services/kyc1/src/index.ts",
+    "start:kyc1": "tsx services/kyc1/src/index.ts",
+    "dev:wlt1": "tsx watch services/wlt1/src/index.ts",
+    "start:wlt1": "tsx services/wlt1/src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.20.0",
+    "node-pg-migrate": "^7.9.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@node-rs/argon2": "^2.0.2",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

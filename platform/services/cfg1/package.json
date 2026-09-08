@@ -1,0 +1,15 @@
+{
+  "name": "@aix/service-cfg1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CFG-01 Feature Flag / Licence Lock service (Fastify). Phase 0 slice: scaffold only — no schema, no runtime decision engine, no business routes.",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@aix/foundation": "*",
+    "@fastify/type-provider-typebox": "^5.1.0",
+    "@sinclair/typebox": "^0.34.0",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.0"
+  }
+}

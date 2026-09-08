@@ -3632,3 +3632,47 @@ interpret raw AML screening evidence — only the Phase 3E decision contract.
 **PHASE 4B: BLOCKED.**
 **LED-01: BLOCKED UNTIL WLT-01 PHASE 4B (VERIFY-AND-CONSUME).** Completion of
 AML-01 Phase 3E does NOT unblock LED-01 directly.
+
+---
+
+**DOCUMENTATION GAP, EXPLICITLY MARKED.** Multiple further WLT-01 phases were
+completed in sessions this file was never updated for, before the entry
+below: Phase 3A/3B Proof-of-Control, Phase 4A, Phase 4B verify-and-consume,
+destination revocation + AML revocation signals, ongoing rescreening, Fiat
+Payout Destinations (APAC), Sensitive Read Logging, Evidence Export,
+Inbound-Source Screening, provider-receipt/stuck-screening recovery — plus
+whatever intervening SEC-01/CFG-01/AML-01/KYC-01/IAM-02 work also happened.
+Not reconstructed here — no first-hand session record survived into the
+context that wrote this entry. Full detail for the checkpoint below (and the
+DOCUMENTATION GAP entry it matches) is in `PROJECT_HANDOVER.md`'s
+"Implementation phase" section.
+
+**VERIFIED CURRENT CHECKPOINT (live database + source inspection):**
+**PLATFORM MIGRATION HEAD: `067_clt1_authorised_user_iam_binding`** (67
+migrations total, all 9 grant files applied clean on a fresh disposable
+Postgres). **WLT-01: 27 routes, 35 errors, 18 tables, 27 audit types** —
+Limits/Velocity/Concentration/First-Use and its L-1 monetary-wire-contract
+hardening are both **COMPLETE / ACCEPTED**. **CLT-01: 71 routes, 44 errors,
+18 tables, 83 audit types** — gained an Authenticated Principal → Client
+Membership Authority extension (migration 067): architecture **ACCEPTED**,
+implementation **CANDIDATE READY FOR INDEPENDENT REVIEW, NOT yet accepted**.
+**FULL PLATFORM CANONICAL (fresh DB, `--no-file-parallelism`): 178 files /
+4660 tests, 4659 passing** — the one known failure is
+`tests/integration/wlt1-db.test.ts` hardcoding migration head as
+`"066_wlt1_limits"`, stale because CLT-01's migration 067 legitimately
+advanced the platform head; tracked, non-blocking, one-line WLT-01 test fix
+still outstanding.
+
+**A WLT-01 Client-Facing Public `/wlt1/*` Surface architecture attempt is
+OPEN / IMPLEMENTATION BLOCKED** (no code written) on three prerequisites:
+(1) an authenticated-user → CLT client_id membership authority — now
+architecturally resolved and implemented as the CLT-01 extension above, but
+NOT yet independently accepted; (2) real API rate limiting — the only
+existing surface, `POST /foundation/rate-limit/check`, is an allow-by-default
+stub; (3) a public perimeter (CORS / security headers / CSRF /
+`Cache-Control`) — none exists anywhere in the platform yet. The WLT public
+surface may not reopen until all three are independently accepted.
+
+**NEXT: independent Opus acceptance review of the Authenticated Principal →
+Client Membership Authority candidate (CLT-01, migration 067).** Only after
+that closes does prerequisite (1) above actually clear.

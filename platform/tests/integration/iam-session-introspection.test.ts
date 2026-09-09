@@ -307,7 +307,14 @@ describe.skipIf(!TEST_DB)("IAM-01 Internal Session Introspection (DB)", () => {
   // -----------------------------------------------------------------------------------------
   describe("A. route inventory", () => {
     it("POST /internal/auth/session/validate exists and is guarded (no header -> SERVICE_IDENTITY_REQUIRED, never 404)", async () => {
-      if (!schemaReady) return;
+      // Fail-loud DB-readiness canary (H-D3C-1 convention — mirrors iam-db.test.ts/iam2-db.test.ts/
+      // sec1-db.test.ts/cfg1-db.test.ts/aml1-db.test.ts/wlt1-db.test.ts's own first-test guard
+      // exactly): every OTHER test in this file below uses a plain `if (!schemaReady) return;`
+      // silent early-return, which would make the whole suite report a false green if the DB is
+      // unmigrated. This ONE test — the first in the file — replaces that with a real failing
+      // assertion instead, so an unmigrated/ungranted database makes the suite fail loudly rather
+      // than silently reporting every DB-gated test as passed-by-skip.
+      if (!schemaReady) return expect(schemaReady, "run migrate:up + iam_runtime_grants.sql first").toBe(true);
       // Body schema validation runs BEFORE preHandler (established platform convention — see
       // e.g. wlt1's proof-of-control/verify route comments), so a SCHEMA-VALID body is required
       // to actually reach the guard; an empty {} body would 400 before the guard ever runs.
@@ -607,11 +614,6 @@ describe.skipIf(!TEST_DB)("IAM-01 Internal Session Introspection (DB)", () => {
       const first = bodies[0];
       for (let i = 1; i < bodies.length; i++) {
         expect(bodies[i], `case ${i} (${cases[i]!.label}) differs from case 0 (${cases[0]!.label})`).toEqual(first);
-      }
-
-      // Explicitly: the 403 AUTH_ACCOUNT_FROZEN status code never surfaces from this route.
-      for (const c of cases) {
-        void c;
       }
     });
 

@@ -29,6 +29,20 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA foundation
 -- prohibited by default (§5.4 param cross_schema_runtime_grants = prohibited_by_default);
 -- controlled read-models/service interfaces are the only approved cross-module path.
 
+-- Shared Rate-Limit Engine (WLT-01 BLOCKER-2 prerequisite, DEC-009): foundation.rate_limit_
+-- policy is governance-owned — role_fnd_runtime may SELECT it (inherited from the blanket
+-- grant above) but must NEVER be able to write it; a limit changes only through a new
+-- governance-approved migration, never at runtime. Guarded with to_regclass so this file stays
+-- safe to re-run against a database migrated to any point BEFORE OR AFTER migration 068 (this
+-- table may not exist yet) — mirrors this file's own "idempotent, safe to re-run" contract.
+DO $$
+BEGIN
+  IF to_regclass('foundation.rate_limit_policy') IS NOT NULL THEN
+    REVOKE INSERT, UPDATE ON foundation.rate_limit_policy FROM role_fnd_runtime;
+  END IF;
+END
+$$;
+
 -- RLS baseline convention (§05.5.2): client-owned tables in *business* modules must add a
 -- client/tenant ownership key + ENABLE ROW LEVEL SECURITY + a policy scoping rows to the
 -- request client_id, plus a test proving cross-client access is denied. The `foundation`

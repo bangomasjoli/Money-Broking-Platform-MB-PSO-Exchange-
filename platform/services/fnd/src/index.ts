@@ -2,11 +2,12 @@
  * FND-01 bootstrap (FND-FR-001). Loads config (fail closed on missing critical config),
  * initialises the DB pool, builds the app, and listens. Any startup failure exits non-zero.
  */
-import { closePool, initPool, loadConfig } from "@aix/foundation";
+import { closePool, initPool } from "@aix/foundation";
+import { loadFndConfig } from "./config.js";
 import { buildApp } from "./server.js";
 
 async function main(): Promise<void> {
-  const config = loadConfig(process.env);
+  const config = loadFndConfig(process.env);
   initPool(config.databaseUrl);
 
   const app = await buildApp(config);

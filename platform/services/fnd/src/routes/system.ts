@@ -1,10 +1,14 @@
 /**
  * System foundation endpoints: health, readiness, version, time, rate-limit check.
- * (FND-01 §04.3.1–3.3, 3.5, 3.11.) Reads only — no sensitive state mutation.
+ * (FND-01 §04.3.1–3.3, 3.5, 3.11.) Reads only — no sensitive state mutation, except the
+ * rate-limit check's own counter increment (an enforcement decision, not business state).
  */
+import { Type, type Static } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
-import { getPool, pingDatabase, successEnvelope, systemTime, type Environment } from "@aix/foundation";
+import { AppError, errorEnvelope, getPool, pingDatabase, successEnvelope, systemTime, type Environment } from "@aix/foundation";
 import { meta } from "../plugins/request-context.js";
+import { makeRateLimitConsumerGuard } from "../plugins/rate-limit-identity.js";
+import { checkRateLimit } from "../lib/rate-limit.js";
 
 export interface ReadinessCheck {
   name: string;
@@ -58,7 +62,24 @@ export function buildReadiness(input: ReadinessInput): ReadinessResult {
   return { status: ready ? "ready" : "not_ready", http: ready ? 200 : 503, checks };
 }
 
+/**
+ * Shared Rate-Limit Engine request schema (WLT-01 BLOCKER-2 prerequisite, DEC-009). Deliberately
+ * does NOT accept `module` (derived from the matched consumer secret — see
+ * `plugins/rate-limit-identity.ts`), `cost`, `limit`, `window`, `policy`, or `scope_hash` — none
+ * of those are caller-controllable. `additionalProperties: false` rejects anything else.
+ */
+const RateLimitCheckBody = Type.Object(
+  {
+    bucket: Type.String({ minLength: 1, maxLength: 64, pattern: "^[A-Z][A-Z0-9_]{0,63}$" }),
+    subject_type: Type.String({ minLength: 1, maxLength: 32, pattern: "^[a-z][a-z0-9_]{0,31}$" }),
+    subject_id: Type.String({ minLength: 1, maxLength: 128 }),
+  },
+  { additionalProperties: false },
+);
+
 export async function registerSystemRoutes(app: FastifyInstance): Promise<void> {
+  const requireRateLimitConsumer = makeRateLimitConsumerGuard(app.config.rateLimitConsumerSecrets);
+
   app.get("/foundation/health", async (request, reply) => {
     return reply.send(successEnvelope({ status: "alive" }, meta(request)));
   });
@@ -106,12 +127,38 @@ export async function registerSystemRoutes(app: FastifyInstance): Promise<void> 
     );
   });
 
-  // Rate-limit decision interface baseline (§04.3.11). MVP: allow-by-default, logged seam.
-  app.post("/foundation/rate-limit/check", async (request, reply) => {
-    return reply.send(
-      successEnvelope({ decision: "allow", limit_ref: null, retry_after_seconds: null }, meta(request)),
-    );
-  });
+  // Shared Rate-Limit Engine (§04.3.11, WLT-01 BLOCKER-2 prerequisite, DEC-009). Guarded by a
+  // DEDICATED per-consumer-module capability secret — never the general internal-service token
+  // — so `module` identity comes from WHICH secret matched, never from the request body.
+  app.post(
+    "/foundation/rate-limit/check",
+    { preHandler: requireRateLimitConsumer, schema: { body: RateLimitCheckBody } },
+    async (request, reply) => {
+      const body = request.body as Static<typeof RateLimitCheckBody>;
+      const module = request.rateLimitConsumerModule as string; // set by the preHandler on success
+
+      const result = await checkRateLimit({
+        module,
+        bucket: body.bucket,
+        subjectType: body.subject_type,
+        subjectId: body.subject_id,
+        correlationId: request.ctx.correlation_id,
+      });
+
+      if (result.decision === "allow") {
+        return reply.send(
+          successEnvelope({ decision: "allow", limit_ref: result.limitRef, retry_after_seconds: null }, meta(request)),
+        );
+      }
+
+      // Genuine quota exceeded — 429, never conflated with an unavailable-enforcement 503.
+      void reply.header("Retry-After", String(result.retryAfterSeconds));
+      const err = new AppError("RATE_LIMITED", {
+        details: [{ field: "retry_after_seconds", issue: String(result.retryAfterSeconds) }],
+      });
+      return reply.code(err.http).send(errorEnvelope(err, meta(request)));
+    },
+  );
 }
 
 async function outboxReachable(): Promise<boolean> {

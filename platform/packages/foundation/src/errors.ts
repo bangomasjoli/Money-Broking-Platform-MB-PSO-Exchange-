@@ -27,6 +27,12 @@ export const FND_ERROR_CODES = {
   SCHEDULED_JOB_MISSED: { http: 500, message: "Scheduled job missed its run window." },
   JOB_QUEUE_DEAD_LETTER: { http: 500, message: "Job moved to dead-letter." },
   RATE_LIMITED: { http: 429, message: "Request throttled." },
+  // Shared Rate-Limit Engine (WLT-01 BLOCKER-2 prerequisite, DEC-009): the enforcement engine
+  // could not determine allow/deny — DB unavailable, missing/inactive/malformed policy row, or
+  // any other enforcement-unavailable condition. Deliberately DISTINCT from RATE_LIMITED (429,
+  // genuine quota exceeded) so a downstream caller can fail closed on unavailability without
+  // confusing it for an invalid identity or a real deny.
+  RATE_LIMIT_UNAVAILABLE: { http: 503, message: "Rate-limit enforcement unavailable." },
   DB_ISOLATION_VIOLATION: { http: 500, message: "Runtime DB grant/RLS violation." },
   ASYNC_CORRELATION_MISSING: { http: 500, message: "Async job missing correlation context." },
   AUDIT_OUTBOX_UNAVAILABLE: { http: 503, message: "Audit/outbox persistence unavailable; action failed closed." },

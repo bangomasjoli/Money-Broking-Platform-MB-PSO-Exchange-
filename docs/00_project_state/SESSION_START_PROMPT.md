@@ -17,43 +17,53 @@ baseline_commit: 780e116
 
 Copy-paste this into a new Claude Code session in this workspace.
 
-**AUTHORITATIVE REPOSITORY ROOT:** `/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-`
-**AUTHORITATIVE DOCS:** `<repo>/docs` (i.e. `/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-/docs`)
+**AUTHORITATIVE REPOSITORY ROOT:** `/Users/AimanRahimi/AIX-Full-Compliance`
+**AUTHORITATIVE DOCS ROOT:** `<repo>/docs` (i.e. `/Users/AimanRahimi/AIX-Full-Compliance/docs`)
+**AUTHORITATIVE CODE ROOT:** `<repo>/platform` (i.e. `/Users/AimanRahimi/AIX-Full-Compliance/platform`)
+
+The repository directory was renamed from `Money-Broking-Platform-MB-PSO-Exchange-`
+to `AIX-Full-Compliance` on 2026-09-09 as local workspace/Finder hygiene — a plain
+local directory rename, not a re-clone; Git history, remote, and HEAD were
+unaffected throughout.
 
 `/Users/AimanRahimi/aix-platform-docs` is now only a **compatibility symlink** to
 `<repo>/docs` (established in Turn D of the Document Control Reorganisation,
-commit range starting `d647dc1`). It is not a second copy — edits through either
-path land in the same physical files, and Git sees them immediately. **No manual
-rsync/copy workflow is permitted or required any more.** Work directly from the
-Git repository. The retired original directory (pre-cutover) is preserved,
-untouched, at `/Users/AimanRahimi/aix-platform-docs.RETIRED-2026-09-08` for
-rollback only — it is not authoritative and must not be edited or read as a
+commit range starting `d647dc1`; retargeted to the renamed repository root
+2026-09-09). It is not a second copy — edits through either path land in the
+same physical files, and Git sees them immediately. **No manual rsync/copy
+workflow is permitted or required any more.** Work directly from the Git
+repository. The retired original directory (pre-cutover) is preserved,
+untouched, at `/Users/AimanRahimi/Documents/AIX-Archive/docs-retired-2026-09-08`
+for rollback only — it is not authoritative and must not be edited or read as a
 source of truth.
-
-**AUTHORITATIVE CODE ROOT:** `<repo>/platform` (i.e.
-`/Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange-/platform`).
 
 `/Users/AimanRahimi/aix-platform` is now only a **compatibility symlink** to
 `<repo>/platform` (code source-of-truth cutover, recovered/completed
 2026-09-09 after an interrupted session — Git HEAD `ff84a5a` unchanged
-throughout). It is not a second copy — edits through either path land in the
-same physical files under Git, and Git sees them immediately. **No manual
-rsync/copy workflow is permitted or required.** Work directly from the Git
-repository at `<repo>/platform`. The retired original directory (pre-cutover)
-is preserved, untouched, at `/Users/AimanRahimi/aix-platform.RETIRED-2026-09-09`
+throughout; retargeted to the renamed repository root the same day). It is not
+a second copy — edits through either path land in the same physical files
+under Git, and Git sees them immediately. **No manual rsync/copy workflow is
+permitted or required.** Work directly from the Git repository at
+`<repo>/platform`. The retired original directory (pre-cutover) is preserved,
+untouched, at `/Users/AimanRahimi/Documents/AIX-Archive/platform-retired-2026-09-09`
 for rollback only — it is not authoritative and must not be edited or read as
 a source of truth. Before this cutover, `aix-platform` was itself the
 authoritative code directory outside Git; that convention is now retired.
-Symlink runtime parity was independently verified (`npx tsc -b --force`, one
-representative unit test, one representative integration test — all matched
-direct-repo results) before this note was written; `NODE_PRESERVE_SYMLINKS`
-must remain unset.
+Symlink runtime parity was independently re-verified after both the code
+cutover and the repository rename (`npx tsc -b --force`, one representative
+unit test, one representative integration test — all matched direct-repo
+results each time); `NODE_PRESERVE_SYMLINKS` must remain unset.
+
+Both compatibility symlinks carry the macOS Finder-hidden flag (`chflags -h
+hidden`, applied to the symlink object itself, not its target) — they remain
+fully functional at their existing paths, just hidden from normal Finder
+browsing. The authoritative repository directory itself is never hidden.
 
 ---
 
 ```
 You are working in the AIX Money Broking + PSO Platform documentation workspace.
-Workspace root: /Users/AimanRahimi/Money-Broking-Platform-MB-PSO-Exchange- (git repo).
+Workspace root: /Users/AimanRahimi/AIX-Full-Compliance (git repo).
 Docs live at <repo>/docs; the legacy path is a compatibility symlink only.
 
 Before doing anything else, read these files:

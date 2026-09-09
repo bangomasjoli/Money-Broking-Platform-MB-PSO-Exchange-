@@ -184,6 +184,124 @@ This is not a record of every historical implementation decision — see
   WLT userClass allowlist → CLT membership resolution`).
 - **Baseline commit:** `5794ffe` (implementation); `5a29559` (test-harness remediation)
 
+### DEC-009 — Shared Rate-Limit Engine: architecture + approved v1 numeric policy (WLT-01 BLOCKER-2 prerequisite)
+
+- **Date:** Shared Rate-Limit Engine architecture review, followed by a dedicated
+  numeric-policy governance/risk review (both prior turns)
+- **Scope:** `foundation.rate_limit_policy` / `foundation.rate_limit_counter` (planned
+  migrations `068_fnd_rate_limit_engine`, `069_fnd_rate_limit_policy_seed`) — the
+  shared, module-agnostic rate-limit engine and its first consumer's (WLT-01) v1
+  numeric policy
+- **Decision — architecture (context, not re-litigated here):** the engine is
+  PostgreSQL-backed (dual fixed-window counters: burst + sustained, one atomic
+  `INSERT … ON CONFLICT DO UPDATE … RETURNING` per check — the platform's own
+  established counter idiom, already used by `iam.account_lockout` and
+  `foundation.idempotency_record`), owned by FND-01, reached by consumers over HTTP
+  only (no shared DB grant into `foundation.rate_limit_*` — WLT DATABASE GRANT DELTA:
+  NONE), replacing the existing `POST /foundation/rate-limit/check` allow-by-default
+  stub in place (path unchanged). Numeric policy is centrally owned in
+  `foundation.rate_limit_policy`, seeded by governance-approved migration only —
+  `role_fnd_runtime` holds no INSERT/UPDATE on that table, so a limit can change only
+  through a new migration, never at runtime. **Verdict at that review: "SHARED
+  RATE-LIMIT ENGINE: ACCEPTED FOR IMPLEMENTATION."**
+- **Decision — v1 numeric policy (this decision's actual subject):** exactly four
+  policy rows, one per WLT-01 v1 public bucket, each with ONE subject scope (no
+  dual-scope checks). `policy_id` is immutable across versions and encodes no numeric
+  value; `limit_ref` for traceability in `foundation.rate_limit_decision_log` is
+  `<policy_id>:v<version>`.
+
+  | policy_id | module | bucket | subject scope | burst_limit | burst_window_seconds | sustained_limit | sustained_window_seconds | status | version |
+  |---|---|---|---|---|---|---|---|---|---|
+  | `frl_wlt1_read_list` | WLT-01 | READ_LIST | `client_id` | 100 | 60 | 1200 | 3600 | active | 1 |
+  | `frl_wlt1_read_item` | WLT-01 | READ_ITEM | `client_id` | 200 | 60 | 2400 | 3600 | active | 1 |
+  | `frl_wlt1_mutate_register` | WLT-01 | MUTATE_REGISTER | `client_id` | 10 | 60 | 60 | 3600 | active | 1 |
+  | `frl_wlt1_mutate_poc` | WLT-01 | MUTATE_POC | `iam_user_id` | 10 | 60 | 60 | 3600 | active | 1 |
+
+  These are the exact rows `069_fnd_rate_limit_policy_seed` must insert — no other
+  row (in particular, no `AUTH_FAILURE` row and no per-IP row).
+- **Rationale — calibration anchors, not invented numbers:** `iam.session_policy`
+  already permits a `client` user up to 10 concurrent sessions
+  (`client_approver`: 5) — 10 users × 10 sessions opening a dashboard inside one
+  minute is exactly what READ_LIST's 100/60s burst absorbs. `WLT1_DESTINATION_
+  COOLING_OFF_HOURS = 24` means a registered destination is unusable for 24 hours
+  regardless of how fast it was created, so a 60/hour registration ceiling cannot
+  obstruct any genuine business process. IAM's own approved lockout thresholds
+  (`IAM_LOGIN_MAX_ATTEMPTS=5`, `IAM_REFRESH_MAX_ATTEMPTS=20`) are this platform's own
+  precedent that a legitimate recurring operation earns a materially higher
+  threshold than an attack-shaped one — mirrored here as reads (generous) vs.
+  mutations (tight, 10/burst-minute, 60/hour) vs. MUTATE_POC (same numbers as
+  MUTATE_REGISTER, but scoped to the individual user rather than the institution,
+  since a compromised credential should not exhaust an entire institution's PoC
+  quota). Mutation limits were sized so that two normal network retries (the
+  accepted architecture checks rate limit BEFORE idempotency resolution, so a
+  retried request consumes quota again) still leave 70%+ of the burst window and
+  95%+ of the sustained window unused — no legitimate single/double retry can
+  self-lock a client. `frl_wlt1_mutate_poc` is deliberately additional to, not a
+  replacement for, the existing `WLT1_POC_MAX_ATTEMPTS`/`WLT1_POC_CHALLENGE_TTL_
+  MINUTES` controls: those bound signature attempts against ONE challenge; this
+  bounds total challenge-issuance-plus-verify volume (each issuance is a Sensitive
+  Read that writes a `wlt1.sensitive_destination_read` SEC-01 evidence row) per user
+  per hour — a gap the per-challenge attempt cap does not cover.
+- **Decision — subject-scope binding is NOT schema, it is an implementation
+  obligation:** `foundation.rate_limit_policy` carries no subject-scope column — the
+  consumer supplies `subject_type`/`subject_id` per request. The future WLT-01
+  implementation MUST bind: `READ_LIST` → `client_id`, `READ_ITEM` → `client_id`,
+  `MUTATE_REGISTER` → `client_id`, `MUTATE_POC` → `iam_user_id`, and assert each
+  binding by test. A scope drift at implementation time would apply
+  institution-sized numbers to a single user or vice versa with no schema-level
+  detection.
+- **Decision — failure semantics (unchanged, restated for traceability):** a
+  genuine quota exceed is `429 RATE_LIMITED` (public: `429 RATE_LIMITED` +
+  `Retry-After`); engine unavailable, DB failure, or a missing/inactive/malformed
+  policy row is `503 RATE_LIMIT_UNAVAILABLE` internally, mapped to public `503
+  SERVICE_UNAVAILABLE` — never conflated with a genuine deny. A consumer proceeds
+  ONLY on `HTTP 200` AND `data.decision === "allow"`; every other outcome
+  (429/503/401/400, timeout, network error, malformed body) fails closed. Until
+  `069` seeds these four rows, every WLT rate-limit check is a missing-policy 503 —
+  the system fails closed, not open, in the interim.
+- **Decision — AUTH_FAILURE removed, per-IP rejected, both for v1 only:** no
+  `AUTH_FAILURE` bucket exists and none is introduced by this decision. No safe
+  bounded-cardinality subject exists pre-authentication (a bearer-token hash or
+  request fingerprint is attacker-chosen — unbounded row growth against shared
+  foundation storage), and per-IP limiting is rejected because no `trustProxy` /
+  trusted-proxy configuration exists anywhere in this platform (`request.ip` is the
+  raw socket peer) — enabling it naively would make `X-Forwarded-For`
+  client-spoofable. **This does NOT close the associated HIGH finding**
+  (unauthenticated garbage-bearer-token requests can reach IAM introspection before
+  any identity-based WLT quota applies) — that remains a public-perimeter /
+  pre-authentication-abuse control, tracked separately, and is a mandatory
+  precondition before any WLT public route is internet-exposed.
+- **Decision — change governance:** numeric policy is never runtime-editable
+  (`role_fnd_runtime` holds no INSERT/UPDATE on `foundation.rate_limit_policy`).
+  Every change to any limit, window, or `status` is a new, governance-approved
+  migration. A `DECISION_LOG.md` entry recording the new values and their
+  justification MUST exist before that seed/update migration is authored — the same
+  sequencing this entry itself satisfies for `069`. `policy_id` is immutable
+  (changed by `UPDATE`, never delete-and-reinsert — `limit_ref` traces historical
+  denial evidence back to it). `version` increments on any MATERIAL change
+  (`burst_limit`, `burst_window_seconds`, `sustained_limit`,
+  `sustained_window_seconds`, or a `status` flip to `inactive`) — a non-material
+  edit (e.g. a comment) does not. **Review trigger:** these are first-generation
+  values with no production telemetry behind them; a review is due at whichever
+  comes first — the first genuine client report of an unexpected 429, or an agreed
+  future period of real public-surface traffic (no specific date is fixed, since
+  none is controlled yet).
+- **Status:** ACCEPTED (architecture) / APPROVED (numeric policy) — neither
+  migration `068` nor `069` has been written; no code, test, migration, or grant
+  change exists yet for this engine. This entry is the required governance
+  prerequisite `069`'s implementation must cite before it may be authored.
+  **WLT-01 BLOCKER-2 remains OPEN** — numeric-policy approval is a prerequisite
+  toward closing it, not the closure itself; the WLT-01 public-surface contract
+  remains FROZEN PENDING PREREQUISITES.
+- **Supersedes / Related:** Builds on DEC-008 (the other WLT-01 BLOCKER-1
+  prerequisite). Related to `OPEN_FINDINGS.md` WLT-FIND-004 (tracks BLOCKER-2) and
+  to CLT-FIND-004 (the migration-068 sequencing predecessor — the global
+  migration-head test pin in `tests/integration/clt1-db.test.ts` that would have
+  broken the moment migration 068 landed; CLOSED at commit `e6cf4c7`, independently
+  clearing the way for `068` to be authored).
+- **Baseline commit:** `e6cf4c7` (CLT-FIND-004 closure — the last commit before this
+  governance decision; no commit exists yet for the engine itself)
+
 ---
 
 Future decisions should be appended below this line, oldest first, using the same

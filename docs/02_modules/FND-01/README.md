@@ -22,6 +22,8 @@ baseline_commit: 780e116
 **Blueprint authority status:** APPROVED — certified via [FND-01/IAM-01 delta note](../_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md)
 **Implementation status:** ACCEPTED (see [00_project_state/MODULE_STATUS.md](../../00_project_state/MODULE_STATUS.md) for detail)
 
+**Pending extension:** Shared Rate-Limit Engine (WLT-01 BLOCKER-2 prerequisite) — architecture ACCEPTED FOR IMPLEMENTATION, v1 numeric policy APPROVED FOR MIGRATION 069 ([DECISION_LOG.md](../../DECISION_LOG.md) DEC-009). Neither migration `068_fnd_rate_limit_engine` nor `069_fnd_rate_limit_policy_seed` has been written yet — no code, test, migration, or grant exists for it. No acceptance record yet; this README will gain one once implemented and independently accepted.
+
 ## Reviews
 
 - [FND-01_Platform_Foundation_Blueprint_Pack_v1.0_Review.md](reviews/FND-01_Platform_Foundation_Blueprint_Pack_v1.0_Review.md)
@@ -39,4 +41,6 @@ baseline_commit: 780e116
 
 ## Open findings
 
-None specific to FND-01. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.
+FND-FIND-001 (HIGH — shared rate-limit engine pre-authentication abuse; a public-
+perimeter control, not closed by the DEC-009 numeric policy approval). See
+[OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.

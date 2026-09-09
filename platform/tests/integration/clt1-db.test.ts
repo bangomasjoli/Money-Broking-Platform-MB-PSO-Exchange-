@@ -3012,9 +3012,11 @@ describe("CLT-01 Phase 1 integration", () => {
       expect(idx.rows).toHaveLength(1);
     });
 
-    it("INVENTORY: migration head is 067_clt1_authorised_user_iam_binding", async () => {
-      const row = await verifyPool.query(`SELECT name FROM pgmigrations ORDER BY id DESC LIMIT 1`);
-      expect(row.rows[0].name).toBe("067_clt1_authorised_user_iam_binding");
+    it("INVENTORY: CLT-01's own migration 067_clt1_authorised_user_iam_binding is present and applied; deliberately does NOT pin the platform-wide global migration head, since a later migration from another module legitimately advances it without touching CLT-01 (same fix pattern as commit 0335340 for WLT-01)", async () => {
+      const row = await verifyPool.query(`SELECT count(*)::int AS n FROM pgmigrations WHERE name = $1`, [
+        "067_clt1_authorised_user_iam_binding",
+      ]);
+      expect(row.rows[0]?.n).toBe(1);
     });
   });
 

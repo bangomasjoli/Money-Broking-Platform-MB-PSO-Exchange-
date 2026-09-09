@@ -125,6 +125,65 @@ This is not a record of every historical implementation decision — see
 - **Supersedes / Related:** None
 - **Baseline commit:** N/A (organizational constraint, not tied to a specific commit)
 
+### DEC-008 — IAM-01 internal session-introspection seam: dedicated capability token, 401 negative-collapse, no cached expiry
+
+- **Date:** IAM-01 Session Introspection architecture / implementation / independent
+  acceptance (this turn's predecessor turns; commits `5794ffe`, `5a29559`)
+- **Scope:** IAM-01 `services/iam/src` — the sole internal seam by which any other
+  module (first consumer: WLT-01) may resolve a client bearer access token to an
+  authenticated identity
+- **Decision:** Add exactly one new internal route, `POST /internal/auth/session/validate`,
+  reusing the canonical `validateAccessToken` verbatim (never a second, independently
+  implemented definition of session validity). Four specific, deliberate departures from
+  the initially candidate contract:
+  1. **Path** `/internal/auth/session/validate`, not `/internal/auth/introspect-session`
+     — mirrors the existing `/internal/auth/service-account/validate` naming convention
+     already established in this codebase, rather than introducing a new verb.
+  2. **Caller authority** uses a DEDICATED `IAM_INTROSPECTION_SERVICE_TOKEN`, distinct
+     from the general `IAM_INTERNAL_SERVICE_TOKEN` — capability scoping via the existing
+     shared-secret guard architecture (`makeIamInternalIdentityGuard`), not a new
+     authentication mechanism. Explicitly NOT true per-caller cryptographic service
+     identity (see `OPEN_FINDINGS.md` IAM1-FIND-003 / carried FINDING-C).
+  3. **Negative-state collapse**: all four canonical negative codes
+     (`AUTH_SESSION_REQUIRED`/`AUTH_SESSION_REVOKED`/`AUTH_SESSION_EXPIRED`/
+     `AUTH_ACCOUNT_FROZEN`) collapse to a single `AUTH_SESSION_REQUIRED`/401 at this seam
+     only — never `200 { valid:false }`. `AUTH_ACCOUNT_FROZEN` alone is 403 elsewhere in
+     IAM-01; passing it through unmapped would let an internal caller distinguish "a real,
+     frozen account" from "a meaningless token" by status code alone (an account-state
+     oracle). Infrastructure/query failure is kept genuinely distinct as
+     `AUTH_SESSION_INTROSPECTION_UNAVAILABLE`/503 — never folded into the negative-auth
+     result — so a downstream caller can fail closed on IAM unavailability without
+     confusing it for an invalid identity.
+  4. **Response minimisation**: exactly `valid`/`user_id`/`session_id`/`user_class`.
+     `expires_at_utc` is deliberately OMITTED (unlike the initial candidate contract) —
+     a caller with no expiry to hold onto cannot be tempted to cache authority across
+     requests; every consumer must re-introspect per request.
+  Audit outcome: successful introspection publishes NO new SEC-01/business audit event
+  (would be high-frequency noise on every downstream public request); a negative result
+  writes the IAM-local `iam.session_introspection_denied` row to `iam.auth_event` only.
+- **Rationale:** This is a material cross-module authority seam — the first and only
+  path by which any module outside IAM-01 can resolve client identity — so its contract
+  shape is a governance decision, not an implementation detail. Reusing existing platform
+  conventions (naming, guard factory, error-collapse discipline) over inventing new ones
+  keeps the interim shared-secret model consistent platform-wide rather than adding a
+  second flavour of it.
+- **Status:** ACCEPTED and implemented. Architecture independently accepted
+  ("IAM-01 SESSION INTROSPECTION: ACCEPTED FOR IMPLEMENTATION"); implementation
+  independently re-verified against real databases and adversarial probes (bidirectional
+  token-isolation check, live auth-event-write-failure probe, empty-DB false-green
+  reproduction) and accepted ("IAM-01 SESSION INTROSPECTION: COMPLETE / ACCEPTED"). Two
+  post-acceptance TEST findings (missing fail-loud DB canary; a dead no-op test
+  assertion) were closed test-only in `5a29559` — see `OPEN_FINDINGS.md` IAM1-FIND-006/007.
+  **This decision satisfies WLT-01 BLOCKER-1.** WLT-01 BLOCKER-2 (shared rate-limit
+  engine) is unrelated and remains OPEN; the WLT-01 public-surface contract remains
+  FROZEN PENDING PREREQUISITES until BLOCKER-2 is independently accepted.
+- **Supersedes / Related:** Related to the WLT-01 Client-Facing Public `/wlt1/*` Surface
+  architecture (see `OPEN_FINDINGS.md` WLT-FIND-004) and to CLT-01's Authenticated
+  Principal → Client Membership Authority extension (migration 067), the other half of
+  the authority chain this seam feeds into (`bearer token → IAM user_id/user_class →
+  WLT userClass allowlist → CLT membership resolution`).
+- **Baseline commit:** `5794ffe` (implementation); `5a29559` (test-harness remediation)
+
 ---
 
 Future decisions should be appended below this line, oldest first, using the same

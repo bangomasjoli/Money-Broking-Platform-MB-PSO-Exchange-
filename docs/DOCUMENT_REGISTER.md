@@ -125,6 +125,20 @@ adjudicate any of these; adjudication requires a dedicated Opus review per modul
 
 ---
 
+## 4a. Module-Level Independent Acceptance Records
+
+Post-blueprint-acceptance implementation extensions certified by an independent
+review, registered individually as controlled evidence. Not an exhaustive backfill
+of every historical acceptance record — see `02_modules/<MODULE>/acceptance/` for
+the full evidence trail per module; this section registers records added going
+forward.
+
+| Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| IAM-01-ACC-003 | IAM-01 Internal Session Introspection — Independent Final Acceptance | IAM-01 | Internal client session-introspection seam (`POST /internal/auth/session/validate`) — WLT-01 BLOCKER-1 prerequisite | N/A | APPROVED | ACCEPTED | [`02_modules/IAM-01/acceptance/IAM-01_Session_Introspection_Opus_v1.0.md`](02_modules/IAM-01/acceptance/IAM-01_Session_Introspection_Opus_v1.0.md) | Unassigned | N/A | N/A | none | 5a29559 |
+
+---
+
 ## 5. Cross-Module Documents
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |

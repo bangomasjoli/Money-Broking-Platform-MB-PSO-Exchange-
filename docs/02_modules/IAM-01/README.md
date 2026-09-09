@@ -22,6 +22,8 @@ baseline_commit: 780e116
 **Blueprint authority status:** APPROVED — certified via [FND-01/IAM-01 delta note](../_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md)
 **Implementation status:** ACCEPTED (see [00_project_state/MODULE_STATUS.md](../../00_project_state/MODULE_STATUS.md) for detail)
 
+**Post-acceptance extension:** Internal Session Introspection (`POST /internal/auth/session/validate`) — COMPLETE / ACCEPTED. Added as the WLT-01 BLOCKER-1 prerequisite: the sole internal seam by which another module resolves a client bearer token to an authenticated identity/`user_class`, reusing the canonical `validateAccessToken` with no duplicated session-validation semantics. Implementation `5794ffe`, test-harness remediation `5a29559`. See acceptance evidence below and [DECISION_LOG.md](../../DECISION_LOG.md) DEC-008.
+
 ## Reviews
 
 - [IAM-01_Authentication_MFA_Session_Blueprint_Pack_v1.0_Review.md](reviews/IAM-01_Authentication_MFA_Session_Blueprint_Pack_v1.0_Review.md)
@@ -31,6 +33,7 @@ baseline_commit: 780e116
 
 - [IAM-01_Final_Review_Opus_v1.0.md](acceptance/IAM-01_Final_Review_Opus_v1.0.md)
 - [IAM-01_Security_Review_Opus_v0.1.md](acceptance/IAM-01_Security_Review_Opus_v0.1.md)
+- [IAM-01_Session_Introspection_Opus_v1.0.md](acceptance/IAM-01_Session_Introspection_Opus_v1.0.md) — Internal Session Introspection seam, independent final acceptance (WLT-01 BLOCKER-1 prerequisite)
 
 ## Implementation notes / plans
 
@@ -38,4 +41,7 @@ baseline_commit: 780e116
 
 ## Open findings
 
-None specific to IAM-01. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.
+Carried, non-blocking, from the Session Introspection acceptance: IAM1-FIND-001 through
+IAM1-FIND-005 (INFORMATIONAL/LOW/MEDIUM, none fixed by design). IAM1-FIND-006 and
+IAM1-FIND-007 (test-harness only) are CLOSED. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md)
+for the full register and current status of each.

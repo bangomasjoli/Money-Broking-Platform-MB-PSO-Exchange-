@@ -10,7 +10,7 @@
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { publishAudit, systemTime } from "@aix/foundation";
-import { IamError } from "./errors.js";
+import { IamError, type IamErrorCode } from "./errors.js";
 
 export type UserClass = "admin" | "staff" | "client" | "client_approver" | "service";
 export type AuthLevel = "password" | "mfa" | "webauthn" | "step_up";
@@ -211,6 +211,25 @@ export async function validateAccessToken(client: PoolClient, token: string): Pr
   await client.query(`SELECT iam.fn_touch_session_last_seen($1)`, [row.session_id]);
   return row;
 }
+
+/**
+ * Internal Session Introspection seam (WLT-01 BLOCKER-1 prerequisite) — the exhaustive set of
+ * `IamError` codes `validateAccessToken` throws for a genuinely INVALID identity (as opposed to
+ * an infrastructure/query failure). `routes/internal.ts`'s `POST /internal/auth/session/validate`
+ * catches exactly this set and collapses all four to a single `AUTH_SESSION_REQUIRED`/401 — never
+ * leaking which negative state occurred (a `AUTH_ACCOUNT_FROZEN` 403 passed straight through would
+ * let an internal caller distinguish "this token belongs to a real, frozen account" from "this
+ * token is meaningless" by status code alone). Any `IamError` code NOT in this set, or any
+ * non-`IamError` exception (pool/query failure), is deliberately NOT covered here and must be
+ * treated by the caller as service unavailability, never as a negative-auth result — see that
+ * route's own header. `validateAccessToken`'s body above is untouched by this addition.
+ */
+export const SESSION_VALIDATION_NEGATIVE_CODES: readonly IamErrorCode[] = [
+  "AUTH_SESSION_REQUIRED",
+  "AUTH_SESSION_REVOKED",
+  "AUTH_SESSION_EXPIRED",
+  "AUTH_ACCOUNT_FROZEN",
+];
 
 /**
  * S1 gap-closing patch: `sessionId` alone does not carry the owning user_id, and

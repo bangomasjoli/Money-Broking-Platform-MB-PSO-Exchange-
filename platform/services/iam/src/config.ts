@@ -22,6 +22,15 @@ export interface RateLimitConfig {
 export interface IamConfig extends AppConfig {
   /** IAM's own interim internal-identity shared secret (decision #4). Never logged. */
   iamInternalServiceToken: string;
+  /**
+   * Internal Session Introspection seam (WLT-01 BLOCKER-1 prerequisite) — a DEDICATED
+   * capability secret guarding `POST /internal/auth/session/validate`, deliberately DISTINCT
+   * from `iamInternalServiceToken`. IAM-01 has no per-caller service-identity model (every
+   * `/internal/auth/*` route shares one generic guard); a separate token narrows this specific
+   * capability to whichever service is provisioned with it, without inventing a second
+   * authentication mechanism or a service-account scope check. Never logged.
+   */
+  iamIntrospectionServiceToken: string;
   bootstrapEnabled: boolean;
   bootstrapAdminIdentifier?: string;
   bootstrapAdminPassword?: string;
@@ -45,12 +54,24 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 
 export function loadIamConfig(env: RawEnv = process.env): IamConfig {
   const iamInternalServiceToken = env.IAM_INTERNAL_SERVICE_TOKEN?.trim();
+  const iamIntrospectionServiceToken = env.IAM_INTROSPECTION_SERVICE_TOKEN?.trim();
 
   // Reuse the foundation loader's fail-closed validation (presence/length/ENVIRONMENT/
   // DATABASE_URL/PORT) by feeding it IAM's own token under the shared field name.
   const base = loadConfig({ ...env, INTERNAL_SERVICE_TOKEN: iamInternalServiceToken });
 
   const problems: string[] = [];
+
+  // Internal Session Introspection seam: required, non-empty, no production default, and must
+  // differ from the general internal-service token — a distinct capability secret is the whole
+  // point of scoping introspection separately (see IamConfig's own field comment).
+  if (!iamIntrospectionServiceToken) {
+    problems.push("IAM_INTROSPECTION_SERVICE_TOKEN is required (internal session introspection seam)");
+  } else if (iamIntrospectionServiceToken.length < 8) {
+    problems.push("IAM_INTROSPECTION_SERVICE_TOKEN too short");
+  } else if (iamInternalServiceToken && iamIntrospectionServiceToken === iamInternalServiceToken) {
+    problems.push("IAM_INTROSPECTION_SERVICE_TOKEN must differ from IAM_INTERNAL_SERVICE_TOKEN");
+  }
 
   const bootstrapEnabled = (env.IAM_BOOTSTRAP_ENABLED ?? "false").trim().toLowerCase() === "true";
   const bootstrapAdminIdentifier = env.IAM_BOOTSTRAP_ADMIN_IDENTIFIER?.trim();
@@ -72,6 +93,7 @@ export function loadIamConfig(env: RawEnv = process.env): IamConfig {
   return {
     ...base,
     iamInternalServiceToken: iamInternalServiceToken as string,
+    iamIntrospectionServiceToken: iamIntrospectionServiceToken as string,
     bootstrapEnabled,
     ...(bootstrapAdminIdentifier ? { bootstrapAdminIdentifier } : {}),
     ...(bootstrapAdminPassword ? { bootstrapAdminPassword } : {}),

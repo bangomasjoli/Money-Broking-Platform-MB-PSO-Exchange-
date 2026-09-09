@@ -57,6 +57,14 @@ export const IAM_ERROR_CODES = {
   // Defensive addition (not in blueprint's code list): session policy is required to issue
   // any session and must fail closed if unresolved (§09 Error Handling §4 rule 12).
   AUTH_SESSION_POLICY_UNAVAILABLE: { http: 503, message: "Service temporarily unavailable." },
+  // Internal Session Introspection seam (WLT-01 BLOCKER-1 prerequisite, Opus architecture
+  // "IAM-01 SESSION INTROSPECTION: ACCEPTED FOR IMPLEMENTATION"): infrastructure/query failure
+  // while resolving `POST /internal/auth/session/validate` — never returned for a genuinely
+  // invalid session (that collapses to AUTH_SESSION_REQUIRED/401 instead, see
+  // SESSION_VALIDATION_NEGATIVE_CODES below). Keeping this a distinct 503 code is what lets a
+  // downstream caller (WLT-01) fail closed on IAM unavailability without confusing it for an
+  // invalid identity.
+  AUTH_SESSION_INTROSPECTION_UNAVAILABLE: { http: 503, message: "Service temporarily unavailable." },
 } as const satisfies Record<string, IamErrorSpec>;
 
 export type IamErrorCode = keyof typeof IAM_ERROR_CODES;

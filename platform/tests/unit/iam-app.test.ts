@@ -19,6 +19,7 @@ const config: IamConfig = {
   artifactHash: "sha256:test",
   buildTimeUtc: "2026-01-01T00:00:00Z",
   iamInternalServiceToken: "test-iam-internal-token-123",
+  iamIntrospectionServiceToken: "test-iam-introspection-token-456",
   bootstrapEnabled: false,
   accessTokenTtlSeconds: 900,
   refreshTokenTtlSeconds: 1_209_600,

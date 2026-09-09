@@ -1,13 +1,16 @@
 /**
  * IAM-01 §04.3 internal/admin-facing endpoints: freeze-event revocation, bulk session
- * revocation, and baseline service-account credential validation. All guarded by IAM's own
- * interim internal-identity seam (decision #4) — fail closed when absent/wrong.
+ * revocation, baseline service-account credential validation, and internal client-session
+ * introspection. All guarded by IAM's own interim internal-identity seam (decision #4) — fail
+ * closed when absent/wrong.
  */
 import { Type } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
+import type { PoolClient } from "pg";
 import {
   beginIdempotent,
   completeIdempotent,
+  getPool,
   publishAudit,
   successEnvelope,
   withTransaction,
@@ -16,7 +19,13 @@ import {
 import { meta, requireIdempotencyKey } from "../plugins/request-context.js";
 import { makeIamInternalIdentityGuard } from "../plugins/internal-identity.js";
 import { IamError } from "../lib/errors.js";
-import { insertAuthEvent, revokeAllSessionsForUser, sha256Hex } from "../lib/session.js";
+import {
+  insertAuthEvent,
+  revokeAllSessionsForUser,
+  sha256Hex,
+  validateAccessToken,
+  SESSION_VALIDATION_NEGATIVE_CODES,
+} from "../lib/session.js";
 
 const FreezeEventBody = Type.Object(
   {
@@ -45,8 +54,26 @@ const ServiceAccountValidateBody = Type.Object(
   { additionalProperties: false },
 );
 
+// Internal Session Introspection seam (WLT-01 BLOCKER-1 prerequisite, Opus architecture "IAM-01
+// SESSION INTROSPECTION: ACCEPTED FOR IMPLEMENTATION"). `access_token` is the presented CLIENT
+// bearer token being introspected — a secret, submitted in the body (never `Authorization`,
+// which on this route identifies the CALLING SERVICE instead — see the route's own comment
+// below). `maxLength: 512` bounds parsing without revealing the real token's length (opaque
+// tokens are `randomBytes(32).toString("base64url")`, 43 characters).
+const SessionValidateBody = Type.Object(
+  {
+    access_token: Type.String({ minLength: 1, maxLength: 512 }),
+  },
+  { additionalProperties: false },
+);
+
 export async function registerInternalRoutes(app: FastifyInstance): Promise<void> {
   const requireInternal = makeIamInternalIdentityGuard(app.config.iamInternalServiceToken);
+  // Internal Session Introspection seam: a DEDICATED capability guard, bound to its own secret
+  // (never `iamInternalServiceToken`) — see IamConfig's own field comment for why. The general
+  // internal-service token must NOT open this route, and this route's own token must not open
+  // any other `/internal/auth/*` route.
+  const requireIntrospection = makeIamInternalIdentityGuard(app.config.iamIntrospectionServiceToken);
 
   app.post(
     "/internal/auth/freeze-event",
@@ -216,6 +243,84 @@ export async function registerInternalRoutes(app: FastifyInstance): Promise<void
       return reply.send(
         successEnvelope({ valid: true, service_account_id: body.service_account_id, scope: result.scope }, meta(request)),
       );
+    },
+  );
+
+  // -------------------------------------------------------------------------------------------
+  // Internal Session Introspection seam (WLT-01 BLOCKER-1 prerequisite, Opus architecture "IAM-01
+  // SESSION INTROSPECTION: ACCEPTED FOR IMPLEMENTATION"). Resolves a presented IAM CLIENT bearer
+  // access token through the SAME canonical `validateAccessToken` `requireUserSession` itself
+  // uses — reused verbatim below, never reimplemented (no independent `sha256Hex` hashing, no
+  // independent `fn_resolve_session_by_token_hash` call, no independent session-status check in
+  // this handler). `requireUserSession` and its four distinct thrown codes are entirely
+  // untouched by this route.
+  //
+  // `Authorization` on THIS route identifies the CALLING SERVICE (via `requireIntrospection`
+  // above) — the token being introspected travels in the body as `access_token` instead, so a
+  // third party's secret is never mistaken for the caller's own credential.
+  //
+  // Negative collapse: every code in `SESSION_VALIDATION_NEGATIVE_CODES` (unknown/malformed
+  // token, revoked, expired, inactive/locked/suspended/deactivated user) collapses to the SAME
+  // `AUTH_SESSION_REQUIRED`/401 — deliberately, since `AUTH_ACCOUNT_FROZEN` alone is 403 and
+  // passing it through would let a caller distinguish "real but frozen account" from "meaningless
+  // token" by status code alone (an account-state oracle). Every other exception — a pool-acquire
+  // failure, a query error inside `validateAccessToken`, anything not in that set — is treated as
+  // infrastructure unavailability (`AUTH_SESSION_INTROSPECTION_UNAVAILABLE`/503), never as a
+  // negative-auth result: WLT-01's fail-closed posture depends on being able to tell "the
+  // identity is invalid" apart from "IAM could not determine validity".
+  //
+  // No cache, no transaction (mirrors `requireUserSession`'s own bare-pooled-connection shape),
+  // and — deliberately — no `expires_at_utc` in the response: a caller with no expiry to hold
+  // onto cannot be tempted to cache authority across requests.
+  app.post(
+    "/internal/auth/session/validate",
+    { preHandler: requireIntrospection, schema: { body: SessionValidateBody } },
+    async (request, reply) => {
+      const body = request.body as { access_token: string };
+      const correlationId = request.ctx.correlation_id;
+
+      let client: PoolClient;
+      try {
+        client = await getPool().connect();
+      } catch (err) {
+        throw new IamError("AUTH_SESSION_INTROSPECTION_UNAVAILABLE", { cause: err });
+      }
+
+      try {
+        let session;
+        try {
+          session = await validateAccessToken(client, body.access_token);
+        } catch (err) {
+          if (err instanceof IamError && (SESSION_VALIDATION_NEGATIVE_CODES as readonly string[]).includes(err.code)) {
+            // IAM-local security log only — no SEC-01/business audit event for a high-frequency
+            // negative-auth outcome (every WLT-01 public request could hit this path). Never the
+            // raw token or its hash; `iam.auth_event` carries no field capable of holding either.
+            await insertAuthEvent(client, {
+              eventType: "iam.session_introspection_denied",
+              userId: null,
+              result: "blocked",
+              correlationId,
+            });
+            throw new IamError("AUTH_SESSION_REQUIRED");
+          }
+          // Anything else (a pg query error mid-`validateAccessToken`, an unexpected exception)
+          // is infrastructure failure, never a negative-auth result.
+          throw new IamError("AUTH_SESSION_INTROSPECTION_UNAVAILABLE", { cause: err });
+        }
+
+        // Minimal response-field allowlist (§8 of the accepted architecture): valid, user_id,
+        // session_id, user_class — nothing else. `user_class` is `iam.session`'s own snapshot
+        // column, the SAME value `requireUserSession` resolves (FINDING-A, not fixed here: this
+        // is a pre-existing snapshot, not a live `iam.user_identity.user_class` read).
+        return reply.send(
+          successEnvelope(
+            { valid: true, user_id: session.user_id, session_id: session.session_id, user_class: session.user_class },
+            meta(request),
+          ),
+        );
+      } finally {
+        client.release();
+      }
     },
   );
 }

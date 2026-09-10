@@ -136,6 +136,7 @@ forward.
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | IAM-01-ACC-003 | IAM-01 Internal Session Introspection — Independent Final Acceptance | IAM-01 | Internal client session-introspection seam (`POST /internal/auth/session/validate`) — WLT-01 BLOCKER-1 prerequisite | N/A | APPROVED | ACCEPTED | [`02_modules/IAM-01/acceptance/IAM-01_Session_Introspection_Opus_v1.0.md`](02_modules/IAM-01/acceptance/IAM-01_Session_Introspection_Opus_v1.0.md) | Unassigned | N/A | N/A | none | 5a29559 |
+| FND-01-ACC-003 | FND-01 Shared Rate-Limit Engine — Independent Acceptance + Post-Acceptance Hardening | FND-01 | Shared rate-limit engine (`POST /foundation/rate-limit/check`) — WLT-01 BLOCKER-2 prerequisite; migrations `068`/`069`/`070` | N/A | APPROVED | ACCEPTED | [`02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md`](02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md) | Unassigned | N/A | N/A | none | eb4a767 |
 
 ---
 

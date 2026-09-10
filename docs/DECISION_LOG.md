@@ -286,13 +286,27 @@ This is not a record of every historical implementation decision — see
   comes first — the first genuine client report of an unexpected 429, or an agreed
   future period of real public-surface traffic (no specific date is fixed, since
   none is controlled yet).
-- **Status:** ACCEPTED (architecture) / APPROVED (numeric policy) — neither
-  migration `068` nor `069` has been written; no code, test, migration, or grant
-  change exists yet for this engine. This entry is the required governance
-  prerequisite `069`'s implementation must cite before it may be authored.
-  **WLT-01 BLOCKER-2 remains OPEN** — numeric-policy approval is a prerequisite
-  toward closing it, not the closure itself; the WLT-01 public-surface contract
-  remains FROZEN PENDING PREREQUISITES.
+- **Status:** ACCEPTED (architecture) / APPROVED (numeric policy) / **IMPLEMENTED
+  and independently accepted COMPLETE / ACCEPTED at commit `2cdeaa5`** — migrations
+  `068_fnd_rate_limit_engine` and `069_fnd_rate_limit_policy_seed` implement this
+  entry's architecture and seed exactly the four rows above, independently
+  cross-checked verbatim against this table. **Post-acceptance hardening COMPLETE
+  / VERIFIED at commit `eb4a767`** — new migration
+  `070_fnd_rate_limit_policy_privilege_hardening` makes the change-governance
+  invariant above (`role_fnd_runtime` holds no INSERT/UPDATE/DELETE on
+  `foundation.rate_limit_policy`) deployment-order-independent, closing
+  `OPEN_FINDINGS.md` FND-FIND-002/003/004 (all CLOSED); FND-FIND-005/006/007/008
+  retained non-blocking; FND-FIND-009 newly opened, LOW, non-blocking. Neither the
+  implementation nor the hardening altered this entry's architecture or the four
+  numeric-policy rows — no new decision entry was required for either. Full
+  record: `02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md`.
+  **WLT-01 BLOCKER-2 IS NOW SATISFIED** — this decision's numeric-policy approval
+  plus the engine's own independent acceptance and hardening together satisfy it in
+  full; the WLT-01 public-surface contract's prerequisites are COMPLETE, though the
+  contract itself remains unimplemented. `OPEN_FINDINGS.md` FND-FIND-001 (HIGH,
+  pre-authentication abuse) is unrelated to this decision, is NOT closed by it or by
+  the engine's implementation/hardening, and remains the separate, mandatory
+  precondition before any WLT-01 public route is internet-exposed.
 - **Supersedes / Related:** Builds on DEC-008 (the other WLT-01 BLOCKER-1
   prerequisite). Related to `OPEN_FINDINGS.md` WLT-FIND-004 (tracks BLOCKER-2) and
   to CLT-FIND-004 (the migration-068 sequencing predecessor — the global

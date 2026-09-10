@@ -22,7 +22,7 @@ baseline_commit: 780e116
 **Blueprint authority status:** APPROVED — certified via [FND-01/IAM-01 delta note](../_cross_module/reviews/FND-01_IAM-01_v1.1_to_v1.2_Delta_Note.md)
 **Implementation status:** ACCEPTED (see [00_project_state/MODULE_STATUS.md](../../00_project_state/MODULE_STATUS.md) for detail)
 
-**Pending extension:** Shared Rate-Limit Engine (WLT-01 BLOCKER-2 prerequisite) — architecture ACCEPTED FOR IMPLEMENTATION, v1 numeric policy APPROVED FOR MIGRATION 069 ([DECISION_LOG.md](../../DECISION_LOG.md) DEC-009). Neither migration `068_fnd_rate_limit_engine` nor `069_fnd_rate_limit_policy_seed` has been written yet — no code, test, migration, or grant exists for it. No acceptance record yet; this README will gain one once implemented and independently accepted.
+**Extension — Shared Rate-Limit Engine (WLT-01 BLOCKER-2 prerequisite):** architecture ACCEPTED FOR IMPLEMENTATION, v1 numeric policy APPROVED FOR MIGRATION 069 ([DECISION_LOG.md](../../DECISION_LOG.md) DEC-009), implemented and independently accepted **COMPLETE / ACCEPTED** at commit `2cdeaa5` (migrations `068_fnd_rate_limit_engine`, `069_fnd_rate_limit_policy_seed`), post-acceptance hardening **COMPLETE / VERIFIED** at commit `eb4a767` (migration `070_fnd_rate_limit_policy_privilege_hardening`). Migration head: `070_fnd_rate_limit_policy_privilege_hardening` (70 migrations). **WLT-01 BLOCKER-2 IS SATISFIED** — see [FND-01_Rate_Limit_Hardening_Opus_v1.0.md](acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md) for the full acceptance/hardening/verification record.
 
 ## Reviews
 
@@ -33,6 +33,7 @@ baseline_commit: 780e116
 
 - [FND-01_Final_Review_Opus_v1.0.md](acceptance/FND-01_Final_Review_Opus_v1.0.md)
 - [FND-01_Implementation_Review_v0.1.md](acceptance/FND-01_Implementation_Review_v0.1.md)
+- [FND-01_Rate_Limit_Hardening_Opus_v1.0.md](acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md) — Shared Rate-Limit Engine implementation acceptance (`2cdeaa5`) + post-acceptance hardening (`eb4a767`)
 
 ## Implementation notes / plans
 
@@ -42,5 +43,9 @@ baseline_commit: 780e116
 ## Open findings
 
 FND-FIND-001 (HIGH — shared rate-limit engine pre-authentication abuse; a public-
-perimeter control, not closed by the DEC-009 numeric policy approval). See
-[OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.
+perimeter control, not closed by the DEC-009 numeric policy approval or by the
+engine's implementation/hardening — **REMAINS OPEN**, mandatory precondition
+before any WLT-01 public route is internet-exposed). Plus FND-FIND-002 through
+FND-FIND-009 (Shared Rate-Limit Engine acceptance/hardening findings — see
+[OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current
+state of each).

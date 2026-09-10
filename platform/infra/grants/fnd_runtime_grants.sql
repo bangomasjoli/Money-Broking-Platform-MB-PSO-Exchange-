@@ -35,10 +35,25 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA foundation
 -- governance-approved migration, never at runtime. Guarded with to_regclass so this file stays
 -- safe to re-run against a database migrated to any point BEFORE OR AFTER migration 068 (this
 -- table may not exist yet) — mirrors this file's own "idempotent, safe to re-run" contract.
+--
+-- NEW-1 (independent Opus post-acceptance review) ordering fix: this guarded REVOKE alone is
+-- only sufficient when this file is (re-)applied AFTER migration 068 exists. The OPPOSITE
+-- deployment order — grants applied once against a pre-068 database, migrations 068-070 run
+-- later, grants never re-applied — used to leave role_fnd_runtime able to INSERT/UPDATE the
+-- policy table, because `ALTER DEFAULT PRIVILEGES` (line 25 above) grants write access to any
+-- NEW table automatically, including one created after this file last ran. Immutability is no
+-- longer solely this file's responsibility for that ordering: `070_fnd_rate_limit_policy_
+-- privilege_hardening.cjs` performs the identical guarded REVOKE at MIGRATION TIME (guarded on
+-- role existence instead of table existence), so migrating to head alone already closes the
+-- gap regardless of grants-file timing. This REVOKE remains here — unchanged in shape, now
+-- also covering DELETE for symmetry with 070's own invariant — because it is still the correct
+-- (and idempotent) statement for the migrations-then-grants ordering, and because this file
+-- must independently produce the fully-restricted state on its own for anyone auditing grants
+-- in isolation.
 DO $$
 BEGIN
   IF to_regclass('foundation.rate_limit_policy') IS NOT NULL THEN
-    REVOKE INSERT, UPDATE ON foundation.rate_limit_policy FROM role_fnd_runtime;
+    REVOKE INSERT, UPDATE, DELETE ON foundation.rate_limit_policy FROM role_fnd_runtime;
   END IF;
 END
 $$;

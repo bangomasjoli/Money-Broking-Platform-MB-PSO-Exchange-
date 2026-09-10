@@ -271,6 +271,62 @@ describe("loadFndConfig — FND_RATE_LIMIT_CONSUMER_SECRETS", () => {
     expect(issues.some((i) => i.includes("duplicate module id key"))).toBe(true);
   });
 
+  // NEW-2 (independent Opus post-acceptance review): two DIFFERENT module ids sharing the same
+  // secret VALUE previously booted successfully, making module identity ambiguous —
+  // `makeRateLimitConsumerGuard` resolves whichever module is iterated first, silently
+  // enforcing the other module's traffic under the wrong namespace/policy. This is distinct
+  // from the duplicate-KEY case above (same module id twice); here the two module ids are both
+  // individually valid, only the shared value is the problem.
+  it("two different module ids sharing the same secret VALUE -> CONFIGURATION_INVALID (module identity would be ambiguous)", () => {
+    const sharedSecret = "shared-secret-value-used-by-two-modules";
+    const issues = configErrorIssues({
+      ...validEnv,
+      FND_RATE_LIMIT_CONSUMER_SECRETS: JSON.stringify({ "WLT-01": sharedSecret, "CLT-01": sharedSecret }),
+    });
+    expect(issues.some((i) => i.includes("must not share the same secret value"))).toBe(true);
+    // The problem message must name which two modules collided, but never the secret value itself.
+    expect(issues.some((i) => i.includes("'WLT-01'") && i.includes("'CLT-01'"))).toBe(true);
+    expect(issues.some((i) => i.includes(sharedSecret))).toBe(false);
+  });
+
+  it("three module ids where only two share a value -> CONFIGURATION_INVALID names exactly the colliding pair", () => {
+    const issues = configErrorIssues({
+      ...validEnv,
+      FND_RATE_LIMIT_CONSUMER_SECRETS: JSON.stringify({
+        "WLT-01": "duplicated-secret-value-abcdefgh",
+        "CLT-01": "a-completely-different-secret-1",
+        "AML-01": "duplicated-secret-value-abcdefgh",
+      }),
+    });
+    expect(issues.some((i) => i.includes("'WLT-01'") && i.includes("'AML-01'"))).toBe(true);
+    expect(issues.some((i) => i.includes("CLT-01"))).toBe(false);
+  });
+
+  it("distinct secret values for different module ids -> loads successfully (control case, not rejected)", () => {
+    const cfg = loadFndConfig({
+      ...validEnv,
+      FND_RATE_LIMIT_CONSUMER_SECRETS: JSON.stringify({
+        "WLT-01": "test-wlt1-consumer-secret-32ch!!",
+        "CLT-01": "test-clt1-consumer-secret-DIFFERENT",
+      }),
+    });
+    expect(cfg.rateLimitConsumerSecrets).toEqual({
+      "WLT-01": "test-wlt1-consumer-secret-32ch!!",
+      "CLT-01": "test-clt1-consumer-secret-DIFFERENT",
+    });
+  });
+
+  it("duplicate-value check does not fire on entries already rejected for another reason (no false positive from two blank/short entries)", () => {
+    // Two blank values are individually invalid; neither should ALSO produce a duplicate-value
+    // problem (both are skipped via `continue` before reaching the value-uniqueness tracking).
+    const issues = configErrorIssues({
+      ...validEnv,
+      FND_RATE_LIMIT_CONSUMER_SECRETS: JSON.stringify({ "WLT-01": "   ", "CLT-01": "   " }),
+    });
+    expect(issues.filter((i) => i.includes("non-blank string")).length).toBe(2);
+    expect(issues.some((i) => i.includes("must not share the same secret value"))).toBe(false);
+  });
+
   it("multiple valid consumer entries all load correctly", () => {
     const cfg = loadFndConfig({
       ...validEnv,

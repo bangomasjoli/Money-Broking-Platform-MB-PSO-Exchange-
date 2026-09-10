@@ -22,7 +22,10 @@ export interface FndConfig extends AppConfig {
    * `{ "<MODULE-ID>": "<secret>", ... }`. Frozen/immutable at boot; never re-read at runtime.
    * Never logged. Empty only if genuinely no consumer is configured (still a valid, if useless,
    * boot state — the required-at-least-one-entry decision is deliberately NOT enforced here,
-   * since FND-01 itself has no opinion on which/how-many consumers exist).
+   * since FND-01 itself has no opinion on which/how-many consumers exist). Every value in this
+   * map is guaranteed distinct — `parseRateLimitConsumerSecrets` rejects a duplicated secret
+   * value across two different module ids at boot (NEW-2), since `makeRateLimitConsumerGuard`
+   * derives module identity from which configured secret matched.
    */
   rateLimitConsumerSecrets: Readonly<Record<string, string>>;
 }
@@ -90,6 +93,17 @@ function parseRateLimitConsumerSecrets(
 
   const problems: string[] = [];
   const secrets: Record<string, string> = {};
+  // NEW-2 (independent Opus post-acceptance review): `makeRateLimitConsumerGuard`
+  // derives module identity from WHICH configured secret matched a presented token — that
+  // invariant (one secret -> exactly one module) silently breaks if two module ids share the
+  // same secret VALUE, since the guard then resolves whichever module is iterated first
+  // (`Object.entries` order), leaving the other module's traffic ambiguously enforced under
+  // the first module's namespace/policy. Tracked separately from `findDuplicateTopLevelJsonKey`
+  // above, which only catches a duplicated KEY (same module id twice) — this catches the same
+  // secret VALUE assigned to two DIFFERENT module ids. Never includes the secret value itself
+  // in the problem message (mirrors every other branch below — only the INTERNAL_SERVICE_TOKEN
+  // collision check ever compares a value, and it doesn't log it either).
+  const moduleIdByValue = new Map<string, string>();
   for (const [moduleId, value] of Object.entries(parsed as Record<string, unknown>)) {
     if (!MODULE_ID_PATTERN.test(moduleId)) {
       problems.push(`FND_RATE_LIMIT_CONSUMER_SECRETS names a malformed module id: '${moduleId}' (expected e.g. 'WLT-01')`);
@@ -107,6 +121,14 @@ function parseRateLimitConsumerSecrets(
       problems.push(`FND_RATE_LIMIT_CONSUMER_SECRETS entry for '${moduleId}' must not equal INTERNAL_SERVICE_TOKEN`);
       continue;
     }
+    const priorModuleId = moduleIdByValue.get(value);
+    if (priorModuleId !== undefined) {
+      problems.push(
+        `FND_RATE_LIMIT_CONSUMER_SECRETS entries for '${priorModuleId}' and '${moduleId}' must not share the same secret value — module identity is derived from which secret matched, so a shared secret makes it ambiguous`,
+      );
+      continue;
+    }
+    moduleIdByValue.set(value, moduleId);
     secrets[moduleId] = value;
   }
   return { secrets: Object.freeze(secrets), problems };

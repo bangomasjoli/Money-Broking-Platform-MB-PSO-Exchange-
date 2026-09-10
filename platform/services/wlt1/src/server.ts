@@ -38,6 +38,10 @@ import { registerInboundSourceScreeningRoutes } from "./routes/inbound-source-sc
 import { registerStuckScreeningRoutes } from "./routes/stuck-screening.js";
 import { createScreeningApplication } from "./lib/screening-application.js";
 import { createWlt1ProviderReceiptAuthenticator } from "./plugins/receipt-auth.js";
+import { registerPublicDestinationRoutes } from "./routes/public/destinations.js";
+import { registerPublicWalletDestinationRoutes } from "./routes/public/wallet-destinations.js";
+import { registerPublicFiatPayoutDestinationRoutes } from "./routes/public/payout-destinations.js";
+import { registerPublicProofOfControlRoutes } from "./routes/public/proof-of-control.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -55,6 +59,11 @@ declare module "fastify" {
  */
 export const WLT1_LOG_REDACT_PATHS = [
   "req.headers['x-internal-service-token']",
+  // Public Client Surface: the raw client bearer token must never reach any log line — same
+  // rationale as x-internal-service-token above. IAM-01's own dedicated introspection token and
+  // FND-01's own dedicated rate-limit consumer token are WLT-01's own config secrets, never
+  // request headers, so neither needs its own redact path here.
+  "req.headers.authorization",
   "req.body.address",
   "req.body.memo_tag",
   // Phase 2C-D1: the provider-receipt authentication secret must never reach any log line, same
@@ -151,6 +160,17 @@ export async function buildApp(config: Wlt1Config): Promise<FastifyInstance> {
   // receipt and whose caller never resumed. NOT a new ingestion path — provider-receipt.ts /
   // vendor_result_inbox remain untouched. No injected service — reads config directly.
   await registerStuckScreeningRoutes(app);
+
+  // Public Client Surface (WLT-01 BLOCKER-1 + BLOCKER-2 both SATISFIED) — six public `/wlt1/*`
+  // routes, a SEPARATE plugin scope from every `/internal/wlt1/*` route above: public bearer
+  // auth (IAM-01 introspection + CLT-01 membership) and internal service-token auth are never
+  // interchangeable — none of these four registrations touch `makeWlt1InternalIdentityGuard`.
+  // FND-FIND-001 (HIGH, pre-authentication abuse) is NOT solved by this surface and remains a
+  // mandatory precondition before any internet exposure — see OPEN_FINDINGS.md.
+  await registerPublicDestinationRoutes(app);
+  await registerPublicWalletDestinationRoutes(app);
+  await registerPublicFiatPayoutDestinationRoutes(app);
+  await registerPublicProofOfControlRoutes(app);
 
   await app.ready();
 

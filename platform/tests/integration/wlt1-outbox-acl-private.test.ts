@@ -177,6 +177,11 @@ beforeAll(async () => {
     aml1BaseUrl: "http://127.0.0.1:0",
     aml1InternalServiceToken: "test-aml1-internal-token-it",
     clt1FetchImpl: clt1AlwaysActiveFetch,
+    iamBaseUrl: "http://127.0.0.1:0",
+    iamIntrospectionServiceToken: "test-iam-introspection-token-it",
+    fndBaseUrl: "http://127.0.0.1:0",
+    fndRateLimitConsumerToken: "test-fnd-ratelimit-token-it",
+    publicDestinationListMax: 100,
   };
   app = await buildApp(mainConfig);
 
@@ -194,6 +199,11 @@ beforeAll(async () => {
       AML1_INTERNAL_SERVICE_TOKEN: "d".repeat(40),
     WLT1_FIAT_ENC_KEY: "e".repeat(40),
       WLT1_SCREENING_MAX_VALIDITY_HOURS: "720",
+      IAM_BASE_URL: "http://localhost:8081",
+      IAM_INTROSPECTION_SERVICE_TOKEN: "f".repeat(40),
+      FND_BASE_URL: "http://localhost:8080",
+      FND_RATE_LIMIT_CONSUMER_TOKEN: "g".repeat(40),
+      WLT1_PUBLIC_DESTINATION_LIST_MAX: "100",
     }),
   );
 

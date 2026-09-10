@@ -44,6 +44,11 @@ const config: Wlt1Config = {
   fiatVerificationRequired: true,
   evidenceExportMaxRecords: 5000,
   stuckScreeningThresholdSeconds: 300,
+  iamBaseUrl: "http://localhost:8081",
+  iamIntrospectionServiceToken: "test-iam-introspection-token-unused",
+  fndBaseUrl: "http://localhost:8080",
+  fndRateLimitConsumerToken: "test-fnd-ratelimit-token-unused",
+  publicDestinationListMax: 100,
 };
 
 let app: FastifyInstance;
@@ -128,8 +133,19 @@ describe("WLT-01 service app (no DB) — Phase 1B scaffold", () => {
     "│   ├── /apply (POST)",
     "│   └── /download (GET, HEAD)",
     "├── /internal/wlt1/inbound-source-screenings (POST)",
-    "└── /internal/wlt1/stuck-screenings (GET, HEAD)",
-    "└── /:screening_result_id/recover (POST)",
+    "├── /internal/wlt1/stuck-screenings (GET, HEAD)",
+    "│   └── /:screening_result_id/recover (POST)",
+    // Public Client Surface (WLT-01 BLOCKER-1 + BLOCKER-2 both SATISFIED) — exactly SIX new
+    // public routes, registered LAST, a SEPARATE plugin scope from every /internal/wlt1/* route
+    // above (public bearer auth, never the internal-service-token guard). Captured live from a
+    // running buildApp(), same discipline as every entry above — Fastify's radix-tree rendering
+    // is position-dependent, never hand-edited incrementally.
+    "├── /wlt1/destinations (GET, HEAD)",
+    "│   └── /:destination_id (GET, HEAD)",
+    "├── /wlt1/wallet-destinations (POST)",
+    "│   ├── /:destination_id/proof-of-control/challenges (POST)",
+    "│   └── /:destination_id/proof-of-control/verify (POST)",
+    "└── /wlt1/payout-destinations (POST)",
   ];
 
   it("registers EXACTLY the frozen Phase 3A-3 + Phase 4A-1 + Phase 4A-2 + Phase 4A-3 + Phase 4B + Destination Revocation + Ongoing Rescreening + Evidence Export + Inbound-Source Screening + Stuck-Screening Operational Closure route tree — an accidental extra route (not just a missing one) fails this test", () => {
@@ -149,8 +165,10 @@ describe("WLT-01 service app (no DB) — Phase 1B scaffold", () => {
       "/internal/wlt1/inbound-sources/screen",
       "/internal/wlt1/rescreening/run",
       "/internal/wlt1/rescreening/trigger",
-      "/wlt1/wallet-destinations",
-      "/wlt1/payout-destinations",
+      // /wlt1/wallet-destinations and /wlt1/payout-destinations are NOW approved — Public Client
+      // Surface — asserted present (not 404) in the dedicated public-surface test file instead;
+      // removed from this "still rejected" list. /wlt1/evidence-exports remains correctly
+      // rejected — evidence export is explicitly OUT of the frozen 6-route public contract.
       "/wlt1/evidence-exports",
     ];
     for (const url of businessPaths) {
@@ -304,14 +322,43 @@ describe("WLT-01 service app (no DB) — Phase 1B scaffold", () => {
     expect(resWithWrongAuth.statusCode).toBe(401);
   });
 
-  it("no route is registered outside /internal/wlt1/* — no public /wlt1/* surface", () => {
+  // Public Client Surface (WLT-01 BLOCKER-1 + BLOCKER-2 both SATISFIED) — exactly SIX public
+  // routes now exist, and ONLY those six. No self-revocation, no public limits/evaluate-use
+  // route, no accidental seventh route.
+  it("registers EXACTLY the frozen six public /wlt1/* routes — no more, no fewer", async () => {
     const routePaths = app
       .printRoutes({ commonPrefix: false })
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean)
       .join("\n");
-    expect(routePaths).not.toMatch(/(^|\s)\/wlt1\//);
+    for (const expected of [
+      "/wlt1/destinations (GET, HEAD)",
+      "/:destination_id (GET, HEAD)",
+      "/wlt1/wallet-destinations (POST)",
+      "/wlt1/payout-destinations (POST)",
+      "/:destination_id/proof-of-control/challenges (POST)",
+      "/:destination_id/proof-of-control/verify (POST)",
+    ]) {
+      expect(routePaths).toContain(expected);
+    }
+    // No self-revocation, no public evaluate-use, no public limits-disclosure route — explicitly
+    // out of scope (P7 deferred; DEC-009's own authenticated-only rate-limit policy is never
+    // disclosed as a public capability). This is proven decisively by the EXACT full-tree match
+    // above (`registers EXACTLY the frozen Phase 3A-3 ... route tree`), which fails on ANY extra
+    // route, public or internal — a substring check here would be unreliable (Fastify's radix
+    // tree does not repeat the `/internal` prefix on nested child lines), so this test only
+    // re-asserts the six positive entries below via `app.inject` reachability, never guessing at
+    // negative-space string matching.
+    for (const [method, url] of [
+      ["POST", "/wlt1/wallet-destinations/wlt1dest_unknown/revoke"],
+      ["POST", "/wlt1/evaluate-use"],
+      ["GET", "/wlt1/limits"],
+      ["POST", "/wlt1/rate-limit/check"],
+    ] as const) {
+      const res = await app.inject({ method, url });
+      expect(res.statusCode, `expected 404 for ${method} ${url}`).toBe(404);
+    }
   });
 
   // "approve" was REMOVED from this forbidden list — Phase 4A-1 (destination whitelist
@@ -492,9 +539,11 @@ describe("WLT-01 service app (no DB) — Phase 1B scaffold", () => {
         "req.body.decision_token",
         "req.body.account_identifier",
         "req.body.beneficiary_name",
+        // Public Client Surface — the raw client bearer token must never reach any log line.
+        "req.headers.authorization",
       ]),
     );
-    expect(WLT1_LOG_REDACT_PATHS).toHaveLength(7);
+    expect(WLT1_LOG_REDACT_PATHS).toHaveLength(8);
   });
 
   it("WLT1_LOG_REDACT_PATHS includes the Phase 4A-1 decision-token body field (never logged)", () => {

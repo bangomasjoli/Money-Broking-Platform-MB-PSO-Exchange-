@@ -85,6 +85,14 @@ export async function registerRequestContext(app: FastifyInstance): Promise<void
     const unified = normalize(err);
     // Never log request/response bodies here — only the stable code (no secrets).
     request.log.warn({ code: unified.code }, "request_failed");
+    // Public Client Surface: a genuine FND-01 rate-limit exceed (`checkPublicRateLimit`) throws
+    // the shared foundation RATE_LIMITED with `details: [{ field: "retry_after_seconds", issue:
+    // "<n>" }]` — surface it as the standard Retry-After header too, mirroring FND-01's own
+    // `/foundation/rate-limit/check` route's identical convention.
+    if (unified.code === "RATE_LIMITED") {
+      const retryAfter = unified.details.find((d) => d.field === "retry_after_seconds")?.issue;
+      if (retryAfter) void reply.header("Retry-After", retryAfter);
+    }
     return reply.code(unified.http).send(unifiedErrorEnvelope(unified, meta(request)));
   });
 

@@ -21,6 +21,11 @@ const base = {
   AML1_BASE_URL: "http://localhost:8088",
   AML1_INTERNAL_SERVICE_TOKEN: "aml1-internal-token-123",
   WLT1_FIAT_ENC_KEY: "test-fiat-enc-key-at-least-32-characters-long",
+  IAM_BASE_URL: "http://localhost:8081",
+  IAM_INTROSPECTION_SERVICE_TOKEN: "iam-introspection-token-123",
+  FND_BASE_URL: "http://localhost:8080",
+  FND_RATE_LIMIT_CONSUMER_TOKEN: "fnd-ratelimit-consumer-token-123",
+  WLT1_PUBLIC_DESTINATION_LIST_MAX: "100",
 };
 
 describe("WLT-01 config loader fail-closed", () => {
@@ -880,5 +885,69 @@ describe("WLT-01 Stuck-Screening Operational Closure config", () => {
     const cfg = loadWlt1Config(base) as unknown as Record<string, unknown>;
     const stuckScreeningKeys = Object.keys(cfg).filter((k) => k.toLowerCase().includes("stuckscreening") || k.toLowerCase().includes("stuck_screening"));
     expect(stuckScreeningKeys).toEqual(["stuckScreeningThresholdSeconds"]);
+  });
+});
+
+// -------------------------------------------------------------------------------------------
+// Public Client Surface — IAM_BASE_URL/IAM_INTROSPECTION_SERVICE_TOKEN,
+// FND_BASE_URL/FND_RATE_LIMIT_CONSUMER_TOKEN, WLT1_PUBLIC_DESTINATION_LIST_MAX.
+// -------------------------------------------------------------------------------------------
+describe("WLT-01 config loader — Public Client Surface", () => {
+  it("loads a valid config with the new public-surface fields carried through", () => {
+    const cfg = loadWlt1Config(base);
+    expect(cfg.iamBaseUrl).toBe("http://localhost:8081");
+    expect(cfg.iamIntrospectionServiceToken).toBe("iam-introspection-token-123");
+    expect(cfg.fndBaseUrl).toBe("http://localhost:8080");
+    expect(cfg.fndRateLimitConsumerToken).toBe("fnd-ratelimit-consumer-token-123");
+    expect(cfg.publicDestinationListMax).toBe(100);
+  });
+
+  it("fails closed when IAM_BASE_URL is missing or blank", () => {
+    expect(() => loadWlt1Config({ ...base, IAM_BASE_URL: undefined })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, IAM_BASE_URL: "   " })).toThrowError(AppError);
+  });
+
+  it("fails closed when IAM_INTROSPECTION_SERVICE_TOKEN is missing or blank", () => {
+    expect(() => loadWlt1Config({ ...base, IAM_INTROSPECTION_SERVICE_TOKEN: undefined })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, IAM_INTROSPECTION_SERVICE_TOKEN: "   " })).toThrowError(AppError);
+  });
+
+  it("fails closed when FND_BASE_URL is missing or blank", () => {
+    expect(() => loadWlt1Config({ ...base, FND_BASE_URL: undefined })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, FND_BASE_URL: "   " })).toThrowError(AppError);
+  });
+
+  it("fails closed when FND_RATE_LIMIT_CONSUMER_TOKEN is missing or blank", () => {
+    expect(() => loadWlt1Config({ ...base, FND_RATE_LIMIT_CONSUMER_TOKEN: undefined })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, FND_RATE_LIMIT_CONSUMER_TOKEN: "   " })).toThrowError(AppError);
+  });
+
+  it("WLT1_PUBLIC_DESTINATION_LIST_MAX is REQUIRED — no default exists (deliberately unlike every other WLT-01 bounded-integer config)", () => {
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: undefined })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "   " })).toThrowError(AppError);
+  });
+
+  it("WLT1_PUBLIC_DESTINATION_LIST_MAX fails closed on zero, negative, non-integer, non-numeric", () => {
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "0" })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "-1" })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "2.5" })).toThrowError(AppError);
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "not-a-number" })).toThrowError(AppError);
+  });
+
+  it("WLT1_PUBLIC_DESTINATION_LIST_MAX accepts any positive integer, with no implicit upper bound imposed by the loader itself", () => {
+    expect(loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "1" }).publicDestinationListMax).toBe(1);
+    expect(loadWlt1Config({ ...base, WLT1_PUBLIC_DESTINATION_LIST_MAX: "500" }).publicDestinationListMax).toBe(500);
+  });
+
+  it("the thrown error's details never echo IAM_INTROSPECTION_SERVICE_TOKEN or FND_RATE_LIMIT_CONSUMER_TOKEN values", () => {
+    try {
+      loadWlt1Config({ ...base, IAM_BASE_URL: undefined });
+      throw new Error("should have thrown");
+    } catch (e) {
+      const err = e as AppError;
+      const detailsText = JSON.stringify(err.details);
+      expect(detailsText).not.toContain(base.IAM_INTROSPECTION_SERVICE_TOKEN);
+      expect(detailsText).not.toContain(base.FND_RATE_LIMIT_CONSUMER_TOKEN);
+    }
   });
 });

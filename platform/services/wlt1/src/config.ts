@@ -196,6 +196,38 @@
  *     fail-closed pattern as every other WLT-01 bounded-integer config: absent -> the stated
  *     default; present -> must parse as a positive integer within the stated inclusive range, or
  *     startup fails closed (`CONFIGURATION_INVALID`). Default 5000, range 1-50000.
+ *
+ * PUBLIC CLIENT SURFACE additions — the six-route public `/wlt1/*` client surface (WLT-01
+ * BLOCKER-1 + BLOCKER-2 both SATISFIED; FND-FIND-001 HIGH remains OPEN — internet exposure
+ * remains PROHIBITED pending that separate control):
+ *
+ *   - `IAM_BASE_URL` / `IAM_INTROSPECTION_SERVICE_TOKEN` — WLT-01's first IAM-01 dependency
+ *     (`lib/iam-client.ts`), used by the public-auth preHandler to resolve a client bearer token
+ *     into an authenticated `user_id`/`user_class` via `POST /internal/auth/session/validate`.
+ *     Named after the DEPENDENCY (IAM-01's own service directory is `services/iam`, no numeral —
+ *     mirrors `CLT1_BASE_URL`/`IAM2_BASE_URL`/`AML1_BASE_URL`'s own "named after the dependency,
+ *     not the caller" convention) — NOT `WLT1_IAM_*`. `IAM_INTROSPECTION_SERVICE_TOKEN` is WLT's
+ *     own copy of the EXACT dedicated capability secret value IAM-01 itself is configured with
+ *     (`services/iam/src/config.ts`'s own `IAM_INTROSPECTION_SERVICE_TOKEN`) — reusing IAM-01's
+ *     own variable name verbatim (not a WLT-local rename) because it IS the same shared secret,
+ *     mirroring `CLT1_INTERNAL_SERVICE_TOKEN`'s identical "shared secret named after the
+ *     dependency's own guard" precedent. Both required; missing/blank fails startup closed. Never
+ *     logged.
+ *   - `FND_BASE_URL` / `FND_RATE_LIMIT_CONSUMER_TOKEN` — WLT-01's first FND-01 rate-limit-engine
+ *     dependency (`lib/fnd-rate-limit-client.ts`), used by the public-auth preHandler's
+ *     rate-limit check (`POST /foundation/rate-limit/check`) — called AFTER authentication/
+ *     authority resolution, BEFORE any mutating business operation or idempotency reservation
+ *     (frozen ordering, DEC-009). `FND_RATE_LIMIT_CONSUMER_TOKEN` MUST be the exact value
+ *     configured as the `"WLT-01"` entry in FND-01's own `FND_RATE_LIMIT_CONSUMER_SECRETS` map
+ *     (`services/fnd/src/config.ts`) — NEVER FND's generic `INTERNAL_SERVICE_TOKEN`, which the
+ *     rate-limit-check route's own dedicated guard does not accept. Both required; missing/blank
+ *     fails startup closed. Never logged.
+ *   - `WLT1_PUBLIC_DESTINATION_LIST_MAX` — the hard server-side ceiling on `GET
+ *     /wlt1/destinations`'s page size. REQUIRED (no unsafe default — a public list route with an
+ *     implicit unbounded page size is a genuine resource-exhaustion risk, unlike every other
+ *     WLT-01 bounded-integer config above, which all default). A caller-requested `limit` may only
+ *     LOWER this ceiling, never raise it (`effective = min(caller ?? this, this)`). Must parse as
+ *     a positive integer, or startup fails closed.
  */
 import { AppError, loadConfig, type AppConfig, type RawEnv } from "@aix/foundation";
 import { isKnownWalletAnalyticsProviderId } from "./lib/providers/registry.js";
@@ -307,6 +339,35 @@ export interface Wlt1Config extends AppConfig {
    * precedent exactly — default 900, hard floor 300 (below-floor fails startup closed), no upper
    * bound (mirrors AML-01, which has none either). */
   stuckScreeningThresholdSeconds: number;
+  /** Public Client Surface — base URL of IAM-01's HTTP surface. Public-auth preHandler dependency
+   * (`lib/iam-client.ts`). */
+  iamBaseUrl: string;
+  /** Public Client Surface — WLT-01's own copy of IAM-01's dedicated introspection capability
+   * secret. Never logged. */
+  iamIntrospectionServiceToken: string;
+  /**
+   * Test-only dependency-injection seam for lib/iam-client.ts (never populated from env) — lets
+   * tests stub the IAM-01 introspection HTTP call instead of requiring a live IAM-01 service.
+   * Mirrors `clt1FetchImpl`/`iam2FetchImpl`/`aml1FetchImpl` exactly.
+   */
+  iamFetchImpl?: typeof fetch;
+  /** Public Client Surface — base URL of FND-01's HTTP surface. Public-auth preHandler dependency
+   * (`lib/fnd-rate-limit-client.ts`). */
+  fndBaseUrl: string;
+  /** Public Client Surface — WLT-01's own copy of the `"WLT-01"` entry in FND-01's
+   * `FND_RATE_LIMIT_CONSUMER_SECRETS` map. NEVER FND's generic internal-service token. Never
+   * logged. */
+  fndRateLimitConsumerToken: string;
+  /**
+   * Test-only dependency-injection seam for lib/fnd-rate-limit-client.ts (never populated from
+   * env) — lets tests stub the FND-01 rate-limit-check HTTP call instead of requiring a live
+   * FND-01 service. Mirrors `clt1FetchImpl`/`iam2FetchImpl`/`aml1FetchImpl`/`iamFetchImpl`
+   * exactly.
+   */
+  fndFetchImpl?: typeof fetch;
+  /** Public Client Surface — hard server-side ceiling on `GET /wlt1/destinations`'s page size.
+   * REQUIRED, no default. See this file's own Public Client Surface header comment. */
+  publicDestinationListMax: number;
 }
 
 const DEFAULT_SCREENING_MAX_VALIDITY_HOURS = 720;
@@ -426,6 +487,16 @@ function parsePositiveIntOverride(raw: string | undefined, fallback: number): nu
   return parsed;
 }
 
+/** Same positive-integer parsing as `parsePositiveIntOverride`, but with NO default — absence
+ * itself is `null` (a config error), not a fallback value. See `WLT1_PUBLIC_DESTINATION_LIST_MAX`'s
+ * own header comment for why this one field deliberately has no safe default. */
+function parseRequiredPositiveInt(raw: string | undefined): number | null {
+  if (raw === undefined || raw === "") return null;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
 export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
   const wlt1InternalServiceToken = env.WLT1_INTERNAL_SERVICE_TOKEN?.trim();
   const clt1BaseUrl = env.CLT1_BASE_URL?.trim();
@@ -453,6 +524,15 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
   const fiatVerificationRequired = fiatVerificationRequiredRaw === undefined || fiatVerificationRequiredRaw === "" ? true : fiatVerificationRequiredRaw === "true";
   const evidenceExportMaxRecords = parsePositiveIntOverride(env.WLT1_EVIDENCE_EXPORT_MAX_RECORDS, DEFAULT_EVIDENCE_EXPORT_MAX_RECORDS);
   const stuckScreeningThresholdSeconds = parsePositiveIntOverride(env.WLT1_STUCK_SCREENING_THRESHOLD_SECONDS, DEFAULT_STUCK_SCREENING_THRESHOLD_SECONDS);
+  const iamBaseUrl = env.IAM_BASE_URL?.trim();
+  const iamIntrospectionServiceToken = env.IAM_INTROSPECTION_SERVICE_TOKEN?.trim();
+  const fndBaseUrl = env.FND_BASE_URL?.trim();
+  const fndRateLimitConsumerToken = env.FND_RATE_LIMIT_CONSUMER_TOKEN?.trim();
+  // No default (Option-B fail-closed pattern does not apply here) — see this file's own Public
+  // Client Surface header comment: an implicit unbounded default page size is unsafe for a public
+  // list route, so absence itself is a config error, not a "use the default" case.
+  const publicDestinationListMaxRaw = env.WLT1_PUBLIC_DESTINATION_LIST_MAX?.trim();
+  const publicDestinationListMax = parseRequiredPositiveInt(publicDestinationListMaxRaw);
 
   // Reuse the foundation loader's fail-closed validation (presence/length/ENVIRONMENT/
   // DATABASE_URL/PORT) by feeding it WLT-01's own token under the shared field name. A
@@ -568,6 +648,13 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
   } else if (stuckScreeningThresholdSeconds < STUCK_SCREENING_THRESHOLD_SECONDS_FLOOR) {
     problems.push(`WLT1_STUCK_SCREENING_THRESHOLD_SECONDS must be at least ${STUCK_SCREENING_THRESHOLD_SECONDS_FLOOR} seconds`);
   }
+  if (!iamBaseUrl) problems.push("IAM_BASE_URL is required (WLT-01 -> IAM-01 introspection dependency)");
+  if (!iamIntrospectionServiceToken) problems.push("IAM_INTROSPECTION_SERVICE_TOKEN is required (shared secret with IAM-01's own introspection seam)");
+  if (!fndBaseUrl) problems.push("FND_BASE_URL is required (WLT-01 -> FND-01 rate-limit-engine dependency)");
+  if (!fndRateLimitConsumerToken) problems.push("FND_RATE_LIMIT_CONSUMER_TOKEN is required (WLT-01's own entry in FND_RATE_LIMIT_CONSUMER_SECRETS)");
+  if (publicDestinationListMax === null) {
+    problems.push("WLT1_PUBLIC_DESTINATION_LIST_MAX is required and must be a positive integer");
+  }
   problems.push(...providerReceiptSecretProblems);
   // Production boot guard (Phase 2C-D1): the receipt route is always registered once this phase
   // ships (no feature flag) — a prod boot with no valid secret for the currently-active screening
@@ -611,5 +698,10 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
     fiatVerificationRequired,
     evidenceExportMaxRecords: evidenceExportMaxRecords as number,
     stuckScreeningThresholdSeconds: stuckScreeningThresholdSeconds as number,
+    iamBaseUrl: iamBaseUrl as string,
+    iamIntrospectionServiceToken: iamIntrospectionServiceToken as string,
+    fndBaseUrl: fndBaseUrl as string,
+    fndRateLimitConsumerToken: fndRateLimitConsumerToken as string,
+    publicDestinationListMax: publicDestinationListMax as number,
   };
 }

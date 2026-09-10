@@ -77,3 +77,74 @@ export async function checkClientStatus(config: Clt1ClientConfig, clientId: stri
   }
   return { eligible: true, status };
 }
+
+// -------------------------------------------------------------------------------------------
+// Public Client Surface — Authenticated Principal -> Client Membership Authority
+// (`GET /internal/clt1/principals/:iam_user_id/client-memberships`, CLT-01 accepted seam).
+// -------------------------------------------------------------------------------------------
+
+/** Bounded so a hung/slow CLT-01 can never block the public-auth chain indefinitely. */
+const CLT1_MEMBERSHIP_CLIENT_TIMEOUT_MS = 5000;
+
+export interface ClientMembership {
+  clientId: string;
+  authorisedUserId: string;
+  role: string;
+  membershipStatus: string;
+  clientStatus: string;
+}
+
+/**
+ * FAIL-CLOSED, always: a network error, a timeout, a non-2xx response, or a malformed/
+ * unparseable response body all resolve to `{ available: false }` (CLT-01 unavailable) — NEVER
+ * silently treated as "no memberships". `{ available: true, memberships: [] }` is the genuine
+ * "authenticated but zero eligible client authority" outcome (mirrors the CLT-01 route's own
+ * "never a client/membership-existence oracle" contract — every no-authority state is 200 +
+ * empty array on the CLT-01 side, not distinguishable from each other, and this client passes
+ * that same observational-identity property straight through).
+ */
+export type MembershipResolutionResult = { available: true; memberships: ClientMembership[] } | { available: false };
+
+interface MembershipResponseBody {
+  success: boolean;
+  data?: { iam_user_id?: string; memberships?: Array<{ client_id?: string; authorised_user_id?: string; role?: string; membership_status?: string; client_status?: string }> };
+}
+
+export async function resolveClientMemberships(config: Clt1ClientConfig, iamUserId: string): Promise<MembershipResolutionResult> {
+  const doFetch = config.fetchImpl ?? fetch;
+  let res: Response;
+  try {
+    res = await doFetch(`${config.baseUrl}/internal/clt1/principals/${encodeURIComponent(iamUserId)}/client-memberships`, {
+      method: "GET",
+      headers: { "x-internal-service-token": config.internalServiceToken },
+      signal: AbortSignal.timeout(CLT1_MEMBERSHIP_CLIENT_TIMEOUT_MS),
+    });
+  } catch {
+    return { available: false };
+  }
+
+  if (!res.ok) {
+    return { available: false };
+  }
+
+  let body: MembershipResponseBody;
+  try {
+    body = (await res.json()) as MembershipResponseBody;
+  } catch {
+    return { available: false };
+  }
+  if (!body?.success || !Array.isArray(body.data?.memberships)) {
+    return { available: false };
+  }
+
+  const memberships: ClientMembership[] = [];
+  for (const m of body.data.memberships) {
+    if (typeof m.client_id !== "string" || typeof m.authorised_user_id !== "string" || typeof m.role !== "string" || typeof m.membership_status !== "string" || typeof m.client_status !== "string") {
+      // A malformed individual entry makes the whole response untrustworthy — fail closed on the
+      // entire call rather than silently dropping one row and proceeding on a partial list.
+      return { available: false };
+    }
+    memberships.push({ clientId: m.client_id, authorisedUserId: m.authorised_user_id, role: m.role, membershipStatus: m.membership_status, clientStatus: m.client_status });
+  }
+  return { available: true, memberships };
+}

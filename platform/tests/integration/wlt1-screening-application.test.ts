@@ -77,6 +77,11 @@ function testWlt1Config(overrides: Record<string, string | undefined> = {}) {
     AML1_INTERNAL_SERVICE_TOKEN: "d".repeat(40),
     WLT1_FIAT_ENC_KEY: "e".repeat(40),
     WLT1_SCREENING_MAX_VALIDITY_HOURS: String(SCREENING_MAX_VALIDITY_HOURS),
+    IAM_BASE_URL: "http://localhost:8081",
+    IAM_INTROSPECTION_SERVICE_TOKEN: "f".repeat(40),
+    FND_BASE_URL: "http://localhost:8080",
+    FND_RATE_LIMIT_CONSUMER_TOKEN: "g".repeat(40),
+    WLT1_PUBLIC_DESTINATION_LIST_MAX: "100",
     ...overrides,
   });
 }

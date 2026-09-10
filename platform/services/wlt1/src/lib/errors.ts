@@ -248,6 +248,43 @@
  *     its pending age has not yet reached the configured threshold, or the authoritative
  *     `destination_id` cross-check failed. Never conflated with `NOT_FOUND` — a known row in the
  *     wrong state is always this code, never a 404.
+ *
+ * PUBLIC CLIENT SURFACE — exactly THREE codes added, all with a reachable throw site in the new
+ * `plugins/public-auth.ts` preHandler shared by all six public `/wlt1/*` routes. Reconciled
+ * against the existing shared foundation catalogue first (`@aix/foundation`'s `FND_ERROR_CODES`)
+ * — the frozen architecture's own proposed `PUBLIC_RATE_LIMITED` name is deliberately NOT added
+ * here: the shared `RATE_LIMITED` (429) and `RATE_LIMIT_UNAVAILABLE` (503) codes already carry
+ * the exact required semantics (genuine quota exceed vs. enforcement-indeterminate), so a WLT
+ * -local duplicate would be redundant — every public route reuses `AppError("RATE_LIMITED")` /
+ * `AppError("RATE_LIMIT_UNAVAILABLE")` directly instead. Similarly, CLT-01 membership-resolution
+ * unavailability reuses the EXISTING `WLT1_CLT1_UNAVAILABLE` above (same dependency, same failure
+ * semantics, same corrective action as the pre-existing client-status check) rather than a new
+ * code:
+ *
+ *   - WLT1_AUTH_REQUIRED             — no bearer token was presented, IAM-01 introspection
+ *     returned `valid:false` (or any collapsed-negative outcome), or the token is otherwise
+ *     rejected. Distinct from the shared `SERVICE_IDENTITY_REQUIRED` (401) — that code's own
+ *     message ("Internal service identity required") is internal-caller-shaped and would be
+ *     confusing on a public client-facing route; this is WLT-01's own client-facing equivalent,
+ *     mirroring IAM-01's own `AUTH_SESSION_REQUIRED` naming spirit (WLT cannot import IAM-01's
+ *     error catalogue — F3(c) — so this is a fresh, WLT-prefixed copy of the same concept).
+ *   - WLT1_CLIENT_AUTHORITY_REQUIRED — the caller is genuinely authenticated (a valid IAM-01
+ *     session) but has no eligible client authority for this request: `user_class` is not
+ *     `client`/`client_approver`, no active CLT-01 membership resolves for the introspected
+ *     `user_id`, more than one eligible membership resolves and no (or a non-matching)
+ *     `X-AIX-Client-Id` narrowing header was supplied to disambiguate, or a supplied
+ *     `X-AIX-Client-Id` does not match any membership the caller actually holds. Deliberately one
+ *     generic code for every one of these — never a state-specific reason that would let a caller
+ *     enumerate which membership(s) exist. 403, not 401 — the caller IS authenticated, it simply
+ *     lacks authority for this specific client-scoped action.
+ *   - WLT1_IAM01_UNAVAILABLE          — IAM-01's introspection call itself failed: timeout,
+ *     network error, a non-200/non-401 response, or a malformed/unparseable response body/missing
+ *     field. Mirrors every other WLT-01 dependency's own identical `<DEP>_UNAVAILABLE` naming
+ *     precedent (`WLT1_CLT1_UNAVAILABLE`/`WLT1_IAM2_UNAVAILABLE`/`WLT1_AML_GATE_UNAVAILABLE`) —
+ *     WLT-01's first IAM-01 integration. Deliberately distinct from `WLT1_AUTH_REQUIRED` — an
+ *     indeterminate IAM-01 outcome must never be treated as "not authenticated" (which a public
+ *     caller could not distinguish from a genuinely invalid token) or as authenticated; it is its
+ *     own fail-closed 503.
  */
 import type { ErrorDetail } from "@aix/foundation";
 
@@ -292,6 +329,9 @@ export const WLT1_ERROR_CODES = {
   WLT1_INBOUND_TRANSFER_CONFLICT: { http: 409, message: "This inbound transfer reference is already associated with a different source address." },
   WLT1_STUCK_SCREENING_NOT_FOUND: { http: 404, message: "Stuck screening not found." },
   WLT1_STUCK_SCREENING_INVALID_STATE: { http: 409, message: "This screening is not eligible for stuck-screening recovery." },
+  WLT1_AUTH_REQUIRED: { http: 401, message: "Authentication required." },
+  WLT1_CLIENT_AUTHORITY_REQUIRED: { http: 403, message: "No eligible client authority for this request." },
+  WLT1_IAM01_UNAVAILABLE: { http: 503, message: "IAM-01 could not be reached." },
 } as const satisfies Record<string, Wlt1ErrorSpec>;
 
 export type Wlt1ErrorCode = keyof typeof WLT1_ERROR_CODES;

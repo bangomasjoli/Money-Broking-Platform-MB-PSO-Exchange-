@@ -76,6 +76,11 @@ const config: Wlt1Config = {
   fiatVerificationRequired: true,
   evidenceExportMaxRecords: 5000,
   stuckScreeningThresholdSeconds: 300,
+  iamBaseUrl: "http://127.0.0.1:0",
+  iamIntrospectionServiceToken: "test-iam-introspection-token-it",
+  fndBaseUrl: "http://127.0.0.1:0",
+  fndRateLimitConsumerToken: "test-fnd-ratelimit-token-it",
+  publicDestinationListMax: 100,
 };
 
 const INTERNAL_HEADERS = { "x-internal-service-token": config.wlt1InternalServiceToken };
@@ -2101,7 +2106,7 @@ describe("WLT-01 Phase 1B integration", () => {
 
   // -----------------------------------------------------------------------------------------
   describe("error inventory — every WLT1 code has a reachable, tested throw site (cross-check against this file's own tests)", () => {
-    it("exactly 35 WLT1 error codes are catalogued (Phase 2C-B added WLT1_DESTINATION_INVALID_STATE, WLT1_VENDOR_RESULT_INVALID; Phase 2C-D2 added WLT1_RECEIPT_CONFLICT; Phase 2C-D3A added WLT1_RECEIPT_STALE; Phase 3A-2 added WLT1_POC_UNSUPPORTED; Phase 3A-3 added WLT1_POC_CHALLENGE_NOT_FOUND/WLT1_POC_CHALLENGE_EXPIRED/WLT1_POC_CHALLENGE_INVALID_STATE/WLT1_PROOF_OF_CONTROL_FAILED, all reachable from tests/integration/wlt1-poc-verify-route.test.ts's own state-machine/crypto-negative tests; TRON added none in Phase 3B; Phase 4A-1 added exactly THREE — WLT1_DESTINATION_APPROVAL_INVALID_STATE/WLT1_APPROVAL_REQUIRED/WLT1_IAM2_UNAVAILABLE, all reachable from tests/integration/wlt1-destination-approval-route.test.ts; Phase 4A-2 added exactly ONE — WLT1_AML_GATE_UNAVAILABLE, reachable from tests/integration/wlt1-evaluate-use-route.test.ts; Destination Revocation added none; Ongoing Rescreening added exactly ONE — WLT1_RESCREENING_RUN_ACTIVE, reachable from tests/integration/wlt1-rescreening-route.test.ts; Fiat Payout Destinations (APAC) added exactly THREE — WLT1_ACCOUNT_IDENTIFIER_INVALID/WLT1_FIAT_RAIL_NOT_SUPPORTED (both reachable from tests/integration/wlt1-payout-destination-route.test.ts) /WLT1_BENEFICIARY_VERIFICATION_UNAVAILABLE (catalogued, reserved — the assess route's own 'both domains failed' case reuses the existing WLT1_SERVICE_UNAVAILABLE per the frozen architecture, see lib/errors.ts's own header comment); Sensitive Read Logging added exactly ONE — WLT1_SENSITIVE_READ_LOG_REQUIRED, reachable from tests/integration/wlt1-sensitive-read-route.test.ts and tests/integration/wlt1-sensitive-read-failclosed-private.test.ts; Evidence Export added exactly THREE — WLT1_EVIDENCE_EXPORT_SCOPE_INVALID/WLT1_EVIDENCE_EXPORT_NOT_FOUND/WLT1_EVIDENCE_EXPORT_LOG_REQUIRED, reachable from tests/integration/wlt1-evidence-export-route.test.ts and tests/integration/wlt1-evidence-export-failclosed-private.test.ts; Inbound-Source Screening added exactly TWO — WLT1_INBOUND_SCREENING_UNAVAILABLE/WLT1_INBOUND_TRANSFER_CONFLICT, reachable from tests/integration/wlt1-inbound-source-screening-route.test.ts and tests/integration/wlt1-inbound-source-failclosed-private.test.ts; Stuck-Screening Operational Closure added exactly TWO — WLT1_STUCK_SCREENING_NOT_FOUND/WLT1_STUCK_SCREENING_INVALID_STATE, reachable from tests/integration/wlt1-stuck-screening-route.test.ts and tests/integration/wlt1-stuck-screening-failclosed-private.test.ts)", async () => {
+    it("exactly 38 WLT1 error codes are catalogued (35 pre-existing through Stuck-Screening Operational Closure, plus exactly THREE Public Client Surface additions — WLT1_AUTH_REQUIRED/WLT1_CLIENT_AUTHORITY_REQUIRED/WLT1_IAM01_UNAVAILABLE, all reachable from plugins/public-auth.ts)", async () => {
       const { WLT1_ERROR_CODES } = await import("../../services/wlt1/src/lib/errors.js");
       expect(Object.keys(WLT1_ERROR_CODES).sort()).toEqual(
         [
@@ -2140,6 +2145,15 @@ describe("WLT-01 Phase 1B integration", () => {
           "WLT1_INBOUND_TRANSFER_CONFLICT",
           "WLT1_STUCK_SCREENING_NOT_FOUND",
           "WLT1_STUCK_SCREENING_INVALID_STATE",
+          // Public Client Surface (WLT-01 BLOCKER-1 + BLOCKER-2 both SATISFIED) added exactly
+          // THREE — WLT1_AUTH_REQUIRED/WLT1_CLIENT_AUTHORITY_REQUIRED/WLT1_IAM01_UNAVAILABLE, all
+          // reachable from plugins/public-auth.ts's own preHandler. The frozen architecture's own
+          // proposed PUBLIC_RATE_LIMITED name was deliberately NOT added — the shared foundation
+          // RATE_LIMITED/RATE_LIMIT_UNAVAILABLE codes already carry the exact required semantics
+          // (see lib/errors.ts's own Public Client Surface header comment).
+          "WLT1_AUTH_REQUIRED",
+          "WLT1_CLIENT_AUTHORITY_REQUIRED",
+          "WLT1_IAM01_UNAVAILABLE",
         ].sort(),
       );
     });

@@ -17,6 +17,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { closePool, getPool, initPool } from "@aix/foundation";
 import { buildApp } from "../../services/wlt1/src/server.js";
+import { canonicalizeAixSignature } from "../../services/wlt1/src/lib/proof-of-control/crypto.js";
 import type { Wlt1Config } from "../../services/wlt1/src/config.js";
 
 const TEST_DB = process.env.TEST_DATABASE_URL;
@@ -187,6 +188,9 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
       await getPool().query(`DELETE FROM wlt1.proof_of_control WHERE client_id IN ($1,$2,$3)`, [CLIENT_A, CLIENT_B, CLIENT_C]);
       await getPool().query(`DELETE FROM wlt1.address_integrity_check WHERE client_id IN ($1,$2,$3)`, [CLIENT_A, CLIENT_B, CLIENT_C]);
       await getPool().query(`DELETE FROM wlt1.wallet_destination WHERE destination_id IN (SELECT destination_id FROM wlt1.destination WHERE client_id IN ($1,$2,$3))`, [CLIENT_A, CLIENT_B, CLIENT_C]);
+      await getPool().query(`DELETE FROM wlt1.beneficiary_verification WHERE destination_id IN (SELECT destination_id FROM wlt1.destination WHERE client_id IN ($1,$2,$3))`, [CLIENT_A, CLIENT_B, CLIENT_C]);
+      await getPool().query(`DELETE FROM wlt1.fiat_screening_result WHERE destination_id IN (SELECT destination_id FROM wlt1.destination WHERE client_id IN ($1,$2,$3))`, [CLIENT_A, CLIENT_B, CLIENT_C]);
+      await getPool().query(`DELETE FROM wlt1.fiat_payout_destination WHERE destination_id IN (SELECT destination_id FROM wlt1.destination WHERE client_id IN ($1,$2,$3))`, [CLIENT_A, CLIENT_B, CLIENT_C]);
       await getPool().query(`DELETE FROM wlt1.destination WHERE client_id IN ($1,$2,$3)`, [CLIENT_A, CLIENT_B, CLIENT_C]);
       await getPool().query(`DELETE FROM foundation.idempotency_record WHERE actor_id IN ($1,$2,$3)`, [IAM_USER_A, IAM_USER_B, IAM_USER_MULTI]);
     }
@@ -303,12 +307,13 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
       fndOutcome = "allow";
     });
 
-    it("FND 503/unavailable -> public 503 RATE_LIMIT_UNAVAILABLE, never 429", async () => {
+    it("FND 503/unavailable -> public 503 WLT1_SERVICE_UNAVAILABLE (DEC-009: internal RATE_LIMIT_UNAVAILABLE never leaks to a public caller), never 429", async () => {
       if (!schemaReady) return;
       fndOutcome = "unavailable";
       const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: authHeaders(BEARER_A) });
       expect(res.statusCode).toBe(503);
-      expect(res.json().error.code).toBe("RATE_LIMIT_UNAVAILABLE");
+      expect(res.json().error.code).toBe("WLT1_SERVICE_UNAVAILABLE");
+      expect(res.json().error.code).not.toBe("RATE_LIMIT_UNAVAILABLE");
       fndOutcome = "allow";
     });
 
@@ -427,6 +432,229 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
         payload: { label: "my wallet", chain: "ethereum", network: "mainnet", address: "0x444444444444444444444444444444444444444a", wallet_type: "unhosted", beneficiary_relationship: "self" },
       });
       expect(res.statusCode).toBe(400);
+    });
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // W6.A — bidirectional auth-channel separation, committed as a regression (previously only
+  // verified ad hoc). The internal `/internal/wlt1/*` surface and the public `/wlt1/*` surface
+  // authenticate via two structurally different, non-interchangeable channels.
+  // -------------------------------------------------------------------------------------------
+  describe("auth-channel separation (W6.A)", () => {
+    it("the internal service-identity token presented via its OWN header (x-internal-service-token) does not authenticate a public route — public routes only ever read Authorization", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "GET",
+        url: "/wlt1/destinations",
+        headers: { "x-internal-service-token": config.wlt1InternalServiceToken },
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().error.code).toBe("WLT1_AUTH_REQUIRED");
+    });
+
+    it("the internal service-identity token presented AS a Bearer token does not authenticate a public route", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "GET",
+        url: "/wlt1/destinations",
+        headers: authHeaders(config.wlt1InternalServiceToken),
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().error.code).toBe("WLT1_AUTH_REQUIRED");
+    });
+
+    it("a genuine public client Bearer token does not authenticate an internal route", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "GET",
+        url: "/internal/wlt1/wallet-destinations/wlt1dest_unknown",
+        headers: { "x-internal-service-token": BEARER_A },
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().error.code).toBe("SERVICE_IDENTITY_REQUIRED");
+    });
+
+    it("a genuine public client Bearer token presented via its OWN header is REJECTED by an internal route (the internal guard never reads Authorization)", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "GET",
+        url: "/internal/wlt1/wallet-destinations/wlt1dest_unknown",
+        headers: authHeaders(BEARER_A),
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().error.code).toBe("SERVICE_IDENTITY_REQUIRED");
+    });
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // W1 — public wallet registration produces the SAME address-integrity evidence class as the
+  // already-accepted internal route (blueprint High severity, WLT1-RISK-018): a persisted
+  // `wlt1.address_integrity_check` row and a published `wlt1.address_integrity_checked` audit
+  // event, on BOTH the success path and the pre-transaction refusal path.
+  // -------------------------------------------------------------------------------------------
+  describe("address-integrity evidence (W1)", () => {
+    // Proven-valid EIP-55 checksum address (== ETH_VALID_1 in wlt1-db.test.ts), registered here
+    // under CLIENT_C (via the multi-membership bearer) — CLIENT_C has not registered it elsewhere
+    // in this file, so this is a genuine fresh success case that actually exercises checksum
+    // validation (never an all-lowercase address that trivially bypasses EIP-55).
+    const FRESH_VALID_ADDRESS = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed";
+    const BAD_CHECKSUM_ADDRESS = FRESH_VALID_ADDRESS.slice(0, -1) + (FRESH_VALID_ADDRESS.at(-1) === "d" ? "D" : "d");
+
+    it("successful registration persists a PASS address_integrity_check row and publishes wlt1.address_integrity_checked; the public response never exposes this evidence", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_MULTI, CLIENT_C, idemKey("w1-success")),
+        payload: { chain: "ethereum", network: "mainnet", address: FRESH_VALID_ADDRESS, wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(res.statusCode).toBe(201);
+      const destinationId = res.json().data.destination_id as string;
+      const data = res.json().data;
+      expect(data.address_check_id).toBeUndefined();
+      expect(data.canonical_address_hash).toBeUndefined();
+      expect(data.raw_address_hash).toBeUndefined();
+
+      const checkRows = await getPool().query(
+        `SELECT address_check_id, client_id, result_status, reason_code, checksum_valid, canonical_address_hash, canonicalisation_version
+           FROM wlt1.address_integrity_check WHERE destination_id = $1`,
+        [destinationId],
+      );
+      expect(checkRows.rows).toHaveLength(1);
+      const check = checkRows.rows[0] as {
+        address_check_id: string; client_id: string; result_status: string; reason_code: string; checksum_valid: boolean; canonical_address_hash: string; canonicalisation_version: string;
+      };
+      expect(check.client_id).toBe(CLIENT_C);
+      expect(check.result_status).toBe("pass");
+      expect(check.reason_code).toBe("canonicalisation_succeeded");
+      expect(check.checksum_valid).toBe(true);
+      expect(check.canonical_address_hash).toBeTruthy();
+      expect(check.canonicalisation_version).toBeTruthy();
+
+      const eventRows = await getPool().query(
+        `SELECT event_type FROM foundation.outbox_event WHERE event_type = 'wlt1.address_integrity_checked' AND (payload_ref::jsonb ->> 'entity_id') = $1`,
+        [check.address_check_id],
+      );
+      expect(eventRows.rows).toHaveLength(1);
+    });
+
+    it("address canonicalisation failure records FAIL refusal evidence (address_integrity_check row + BOTH wlt1.address_integrity_checked and wlt1.destination_registration_refused audit events) even though no destination was ever created", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_A, undefined, idemKey("w1-refusal")),
+        payload: { chain: "ethereum", network: "mainnet", address: BAD_CHECKSUM_ADDRESS, wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().error.code).toBe("WLT1_ADDRESS_CANONICALISATION_FAILED");
+
+      const checkRows = await getPool().query(
+        `SELECT address_check_id, destination_id, client_id, result_status, reason_code, checksum_valid
+           FROM wlt1.address_integrity_check WHERE client_id = $1 AND reason_code = 'invalid_eip55_checksum'`,
+        [CLIENT_A],
+      );
+      expect(checkRows.rows).toHaveLength(1);
+      const check = checkRows.rows[0] as { address_check_id: string; destination_id: string | null; client_id: string; result_status: string; checksum_valid: boolean };
+      expect(check.destination_id).toBeNull();
+      expect(check.result_status).toBe("fail");
+      expect(check.checksum_valid).toBe(false);
+
+      const refusalEvents = await getPool().query(
+        `SELECT event_type FROM foundation.outbox_event
+          WHERE (payload_ref::jsonb ->> 'entity_id') = $1 AND event_type IN ('wlt1.address_integrity_checked', 'wlt1.destination_registration_refused')`,
+        [check.address_check_id],
+      );
+      expect(refusalEvents.rows.map((r: { event_type: string }) => r.event_type).sort()).toEqual(
+        ["wlt1.address_integrity_checked", "wlt1.destination_registration_refused"].sort(),
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // W2 — idempotency binds actor + derived client authority, never the actor alone. Uses
+  // BEARER_MULTI (IAM_USER_MULTI, eligible in BOTH CLIENT_A and CLIENT_C) to prove a caller
+  // holding two memberships can never have one client's idempotent-replay result attributed to
+  // the other, on every public mutation that uses foundation idempotency.
+  // -------------------------------------------------------------------------------------------
+  describe("idempotency binds actor + derived client authority (W2)", () => {
+    it("wallet registration: same Idempotency-Key + same body, narrowed to a DIFFERENT client each call -> independent per-client operations, never a cross-client replay; narrowing back to the original client still replays", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const key = idemKey("w2-cross-client");
+      const payload = { chain: "ethereum", network: "mainnet", address: "0x" + "d".repeat(39) + "a", wallet_type: "unhosted" as const, beneficiary_relationship: "self" as const };
+
+      const r1 = await app.inject({ method: "POST", url: "/wlt1/wallet-destinations", headers: authHeaders(BEARER_MULTI, CLIENT_A, key), payload });
+      expect(r1.statusCode).toBe(201);
+      const destA = r1.json().data.destination_id as string;
+
+      const r2 = await app.inject({ method: "POST", url: "/wlt1/wallet-destinations", headers: authHeaders(BEARER_MULTI, CLIENT_C, key), payload });
+      expect(r2.statusCode).toBe(201);
+      const destC = r2.json().data.destination_id as string;
+
+      // The defining W2 proof: CLIENT_C's call must NOT have replayed CLIENT_A's result.
+      expect(destC).not.toBe(destA);
+
+      // Both destinations genuinely exist, each owned by its OWN client — never CLIENT_A's row
+      // returned under CLIENT_C's narrowed authority, or vice versa. The public API response
+      // never carries `client_id`, so ownership is verified directly against the DB.
+      const rows = await getPool().query(`SELECT destination_id, client_id FROM wlt1.destination WHERE destination_id IN ($1, $2)`, [destA, destC]);
+      const ownerOf = Object.fromEntries(rows.rows.map((r: { destination_id: string; client_id: string }) => [r.destination_id, r.client_id]));
+      expect(ownerOf[destA]).toBe(CLIENT_A);
+      expect(ownerOf[destC]).toBe(CLIENT_C);
+
+      // Same actor, same key+body, narrowed back to the SAME client as call 1 -> a genuine replay.
+      const r3 = await app.inject({ method: "POST", url: "/wlt1/wallet-destinations", headers: authHeaders(BEARER_MULTI, CLIENT_A, key), payload });
+      expect(r3.statusCode).toBe(201);
+      expect(r3.json().data.destination_id).toBe(destA);
+    });
+
+    it("PoC challenge: same Idempotency-Key + SAME destination_id, narrowed to a client that does NOT own it -> the replay branch never bypasses the ownership check (404, never a cross-client-replayed challenge); the true owner can still replay its own result", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const regKey = idemKey("w2-poc-setup");
+      const regRes = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_MULTI, CLIENT_A, regKey),
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "e".repeat(39) + "a", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(regRes.statusCode).toBe(201);
+      const destinationId = regRes.json().data.destination_id as string;
+      await getPool().query(`UPDATE wlt1.destination SET status = 'pending_review' WHERE destination_id = $1`, [destinationId]);
+
+      const key = idemKey("w2-poc-challenge");
+      const r1 = await app.inject({
+        method: "POST",
+        url: `/wlt1/wallet-destinations/${destinationId}/proof-of-control/challenges`,
+        headers: authHeaders(BEARER_MULTI, CLIENT_A, key),
+        payload: {},
+      });
+      expect(r1.statusCode).toBe(201);
+
+      // SAME key, SAME destination_id (owned by CLIENT_A, not CLIENT_C) — narrowed to CLIENT_C.
+      // Pre-fix, the idempotent-replay branch resolves and returns BEFORE the destination's own
+      // ownership check runs, so this would have silently returned CLIENT_A's challenge as if
+      // CLIENT_C's request had succeeded.
+      const r2 = await app.inject({
+        method: "POST",
+        url: `/wlt1/wallet-destinations/${destinationId}/proof-of-control/challenges`,
+        headers: authHeaders(BEARER_MULTI, CLIENT_C, key),
+        payload: {},
+      });
+      expect(r2.statusCode).toBe(404);
+      expect(r2.json().error.code).toBe("WLT1_DESTINATION_NOT_FOUND");
+
+      const r3 = await app.inject({
+        method: "POST",
+        url: `/wlt1/wallet-destinations/${destinationId}/proof-of-control/challenges`,
+        headers: authHeaders(BEARER_MULTI, CLIENT_A, key),
+        payload: {},
+      });
+      expect(r3.statusCode).toBe(201);
+      expect(r3.json().data.challenge_id).toBe(r1.json().data.challenge_id);
     });
   });
 
@@ -663,6 +891,145 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
         },
       });
       expect(res.statusCode).toBe(400);
+    });
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // W6.B — positive DTO allowlists for ALL SIX public routes. A `toBeUndefined()` check on one
+  // field only proves that ONE field is absent; these assert the COMPLETE top-level key set, so
+  // the test fails if an unexpected DB/internal field is ever exposed later.
+  // -------------------------------------------------------------------------------------------
+  describe("positive DTO allowlists (W6.B)", () => {
+    const WALLET_DTO_KEYS = ["destination_id", "destination_type", "status", "chain", "network", "address_masked", "memo_tag_present", "wallet_type", "beneficiary_relationship", "created_at_utc"].sort();
+    const FIAT_DTO_KEYS = ["destination_id", "destination_type", "status", "bank_country", "currency", "rail", "bank_identifier", "branch_identifier", "account_identifier_masked", "beneficiary_type", "created_at_utc"].sort();
+
+    it("POST /wlt1/wallet-destinations: exact response data key set (also covers the registration route)", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_A, undefined, idemKey("dto-wallet-register")),
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "f".repeat(39) + "a", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(res.statusCode).toBe(201);
+      expect(Object.keys(res.json().data).sort()).toEqual(WALLET_DTO_KEYS);
+    });
+
+    it("GET /wlt1/destinations: exact top-level envelope keys, and exact per-item key set", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: authHeaders(BEARER_A) });
+      expect(res.statusCode).toBe(200);
+      expect(Object.keys(res.json().data).sort()).toEqual(["destinations", "next_cursor"].sort());
+      const items = res.json().data.destinations as Array<Record<string, unknown>>;
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(Object.keys(item).sort()).toEqual(WALLET_DTO_KEYS);
+      }
+    });
+
+    it("GET /wlt1/destinations/:destination_id: exact response data key set", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const regRes = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_A, undefined, idemKey("dto-single-read-setup")),
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "1".repeat(38) + "ab", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(regRes.statusCode).toBe(201);
+      const destinationId = regRes.json().data.destination_id as string;
+      const res = await app.inject({ method: "GET", url: `/wlt1/destinations/${destinationId}`, headers: authHeaders(BEARER_A) });
+      expect(res.statusCode).toBe(200);
+      expect(Object.keys(res.json().data).sort()).toEqual(WALLET_DTO_KEYS);
+    });
+
+    it("POST .../proof-of-control/challenges: exact response data key set", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const regRes = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_A, undefined, idemKey("dto-challenge-setup")),
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "2".repeat(38) + "ab", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      const destinationId = regRes.json().data.destination_id as string;
+      await getPool().query(`UPDATE wlt1.destination SET status = 'pending_review' WHERE destination_id = $1`, [destinationId]);
+      const res = await app.inject({
+        method: "POST",
+        url: `/wlt1/wallet-destinations/${destinationId}/proof-of-control/challenges`,
+        headers: authHeaders(BEARER_A, undefined, idemKey("dto-challenge")),
+        payload: {},
+      });
+      expect(res.statusCode).toBe(201);
+      expect(Object.keys(res.json().data).sort()).toEqual(["status", "challenge_id", "message", "verification_scheme", "expires_at_utc"].sort());
+    });
+
+    it("POST .../proof-of-control/verify: exact response data key set on a verified-replay success (the frozen challenge-state-authoritative replay path)", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      const regRes = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: authHeaders(BEARER_A, undefined, idemKey("dto-verify-setup")),
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "3".repeat(38) + "ab", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      const destinationId = regRes.json().data.destination_id as string;
+      await getPool().query(`UPDATE wlt1.destination SET status = 'pending_review' WHERE destination_id = $1`, [destinationId]);
+
+      // A genuinely valid AIX signature (from tests/unit/wlt1-poc-crypto.test.ts's own golden
+      // vector) — its exact bytes don't need to recover to any particular address here, since the
+      // verified-replay branch only range-validates + hash-compares, never re-runs recovery.
+      const goldenSignature =
+        "0xf85082737d1f4323caf330395db0b95ef1d6831c4b98949d6a7b526aa3e741776d4a0b36390ea18b99782cb502a4de1282fdb8490b3a47b00b6a292a5551eec81b";
+      const canon = canonicalizeAixSignature(goldenSignature);
+      if (!canon.ok) throw new Error("golden signature failed to canonicalize — fixture is broken");
+
+      const challengeId = "wlt1pocchal_dtotest_" + randomUUID();
+      await getPool().query(
+        `INSERT INTO wlt1.proof_of_control
+           (challenge_id, destination_id, client_id, chain, network, canonical_address, address_hash, proof_method, verification_scheme, message_format_version, domain_environment, nonce, message_hash, verification_status, signature_hash, recovered_address, issued_at_utc, expires_at_utc, verified_at_utc)
+         VALUES ($1,$2,$3,'ethereum','mainnet',$4,$5,'signed_message','eip191_personal_sign',1,'dev',$6,$7,'verified',$8,$9, now(), now() + interval '15 minutes', now())`,
+        [challengeId, destinationId, CLIENT_A, "0x" + "3".repeat(38) + "ab", "sha256:" + "ab".repeat(32), "cd".repeat(32), "ef".repeat(32), canon.signatureHash, "0x" + "3".repeat(38) + "ab"],
+      );
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/wlt1/wallet-destinations/${destinationId}/proof-of-control/verify`,
+        headers: authHeaders(BEARER_A),
+        payload: { challenge_id: challengeId, signature: goldenSignature },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.status).toBe("verified");
+      expect(Object.keys(res.json().data).sort()).toEqual(["status", "challenge_id", "verification_scheme", "verified_address", "verified_at_utc"].sort());
+    });
+
+    it("POST /wlt1/payout-destinations: exact response data key set on a genuine success (temporarily activates one dormant rail, restored immediately after)", async () => {
+      if (!schemaReady) return;
+      fndOutcome = "allow";
+      await getPool().query(`UPDATE wlt1.fiat_rail_coverage SET activation_status = 'active' WHERE coverage_id = 'wlt1cov_fiat_my_myr'`);
+      try {
+        const res = await app.inject({
+          method: "POST",
+          url: "/wlt1/payout-destinations",
+          headers: authHeaders(BEARER_A, undefined, idemKey("dto-payout-success")),
+          payload: {
+            beneficiary_name: "DTO Allowlist Test",
+            beneficiary_type: "individual",
+            account_identifier_type: "local_account",
+            account_identifier: "9988776655",
+            bank_identifier: "TESTMYKL",
+            bank_identifier_type: "bic",
+            bank_country: "MY",
+            currency: "MYR",
+            rail: "apac_local_my",
+          },
+        });
+        expect(res.statusCode).toBe(201);
+        expect(Object.keys(res.json().data).sort()).toEqual(FIAT_DTO_KEYS);
+      } finally {
+        await getPool().query(`UPDATE wlt1.fiat_rail_coverage SET activation_status = 'inactive' WHERE coverage_id = 'wlt1cov_fiat_my_myr'`);
+      }
     });
   });
 });

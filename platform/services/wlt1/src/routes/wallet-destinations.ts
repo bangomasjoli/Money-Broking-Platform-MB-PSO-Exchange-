@@ -57,6 +57,7 @@ import {
   isDuplicateNaturalKeyViolation,
   newAddressCheckId,
   newDestinationId,
+  recordRefusal,
   takeRegistrationLock,
 } from "../lib/destinations.js";
 import { safeWalletDestinationResponse, type WalletDestinationRow } from "../lib/safe-response.js";
@@ -110,91 +111,6 @@ function mapAddressReasonCode(reasonCode: string): Wlt1ErrorCode {
   return "WLT1_WALLET_ADDRESS_INVALID";
 }
 
-interface RefusalInput {
-  clientId: string;
-  reasonCode: string;
-  /** Present only for a refusal that occurred AFTER address parsing was attempted — a CLT-01
-   * status refusal has none of these, per this file's own header comment. */
-  addressStage?: {
-    chain: string;
-    network: string;
-    rawAddressHash: string;
-    canonicalAddressHash: string | null;
-    canonicalisationVersion: string | null;
-    checksumValid: boolean;
-  };
-}
-
-/** Records durable refusal evidence in its OWN short-lived transaction — see this file's header
- * comment for why this is separate from the main registration transaction. Always takes the SAME
- * client-scoped lock namespace as registration, so refusal and registration attempts for the same
- * client are always serialized against each other in one consistent order. */
-async function recordRefusal(app: FastifyInstance, input: RefusalInput): Promise<void> {
-  await withTransaction(async (client) => {
-    await takeRegistrationLock(client, input.clientId);
-
-    let checkId: string | undefined;
-    if (input.addressStage) {
-      checkId = newAddressCheckId();
-      await query(
-        client,
-        `INSERT INTO wlt1.address_integrity_check
-           (address_check_id, destination_id, client_id, chain, network, raw_address_hash, canonical_address_hash, canonicalisation_version, checksum_valid, result_status, reason_code)
-         VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, 'fail', $9)`,
-        [
-          checkId,
-          input.clientId,
-          input.addressStage.chain,
-          input.addressStage.network,
-          input.addressStage.rawAddressHash,
-          input.addressStage.canonicalAddressHash,
-          input.addressStage.canonicalisationVersion,
-          input.addressStage.checksumValid,
-          input.reasonCode,
-        ],
-      );
-      await publishAudit(client, {
-        event_type: "wlt1.address_integrity_checked",
-        source_module: "WLT-01",
-        actor_id: "wlt1_internal_service",
-        actor_type: "service",
-        entity_type: "address_integrity_check",
-        entity_id: checkId,
-        metadata: {
-          destination_id: null,
-          client_id: input.clientId,
-          chain: input.addressStage.chain,
-          network: input.addressStage.network,
-          raw_address_hash: input.addressStage.rawAddressHash,
-          canonical_address_hash: input.addressStage.canonicalAddressHash,
-          canonicalisation_version: input.addressStage.canonicalisationVersion,
-          checksum_valid: input.addressStage.checksumValid,
-          result_status: "fail",
-          reason_code: input.reasonCode,
-        },
-      });
-    }
-
-    await publishAudit(client, {
-      event_type: "wlt1.destination_registration_refused",
-      source_module: "WLT-01",
-      actor_id: "wlt1_internal_service",
-      actor_type: "service",
-      entity_type: "destination_registration",
-      entity_id: checkId ?? input.clientId,
-      metadata: {
-        client_id: input.clientId,
-        reason_code: input.reasonCode,
-        ...(input.addressStage ? { chain: input.addressStage.chain, network: input.addressStage.network } : {}),
-      },
-    });
-  }).catch((err) => {
-    // The refusal transaction itself rolled back (e.g. an audit/outbox write failed) — never
-    // claim the refusal was durably recorded.
-    throw new Wlt1Error("WLT1_AUDIT_REQUIRED", { cause: err });
-  });
-}
-
 type RegistrationOutcome =
   | { kind: "created" | "idempotent_replay"; row: WalletDestinationRow }
   | { kind: "duplicate" };
@@ -214,7 +130,7 @@ export async function registerWalletDestinationRoutes(app: FastifyInstance): Pro
       // Steps 3-4: CLT-01 client-status check, OUTSIDE any transaction.
       const clt = await checkClientStatus(clt1Config(app), body.client_id);
       if (!clt.eligible) {
-        await recordRefusal(app, { clientId: body.client_id, reasonCode: clt.reasonCode });
+        await recordRefusal({ clientId: body.client_id, reasonCode: clt.reasonCode, actorId: "wlt1_internal_service", actorType: "service" });
         throw new Wlt1Error(clt.reasonCode === "clt1_unavailable" ? "WLT1_CLT1_UNAVAILABLE" : "WLT1_CLIENT_STATUS_BLOCKED");
       }
 
@@ -223,9 +139,11 @@ export async function registerWalletDestinationRoutes(app: FastifyInstance): Pro
       const rawAddressHash = fingerprint({ chain: body.chain, network: body.network, raw_address: body.address, memo_tag: memoTagInput });
       const canon = canonicaliseAddress(body.chain, body.network, body.address, body.memo_tag);
       if (!canon.ok) {
-        await recordRefusal(app, {
+        await recordRefusal({
           clientId: body.client_id,
           reasonCode: canon.reasonCode,
+          actorId: "wlt1_internal_service",
+          actorType: "service",
           addressStage: {
             chain: body.chain,
             network: body.network,

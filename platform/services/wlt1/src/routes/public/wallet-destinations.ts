@@ -2,19 +2,26 @@
  * WLT-01 Public Client Surface — `POST /wlt1/wallet-destinations`. A client-safe public
  * projection of the already-accepted internal wallet-registration capability
  * (`routes/wallet-destinations.ts`) — same underlying lib functions (address canonicalisation,
- * chain-coverage, natural-key duplicate detection), same registration-transaction shape, same
- * audit events. The ONLY differences from the internal route: `client_id` is ALWAYS server-derived
- * from the public-auth chain (never accepted in the body — no `client_id` field in this schema at
- * all), the actor attribution is the authenticated human end-user (not the generic
+ * chain-coverage, natural-key duplicate detection, refusal-evidence recording), same
+ * registration-transaction shape, same audit events (including the address-integrity evidence
+ * chain — `wlt1.address_integrity_check` + `wlt1.address_integrity_checked`, blueprint High
+ * severity, WLT1-RISK-018). The ONLY differences from the internal route: `client_id` is ALWAYS
+ * server-derived from the public-auth chain (never accepted in the body — no `client_id` field in
+ * this schema at all), the actor attribution is the authenticated human end-user (not the generic
  * `wlt1_internal_service`), the idempotency action namespace is public-distinct
  * (`wlt1.public.wallet_destination.register`, never colliding with the internal
- * `wlt1.wallet_destination.register`), an FND-01 rate-limit check runs before idempotency, and the
- * response is projected through the public-safe DTO (no `client_id`).
+ * `wlt1.wallet_destination.register`), the idempotency scope's `actorId` additionally binds the
+ * derived `client_id` (see `publicIdempotencyActorId` — a caller holding memberships in more than
+ * one client can never have one client's idempotent-replay result returned for another, since the
+ * foundation scope key has no independent client column of its own), an FND-01 rate-limit check
+ * runs before idempotency, and the response is projected through the public-safe DTO (no
+ * `client_id`).
  *
  * ORDER: requirePublicClientAuthority -> FND-01 rate-limit check (MUTATE_REGISTER/client) ->
  * CLT-01 client-status check (unchanged from internal route) -> address canonicalisation ->
  * registration transaction (idempotency -> chain-coverage re-read -> natural-key re-check ->
- * inserts -> audit -> idempotency completion -> commit) -> public-safe response.
+ * inserts -> address-integrity evidence -> audit -> idempotency completion -> commit) ->
+ * public-safe response.
  */
 import { Type, type Static } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
@@ -22,6 +29,7 @@ import {
   AppError,
   beginIdempotent,
   completeIdempotent,
+  fingerprint,
   getPool,
   publishAudit,
   successEnvelope,
@@ -30,7 +38,7 @@ import {
   type IdempotencyScope,
 } from "@aix/foundation";
 import { meta, requireIdempotencyKey } from "../../plugins/request-context.js";
-import { makePublicClientAuthorityGuard, checkPublicRateLimit } from "../../plugins/public-auth.js";
+import { makePublicClientAuthorityGuard, checkPublicRateLimit, publicIdempotencyActorId } from "../../plugins/public-auth.js";
 import { canonicaliseAddress } from "../../lib/address/index.js";
 import { checkClientStatus, type Clt1ClientConfig } from "../../lib/clt1-client.js";
 import { fetchActiveChainCoverage } from "../../lib/chain-coverage.js";
@@ -42,7 +50,9 @@ import {
   fetchWalletDestinationById,
   fetchWalletDestinationByNaturalKey,
   isDuplicateNaturalKeyViolation,
+  newAddressCheckId,
   newDestinationId,
+  recordRefusal,
   takeRegistrationLock,
 } from "../../lib/destinations.js";
 import { publicWalletDestinationResponse } from "../../lib/public/dto.js";
@@ -110,12 +120,31 @@ export async function registerPublicWalletDestinationRoutes(app: FastifyInstance
       // CLT-01 client-status check, OUTSIDE any transaction — unchanged from the internal route.
       const clt = await checkClientStatus(clt1Config(config), clientId);
       if (!clt.eligible) {
+        await recordRefusal({ clientId, reasonCode: clt.reasonCode, actorId, actorType: "user" });
         throw new Wlt1Error(clt.reasonCode === "clt1_unavailable" ? "WLT1_CLT1_UNAVAILABLE" : "WLT1_CLIENT_STATUS_BLOCKED");
       }
 
-      // Deterministic address canonicalisation + integrity, pure in-process.
+      // Deterministic address canonicalisation + integrity, pure in-process — same evidence shape
+      // as the internal route (`rawAddressHash` computed unconditionally, before canon.ok is known,
+      // since a refusal needs it too).
+      const memoTagInput = body.memo_tag ?? "";
+      const rawAddressHash = fingerprint({ chain: body.chain, network: body.network, raw_address: body.address, memo_tag: memoTagInput });
       const canon = canonicaliseAddress(body.chain, body.network, body.address, body.memo_tag);
       if (!canon.ok) {
+        await recordRefusal({
+          clientId,
+          reasonCode: canon.reasonCode,
+          actorId,
+          actorType: "user",
+          addressStage: {
+            chain: body.chain,
+            network: body.network,
+            rawAddressHash,
+            canonicalAddressHash: null,
+            canonicalisationVersion: null,
+            checksumValid: false,
+          },
+        });
         throw new Wlt1Error(mapAddressReasonCode(canon.reasonCode));
       }
 
@@ -124,7 +153,14 @@ export async function registerPublicWalletDestinationRoutes(app: FastifyInstance
       const naturalKeyHash = computeNaturalKeyHash(clientId, WALLET_DESTINATION_TYPE, addressHash);
 
       const idemScope: IdempotencyScope = {
-        actorId,
+        // Binds BOTH the authenticated human actor AND the derived client authority — the
+        // foundation idempotency scope key has no independent client column (see
+        // packages/foundation/src/idempotency.ts's own header comment), so without this a caller
+        // holding memberships in more than one client could submit the identical Idempotency-Key
+        // and body narrowed to a DIFFERENT client on each call and silently receive the FIRST
+        // client's result on the second. `actor_id` here is an idempotency-uniqueness key only —
+        // audit attribution below always uses the plain `actorId` (iamUserId).
+        actorId: publicIdempotencyActorId(actorId, clientId),
         actorType: "user",
         // Public-distinct namespace — never collides with the internal
         // "wlt1.wallet_destination.register" action even under the same actorId.
@@ -172,6 +208,7 @@ export async function registerPublicWalletDestinationRoutes(app: FastifyInstance
           }
 
           const destinationId = newDestinationId();
+          const checkId = newAddressCheckId();
 
           try {
             await query(
@@ -194,6 +231,36 @@ export async function registerPublicWalletDestinationRoutes(app: FastifyInstance
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [destinationId, body.chain, body.network, canon.canonicalAddress, addressHash, memoTagIdentity, canon.canonicalisationVersion, body.wallet_type, body.beneficiary_relationship],
           );
+
+          await query(
+            client,
+            `INSERT INTO wlt1.address_integrity_check
+               (address_check_id, destination_id, client_id, chain, network, raw_address_hash, canonical_address_hash, canonicalisation_version, checksum_valid, result_status, reason_code)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, 'pass', 'canonicalisation_succeeded')`,
+            [checkId, destinationId, clientId, body.chain, body.network, rawAddressHash, addressHash, canon.canonicalisationVersion],
+          );
+
+          await publishAudit(client, {
+            event_type: "wlt1.address_integrity_checked",
+            source_module: "WLT-01",
+            actor_id: actorId,
+            actor_type: "user",
+            entity_type: "address_integrity_check",
+            entity_id: checkId,
+            metadata: {
+              destination_id: destinationId,
+              client_id: clientId,
+              chain: body.chain,
+              network: body.network,
+              raw_address_hash: rawAddressHash,
+              canonical_address_hash: addressHash,
+              canonicalisation_version: canon.canonicalisationVersion,
+              checksum_valid: true,
+              result_status: "pass",
+              reason_code: "canonicalisation_succeeded",
+              public_surface: true,
+            },
+          });
 
           await publishAudit(client, {
             event_type: "wlt1.wallet_registered",

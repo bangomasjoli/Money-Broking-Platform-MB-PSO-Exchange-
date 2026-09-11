@@ -253,13 +253,17 @@
  * `plugins/public-auth.ts` preHandler shared by all six public `/wlt1/*` routes. Reconciled
  * against the existing shared foundation catalogue first (`@aix/foundation`'s `FND_ERROR_CODES`)
  * — the frozen architecture's own proposed `PUBLIC_RATE_LIMITED` name is deliberately NOT added
- * here: the shared `RATE_LIMITED` (429) and `RATE_LIMIT_UNAVAILABLE` (503) codes already carry
- * the exact required semantics (genuine quota exceed vs. enforcement-indeterminate), so a WLT
- * -local duplicate would be redundant — every public route reuses `AppError("RATE_LIMITED")` /
- * `AppError("RATE_LIMIT_UNAVAILABLE")` directly instead. Similarly, CLT-01 membership-resolution
- * unavailability reuses the EXISTING `WLT1_CLT1_UNAVAILABLE` above (same dependency, same failure
- * semantics, same corrective action as the pre-existing client-status check) rather than a new
- * code:
+ * here: for a GENUINE quota exceed, the shared `RATE_LIMITED` (429) code already carries the
+ * exact required semantics, so every public route reuses `AppError("RATE_LIMITED")` directly (its
+ * `Retry-After` preserved end to end). The enforcement-INDETERMINATE case (engine unavailable, DB
+ * failure, missing/inactive/malformed policy row, or any other non-allow/non-429 outcome) is
+ * DIFFERENT: DEC-009 requires FND-01's own internal `RATE_LIMIT_UNAVAILABLE` code never leak past
+ * a public boundary as-is — `checkPublicRateLimit` (`plugins/public-auth.ts`) maps it instead to
+ * the ALREADY-EXISTING `WLT1_SERVICE_UNAVAILABLE` below (the same generic "WLT cannot complete
+ * this right now" code the DB-pool/provider-outage paths already reuse), not a new code. Likewise
+ * CLT-01 membership-resolution unavailability reuses the EXISTING `WLT1_CLT1_UNAVAILABLE` above
+ * (same dependency, same failure semantics, same corrective action as the pre-existing
+ * client-status check) rather than a new code:
  *
  *   - WLT1_AUTH_REQUIRED             — no bearer token was presented, IAM-01 introspection
  *     returned `valid:false` (or any collapsed-negative outcome), or the token is otherwise

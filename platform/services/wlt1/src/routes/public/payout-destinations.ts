@@ -19,7 +19,7 @@ import { Type, type Static } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
 import { AppError, beginIdempotent, completeIdempotent, getPool, publishAudit, query, successEnvelope, withTransaction, type IdempotencyScope } from "@aix/foundation";
 import { meta, requireIdempotencyKey } from "../../plugins/request-context.js";
-import { makePublicClientAuthorityGuard, checkPublicRateLimit } from "../../plugins/public-auth.js";
+import { makePublicClientAuthorityGuard, checkPublicRateLimit, publicIdempotencyActorId } from "../../plugins/public-auth.js";
 import { APAC_BANK_COUNTRIES, resolveCountryProfile, type ApacBankCountry } from "../../lib/fiat/country-profiles.js";
 import {
   buildCanonicalAccountIdentity,
@@ -149,7 +149,10 @@ export async function registerPublicFiatPayoutDestinationRoutes(app: FastifyInst
       const naturalKeyHash = computeNaturalKeyHash(clientId, FIAT_DESTINATION_TYPE, canon.accountIdentifierHash);
 
       const idemScope: IdempotencyScope = {
-        actorId,
+        // Binds actor + derived client authority — see `publicIdempotencyActorId`'s own header
+        // comment (`plugins/public-auth.ts`). `actor_id` here is an idempotency-uniqueness key
+        // only; audit attribution below always uses the plain `actorId` (iamUserId).
+        actorId: publicIdempotencyActorId(actorId, clientId),
         actorType: "user",
         action: "wlt1.public.fiat_payout_destination.register",
         key: idempotencyKey,

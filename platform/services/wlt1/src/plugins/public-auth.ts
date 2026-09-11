@@ -167,10 +167,16 @@ function fndConfig(config: Wlt1Config): FndRateLimitClientConfig {
 /**
  * Throws on anything except an explicit allow — the caller (route handler) never needs its own
  * branching; a route that returns normally from this call has an explicit FND-01 `allow` for this
- * exact bucket/subject. Maps a genuine quota exceed to the SHARED foundation `RATE_LIMITED` (429)
- * and every other outcome (unavailable, non-200, timeout, network error, malformed body) to the
- * SHARED foundation `RATE_LIMIT_UNAVAILABLE` (503) — never invents a WLT-local duplicate of
- * either, and an engine outage is never mapped to 429.
+ * exact bucket/subject. Maps a genuine quota exceed to the SHARED foundation `RATE_LIMITED` (429,
+ * `Retry-After` preserved) — never mapped away, a real quota denial always stays 429. Every other
+ * outcome (unavailable, non-200, timeout, network error, malformed body) is DEC-009's own
+ * enforcement-indeterminate case; DEC-009 requires it stay internal-only as the shared foundation
+ * `RATE_LIMIT_UNAVAILABLE`, mapped to a generic public dependency-failure code — this public
+ * boundary reuses WLT-01's OWN already-accepted generic-unavailable code
+ * `WLT1_SERVICE_UNAVAILABLE` (the same code `assertPoolAvailable`/provider-outage paths already
+ * reuse, per `lib/errors.ts`'s own header comment: "the caller cannot act on the two [causes]
+ * differently") rather than leaking FND's internal `RATE_LIMIT_UNAVAILABLE` terminology to a
+ * public client.
  */
 export async function checkPublicRateLimit(config: Wlt1Config, input: RateLimitCheckInput): Promise<void> {
   const result = await checkRateLimit(fndConfig(config), input);
@@ -178,5 +184,23 @@ export async function checkPublicRateLimit(config: Wlt1Config, input: RateLimitC
   if (result.outcome === "rate_limited") {
     throw new AppError("RATE_LIMITED", { details: [{ field: "retry_after_seconds", issue: String(result.retryAfterSeconds) }] });
   }
-  throw new AppError("RATE_LIMIT_UNAVAILABLE");
+  throw new Wlt1Error("WLT1_SERVICE_UNAVAILABLE");
+}
+
+/**
+ * Public-surface mutation idempotency must bind BOTH the authenticated human actor AND the
+ * derived client authority — never the actor alone. The foundation idempotency scope key is
+ * `(source_module, actor_id, action, idempotency_key)` (`packages/foundation/src/idempotency.ts`)
+ * with no independent client column; without this, one IAM user holding eligible memberships in
+ * two clients could submit the identical Idempotency-Key and body narrowed to a DIFFERENT client
+ * on each call and silently have the FIRST client's result replayed onto the second. Colon-
+ * composite identifiers are an established repository convention for exactly this kind of derived
+ * compound scoping key (e.g. `lib/destinations.ts`'s own `takeRegistrationLock` advisory-lock
+ * namespace, `lib/providers/stub-provider.ts`'s `${chain}:${network}:${canonicalAddress}`
+ * fixture key). This is NEVER the identity used for audit attribution — every `publishAudit`
+ * `actor_id` on the public surface stays the plain `iamUserId` — only the idempotency-record
+ * uniqueness key.
+ */
+export function publicIdempotencyActorId(iamUserId: string, clientId: string): string {
+  return `${iamUserId}:${clientId}`;
 }

@@ -29,7 +29,7 @@ import type { FastifyInstance } from "fastify";
 import type { PoolClient } from "pg";
 import { AppError, beginIdempotent, completeIdempotent, getPool, publishAudit, query, successEnvelope, withTransaction, type IdempotencyScope, type Sql } from "@aix/foundation";
 import { meta, requireIdempotencyKey } from "../../plugins/request-context.js";
-import { makePublicClientAuthorityGuard, checkPublicRateLimit } from "../../plugins/public-auth.js";
+import { makePublicClientAuthorityGuard, checkPublicRateLimit, publicIdempotencyActorId } from "../../plugins/public-auth.js";
 import { buildCanonicalPocMessage, computePocMessageHash, resolvePocVerificationScheme } from "../../lib/proof-of-control/message.js";
 import { canonicalizeAixSignature, verifyEip191PersonalSignSignature, verifyTronPersonalSignSignature } from "../../lib/proof-of-control/crypto.js";
 import { isPocSupportedWalletType, mintChallengeId, mintNonce } from "../../lib/proof-of-control/service.js";
@@ -199,7 +199,14 @@ export async function registerPublicProofOfControlRoutes(app: FastifyInstance): 
       await checkPublicRateLimit(config, { bucket: "MUTATE_POC", subjectType: "user", subjectId: iamUserId });
 
       const idemScope: IdempotencyScope = {
-        actorId,
+        // Binds actor + derived client authority — see `publicIdempotencyActorId`'s own header
+        // comment (`plugins/public-auth.ts`). Without this, the idempotent-replay branch below
+        // (which resolves and returns a cached challenge BEFORE the destination's own
+        // `client_id` ownership check runs) could return a challenge minted for a DIFFERENT
+        // client's destination to a caller who narrowed to a different membership on a replayed
+        // key. `actor_id` here is an idempotency-uniqueness key only; audit attribution below
+        // always uses the plain `actorId` (iamUserId).
+        actorId: publicIdempotencyActorId(actorId, clientId),
         actorType: "user",
         action: "wlt1.public.proof_of_control.challenge.create",
         key: idempotencyKey,

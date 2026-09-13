@@ -40,12 +40,26 @@ baseline_commit: 780e116
 - [FND-01_IMPLEMENTATION_NOTES.md](notes/FND-01_IMPLEMENTATION_NOTES.md)
 - [FND-01_Implementation_Plan_v0.1.md](notes/FND-01_Implementation_Plan_v0.1.md)
 
+**Public perimeter / pre-authentication abuse control:** the closing architecture
+for FND-FIND-001 is now **ACCEPTED FOR IMPLEMENTATION** as
+[`DECISION_LOG.md`](../../DECISION_LOG.md) DEC-010 — a four-layer design (trusted
+edge pre-auth throttling, mandatory network isolation, a WLT-01-owned
+public-surface enablement gate/perimeter-provenance credential, and the existing
+unchanged authenticated FND-01 chain from DEC-009). The authenticated engine and
+its numeric policy (DEC-009) are unchanged and are NOT extended to any
+pre-authentication subject. DEC-010's Turn 2 (the trusted edge / network
+isolation that alone closes this finding) is BLOCKED pending governance
+designation of a deployment/infrastructure implementation owner and a separate
+numeric pre-auth policy decision — no implementation exists yet. FND-FIND-001
+**REMAINS OPEN**.
+
 ## Open findings
 
 FND-FIND-001 (HIGH — shared rate-limit engine pre-authentication abuse; a public-
-perimeter control, not closed by the DEC-009 numeric policy approval or by the
-engine's implementation/hardening — **REMAINS OPEN**, mandatory precondition
-before any WLT-01 public route is internet-exposed). Plus FND-FIND-002 through
-FND-FIND-009 (Shared Rate-Limit Engine acceptance/hardening findings — see
+perimeter control, not closed by the DEC-009 numeric policy approval, by the
+engine's implementation/hardening, or by DEC-010's architecture acceptance alone
+— **REMAINS OPEN**, mandatory precondition before any WLT-01 public route is
+internet-exposed). Plus FND-FIND-002 through FND-FIND-009 (Shared Rate-Limit
+Engine acceptance/hardening findings — see
 [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current
 state of each).

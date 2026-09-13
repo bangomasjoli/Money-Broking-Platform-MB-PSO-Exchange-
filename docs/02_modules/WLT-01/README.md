@@ -26,6 +26,8 @@ baseline_commit: 780e116
 
 **Blueprint conflict note (unresolved, unaffected by the public-surface acceptance above):** `BP-WLT-01-v1.2` remains `REVIEW_REQUIRED — CONFLICT` (see above) — this acceptance record does not resolve it.
 
+**Public perimeter / pre-authentication abuse control:** internet exposure of the accepted public surface remains **PROHIBITED** pending `FND-FIND-001` (HIGH, tracked under FND-01). The closing architecture is now **ACCEPTED FOR IMPLEMENTATION** as [`DECISION_LOG.md`](../../DECISION_LOG.md) DEC-010 — a four-layer design (trusted edge pre-auth throttling + mandatory network isolation + a WLT-01-owned public-surface enablement gate/perimeter-provenance credential + the existing unchanged authenticated chain). WLT-01 owns the enablement-gate turn (`WLT1_PUBLIC_SURFACE_ENABLED`/`WLT1_PUBLIC_PERIMETER_TOKEN`, tracked as WLT-FIND-010), which can at most close WLT-FIND-010 once implemented and independently accepted; it does **not** by itself close FND-FIND-001, which requires the separate trusted-edge/network-isolation turn (currently blocked on deployment-owner designation and numeric-policy governance). No implementation exists yet for either turn.
+
 ## Reviews
 
 - [WLT-01_Wallet_Screening_Payout_Destination_Whitelist_Blueprint_Pack_v1.0_Review.md](reviews/WLT-01_Wallet_Screening_Payout_Destination_Whitelist_Blueprint_Pack_v1.0_Review.md)

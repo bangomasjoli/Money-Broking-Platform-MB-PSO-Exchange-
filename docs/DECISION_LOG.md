@@ -320,3 +320,223 @@ This is not a record of every historical implementation decision — see
 
 Future decisions should be appended below this line, oldest first, using the same
 `DEC-NNN` numbering.
+
+---
+
+### DEC-010 — Public Perimeter / Pre-Authentication Abuse Control: four-layer architecture (FND-FIND-001 + WLT-FIND-010)
+
+- **Date:** WLT-01 Public Client Surface independent Opus architecture review
+  (this turn), following the WLT-01 Public Client Surface independent acceptance
+  at commit `7f9fc8a` and its governance record at commit `bb1ee1a`
+- **Scope:** the public trust boundary in front of WLT-01's six accepted public
+  `/wlt1/*` routes — network isolation, trusted-edge pre-authentication
+  throttling, a WLT-01-owned public-surface enablement gate, and a distinct
+  perimeter-provenance credential. This is a NEW decision, deliberately separate
+  from DEC-009: DEC-009 governs the AUTHENTICATED FND shared rate-limit engine
+  and WLT-01's bucket/subject bindings for identities that already exist
+  (`client_id`/`iam_user_id`); this decision governs the PRE-AUTHENTICATION
+  boundary, where no such identity yet exists. Repository inspection confirmed
+  no deployment/infrastructure tier exists anywhere in this repository (zero
+  Dockerfiles, compose files, Kubernetes/Helm manifests, Terraform, or reverse-
+  proxy configuration of any kind), and confirmed every service — WLT-01
+  included — binds one Fastify listener on `0.0.0.0` serving internal, public,
+  and health/readiness routes together with no listener separation.
+- **Decision — four-layer architecture, ACCEPTED FOR IMPLEMENTATION:**
+
+  **L1 — Trusted edge (reverse proxy / API gateway / managed ingress).** Owns:
+  TLS termination; the only authoritative source-network identity in the
+  platform (it terminates the connection, so it OBSERVES the peer address
+  rather than reading a forwardable header); pre-authentication abuse
+  throttling (source-IP burst + sustained + concurrent-connection ceiling +
+  a global ingress ceiling as a rotating-source-IP backstop, with bounded/
+  evicting — never PostgreSQL — counter state, and IPv6 handled by prefix
+  aggregation, never unlimited per-address keys); an EXACT allowlist of the
+  six public paths (`/internal/*` is never proxied); stripping any
+  client-supplied perimeter-provenance header and injecting the edge's own
+  trusted value; `Cache-Control: no-store` and baseline security headers on
+  every public response (public responses can carry sensitive values — the
+  PoC message embeds the canonical wallet address); and a deliberately
+  configured, non-allow-all CORS policy (no first-party browser origin is
+  currently registered anywhere in this platform). No edge product/provider
+  is selected by this decision.
+
+  **L2 — Network isolation (MANDATORY, not defense-in-depth).** The WLT
+  listener MUST NOT be directly internet-reachable. This is an architectural
+  invariant, not an optional hardening step, precisely because the same
+  listener also serves the 27 internal `/internal/wlt1/*` routes (protected
+  today only by a shared static bearer secret) and the unauthenticated
+  `/internal/wlt1/health`/`/internal/wlt1/readiness` endpoints — exposing the
+  public surface without isolation would exposure all of it. The concrete
+  mechanism (private subnet, firewall/security-group rule, network policy,
+  service mesh, or an ingress-only listener) is a deployment choice deferred
+  to Turn 2; that the invariant holds is not deferrable.
+
+  **L3 — WLT-01 public-surface enablement gate + perimeter provenance.**
+  WLT-01 owns two new configuration keys (below). Safe default: public
+  surface DISABLED. When disabled, the six public routes are NOT registered
+  at all (the smallest reachable attack surface — no handler, no
+  IAM/CLT/FND client, no DB path exists for a disabled surface; a request to
+  any of the six paths falls to the ordinary unknown-route `404`). When
+  enabled, a distinct perimeter-provenance credential
+  (`x-aix-perimeter-token`, compared via `crypto.timingSafeEqual` with a
+  length guard, checked in an `onRequest` hook — before body parsing — and
+  BEFORE any IAM call) is required on every public request; a missing or
+  mismatched credential is rejected with the SAME `404 NOT_FOUND` a disabled
+  surface returns, so a direct-to-service prober cannot distinguish
+  "surface disabled" from "surface enabled, provenance rejected" from
+  "path does not exist." This credential is infrastructure provenance
+  ONLY — it is never client identity, never IAM identity, never CLT
+  authority, and it must never be accepted as, or confused with, WLT-01's
+  existing `x-internal-service-token` internal-service-identity guard (which
+  continues to authenticate the 27 internal routes exactly as accepted, and
+  which the perimeter credential must never satisfy in either direction).
+
+  **L4 — Existing accepted authenticated chain (UNCHANGED).** After perimeter
+  admission: IAM-01 introspection (fail-closed) → `user_class ∈ {client,
+  client_approver}` → CLT-01 membership authority (`X-AIX-Client-Id`
+  narrowing-only) → the DEC-009-governed authenticated FND-01 rate-limit
+  check → idempotency where applicable (wallet/payout/PoC-challenge; binds
+  the derived client authority per `7f9fc8a`) → the business operation →
+  Sensitive Read evidence-before-response. None of this decision alters any
+  part of L4.
+
+  **Frozen request ordering** (perimeter-provenance rejection strictly
+  precedes IAM, which is the load-bearing property this decision exists to
+  fix):
+  1. network admission (L2) 2. edge pre-auth throttle (L1) 3. edge exact
+  path allowlist + header strip/inject (L1) 4. WLT public route exists only
+  if enabled (L3) 5. WLT perimeter-provenance check (L3) 6. request
+  schema/context 7. IAM-01 introspection (L4) 8. `user_class` gate (L4)
+  9. CLT-01 authority (L4) 10. authenticated FND-01 rate limit (L4)
+  11. idempotency where applicable (L4) 12. business operation / Sensitive
+  Read evidence / response (L4).
+
+- **Decision — the zero-pre-authentication-database-write invariant:** an
+  unauthenticated or perimeter-rejected request MUST cause zero database
+  writes anywhere in the platform before IAM authentication succeeds. This is
+  the precise, testable property that closes FND-FIND-001 once implemented
+  and verified: garbage/expired/revoked bearer traffic blocked at the edge
+  never reaches IAM, so it can never trigger IAM's own `iam.auth_event`
+  negative-outcome write (`services/iam/src/routes/internal.ts`'s
+  `insertAuthEvent` call on the `SESSION_VALIDATION_NEGATIVE_CODES` branch) —
+  a write path independently confirmed during this review to have no
+  retention/eviction policy today.
+- **Decision — the authenticated FND-01 engine (DEC-009) is explicitly NOT
+  extended to any pre-authentication subject.** No `AUTH_FAILURE` bucket, no
+  bearer-token/token-hash/request-fingerprint subject, no untrusted
+  `request.ip` subject. Rationale, all independently confirmed against the
+  repository: (1) no trusted, bounded-cardinality identity exists before
+  authentication — every candidate pre-auth key is attacker-chosen; (2)
+  `foundation.rate_limit_counter` has no eviction mechanism, so an
+  attacker-chosen subject would create unbounded, permanent row growth in
+  shared foundation storage; (3) a pre-auth call into FND-01 would itself add
+  an HTTP round-trip plus a PostgreSQL upsert per garbage request — moving
+  the amplification FND-FIND-001 describes rather than removing it. This
+  reaffirms, rather than revisits, DEC-009's own original rejection of
+  `AUTH_FAILURE` and per-IP limiting at that layer.
+- **Decision — WLT-01-local IP-based limiting is explicitly rejected as a
+  substitute for L1.** Confirmed by repository inspection: `trustProxy` is
+  configured nowhere in this platform, so `request.ip` at WLT would resolve
+  to the raw socket peer (or, behind a future untrusted intermediary, could
+  collapse every client onto one key or become spoofable via a naively
+  trusted `X-Forwarded-For`). Source-network throttling belongs solely at the
+  connection-terminating edge (L1), which — unlike WLT — genuinely observes
+  the peer address rather than reading a forwardable claim.
+- **Decision — proposed WLT-01 configuration** (architecture-level; exact
+  validation/error-code details are an implementation-turn decision, not
+  fixed here):
+
+  | Key | Owner | Secret | Required | Default | Validation |
+  |---|---|---|---|---|---|
+  | `WLT1_PUBLIC_SURFACE_ENABLED` | WLT-01 | No | Optional | `"false"` | exact case-insensitive `"true"` after trim enables; every other value (including empty, `"1"`, `"yes"`) disables — mirrors the existing `IAM_BOOTSTRAP_ENABLED`/`IAM2_BOOTSTRAP_TRANSITION_ENABLED` convention |
+  | `WLT1_PUBLIC_PERIMETER_TOKEN` | WLT-01 | Yes | Conditional — required iff `WLT1_PUBLIC_SURFACE_ENABLED=true` | none | non-blank, minimum 32 characters; if the surface is enabled and this is absent or too short, startup MUST fail (`CONFIGURATION_INVALID`, non-zero exit) — an operator who explicitly requested enablement is never silently downgraded to disabled |
+
+  Header: `x-aix-perimeter-token` — a name distinct from `x-internal-service-
+  token`, `x-wlt1-provider-receipt-token`, and every other existing WLT-01
+  credential header. Comparison: `crypto.timingSafeEqual` with a length
+  guard (the platform's established constant-time-comparison pattern). Log
+  redaction: added to WLT-01's redact-path list. The credential is never sent
+  to, or accepted from, a browser or mobile client — the edge strips any
+  inbound copy and injects its own. Rotation MAY use a two-value acceptance
+  window during a controlled rotation; no actual secret value is defined by
+  this decision.
+- **Decision — public failure semantics** (all preserving existing accepted
+  behaviour for L4 outcomes, adding only the two new L3 cases): public
+  surface disabled → `404 NOT_FOUND`; missing/invalid perimeter provenance →
+  `404 NOT_FOUND` (deliberately indistinguishable from "disabled" — a direct
+  prober learns nothing, and no legitimate client ever reaches this branch,
+  since the edge always injects the credential); edge pre-auth throttle
+  exceeded → `429` + `Retry-After` (edge-generated); edge/perimeter
+  unavailable → edge-generated `502`/`503`/`504`; IAM-01 unavailable →
+  existing public `503` (unchanged); authenticated FND-01 unavailable/
+  indeterminate → existing generic public `503` (unchanged, per
+  `7f9fc8a`/WLT-FIND-007); genuine authenticated quota exceed → existing
+  public `429 RATE_LIMITED` with `Retry-After` (unchanged). No response at
+  any layer may disclose perimeter topology, secrets, IAM state, CLT
+  membership, or bearer-token validity.
+- **Decision — observability.** WLT-01 may expose bounded, unlabelled-by-
+  attacker-input counters for disabled-surface rejections and perimeter-
+  provenance rejections; no raw bearer tokens, no perimeter secrets, and no
+  attacker-controlled values as metric labels (a second, distinct
+  unbounded-cardinality trap this decision explicitly closes off). Pre-
+  authentication rejections write no audit/outbox record, and any
+  request-level logging of such rejections must be sampled/aggregated, never
+  one line per request, so the rejection path cannot itself become a
+  disk-amplification vector. Pre-auth throttle telemetry is owned by the
+  edge (L1), outside this repository.
+- **Decision — module ownership, and an explicit unresolved gap.** WLT-01
+  owns L3 in full: the enablement gate, the perimeter-provenance check, its
+  own configuration, log redaction, and its own tests. **No module in this
+  repository currently owns L1/L2** (the trusted edge and network
+  isolation) — `DEP-01` was inspected and confirmed to be "Deposit
+  Execution / Inbound Receipt" (a business module, `NOT_STARTED`), not
+  deployment infrastructure, and is explicitly NOT assigned any part of this
+  work. This decision does not create a new module ID to fill that gap —
+  doing so is a separate governance act. Until a deployment/infrastructure
+  owner is designated, Turn 2 below remains blocked.
+- **Decision — staged implementation, not a single turn:**
+  - **Turn 1 (WLT-01, unblocked, may proceed on acceptance of this
+    decision):** the L3 enablement gate and perimeter-provenance check,
+    configuration, redaction, and WLT-01-owned tests (disabled-surface
+    non-reachability with zero IAM/CLT/FND calls; enabled-with-valid-
+    provenance reaching the unchanged L4 chain; invalid/missing provenance
+    rejected before any L4 call with zero business mutation; config
+    fail-closed defaults and fail-loud startup on enabled-without-token;
+    unchanged 27-internal/6-public route inventory; full regression).
+    Turn 1 alone does **NOT** close FND-FIND-001 (an enabled surface still
+    needs L1/L2 to be safe from pre-authentication abuse) and can at most
+    make WLT-FIND-010 eligible for closure, and only after independent
+    acceptance.
+  - **Turn 2 (L1/L2, BLOCKED):** blocked on (a) governance designation of a
+    deployment/infrastructure implementation owner, and (b) a separate,
+    later governance decision approving the numeric pre-auth policy (burst/
+    sustained/concurrency/global ceilings, IPv6 aggregation width) — this
+    decision deliberately fixes none of those numbers, following the same
+    "architecture first, numbers separately" discipline DEC-009 itself
+    used. Turn 2 owns eventual closure of FND-FIND-001.
+  - **Turn 3:** independent acceptance of each implemented turn against a
+    real deployed topology, followed by the governance update that may
+    close FND-FIND-001 and WLT-FIND-010 — never before that evidence
+    exists.
+- **Status:** ARCHITECTURE ACCEPTED FOR IMPLEMENTATION. **Neither
+  FND-FIND-001 nor WLT-FIND-010 is closed by this decision** — architecture
+  acceptance is not implementation, is not independent acceptance, and is
+  not a deployment-readiness determination. `INTERNET EXPOSURE` remains
+  **PROHIBITED**. This decision does not alter DEC-009 (the authenticated
+  engine and its numeric policy are unchanged), does not alter the WLT-01
+  Public Client Surface acceptance at `7f9fc8a`/`bb1ee1a` (all six public
+  routes, their authority chain, and their DEC-009 bindings are unchanged),
+  and introduces no migration, no grant change, and no code.
+- **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
+  DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
+  unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and
+  WLT-FIND-010 (LOW), neither closed here. Related to the WLT-01 Public
+  Client Surface acceptance record
+  (`02_modules/WLT-01/acceptance/WLT-01_Public_Client_Surface_Opus_Acceptance_v1.0.md`)
+  and to the original WLT-01 Client-Facing Public `/wlt1/*` Surface
+  architecture addendum, whose third named prerequisite ("a public
+  perimeter — not started") this decision is the architecture for, but does
+  not itself satisfy.
+- **Baseline commit:** `bb1ee1a` (WLT-01 Public Client Surface governance
+  record — the last commit before this decision; no implementation commit
+  exists yet for either Turn 1 or Turn 2 of this decision).

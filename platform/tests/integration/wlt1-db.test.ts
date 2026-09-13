@@ -81,6 +81,10 @@ const config: Wlt1Config = {
   fndBaseUrl: "http://127.0.0.1:0",
   fndRateLimitConsumerToken: "test-fnd-ratelimit-token-it",
   publicDestinationListMax: 100,
+  // Public Perimeter / Pre-Authentication Abuse Control (DEC-010) — this file exercises only the
+  // internal `/internal/wlt1/*` surface, so the public surface stays disabled (safe default).
+  publicSurfaceEnabled: false,
+  publicPerimeterToken: undefined,
 };
 
 const INTERNAL_HEADERS = { "x-internal-service-token": config.wlt1InternalServiceToken };

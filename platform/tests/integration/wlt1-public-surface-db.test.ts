@@ -37,13 +37,25 @@ const BEARER_TRIGGERS_IAM_OUTAGE = "bearer-token-triggers-iam-outage";
 const BEARER_NO_MEMBERSHIP = "bearer-token-for-user-with-no-membership";
 const IAM_USER_NO_MEMBERSHIP = "iamuser_no_membership_" + randomUUID();
 
+// Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3) — the trusted edge's own
+// provenance credential, distinct from every bearer/internal-service token above. Every existing
+// test in this file represents a request that DID arrive through a (simulated) trusted edge, so
+// `authHeaders()` below attaches PERIMETER_TOKEN by default; the dedicated "Public Perimeter"
+// describe block further down is the only place WRONG_PERIMETER_TOKEN or an omitted header is
+// used deliberately.
+const PERIMETER_TOKEN = "test-wlt1-perimeter-token-pubsurf-at-least-32-chars";
+const WRONG_PERIMETER_TOKEN = "wrong-wlt1-perimeter-token-pubsurf-at-least-32-ch";
+
 /** In-memory rate-limit toggle this file's own FND stub reads — lets individual tests force an
  * allow/429/503 outcome without a live FND-01. */
 let fndOutcome: "allow" | "rate_limited" | "unavailable" = "allow";
 let fndCallCount = 0;
+let iamCallCount = 0;
+let cltCallCount = 0;
 let fndLastRequest: { bucket: string; subject_type: string; subject_id: string } | undefined;
 
 async function iamFetchImpl(url: string | URL | Request, init?: RequestInit): Promise<Response> {
+  iamCallCount++;
   const body = JSON.parse((init?.body as string) ?? "{}") as { access_token?: string };
   const token = body.access_token;
   if (token === BEARER_TRIGGERS_IAM_OUTAGE) {
@@ -68,6 +80,7 @@ async function iamFetchImpl(url: string | URL | Request, init?: RequestInit): Pr
 }
 
 async function clt1FetchImpl(url: string | URL | Request): Promise<Response> {
+  cltCallCount++;
   const u = String(url);
   if (u.includes("/client-memberships")) {
     if (u.includes(encodeURIComponent(IAM_USER_A)) || u.includes(IAM_USER_A)) {
@@ -149,6 +162,8 @@ const config: Wlt1Config = {
   fndRateLimitConsumerToken: "test-fnd-ratelimit-token-unused",
   fndFetchImpl,
   publicDestinationListMax: 5,
+  publicSurfaceEnabled: true,
+  publicPerimeterToken: PERIMETER_TOKEN,
 };
 
 let app: FastifyInstance;
@@ -163,8 +178,13 @@ async function foundationSchemaExists(): Promise<boolean> {
   }
 }
 
+// Public Perimeter / Pre-Authentication Abuse Control (DEC-010) — every call through this helper
+// represents a request that arrived through a (simulated) trusted edge with valid provenance, so
+// PERIMETER_TOKEN is attached by default. The dedicated "Public Perimeter" describe block below
+// constructs its own header objects directly (never through this helper) to test the missing/
+// wrong-token cases.
 function authHeaders(bearer: string, narrowingClientId?: string, idempotencyKey?: string) {
-  const headers: Record<string, string> = { authorization: `Bearer ${bearer}` };
+  const headers: Record<string, string> = { authorization: `Bearer ${bearer}`, "x-aix-perimeter-token": PERIMETER_TOKEN };
   if (narrowingClientId) headers["x-aix-client-id"] = narrowingClientId;
   if (idempotencyKey) headers["idempotency-key"] = idempotencyKey;
   return headers;
@@ -205,12 +225,124 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
   });
 
   // -------------------------------------------------------------------------------------------
+  // A. Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3) — admission runs
+  // strictly before IAM/CLT/FND. This app instance is built with the public surface ENABLED and
+  // a real perimeter token configured (see `config` above); every other describe block in this
+  // file presents PERIMETER_TOKEN via `authHeaders()`'s own default. This block is the only place
+  // WRONG_PERIMETER_TOKEN or an omitted perimeter header is used deliberately.
+  // -------------------------------------------------------------------------------------------
+  describe("Public Perimeter / Pre-Authentication Abuse Control (DEC-010)", () => {
+    it("missing perimeter token on a GET route -> 404 NOT_FOUND, and zero IAM/CLT/FND calls (even with an otherwise-valid bearer)", async () => {
+      if (!schemaReady) return;
+      iamCallCount = 0;
+      cltCallCount = 0;
+      fndCallCount = 0;
+      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: { authorization: `Bearer ${BEARER_A}` } });
+      expect(res.statusCode).toBe(404);
+      expect(res.json().error.code).toBe("NOT_FOUND");
+      expect(iamCallCount).toBe(0);
+      expect(cltCallCount).toBe(0);
+      expect(fndCallCount).toBe(0);
+    });
+
+    it("wrong perimeter token on a GET route -> 404 NOT_FOUND, and zero IAM/CLT/FND calls", async () => {
+      if (!schemaReady) return;
+      iamCallCount = 0;
+      cltCallCount = 0;
+      fndCallCount = 0;
+      const res = await app.inject({
+        method: "GET",
+        url: "/wlt1/destinations",
+        headers: { authorization: `Bearer ${BEARER_A}`, "x-aix-perimeter-token": WRONG_PERIMETER_TOKEN },
+      });
+      expect(res.statusCode).toBe(404);
+      expect(res.json().error.code).toBe("NOT_FOUND");
+      expect(iamCallCount).toBe(0);
+      expect(cltCallCount).toBe(0);
+      expect(fndCallCount).toBe(0);
+    });
+
+    it("missing perimeter token on a POST (mutation) route -> 404 NOT_FOUND, zero IAM/CLT/FND calls, zero destination created", async () => {
+      if (!schemaReady) return;
+      iamCallCount = 0;
+      cltCallCount = 0;
+      fndCallCount = 0;
+      const before = await getPool().query(`SELECT count(*)::int n FROM wlt1.destination WHERE client_id = $1`, [CLIENT_A]);
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: { authorization: `Bearer ${BEARER_A}`, "idempotency-key": idemKey("perimeter-missing-post") },
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "7".repeat(39) + "a", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(res.statusCode).toBe(404);
+      expect(res.json().error.code).toBe("NOT_FOUND");
+      expect(iamCallCount).toBe(0);
+      expect(cltCallCount).toBe(0);
+      expect(fndCallCount).toBe(0);
+      const after = await getPool().query(`SELECT count(*)::int n FROM wlt1.destination WHERE client_id = $1`, [CLIENT_A]);
+      expect(after.rows[0].n).toBe(before.rows[0].n);
+    });
+
+    it("wrong perimeter token on a POST (mutation) route -> 404 NOT_FOUND, zero IAM/CLT/FND calls, zero destination created, zero idempotency reservation", async () => {
+      if (!schemaReady) return;
+      iamCallCount = 0;
+      cltCallCount = 0;
+      fndCallCount = 0;
+      const key = idemKey("perimeter-wrong-post");
+      const before = await getPool().query(`SELECT count(*)::int n FROM wlt1.destination WHERE client_id = $1`, [CLIENT_A]);
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations",
+        headers: { authorization: `Bearer ${BEARER_A}`, "idempotency-key": key, "x-aix-perimeter-token": WRONG_PERIMETER_TOKEN },
+        payload: { chain: "ethereum", network: "mainnet", address: "0x" + "8".repeat(39) + "a", wallet_type: "unhosted", beneficiary_relationship: "self" },
+      });
+      expect(res.statusCode).toBe(404);
+      expect(res.json().error.code).toBe("NOT_FOUND");
+      expect(iamCallCount).toBe(0);
+      expect(cltCallCount).toBe(0);
+      expect(fndCallCount).toBe(0);
+      const after = await getPool().query(`SELECT count(*)::int n FROM wlt1.destination WHERE client_id = $1`, [CLIENT_A]);
+      expect(after.rows[0].n).toBe(before.rows[0].n);
+      const idemRows = await getPool().query(`SELECT count(*)::int n FROM foundation.idempotency_record WHERE idempotency_key = $1`, [key]);
+      expect(idemRows.rows[0].n).toBe(0);
+    });
+
+    it("correct perimeter token clears admission and reaches the real IAM/CLT/FND chain (a genuinely different failure/success mode than the perimeter's own 404)", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: authHeaders(BEARER_A) });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().error?.code).not.toBe("NOT_FOUND");
+    });
+
+    it("the internal-service-identity token value does not satisfy the public perimeter (two independent secrets)", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "GET",
+        url: "/wlt1/destinations",
+        headers: { authorization: `Bearer ${BEARER_A}`, "x-aix-perimeter-token": config.wlt1InternalServiceToken },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it("PoC verify (the one route with no Idempotency-Key requirement) still enforces perimeter provenance BEFORE its own schema validation — missing token -> 404, never 400", async () => {
+      if (!schemaReady) return;
+      const res = await app.inject({
+        method: "POST",
+        url: "/wlt1/wallet-destinations/wlt1dest_unknown/proof-of-control/verify",
+        payload: { challenge_id: "wlt1poc_unknown", signature: "not-a-valid-signature" },
+      });
+      expect(res.statusCode).toBe(404);
+      expect(res.json().error.code).toBe("NOT_FOUND");
+    });
+  });
+
+  // -------------------------------------------------------------------------------------------
   // B. IAM authentication
   // -------------------------------------------------------------------------------------------
   describe("authentication", () => {
     it("no Authorization header -> 401 WLT1_AUTH_REQUIRED", async () => {
       if (!schemaReady) return;
-      const res = await app.inject({ method: "GET", url: "/wlt1/destinations" });
+      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: { "x-aix-perimeter-token": PERIMETER_TOKEN } });
       expect(res.statusCode).toBe(401);
       expect(res.json().error.code).toBe("WLT1_AUTH_REQUIRED");
     });
@@ -231,7 +363,7 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
 
     it("a malformed Authorization header (not 'Bearer <token>') -> 401", async () => {
       if (!schemaReady) return;
-      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: { authorization: "Basic dXNlcjpwYXNz" } });
+      const res = await app.inject({ method: "GET", url: "/wlt1/destinations", headers: { authorization: "Basic dXNlcjpwYXNz", "x-aix-perimeter-token": PERIMETER_TOKEN } });
       expect(res.statusCode).toBe(401);
     });
 
@@ -335,7 +467,7 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
     it("a rejected auth request never calls FND-01 (auth runs strictly before rate-limit)", async () => {
       if (!schemaReady) return;
       fndCallCount = 0;
-      await app.inject({ method: "GET", url: "/wlt1/destinations" }); // no bearer at all
+      await app.inject({ method: "GET", url: "/wlt1/destinations", headers: { "x-aix-perimeter-token": PERIMETER_TOKEN } }); // no bearer at all
       expect(fndCallCount).toBe(0);
     });
 
@@ -446,7 +578,7 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
       const res = await app.inject({
         method: "GET",
         url: "/wlt1/destinations",
-        headers: { "x-internal-service-token": config.wlt1InternalServiceToken },
+        headers: { "x-internal-service-token": config.wlt1InternalServiceToken, "x-aix-perimeter-token": PERIMETER_TOKEN },
       });
       expect(res.statusCode).toBe(401);
       expect(res.json().error.code).toBe("WLT1_AUTH_REQUIRED");
@@ -821,6 +953,7 @@ describe.skipIf(!TEST_DB)("WLT-01 Public Client Surface — DB-gated behaviour",
       const res = await app.inject({
         method: "POST",
         url: "/wlt1/wallet-destinations/wlt1dest_unknown/proof-of-control/verify",
+        headers: { "x-aix-perimeter-token": PERIMETER_TOKEN },
         payload: { challenge_id: "wlt1poc_unknown", signature: "not-a-valid-signature" },
       });
       expect(res.statusCode).toBe(400);

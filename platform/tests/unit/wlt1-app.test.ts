@@ -49,6 +49,13 @@ const config: Wlt1Config = {
   fndBaseUrl: "http://localhost:8080",
   fndRateLimitConsumerToken: "test-fnd-ratelimit-token-unused",
   publicDestinationListMax: 100,
+  // Public Perimeter / Pre-Authentication Abuse Control (DEC-010) — this file's own EXACT_ROUTE_TREE
+  // test below is the canonical proof that the full accepted route surface (27 internal + 6
+  // public) is exactly what's approved so far, so this shared app instance runs with the public
+  // surface explicitly ENABLED. The dedicated disabled-state route-tree proof (0 public routes)
+  // lives in tests/unit/wlt1-public-perimeter.test.ts, against its own separate app instance.
+  publicSurfaceEnabled: true,
+  publicPerimeterToken: "test-wlt1-perimeter-token-at-least-32-characters-long",
 };
 
 let app: FastifyInstance;
@@ -541,9 +548,12 @@ describe("WLT-01 service app (no DB) — Phase 1B scaffold", () => {
         "req.body.beneficiary_name",
         // Public Client Surface — the raw client bearer token must never reach any log line.
         "req.headers.authorization",
+        // Public Perimeter / Pre-Authentication Abuse Control (DEC-010) — the trusted edge's own
+        // provenance credential must never reach any log line either.
+        "req.headers['x-aix-perimeter-token']",
       ]),
     );
-    expect(WLT1_LOG_REDACT_PATHS).toHaveLength(8);
+    expect(WLT1_LOG_REDACT_PATHS).toHaveLength(9);
   });
 
   it("WLT1_LOG_REDACT_PATHS includes the Phase 4A-1 decision-token body field (never logged)", () => {

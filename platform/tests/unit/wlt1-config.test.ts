@@ -951,3 +951,75 @@ describe("WLT-01 config loader — Public Client Surface", () => {
     }
   });
 });
+
+describe("WLT-01 config loader — Public Perimeter / Pre-Authentication Abuse Control (DEC-010)", () => {
+  const VALID_TOKEN = "a-perimeter-token-of-at-least-32-characters";
+
+  it("WLT1_PUBLIC_SURFACE_ENABLED absent -> disabled (safe default)", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: undefined });
+    expect(cfg.publicSurfaceEnabled).toBe(false);
+    expect(cfg.publicPerimeterToken).toBeUndefined();
+  });
+
+  it.each(["false", "", "0", "1", "yes", "TRUE_TYPO", " "])("WLT1_PUBLIC_SURFACE_ENABLED=%j -> disabled (only the exact string 'true' enables)", (raw) => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: raw });
+    expect(cfg.publicSurfaceEnabled).toBe(false);
+    expect(cfg.publicPerimeterToken).toBeUndefined();
+  });
+
+  it("WLT1_PUBLIC_SURFACE_ENABLED='true' -> enabled (with a valid perimeter token configured)", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: VALID_TOKEN });
+    expect(cfg.publicSurfaceEnabled).toBe(true);
+    expect(cfg.publicPerimeterToken).toBe(VALID_TOKEN);
+  });
+
+  it.each(["TRUE", " true ", "True"])("WLT1_PUBLIC_SURFACE_ENABLED=%j -> enabled (case-insensitive, trimmed normalization)", (raw) => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: raw, WLT1_PUBLIC_PERIMETER_TOKEN: VALID_TOKEN });
+    expect(cfg.publicSurfaceEnabled).toBe(true);
+  });
+
+  it("enabled + missing WLT1_PUBLIC_PERIMETER_TOKEN -> boot fails closed (never silently downgrades to disabled)", () => {
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: undefined })).toThrowError(AppError);
+  });
+
+  it("enabled + blank WLT1_PUBLIC_PERIMETER_TOKEN -> boot fails closed", () => {
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: "   " })).toThrowError(AppError);
+  });
+
+  it("enabled + WLT1_PUBLIC_PERIMETER_TOKEN shorter than 32 characters -> boot fails closed", () => {
+    expect(() => loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: "a".repeat(31) })).toThrowError(AppError);
+  });
+
+  it("enabled + WLT1_PUBLIC_PERIMETER_TOKEN exactly 32 characters -> boots", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: "a".repeat(32) });
+    expect(cfg.publicSurfaceEnabled).toBe(true);
+    expect(cfg.publicPerimeterToken).toBe("a".repeat(32));
+  });
+
+  it("disabled + missing WLT1_PUBLIC_PERIMETER_TOKEN -> boots (token is never required when disabled)", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "false", WLT1_PUBLIC_PERIMETER_TOKEN: undefined });
+    expect(cfg.publicSurfaceEnabled).toBe(false);
+    expect(cfg.publicPerimeterToken).toBeUndefined();
+  });
+
+  it("disabled + a token present anyway -> boots, but the token is never surfaced on the returned config (never trusted while disabled)", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "false", WLT1_PUBLIC_PERIMETER_TOKEN: VALID_TOKEN });
+    expect(cfg.publicSurfaceEnabled).toBe(false);
+    expect(cfg.publicPerimeterToken).toBeUndefined();
+  });
+
+  it("the thrown error's details never echo the configured perimeter token value", () => {
+    try {
+      loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: "a".repeat(31) });
+      throw new Error("should have thrown");
+    } catch (e) {
+      const err = e as AppError;
+      expect(JSON.stringify(err.details)).not.toContain("a".repeat(31));
+    }
+  });
+
+  it("the perimeter token must never equal the internal-service token by construction check (this repository convention — not enforced by the loader itself, just confirmed distinct in the fixture)", () => {
+    const cfg = loadWlt1Config({ ...base, WLT1_PUBLIC_SURFACE_ENABLED: "true", WLT1_PUBLIC_PERIMETER_TOKEN: VALID_TOKEN });
+    expect(cfg.publicPerimeterToken).not.toBe(cfg.wlt1InternalServiceToken);
+  });
+});

@@ -42,6 +42,7 @@ import { registerPublicDestinationRoutes } from "./routes/public/destinations.js
 import { registerPublicWalletDestinationRoutes } from "./routes/public/wallet-destinations.js";
 import { registerPublicFiatPayoutDestinationRoutes } from "./routes/public/payout-destinations.js";
 import { registerPublicProofOfControlRoutes } from "./routes/public/proof-of-control.js";
+import { makePublicPerimeterGuard } from "./plugins/public-perimeter.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -72,6 +73,10 @@ export const WLT1_LOG_REDACT_PATHS = [
   // Phase 4A-1: the IAM-02 decision token must never reach any log line — same rationale as every
   // other secret above.
   "req.body.decision_token",
+  // Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3): the trusted edge's own
+  // provenance credential must never reach any log line, same rationale as x-internal-service-
+  // token above.
+  "req.headers['x-aix-perimeter-token']",
   // Fiat Payout Destinations (APAC): the raw bank account identifier and beneficiary name are
   // Restricted/AML-sensitive request fields — never written to the request/error logs, same
   // rationale as req.body.address/req.body.memo_tag above. bank_identifier (BIC)/branch_identifier
@@ -165,12 +170,32 @@ export async function buildApp(config: Wlt1Config): Promise<FastifyInstance> {
   // routes, a SEPARATE plugin scope from every `/internal/wlt1/*` route above: public bearer
   // auth (IAM-01 introspection + CLT-01 membership) and internal service-token auth are never
   // interchangeable — none of these four registrations touch `makeWlt1InternalIdentityGuard`.
-  // FND-FIND-001 (HIGH, pre-authentication abuse) is NOT solved by this surface and remains a
-  // mandatory precondition before any internet exposure — see OPEN_FINDINGS.md.
-  await registerPublicDestinationRoutes(app);
-  await registerPublicWalletDestinationRoutes(app);
-  await registerPublicFiatPayoutDestinationRoutes(app);
-  await registerPublicProofOfControlRoutes(app);
+  //
+  // Public Perimeter / Pre-Authentication Abuse Control (`DECISION_LOG.md` DEC-010, L3) — the six
+  // routes are registered ONLY when `config.publicSurfaceEnabled` is true (safe default: false,
+  // disabled — see config.ts). When disabled, they are absent from the route tree entirely: no
+  // handler, no preHandler, no IAM/CLT/FND client, no DB path exists for a disabled surface — the
+  // smallest reachable attack surface (closes WLT-FIND-010's own gap, once independently
+  // accepted). When enabled, ONE encapsulated plugin scope (`app.register(async (publicScope) =>
+  // ...)`) wraps exactly these four registrations plus a perimeter-provenance `onRequest` hook —
+  // encapsulation is what makes the hook apply to exactly the six public routes and NEVER leak
+  // onto the 27 internal routes or health/readiness above, which are registered on the root `app`
+  // instance, outside this scope.
+  //
+  // FND-FIND-001 (HIGH, pre-authentication abuse) is NOT solved by this gate alone — DEC-010's
+  // Turn 2 (trusted edge + mandatory network isolation, NOT yet implemented) is what actually
+  // closes it. This gate only guarantees that a request reaching an ENABLED public surface
+  // without valid perimeter provenance never reaches IAM/CLT/FND/the database. See
+  // OPEN_FINDINGS.md (FND-FIND-001, WLT-FIND-010).
+  if (config.publicSurfaceEnabled) {
+    await app.register(async (publicScope) => {
+      publicScope.addHook("onRequest", makePublicPerimeterGuard(config.publicPerimeterToken as string));
+      await registerPublicDestinationRoutes(publicScope);
+      await registerPublicWalletDestinationRoutes(publicScope);
+      await registerPublicFiatPayoutDestinationRoutes(publicScope);
+      await registerPublicProofOfControlRoutes(publicScope);
+    });
+  }
 
   await app.ready();
 

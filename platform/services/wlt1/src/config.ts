@@ -368,6 +368,26 @@ export interface Wlt1Config extends AppConfig {
   /** Public Client Surface — hard server-side ceiling on `GET /wlt1/destinations`'s page size.
    * REQUIRED, no default. See this file's own Public Client Surface header comment. */
   publicDestinationListMax: number;
+  /**
+   * Public Perimeter / Pre-Authentication Abuse Control (`DECISION_LOG.md` DEC-010, L3). Safe
+   * default `false` — the six public routes are NOT registered at all when disabled (see
+   * `server.ts`). Only the exact case-insensitive string `"true"` (after trim) enables; every
+   * other value, including absence, disables — mirrors `IAM_BOOTSTRAP_ENABLED`/
+   * `IAM2_BOOTSTRAP_TRANSITION_ENABLED`'s own established dangerous-capability convention.
+   */
+  publicSurfaceEnabled: boolean;
+  /**
+   * Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3). The trusted edge's own
+   * provenance credential (`x-aix-perimeter-token`), checked by
+   * `plugins/public-perimeter.ts` BEFORE any IAM call. Conditionally required: MUST be set
+   * (non-blank, >= 32 characters) when `publicSurfaceEnabled` is `true` — startup fails closed if
+   * enabled without it, so an operator who explicitly requested enablement is never silently
+   * downgraded to disabled. `undefined` when the surface is disabled (never read). Infrastructure
+   * provenance ONLY — never client identity, IAM identity, CLT authority, or internal-service
+   * authority; NEVER the same value as `wlt1InternalServiceToken` or any other WLT-01 credential.
+   * Never logged.
+   */
+  publicPerimeterToken: string | undefined;
 }
 
 const DEFAULT_SCREENING_MAX_VALIDITY_HOURS = 720;
@@ -414,6 +434,8 @@ const EVIDENCE_EXPORT_MAX_RECORDS_MAX = 50000;
 
 const DEFAULT_STUCK_SCREENING_THRESHOLD_SECONDS = 900;
 const STUCK_SCREENING_THRESHOLD_SECONDS_FLOOR = 300;
+
+const PUBLIC_PERIMETER_TOKEN_MIN_LENGTH = 32;
 
 /** Detects a textually-duplicated top-level JSON object key BEFORE the string is trusted —
  * `JSON.parse` itself silently keeps only the last occurrence of a duplicated key (per the JSON
@@ -533,6 +555,12 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
   // list route, so absence itself is a config error, not a "use the default" case.
   const publicDestinationListMaxRaw = env.WLT1_PUBLIC_DESTINATION_LIST_MAX?.trim();
   const publicDestinationListMax = parseRequiredPositiveInt(publicDestinationListMaxRaw);
+  // Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3) — dangerous-capability
+  // default-off pattern, mirrors IAM_BOOTSTRAP_ENABLED/IAM2_BOOTSTRAP_TRANSITION_ENABLED exactly:
+  // only the exact string "true" (after trim/lowercase) enables; every other value disables, with
+  // no separate "malformed boolean" error state.
+  const publicSurfaceEnabled = (env.WLT1_PUBLIC_SURFACE_ENABLED ?? "false").trim().toLowerCase() === "true";
+  const publicPerimeterTokenRaw = env.WLT1_PUBLIC_PERIMETER_TOKEN?.trim();
 
   // Reuse the foundation loader's fail-closed validation (presence/length/ENVIRONMENT/
   // DATABASE_URL/PORT) by feeding it WLT-01's own token under the shared field name. A
@@ -655,6 +683,16 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
   if (publicDestinationListMax === null) {
     problems.push("WLT1_PUBLIC_DESTINATION_LIST_MAX is required and must be a positive integer");
   }
+  // Public Perimeter / Pre-Authentication Abuse Control (DEC-010, L3): an operator who explicitly
+  // requested enablement is never silently downgraded to disabled — a missing/blank/too-short
+  // perimeter token when enabled fails startup closed instead.
+  if (publicSurfaceEnabled) {
+    if (!publicPerimeterTokenRaw) {
+      problems.push("WLT1_PUBLIC_PERIMETER_TOKEN is required when WLT1_PUBLIC_SURFACE_ENABLED=true");
+    } else if (publicPerimeterTokenRaw.length < PUBLIC_PERIMETER_TOKEN_MIN_LENGTH) {
+      problems.push(`WLT1_PUBLIC_PERIMETER_TOKEN must be at least ${PUBLIC_PERIMETER_TOKEN_MIN_LENGTH} characters when WLT1_PUBLIC_SURFACE_ENABLED=true`);
+    }
+  }
   problems.push(...providerReceiptSecretProblems);
   // Production boot guard (Phase 2C-D1): the receipt route is always registered once this phase
   // ships (no feature flag) — a prod boot with no valid secret for the currently-active screening
@@ -703,5 +741,7 @@ export function loadWlt1Config(env: RawEnv = process.env): Wlt1Config {
     fndBaseUrl: fndBaseUrl as string,
     fndRateLimitConsumerToken: fndRateLimitConsumerToken as string,
     publicDestinationListMax: publicDestinationListMax as number,
+    publicSurfaceEnabled,
+    publicPerimeterToken: publicSurfaceEnabled ? (publicPerimeterTokenRaw as string) : undefined,
   };
 }

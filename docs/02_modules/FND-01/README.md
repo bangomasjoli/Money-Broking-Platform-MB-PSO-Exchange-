@@ -47,11 +47,19 @@ edge pre-auth throttling, mandatory network isolation, a WLT-01-owned
 public-surface enablement gate/perimeter-provenance credential, and the existing
 unchanged authenticated FND-01 chain from DEC-009). The authenticated engine and
 its numeric policy (DEC-009) are unchanged and are NOT extended to any
-pre-authentication subject. DEC-010's Turn 2 (the trusted edge / network
-isolation that alone closes this finding) is BLOCKED pending governance
-designation of a deployment/infrastructure implementation owner and a separate
-numeric pre-auth policy decision — no implementation exists yet. FND-FIND-001
-**REMAINS OPEN**.
+pre-authentication subject. **FND-01 remains owner of the authenticated L4
+rate-limit engine and remains the register-holder of FND-FIND-001; it does NOT
+own DEC-010's remaining L1/L2 implementation.** An independent Opus governance/
+architecture review (DEC-010 Turn 2 Prerequisites, no code) has **RESOLVED**
+implementation ownership of the trusted edge (L1) and mandatory network
+isolation (L2) — the layers that alone close this finding — to
+[**`IMP-02`**](../../03_implementation/IMP-02/README.md)
+(`03_implementation/IMP-02/README.md`, `NOT_STARTED`; a second instance of the
+already-governed `03_implementation` document class, explicitly **not** an 18th
+`02_modules/` pack). Production numeric pre-auth policy remains **NOT
+approved**; an explicitly non-production INTERNAL-UAT-only provisional policy
+is authorized for `IMP-02` engineering/abuse-test purposes only. No L1/L2
+implementation exists yet. FND-FIND-001 **REMAINS OPEN**.
 
 ## Open findings
 
@@ -59,7 +67,12 @@ FND-FIND-001 (HIGH — shared rate-limit engine pre-authentication abuse; a publ
 perimeter control, not closed by the DEC-009 numeric policy approval, by the
 engine's implementation/hardening, or by DEC-010's architecture acceptance alone
 — **REMAINS OPEN**, mandatory precondition before any WLT-01 public route is
-internet-exposed). Plus FND-FIND-002 through FND-FIND-009 (Shared Rate-Limit
-Engine acceptance/hardening findings — see
+internet-exposed; Required Action now names `IMP-02` as the designated
+implementation owner of the remaining L1/L2 work). Plus FND-FIND-002 through
+FND-FIND-009 (Shared Rate-Limit Engine acceptance/hardening findings), and
+**FND-FIND-010** (MEDIUM, newly opened by the DEC-010 Turn 2 Prerequisites
+review — the shared `@aix/foundation` connection pool configures neither
+`pool.max` nor `connectionTimeoutMillis`, blocking accurate production capacity
+calibration for FND-FIND-001's eventual closure) — see
 [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current
-state of each).
+state of each.

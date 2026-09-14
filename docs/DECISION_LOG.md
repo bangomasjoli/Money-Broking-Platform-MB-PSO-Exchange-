@@ -542,16 +542,55 @@ Future decisions should be appended below this line, oldest first, using the sam
   `02_modules/WLT-01/acceptance/
   WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md`.
   **Turn 2 / L1-L2 (trusted-edge pre-authentication throttling + mandatory
-  network isolation) remains NOT IMPLEMENTED / BLOCKED**, pending (1) a
-  deployment/infrastructure implementation owner — still UNASSIGNED — and
-  (2) a separate, later governance decision approving the numeric pre-auth
-  policy — still PENDING. `FND-FIND-001` (HIGH) is unrelated to Turn 1, is
-  NOT closed by it, and REMAINS OPEN. `INTERNET EXPOSURE` REMAINS
-  **PROHIBITED** — Turn 1's acceptance does not approve deployment, does not
-  approve internet exposure, and does not mitigate FND-FIND-001 (independent
-  acceptance directly confirmed that a valid perimeter token combined with
-  an invalid bearer still reaches IAM-01 — provenance is admission control,
-  not pre-authentication abuse throttling).
+  network isolation) remains NOT IMPLEMENTED**, but its two prerequisites are
+  now partially resolved by an independent Opus governance/architecture
+  review (DEC-010 Turn 2 Prerequisites, no code/file changes) that concluded
+  **PARTIALLY RESOLVED — ADDITIONAL GOVERNANCE REQUIRED**:
+  - **Deployment/infrastructure implementation owner — RESOLVED.** L1 and L2
+    are owned exclusively by **`IMP-02`** (`03_implementation/IMP-02/
+    README.md`), a second instance of the already-governed `03_implementation`
+    implementation-handover document class established by `IMP-01` —
+    explicitly NOT an 18th `02_modules/` blueprint pack; the platform's
+    17-module delivery taxonomy is unchanged. `IMP-02` status: `NOT_STARTED`.
+  - **Numeric pre-auth policy — NOT RESOLVED (outcome B).** Production
+    thresholds are NOT approved: the load-bearing capacity inputs (negative-
+    introspection DB service time; deployed IAM pool concurrency; deployment
+    shape; NAT/CGNAT fairness population `K_max`) are unmeasured, and no
+    number is invented in their place. A capacity formula, an explicitly
+    non-production **INTERNAL-UAT-only provisional policy**, a source-bucket
+    aggregation policy (IPv4 `/32` primary / `/24` secondary at 8×; IPv6
+    `/64` primary / `/48` secondary at 8×), a three-counter route
+    classification (`TOTAL`/`READ`/`MUTATE`, 10:1 ratio inherited from
+    DEC-009), a mandatory single-logical-enforcement-point multi-instance
+    invariant, HTTP semantics (429 throttle / 404 allowlist, distinct from
+    L3's 404), an eight-measurement capacity-calibration framework (M1–M8),
+    and a ten-scenario abuse-test acceptance matrix (A1–A10) are all recorded
+    in `IMP-02`, none of them as approved production numbers. Production
+    approval requires the full M1–M8 evidence pack, explicit signed
+    risk-policy terms (`U`, `N`), the A1–A10 matrix passed at production
+    shape, independent acceptance, a `DECISION_LOG.md` entry of record, and
+    OPS-05 maker-checker sign-off — see `IMP-02` for the full process.
+  - **Newly surfaced, OPEN:** the shared `@aix/foundation` connection pool
+    (`packages/foundation/src/db.ts`) configures neither `pool.max` nor
+    `connectionTimeoutMillis` (both at node-pg library defaults), materially
+    blocking accurate M1/M2/M5 capacity calibration — tracked as
+    `OPEN_FINDINGS.md` **FND-FIND-010** (MEDIUM).
+  - **Still OPEN, unresolved by this review:** cloud provider selection
+    (ARC-11 §28 #1), IaC tooling (ARC-11 §28 #5), and a named accountable
+    human owner for production numeric-policy sign-off (remains
+    `Unassigned`, consistent with every module `owner:` field in this
+    repository — not invented here).
+
+  **`FND-FIND-001` (HIGH) is unrelated to Turn 1, is NOT closed by it, is NOT
+  closed by this prerequisites review, and REMAINS OPEN** — its Required
+  Action now names `IMP-02` as the designated implementation owner.
+  **`INTERNET EXPOSURE` REMAINS PROHIBITED** — resolving ownership and
+  recording a provisional UAT-only policy authorizes `IMP-02` to begin
+  UAT-scoped engineering and abuse-test exercise; it does not approve
+  deployment, does not approve internet exposure, and does not mitigate
+  FND-FIND-001 (independent acceptance already confirmed that a valid
+  perimeter token combined with an invalid bearer still reaches IAM-01 —
+  provenance is admission control, not pre-authentication abuse throttling).
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

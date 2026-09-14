@@ -122,6 +122,7 @@ adjudicate any of these; adjudication requires a dedicated Opus review per modul
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | IMP-01 | AIX Master Implementation Handover | Platform-wide | Build order, dependency map, migration order, go-live roadmap | v1.0 | DRAFT | IN_PROGRESS | `03_implementation/IMP-01/README.md` | Unassigned | N/A | Draft / ready for implementation use | — | c1765f5 |
+| IMP-02 | AIX Platform Deployment and Perimeter Implementation Pack | Platform-wide | Trusted edge, network isolation, deployment perimeter (`DECISION_LOG.md` DEC-010 L1/L2; closes `FND-FIND-001` once implemented and independently accepted) | v1.0 | DRAFT | NOT_STARTED | `03_implementation/IMP-02/README.md` | Unassigned | N/A | N/A | none | 6262a81 |
 
 ---
 

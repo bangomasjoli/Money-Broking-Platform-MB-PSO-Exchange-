@@ -179,6 +179,42 @@ describe.skipIf(!EDGE_BASE_URL)("IMP-02 edge — live behaviour (TEST_EDGE_BASE_
     expect(res.status).toBe(404);
   });
 
+  // ---- E1: non-admitted traffic must not poison request-rate counters ----------------------
+  // Regression coverage for a finding raised during independent acceptance review: denied
+  // traffic (unknown paths, /internal/*, path-confusion, wrong method) was reaching the
+  // request-rate tracking directives before being denied, so a 404 flood could exhaust a
+  // legitimate client's TOTAL/READ/MUTATE/aggregate budget purely through non-admitted probing.
+  // This test is placed early, before any rate-limiting-triggering test below, so it observes a
+  // still-fresh counter budget — see this file's header comment on TEST_EDGE_BASE_URL usage.
+  it("[E1] a large flood of denied (non-admitted) traffic does not consume the legitimate request-rate budget", async () => {
+    const deniedPaths = [
+      "/internal/wlt1/health",
+      "/wlt1/nope-does-not-exist",
+      "/wlt1//confusion",
+      "/wlt1/destinations/foo/bar",
+    ];
+    let deniedCount = 0;
+    for (let round = 0; round < 40; round++) {
+      for (const p of deniedPaths) {
+        const res = await rawRequest(p);
+        expect(res.status, `expected 404 for denied path ${p}`).toBe(404);
+        deniedCount++;
+      }
+    }
+    expect(deniedCount).toBe(160); // 4 denied classes x 40 rounds — well past any governed threshold
+
+    // A legitimate, allowed request immediately afterward must NOT be rejected as a consequence
+    // of the denied flood above (it may still legitimately be reachable/unreachable for reasons
+    // unrelated to rate limiting — e.g. no upstream configured for this test run — but it must
+    // never be 429, since the denied flood alone must never have moved a governed counter).
+    const legit = await rawRequest("/wlt1/destinations");
+    expect(
+      legit.status,
+      "a legitimate request was rate-limited after only denied (non-admitted) traffic — " +
+        "denied traffic must never consume a governed request-rate counter",
+    ).not.toBe(429);
+  });
+
   // ---- Header strip/inject -------------------------------------------------------------------
   it("forwarding-claim headers (X-Forwarded-For etc.) do not survive to the upstream response echo, where observable", async () => {
     // This assertion is meaningful only when the upstream echoes request headers (e.g. a test

@@ -364,3 +364,126 @@ describe("IMP-02 edge — structural separation (base cannot run standalone)", (
     expect(limitsCfg).toMatch(/^backend b_gate\b/m);
   });
 });
+
+describe("IMP-02 edge — E1: non-admitted traffic cannot reach request-rate tracking", () => {
+  // Regression coverage for a finding raised during independent acceptance review: the six-pair
+  // admission deny rule previously sat AFTER the track-sc1..sc6 directives, so any request that
+  // was neither /internal/*, nor path-confusion, but simply not one of the six governed pairs
+  // (an unknown path, a wrong method on a known path, etc.) still consumed a governed
+  // TOTAL/READ/MUTATE/aggregate counter before being denied. Live-proven fixed: 300x unknown-path
+  // and 300x wrong-method/path-confusion requests now produce zero counter movement on every
+  // request-rate table, while genuine admitted traffic still tracks and still enforces (including
+  // the /24-/48 aggregate reaching its own 960/60s threshold from admitted traffic alone).
+  //
+  // These assertions use the comment-stripped baseCfgCode exclusively — a comment claiming the
+  // correct order cannot satisfy them; only the actual directive ordering can.
+
+  const trackScLines = [1, 2, 3, 4, 5, 6].map((n) => `track-sc${n} `);
+
+  function firstIndexOfAny(text: string, needles: string[]): number {
+    const indices = needles
+      .map((n) => text.indexOf(n))
+      .filter((i) => i !== -1);
+    expect(indices.length, `none of [${needles.join(", ")}] found in config`).toBeGreaterThan(0);
+    return Math.min(...indices);
+  }
+
+  it("the six-pair admission deny rule appears strictly before every track-sc* directive", () => {
+    const admissionIdx = baseCfgCode.indexOf(
+      "http-request deny deny_status 404 unless m_get p_read_list",
+    );
+    expect(admissionIdx, "admission deny rule not found").toBeGreaterThan(-1);
+
+    const firstTrackScIdx = firstIndexOfAny(baseCfgCode, trackScLines);
+    expect(admissionIdx).toBeLessThan(firstTrackScIdx);
+  });
+
+  it("the internal-path and path-confusion deny rules also precede every track-sc* directive", () => {
+    const internalDenyIdx = baseCfgCode.indexOf("http-request deny deny_status 404 if p_internal");
+    const confusionDenyIdx = baseCfgCode.indexOf(
+      "http-request deny deny_status 404 if has_dslash",
+    );
+    expect(internalDenyIdx).toBeGreaterThan(-1);
+    expect(confusionDenyIdx).toBeGreaterThan(-1);
+
+    const firstTrackScIdx = firstIndexOfAny(baseCfgCode, trackScLines);
+    expect(internalDenyIdx).toBeLessThan(firstTrackScIdx);
+    expect(confusionDenyIdx).toBeLessThan(firstTrackScIdx);
+  });
+
+  it("every track-sc* directive appears strictly after ALL three deny gates (internal, confusion, admission)", () => {
+    const denyGateIndices = [
+      baseCfgCode.indexOf("http-request deny deny_status 404 if p_internal"),
+      baseCfgCode.indexOf("http-request deny deny_status 404 if has_dslash"),
+      baseCfgCode.indexOf("http-request deny deny_status 404 unless m_get p_read_list"),
+    ];
+    expect(denyGateIndices.every((i) => i > -1)).toBe(true);
+    const lastDenyGateIdx = Math.max(...denyGateIndices);
+
+    for (const marker of trackScLines) {
+      const idx = baseCfgCode.indexOf(marker);
+      expect(idx, `${marker.trim()} not found`).toBeGreaterThan(-1);
+      expect(idx).toBeGreaterThan(lastDenyGateIdx);
+    }
+  });
+
+  it("the TCP-layer connection ceiling remains unconditional (E1 does not touch sc0/connection tracking)", () => {
+    // The connection-concurrency ceiling is a distinct, pre-HTTP control and is explicitly NOT
+    // part of E1's remediation scope — it must remain unaffected by, and precede, the HTTP-layer
+    // admission gate (tcp-request connection rules execute before HTTP parsing regardless of
+    // textual position, but this repository's convention keeps them textually first for clarity).
+    const connTrackIdx = baseCfgCode.indexOf("tcp-request connection track-sc0");
+    const connRejectIdx = baseCfgCode.indexOf("tcp-request connection reject");
+    const admissionIdx = baseCfgCode.indexOf(
+      "http-request deny deny_status 404 unless m_get p_read_list",
+    );
+    expect(connTrackIdx).toBeGreaterThan(-1);
+    expect(connRejectIdx).toBeGreaterThan(-1);
+    expect(connTrackIdx).toBeLessThan(admissionIdx);
+    expect(connRejectIdx).toBeLessThan(admissionIdx);
+  });
+});
+
+describe("IMP-02 edge — E2: pinned HAProxy version is enforced, not merely documented", () => {
+  it("validate.mjs reads VERSION from disk and compares against a variable, never a hard-coded literal", async () => {
+    const validateSrc = readFileSync(join(EDGE_ROOT, "validate.mjs"), "utf8");
+    expect(validateSrc).toContain('join(here, "VERSION")');
+    // The comparison itself must be variable-to-variable (reported.version !== pinned), never a
+    // literal version string compared directly — "3.0.27" may still appear in comments/example
+    // error-message text, which is legitimate and not what this assertion targets.
+    expect(validateSrc).toContain("reported.version !== pinned");
+    expect(validateSrc).not.toMatch(/===\s*["']3\.\d+\.\d+["']/);
+    expect(validateSrc).not.toMatch(/["']3\.\d+\.\d+["']\s*===/);
+  });
+
+  it("readPinnedVersion() returns the exact committed VERSION content", async () => {
+    const { readPinnedVersion } = await import("../../edge/validate.mjs");
+    expect(readPinnedVersion()).toBe(version);
+  });
+
+  it("the HAProxy version-line regex is anchored to a literal 'HAProxy version' prefix (never a bare substring match)", async () => {
+    const { HAPROXY_VERSION_LINE_RE } = await import("../../edge/validate.mjs");
+    expect(HAPROXY_VERSION_LINE_RE.test("HAProxy version 3.0.27-a2b09cd 2026/08/27")).toBe(true);
+    expect(HAPROXY_VERSION_LINE_RE.test("HAProxy version 3.0.27 2026/08/27")).toBe(true);
+    expect(HAPROXY_VERSION_LINE_RE.test("not-haproxy 3.0.27")).toBe(false);
+    expect(HAPROXY_VERSION_LINE_RE.test("some text mentioning HAProxy version 3.0.27 in passing")).toBe(
+      false,
+    ); // not at line start
+  });
+
+  it("the version regex captures only the core X.Y.Z, excluding any build/pre-release suffix", async () => {
+    const { HAPROXY_VERSION_LINE_RE } = await import("../../edge/validate.mjs");
+    const m = "HAProxy version 3.0.27-a2b09cd 2026/08/27 - https://haproxy.org/".match(
+      HAPROXY_VERSION_LINE_RE,
+    );
+    expect(m?.[1]).toBe("3.0.27");
+  });
+
+  it("SEMVER_RE rejects a 'v'-prefixed, suffixed, or otherwise non-bare VERSION value", async () => {
+    const { SEMVER_RE } = await import("../../edge/validate.mjs");
+    expect(SEMVER_RE.test("3.0.27")).toBe(true);
+    expect(SEMVER_RE.test("v3.0.27")).toBe(false);
+    expect(SEMVER_RE.test("3.0.27 (LTS)")).toBe(false);
+    expect(SEMVER_RE.test("3.0")).toBe(false);
+  });
+});

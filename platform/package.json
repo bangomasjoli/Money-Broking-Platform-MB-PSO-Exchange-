@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "migrate:up": "node-pg-migrate -m infra/migrations --no-check-order up",
     "migrate:down": "node-pg-migrate -m infra/migrations --no-check-order down",
+    "edge:validate": "node edge/validate.mjs",
     "dev:fnd": "tsx watch services/fnd/src/index.ts",
     "start:fnd": "tsx services/fnd/src/index.ts",
     "dev:iam": "tsx watch services/iam/src/index.ts",

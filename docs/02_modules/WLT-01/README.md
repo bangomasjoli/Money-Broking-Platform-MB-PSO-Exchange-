@@ -26,7 +26,11 @@ baseline_commit: 780e116
 
 **Blueprint conflict note (unresolved, unaffected by the public-surface acceptance above):** `BP-WLT-01-v1.2` remains `REVIEW_REQUIRED — CONFLICT` (see above) — this acceptance record does not resolve it.
 
-**Public perimeter / pre-authentication abuse control:** internet exposure of the accepted public surface remains **PROHIBITED** pending `FND-FIND-001` (HIGH, tracked under FND-01). The closing architecture is now **ACCEPTED FOR IMPLEMENTATION** as [`DECISION_LOG.md`](../../DECISION_LOG.md) DEC-010 — a four-layer design (trusted edge pre-auth throttling + mandatory network isolation + a WLT-01-owned public-surface enablement gate/perimeter-provenance credential + the existing unchanged authenticated chain). WLT-01 owns the enablement-gate turn (`WLT1_PUBLIC_SURFACE_ENABLED`/`WLT1_PUBLIC_PERIMETER_TOKEN`, tracked as WLT-FIND-010), which can at most close WLT-FIND-010 once implemented and independently accepted; it does **not** by itself close FND-FIND-001, which requires the separate trusted-edge/network-isolation turn (currently blocked on deployment-owner designation and numeric-policy governance). No implementation exists yet for either turn.
+**Public perimeter / pre-authentication abuse control:** internet exposure of the accepted public surface remains **PROHIBITED** pending `FND-FIND-001` (HIGH, tracked under FND-01). The closing architecture is **ACCEPTED FOR IMPLEMENTATION** as [`DECISION_LOG.md`](../../DECISION_LOG.md) DEC-010 — a four-layer design (trusted edge pre-auth throttling + mandatory network isolation + a WLT-01-owned public-surface enablement gate/perimeter-provenance credential + the existing unchanged authenticated chain).
+
+**DEC-010 Turn 1 (WLT-01's own L3 application gate) is COMPLETE / ACCEPTED at commit `af52fe8`.** The six public routes are now registered only when `WLT1_PUBLIC_SURFACE_ENABLED` is exactly `"true"` (safe default: **disabled** — 0 public + 27 internal routes; no handler, no IAM/CLT/FND client, no DB path exists). When enabled (6 public + 27 internal routes), every public request must additionally present a valid `x-aix-perimeter-token` (`WLT1_PUBLIC_PERIMETER_TOKEN`, ≥32 characters, constant-time compared, boot fails closed if enabled without it) via an `onRequest` hook confined to a dedicated Fastify plugin scope, checked strictly before body parsing and before any IAM/CLT/FND call — independently proven inert on the 27 internal routes and on health/readiness, with zero downstream calls and zero database writes on rejection, and a `404` response indistinguishable from a disabled surface or an unknown route. **`OPEN_FINDINGS.md` WLT-FIND-010 is now CLOSED** — see [WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md](acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md) for the full acceptance record. Two new non-blocking carry-forwards: WLT-FIND-014, WLT-FIND-015 (both INFORMATIONAL).
+
+**Turn 1's acceptance does NOT close FND-FIND-001 and does NOT approve internet exposure.** DEC-010's Turn 2 (trusted edge pre-authentication throttling + mandatory network isolation — the layers that actually close FND-FIND-001) remains **NOT IMPLEMENTED / BLOCKED**, pending deployment/infrastructure owner designation (still unassigned) and a separate future numeric pre-auth policy governance decision. Independent acceptance directly confirmed that a valid perimeter token combined with an invalid bearer still reaches IAM-01 — provenance is admission control, not pre-authentication abuse throttling. **FND-FIND-001 remains HIGH/OPEN. Internet exposure remains PROHIBITED.**
 
 ## Reviews
 
@@ -36,6 +40,7 @@ baseline_commit: 780e116
 ## Acceptance evidence
 
 - [WLT-01_Public_Client_Surface_Opus_Acceptance_v1.0.md](acceptance/WLT-01_Public_Client_Surface_Opus_Acceptance_v1.0.md) — Public Client Surface implementation acceptance (`12cedda`) + remediation (`7f9fc8a`)
+- [WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md](acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md) — Public Perimeter Application Gate (DEC-010 Turn 1) implementation + acceptance (`af52fe8`)
 
 ## Implementation notes / plans
 
@@ -45,6 +50,9 @@ baseline_commit: 780e116
 
 WLT-FIND-001 through WLT-FIND-004 (WLT-FIND-004 now records public-surface acceptance
 COMPLETE), plus WLT-FIND-005 through WLT-FIND-008 (public-surface MEDIUM/LOW findings,
-all CLOSED) and WLT-FIND-009 through WLT-FIND-013 (public-surface non-blocking
-carry-forwards, OPEN) — see [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full
-register and current state of each.
+all CLOSED), WLT-FIND-009 (LOW, OPEN), **WLT-FIND-010 (public-surface enablement gate
+— CLOSED at commit `af52fe8`)**, WLT-FIND-011 through WLT-FIND-013 (non-blocking
+carry-forwards, OPEN), and WLT-FIND-014/WLT-FIND-015 (public-perimeter-gate
+INFORMATIONAL carry-forwards, OPEN, non-blocking) — see
+[OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current state of
+each.

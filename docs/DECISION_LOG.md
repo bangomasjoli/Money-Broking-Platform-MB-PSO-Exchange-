@@ -527,6 +527,31 @@ Future decisions should be appended below this line, oldest first, using the sam
   Public Client Surface acceptance at `7f9fc8a`/`bb1ee1a` (all six public
   routes, their authority chain, and their DEC-009 bindings are unchanged),
   and introduces no migration, no grant change, and no code.
+  **Turn 1 / L3 (WLT-01 public-surface enablement gate + perimeter-provenance
+  admission) IMPLEMENTED and independently accepted COMPLETE / ACCEPTED at
+  commit `af52fe8`** — `WLT1_PUBLIC_SURFACE_ENABLED` (safe default `false`;
+  the six public routes are NOT registered at all when disabled) plus
+  conditionally-required `WLT1_PUBLIC_PERIMETER_TOKEN` (≥32 chars, boot
+  fails closed if enabled without it); the `x-aix-perimeter-token`
+  `onRequest` hook independently proven confined to the public route scope,
+  running before body parsing and strictly before any IAM/CLT/FND call, with
+  zero downstream calls and zero database writes (including
+  `foundation.outbox_event`) on rejection, and a 404 response independently
+  proven byte-identical to a disabled surface and to a genuinely unknown
+  route. **This CLOSES `OPEN_FINDINGS.md` WLT-FIND-010.** Full record:
+  `02_modules/WLT-01/acceptance/
+  WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md`.
+  **Turn 2 / L1-L2 (trusted-edge pre-authentication throttling + mandatory
+  network isolation) remains NOT IMPLEMENTED / BLOCKED**, pending (1) a
+  deployment/infrastructure implementation owner — still UNASSIGNED — and
+  (2) a separate, later governance decision approving the numeric pre-auth
+  policy — still PENDING. `FND-FIND-001` (HIGH) is unrelated to Turn 1, is
+  NOT closed by it, and REMAINS OPEN. `INTERNET EXPOSURE` REMAINS
+  **PROHIBITED** — Turn 1's acceptance does not approve deployment, does not
+  approve internet exposure, and does not mitigate FND-FIND-001 (independent
+  acceptance directly confirmed that a valid perimeter token combined with
+  an invalid bearer still reaches IAM-01 — provenance is admission control,
+  not pre-authentication abuse throttling).
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

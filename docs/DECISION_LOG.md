@@ -625,6 +625,51 @@ Future decisions should be appended below this line, oldest first, using the sam
   new number, and does not touch the M1–M8/A1–A10/OPS-05 production approval
   path. **`FND-FIND-001` REMAINS HIGH/OPEN. `INTERNET EXPOSURE` REMAINS
   PROHIBITED.**
+- **IMP-02 Turn B / L2 mandatory network isolation (UAT proof) — IMPLEMENTED
+  and independently accepted COMPLETE / ACCEPTED at commit `7132057`**
+  (`feat(imp02): add UAT L2 isolation topology`; single commit, no
+  remediation turn required). Proves, inside a disposable, provider-neutral
+  Lima UAT harness (genuine Linux network namespaces + veth pairs, no
+  Docker/container runtime, no host root), that a direct probe from the
+  modeled external/test-client trust zone to the real, unmodified WLT-01
+  backend fails at the network layer (independently reproduced as raw-socket
+  `ENETUNREACH`, the strongest available negative outcome — not a timeout,
+  not `ECONNREFUSED`), while the same client through the real, unmodified
+  Turn-A HAProxy edge reaches real WLT-01 application logic (`401
+  WLT1_AUTH_REQUIRED`), and the same isolated topology with a deliberately
+  wrong edge perimeter token still receives WLT's own unmodified L3
+  rejection (`404`, independently attributed to WLT via its structured JSON
+  envelope and generated request/correlation IDs, distinguishable from an
+  edge-generated denial). Independent review additionally verified: the
+  guest root namespace is orchestrator-only with no veth/bridge membership
+  and no route into either modeled network; IPv4/IPv6 forwarding explicitly
+  disabled in all three namespaces and guest root, with an adversarial test
+  confirming isolation holds even after an explicit backend route is added
+  to the client namespace (disabled forwarding blocks it independently of
+  route absence); the A3/positive-control fail-loud coupling reproduced by
+  deliberately breaking the edge path (A3 alone would have passed, but the
+  suite correctly withheld the verdict and reported overall FAIL); zero
+  internet/host exposure of the topology; and full reversal on
+  `topology.sh destroy`. Turn-A artifacts (`haproxy.base.cfg`, `uat/
+  haproxy.limits.cfg`, `validate.mjs`, `VERSION`) independently confirmed
+  byte-identical across `65fca52`/`cade4e0`/`7132057` — Turn B references
+  them at runtime rather than duplicating or modifying them. Turn-A Tier-1
+  (47/47), Tier-2 (6/6), and Tier-3 (23/23, under Turn-A's own canonical
+  echo-upstream condition) independently reproduced unaffected; full
+  canonical platform baseline independently reproduced from a fresh scratch
+  Postgres (189/191 files, 5004/5035 tests, 31 skipped exactly = the two
+  new env-gated live suites, 0 failures); migration head unchanged at `070`;
+  all 9 grants byte-unchanged. Full record: `03_implementation/IMP-02/
+  acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-002`). Three new LOW, non-blocking findings registered
+  (`IMP-02-FIND-005` through `IMP-02-FIND-007`) — none blocked acceptance.
+  **This proves the L2 isolation property only inside a disposable UAT
+  harness. It does NOT prove production network isolation, does NOT
+  implement TLS, does NOT approve any production numeric policy, and does
+  NOT close `FND-FIND-001`.** **TLS termination REMAINS PENDING IMP-02
+  work. Production numeric pre-authentication policy REMAINS NOT APPROVED.
+  `FND-FIND-001` REMAINS HIGH/OPEN. `FND-FIND-010` REMAINS OPEN. `INTERNET
+  EXPOSURE` REMAINS PROHIBITED.**
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

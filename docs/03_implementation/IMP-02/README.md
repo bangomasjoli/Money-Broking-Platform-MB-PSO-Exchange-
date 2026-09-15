@@ -25,13 +25,21 @@ acceptance made explicit:
   **COMPLETE / ACCEPTED at commit `65fca52`.** Full record:
   [`acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md)
   (`IMP-02-ACC-001`).
-- **Turn B — L2 mandatory network isolation** (the WLT listener must not be
-  directly internet-reachable; proven by external probe, abuse test A3).
-  **NOT STARTED.**
+- **Turn B — L2 mandatory network isolation UAT proof** (the WLT listener
+  must not be directly internet-reachable; proven by direct probe inside a
+  disposable Lima UAT harness, abuse test A3). **COMPLETE / ACCEPTED at
+  commit `7132057`.** Full record:
+  [`acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md)
+  (`IMP-02-ACC-002`).
 
-**Turn A acceptance is not Turn B's acceptance, is not IMP-02's overall
-completion, and is not production-perimeter readiness.** It does NOT close
-`OPEN_FINDINGS.md` FND-FIND-001, and it does NOT approve internet exposure.
+**Turn A and Turn B acceptance together are not IMP-02's overall completion,
+and are not production-perimeter readiness.** Turn B proves the L2 isolation
+property only inside a disposable, provider-neutral UAT harness — it does
+NOT prove production network isolation, production TLS, production cloud
+topology, production firewall/security-group configuration, production
+numeric limits, production capacity, or internet readiness. Neither turn
+closes `OPEN_FINDINGS.md` FND-FIND-001, and neither approves internet
+exposure.
 
 ## TLS Status
 
@@ -168,7 +176,8 @@ authority is unmodified by this pack; only cross-references are added.
 | L1 trusted edge — Turn A (UAT HTTP reference) | **IMP-02** | **ACCEPTED (`65fca52`)** |
 | L1 trusted edge — TLS termination | **IMP-02** | PENDING |
 | L1 trusted edge — production numeric policy | **IMP-02** | NOT APPROVED |
-| L2 network isolation — Turn B | **IMP-02** | NOT_STARTED |
+| L2 network isolation — Turn B (UAT proof) | **IMP-02** | **ACCEPTED (`7132057`)** |
+| L2 network isolation — production deployment | **IMP-02** | NOT PROVEN / PENDING |
 | L3 app gate + perimeter provenance | WLT-01 | ACCEPTED (`af52fe8`) |
 | L4 authenticated chain + rate-limit engine | FND-01 / IAM-01 / CLT-01 | ACCEPTED (`eb4a767`) |
 | FND-FIND-001 register-holder | FND-01 | HIGH / OPEN |
@@ -374,17 +383,29 @@ haproxy.limits.cfg` (every governed PROVISIONAL numeric threshold),
 `validate.mjs` (Tier-2 `haproxy -c` validation with enforced HAProxy VERSION
 pinning), `VERSION` (`3.0.27`), `uat/.env.example`, and `production/README.md`
 (no `.cfg` file — no production configuration exists). Full inventory and
-independent verification: `IMP-02-ACC-001`. No Dockerfile, Docker Compose,
-Kubernetes manifest, Terraform, or cloud-provider selection exists anywhere
-in this pack — those remain out of scope for Turn A and are not part of
-Turn B's L2 network-isolation scope either without a separate decision.
+independent verification: `IMP-02-ACC-001`.
+
+Turn B landed a disposable UAT isolation harness under
+`platform/edge/uat-topology/`: `lima.yaml` (a single provider-neutral Lima
+guest template, `vmType: vz`, no host root), `topology.sh` (namespace/veth
+orchestration, HAProxy/WLT-01 lifecycle inside the guest), `run-a3.sh` (the
+three frozen tests — A3 direct-bypass, positive control, A4 L3 regression —
+and evidence capture), `README.md`, and a git-ignored `evidence/` directory.
+Turn B references Turn A's real `haproxy.base.cfg`/`uat/haproxy.limits.cfg`
+at runtime rather than duplicating them. Full inventory and independent
+verification: `IMP-02-ACC-002`.
+
+No Dockerfile, Docker Compose, Kubernetes manifest, Terraform, or
+cloud-provider selection exists anywhere in this pack — those remain out of
+scope for both Turn A and Turn B without a separate decision.
 
 ## Status
 
 ```txt
-IMP-02 status (overall) = IN_PROGRESS — Turn A accepted, Turn B not started
+IMP-02 status (overall) = IN_PROGRESS — Turn A accepted, Turn B UAT-accepted, production L2 + TLS pending
 Turn A (L1 UAT trusted-edge HTTP reference) = COMPLETE / ACCEPTED at 65fca52
-Turn B (L2 network isolation) = NOT_STARTED
+Turn B (L2 network isolation, UAT proof) = COMPLETE / ACCEPTED at 7132057
+Production L2 network isolation (deployed) = NOT PROVEN / PENDING
 TLS termination = PENDING (deliberately deferred in Turn A, not a defect)
 L3 = WLT-01, COMPLETE / ACCEPTED at af52fe8
 Production numeric pre-auth policy = NOT APPROVED
@@ -392,9 +413,10 @@ Internal-UAT provisional policy = AUTHORIZED, non-production only, IMPLEMENTED i
 Cloud provider = OPEN (ARC-11 §28 #1)
 IaC tooling = OPEN (ARC-11 §28 #5)
 Named accountable human owner = UNASSIGNED
-FND-FIND-001 = HIGH / OPEN (Turn A acceptance does NOT close it)
+FND-FIND-001 = HIGH / OPEN (neither Turn A nor Turn B closes it)
 FND-FIND-010 = OPEN (IAM pool capacity gap; blocks M1/M2/M5)
 IMP-02-FIND-001..004 = LOW / OPEN (non-blocking Turn-A hardening residuals)
+IMP-02-FIND-005..007 = LOW / OPEN (non-blocking Turn-B hardening residuals)
 Internet exposure = PROHIBITED
 ```
 
@@ -403,8 +425,10 @@ Internet exposure = PROHIBITED
 - `DECISION_LOG.md` DEC-010 — governing architecture decision.
 - `03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md`
   (`IMP-02-ACC-001`) — Turn A independent acceptance, full evidence record.
+- `03_implementation/IMP-02/acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-002`) — Turn B independent acceptance, full evidence record.
 - `OPEN_FINDINGS.md` FND-FIND-001 — the finding IMP-02 exists to close, and
   FND-FIND-010 — the IAM capacity-gap cross-reference — plus the `IMP-02`
-  section (IMP-02-FIND-001 through IMP-02-FIND-004, LOW/OPEN, non-blocking).
+  section (IMP-02-FIND-001 through IMP-02-FIND-007, LOW/OPEN, non-blocking).
 - `02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md` — L3, already accepted.
 - `02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md` — L4 authenticated engine.

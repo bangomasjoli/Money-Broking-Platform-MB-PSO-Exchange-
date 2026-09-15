@@ -56,20 +56,25 @@ isolation (L2) — the layers that alone close this finding — to
 [**`IMP-02`**](../../03_implementation/IMP-02/README.md)
 (`03_implementation/IMP-02/README.md`, `IN_PROGRESS`; a second instance of the
 already-governed `03_implementation` document class, explicitly **not** an 18th
-`02_modules/` pack), staged as two sub-turns: **Turn A (L1 UAT trusted-edge
+`02_modules/` pack), staged as three sub-turns: **Turn A (L1 UAT trusted-edge
 HTTP reference implementation) is COMPLETE / ACCEPTED at commit `65fca52`**
 ([`IMP-02-ACC-001`](../../03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md));
-**Turn B (L2 mandatory network isolation, UAT proof) is now COMPLETE /
+**Turn B (L2 mandatory network isolation, UAT proof) is COMPLETE /
 ACCEPTED at commit `7132057`**
 ([`IMP-02-ACC-002`](../../03_implementation/IMP-02/acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md))
 — proved only inside a disposable, provider-neutral UAT harness, NOT at a
-production deployment; **TLS termination remains PENDING IMP-02 work.**
+production deployment; **Turn C (UAT TLS termination, functional) is now
+COMPLETE / ACCEPTED at commit `d568fa0`**
+([`IMP-02-ACC-003`](../../03_implementation/IMP-02/acceptance/IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md))
+— TLS functional only inside the same disposable UAT harness; **production
+certificate lifecycle, cipher policy, and backend/service-to-service TLS or
+mTLS all remain PENDING IMP-02 work.**
 Production numeric pre-auth policy remains **NOT approved**; the explicitly
 non-production INTERNAL-UAT-only provisional policy Turn A implements is
-authorized for `IMP-02` engineering/abuse-test purposes only. **Turn A and
-Turn B together do not close this finding** — L2 proven at a real
-production deployment and an approved production numeric policy are both
-still required. FND-FIND-001 **REMAINS OPEN**.
+authorized for `IMP-02` engineering/abuse-test purposes only. **Turn A,
+Turn B, and Turn C together do not close this finding** — L2 and TLS
+proven at a real production deployment, and an approved production numeric
+policy, are all still required. FND-FIND-001 **REMAINS OPEN**.
 
 ## Open findings
 

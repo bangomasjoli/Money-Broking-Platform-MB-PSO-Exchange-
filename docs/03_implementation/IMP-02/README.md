@@ -31,28 +31,41 @@ acceptance made explicit:
   commit `7132057`.** Full record:
   [`acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md)
   (`IMP-02-ACC-002`).
+- **Turn C — UAT TLS termination** (functional TLS capability at the
+  accepted L1 edge, inside the same disposable Lima UAT harness). **COMPLETE
+  / ACCEPTED at commit `d568fa0`.** Full record:
+  [`acceptance/IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md)
+  (`IMP-02-ACC-003`).
 
-**Turn A and Turn B acceptance together are not IMP-02's overall completion,
-and are not production-perimeter readiness.** Turn B proves the L2 isolation
-property only inside a disposable, provider-neutral UAT harness — it does
-NOT prove production network isolation, production TLS, production cloud
-topology, production firewall/security-group configuration, production
-numeric limits, production capacity, or internet readiness. Neither turn
-closes `OPEN_FINDINGS.md` FND-FIND-001, and neither approves internet
-exposure.
+**Turn A, Turn B, and Turn C acceptance together are not IMP-02's overall
+completion, and are not production-perimeter readiness.** Turn B proves the
+L2 isolation property, and Turn C proves TLS termination is functional, only
+inside a disposable, provider-neutral UAT harness — neither proves
+production network isolation, production certificate lifecycle, production
+cipher policy, backend TLS/mTLS, production cloud topology, production
+firewall/security-group configuration, production numeric limits,
+production capacity, or internet readiness. No turn closes
+`OPEN_FINDINGS.md` FND-FIND-001, and none approves internet exposure.
 
 ## TLS Status
 
-**TLS termination remains PENDING IMP-02 work.** It is named in this pack's
-in-scope list below, but Turn A deliberately built a TLS-neutral HTTP UAT
-reference edge (HAProxy compiled without OpenSSL — none of Turn A's required
-capabilities involve TLS) and neither implemented nor validated it. This is
-an adjudicated scope deferral, not a defect — see
-`IMP-02-ACC-001` §7 for the full reasoning. Pending work includes at minimum:
-a TLS-capable edge runtime/build, certificate provisioning, certificate
-rotation, TLS configuration, the M7 TLS-handshake capacity measurement below,
-and production-shape validation. **No document in this pack claims TLS
-implemented, HTTPS production-ready, or the production perimeter complete.**
+**Functional UAT TLS termination is COMPLETE / ACCEPTED at commit `d568fa0`
+(`IMP-02-ACC-003`) — production TLS readiness remains PENDING IMP-02 work.**
+Turn A deliberately built a TLS-neutral HTTP UAT reference edge (HAProxy
+compiled without OpenSSL — none of Turn A's required capabilities involved
+TLS); this was an adjudicated scope deferral, not a defect (see
+`IMP-02-ACC-001` §7). Turn C closes that deferral functionally: the same
+governed HAProxy 3.0.27 source, rebuilt with `USE_OPENSSL=1` inside the
+disposable Lima guest, terminates TLS 1.2/1.3 at the accepted edge via a
+narrow guarded modification to `haproxy.base.cfg`'s `bind` directive (see
+Pack Contents below), with an ephemeral, non-production UAT certificate
+model. **Still pending, unaffected by Turn C:** production certificate
+authority/lifecycle (issuance, storage, rotation, revocation, monitoring),
+production cipher policy, production SNI/Host enforcement policy, backend/
+service-to-service TLS or mTLS, the M7 TLS-handshake capacity measurement
+below, and production-shape validation. **No document in this pack claims
+production certificate lifecycle, production cipher policy, or the
+production perimeter complete.**
 
 ## Purpose
 
@@ -139,7 +152,8 @@ authority is unmodified by this pack; only cross-references are added.
 
 ### In scope (IMP-02 owns exclusively)
 
-- TLS termination — **PENDING**, not implemented in Turn A (see TLS Status above)
+- TLS termination — **UAT: ACCEPTED (`d568fa0`, Turn C)**; production
+  readiness PENDING (see TLS Status above)
 - Exact six-public-path allowlist (`/internal/*` never proxied) — **Turn A: ACCEPTED**
 - Pre-authentication source-based throttling — **Turn A: ACCEPTED (UAT provisional values only)**
 - Inbound stripping of any client-supplied `x-aix-*` provenance header
@@ -174,7 +188,8 @@ authority is unmodified by this pack; only cross-references are added.
 | Layer | Owner | Status |
 |---|---|---|
 | L1 trusted edge — Turn A (UAT HTTP reference) | **IMP-02** | **ACCEPTED (`65fca52`)** |
-| L1 trusted edge — TLS termination | **IMP-02** | PENDING |
+| L1 trusted edge — TLS termination — Turn C (UAT functional) | **IMP-02** | **ACCEPTED (`d568fa0`)** |
+| L1 trusted edge — TLS termination — production lifecycle | **IMP-02** | PENDING |
 | L1 trusted edge — production numeric policy | **IMP-02** | NOT APPROVED |
 | L2 network isolation — Turn B (UAT proof) | **IMP-02** | **ACCEPTED (`7132057`)** |
 | L2 network isolation — production deployment | **IMP-02** | NOT PROVEN / PENDING |
@@ -314,7 +329,7 @@ of this pack's creation.**
 | M4 | Authenticated WLT public-route latency under attack |
 | M5 | IAM pool saturation and post-saturation behaviour |
 | M6 | `iam.auth_event` unauthenticated-traffic write amplification |
-| M7 | Edge throughput / TLS handshake rate / connection capacity |
+| M7 | Edge throughput / TLS handshake rate / connection capacity — **NOT PERFORMED**; Turn C proved TLS is functional, never how fast it is; no benchmark/capacity figure was produced or claimed |
 | M8 | `K_max` — distinct legitimate clients per source bucket |
 
 ## Abuse-Test Matrix — IMP-02 Acceptance Obligations
@@ -395,28 +410,47 @@ Turn B references Turn A's real `haproxy.base.cfg`/`uat/haproxy.limits.cfg`
 at runtime rather than duplicating them. Full inventory and independent
 verification: `IMP-02-ACC-002`.
 
+Turn C landed a disposable UAT TLS harness under `platform/edge/uat-tls/`:
+`make-certs.sh` (ephemeral local CA + valid/wrong-host/expired leaf
+certificates, ECDSA P-256, non-production), `tls-verify.sh` (T1–T8
+certificate/protocol tests, HTTPS application controls, six-route/header/
+rate-limit regression, evidence capture), `validate-tls.mjs` (Tier-2 TLS
+config/capability validation, importing `validate.mjs`'s helpers rather
+than duplicating them), `README.md`, `.env.example`, and git-ignored
+`generated/`/`evidence/` directories. Turn C's ONLY modification to a
+previously-accepted artifact is a narrow, guarded, fail-closed addition to
+`platform/edge/haproxy.base.cfg`'s `bind` directive (`EDGE_TLS_ENABLED` — a
+presence flag, unset for the accepted Turn-A HTTP mode); Turn-B's
+`uat-topology/lima.yaml` and `topology.sh` are unmodified — `libssl-dev` is
+installed guest-locally by `tls-verify.sh` at runtime instead. Full
+inventory and independent verification: `IMP-02-ACC-003`.
+
 No Dockerfile, Docker Compose, Kubernetes manifest, Terraform, or
 cloud-provider selection exists anywhere in this pack — those remain out of
-scope for both Turn A and Turn B without a separate decision.
+scope for Turn A, Turn B, and Turn C without a separate decision.
 
 ## Status
 
 ```txt
-IMP-02 status (overall) = IN_PROGRESS — Turn A accepted, Turn B UAT-accepted, production L2 + TLS pending
+IMP-02 status (overall) = IN_PROGRESS — Turn A/B/C accepted, production L2 + TLS + calibration pending
 Turn A (L1 UAT trusted-edge HTTP reference) = COMPLETE / ACCEPTED at 65fca52
 Turn B (L2 network isolation, UAT proof) = COMPLETE / ACCEPTED at 7132057
+Turn C (UAT TLS termination, functional) = COMPLETE / ACCEPTED at d568fa0
 Production L2 network isolation (deployed) = NOT PROVEN / PENDING
-TLS termination = PENDING (deliberately deferred in Turn A, not a defect)
+TLS termination (UAT, functional) = ACCEPTED (Turn C, d568fa0)
+TLS termination (production lifecycle/cipher/SNI/backend mTLS) = PENDING
 L3 = WLT-01, COMPLETE / ACCEPTED at af52fe8
 Production numeric pre-auth policy = NOT APPROVED
 Internal-UAT provisional policy = AUTHORIZED, non-production only, IMPLEMENTED in Turn A
+M7 (TLS handshake rate / capacity) = NOT PERFORMED / PENDING
 Cloud provider = OPEN (ARC-11 §28 #1)
 IaC tooling = OPEN (ARC-11 §28 #5)
 Named accountable human owner = UNASSIGNED
-FND-FIND-001 = HIGH / OPEN (neither Turn A nor Turn B closes it)
-FND-FIND-010 = OPEN (IAM pool capacity gap; blocks M1/M2/M5)
+FND-FIND-001 = HIGH / OPEN (no turn closes it)
+FND-FIND-010 = MEDIUM / OPEN (IAM pool capacity gap; blocks M1/M2/M5; untouched by Turn C)
 IMP-02-FIND-001..004 = LOW / OPEN (non-blocking Turn-A hardening residuals)
 IMP-02-FIND-005..007 = LOW / OPEN (non-blocking Turn-B hardening residuals)
+IMP-02-FIND-008..009 = LOW / OPEN (non-blocking Turn-C hardening residuals)
 Internet exposure = PROHIBITED
 ```
 
@@ -427,8 +461,10 @@ Internet exposure = PROHIBITED
   (`IMP-02-ACC-001`) — Turn A independent acceptance, full evidence record.
 - `03_implementation/IMP-02/acceptance/IMP-02_UAT_L2_Network_Isolation_Turn_B_Opus_Acceptance_v1.0.md`
   (`IMP-02-ACC-002`) — Turn B independent acceptance, full evidence record.
+- `03_implementation/IMP-02/acceptance/IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-003`) — Turn C independent acceptance, full evidence record.
 - `OPEN_FINDINGS.md` FND-FIND-001 — the finding IMP-02 exists to close, and
   FND-FIND-010 — the IAM capacity-gap cross-reference — plus the `IMP-02`
-  section (IMP-02-FIND-001 through IMP-02-FIND-007, LOW/OPEN, non-blocking).
+  section (IMP-02-FIND-001 through IMP-02-FIND-009, LOW/OPEN, non-blocking).
 - `02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md` — L3, already accepted.
 - `02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md` — L4 authenticated engine.

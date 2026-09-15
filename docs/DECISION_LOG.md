@@ -670,6 +670,52 @@ Future decisions should be appended below this line, oldest first, using the sam
   work. Production numeric pre-authentication policy REMAINS NOT APPROVED.
   `FND-FIND-001` REMAINS HIGH/OPEN. `FND-FIND-010` REMAINS OPEN. `INTERNET
   EXPOSURE` REMAINS PROHIBITED.**
+- **IMP-02 Turn C / L1 UAT TLS termination (functional) — IMPLEMENTED and
+  independently accepted COMPLETE / ACCEPTED at commit `d568fa0`**
+  (`feat(imp02): add UAT TLS edge termination`; single commit, no
+  remediation turn required). Terminates TLS functionally at the accepted
+  L1 edge, inside the same disposable Lima UAT harness Turn B established,
+  using the same governed HAProxy 3.0.27 source rebuilt with
+  `USE_OPENSSL=1`. The modification to the accepted Turn-A
+  `haproxy.base.cfg` is narrow and guarded — a single `bind` directive
+  behind a `.if defined(EDGE_TLS_ENABLED)/.else/.endif` structure,
+  independently confirmed a PRESENCE flag (not a boolean: `false`/`0`
+  still select the TLS branch and still fail closed without a certificate
+  path) — and independently proven behaviourally inert when unset: the
+  accepted Turn-A HTTP mode reproduces Tier-1 47/47, Tier-2 6/6, and
+  Tier-3 23/23 under its own canonical echo-upstream condition, unchanged.
+  Zero Turn-B artifacts modified (`lima.yaml`/`topology.sh` untouched;
+  `libssl-dev` installed guest-locally at runtime instead). Independent
+  review additionally verified: T1–T4 each fail for a distinct, isolated
+  cause (CA trust / hostname / certificate expiry respectively, via a
+  genuine X.509v3 UAT certificate set with correct SANs); TLS 1.0/1.1
+  rejection proven non-vacuously (a client first proven capable of
+  completing those protocols against a permissive listener was then
+  rejected by the governed edge with a genuine `protocol_version` alert);
+  TLS 1.2/1.3 succeed; all six governed public routes are admitted through
+  the TLS edge and reach the real WLT chain, with path-confusion/
+  non-allowlisted probes remaining edge-local denials; client-supplied
+  `x-aix-*` and all five forwarding headers are stripped, with only the
+  trusted perimeter token (exactly once) reaching the real WLT upstream;
+  the MUTATE/READ/TOTAL-burst rate-limit ladder and the 50-connection
+  ceiling hold at their exact governed UAT boundaries under TLS; 200
+  denied TLS requests produced zero governed-counter movement; source-IP
+  spoofing via forged forwarding headers could not evade the limiter,
+  confirming TLS did not alter the TCP-peer source model; and Turn-B's own
+  A3/positive/A4 property was independently re-run and confirmed
+  unaffected. Full record: `03_implementation/IMP-02/acceptance/
+  IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-003`). Two new LOW, non-blocking findings registered
+  (`IMP-02-FIND-008`, `IMP-02-FIND-009`) — neither blocked acceptance.
+  **This proves TLS is functional only inside a disposable UAT harness. It
+  does NOT select a production certificate authority, production cipher
+  policy, production SNI/Host policy, or backend/service-to-service TLS or
+  mTLS; it does NOT perform M7 capacity calibration; and it does NOT close
+  `FND-FIND-001`.** **Production TLS certificate lifecycle, cipher policy,
+  and backend TLS/mTLS all REMAIN PENDING. M7 REMAINS NOT PERFORMED/
+  PENDING. Production numeric pre-authentication policy REMAINS NOT
+  APPROVED. `FND-FIND-001` REMAINS HIGH/OPEN. `FND-FIND-010` REMAINS
+  OPEN. `INTERNET EXPOSURE` REMAINS PROHIBITED.**
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

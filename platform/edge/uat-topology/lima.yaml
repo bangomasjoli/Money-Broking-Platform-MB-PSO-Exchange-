@@ -1,0 +1,50 @@
+# IMP-02 Turn B — L2 UAT isolation topology guest template.
+#
+# UAT TOPOLOGY HARNESS ONLY. NOT PRODUCTION. NO CLOUD COMMITMENT. NO CONTAINER COMMITMENT.
+#
+# This file defines a single disposable Linux guest used ONLY to prove DEC-010's L2 invariant
+# (the WLT listener must not be directly internet-reachable) via genuine Linux network namespaces
+# inside the guest. It selects no production virtualization/container/cloud technology — see
+# docs/03_implementation/IMP-02/README.md and the DEC-010 Turn 2A L2 topology-selection review for
+# the governance record. Reversal: `limactl delete <instance>` removes everything this file
+# creates; nothing is ever installed on the macOS host.
+
+vmType: "vz"
+arch: "aarch64"
+
+images:
+- location: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+
+cpus: 2
+memory: "2GiB"
+disk: "10GiB"
+
+# No host filesystem mount — topology.sh copies the exact working-tree Turn-A artifacts and WLT
+# source into the guest at run time (see topology.sh's copy_platform_into_guest), so the harness
+# never depends on a host-specific absolute path being embedded in this template.
+mounts: []
+
+# No user-mode container/network tooling — this harness proves isolation with kernel network
+# namespaces only. Provisioning containerd/nerdctl would be unused weight and would blur the "no
+# container commitment" boundary this pack is required to preserve.
+containerd:
+  system: false
+  user: false
+
+# No portForwards override: Lima's own SSH-based control channel (guest provisioning,
+# `limactl shell`) depends on its default forwarding behaviour, and disabling it broadly hung
+# guest bootstrap in testing. This is harmless to the property being proven — net_public and
+# net_backend are created entirely inside the guest via `ip netns` after boot, on interfaces that
+# are never attached to the guest's primary NIC, so Lima's default forwarding (which only
+# concerns that primary NIC) never exposes them to the macOS host regardless.
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux
+    # Guest-local package installation only (never touches the macOS host). Exact packages
+    # recorded here for reproducibility/audit; installed once, idempotent on restart.
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq build-essential curl ca-certificates iproute2

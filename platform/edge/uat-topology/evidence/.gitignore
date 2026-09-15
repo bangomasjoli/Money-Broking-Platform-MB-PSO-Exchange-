@@ -1,0 +1,4 @@
+# Generated run evidence (namespace/route dumps, boot logs, HTTP bodies). May reflect local
+# environment details and must never be committed raw. Only this .gitignore is tracked.
+*
+!.gitignore

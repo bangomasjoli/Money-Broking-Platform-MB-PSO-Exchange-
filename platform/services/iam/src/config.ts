@@ -44,12 +44,50 @@ export interface IamConfig extends AppConfig {
    * require extra setup; a production deploy MUST override it.
    */
   mfaSecretEncryptionKey: string;
+  /**
+   * FND-FIND-010 — IAM's own explicit database-pool concurrency ceiling (`pg.Pool`'s `max`).
+   * Required when `environment === "prod"` (no production default exists or is invented here);
+   * optional in every other environment. Absent outside prod means the shared `@aix/foundation`
+   * pool is constructed exactly as it was before this remediation (node-postgres library
+   * default), never a value substituted by this loader. This is a capacity INPUT only — it does
+   * not itself constitute an approved production numeric policy (see `IMP-02` / FND-FIND-001).
+   */
+  dbPoolMax?: number;
+  /**
+   * FND-FIND-010 — pool-acquisition timeout in milliseconds (node-postgres `connectionTimeoutMillis`).
+   * Governs how long a queued `pool.connect()` waits when the pool is exhausted before failing —
+   * NOT a SQL statement/query timeout, NOT WLT's HTTP client timeout, NOT an edge timeout. Same
+   * required-in-prod / optional-elsewhere rule as `dbPoolMax`.
+   */
+  dbConnectionTimeoutMs?: number;
 }
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
   const n = parseInt(value, 10);
   return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+/**
+ * Strict positive-integer parser for FND-FIND-010's two capacity inputs — deliberately NOT the
+ * lenient `parsePositiveInt` above (which silently falls back on any malformed value). A
+ * capacity governance value must never silently substitute a fallback: "10abc", "10.5", "0",
+ * "-1", and whitespace-only are all rejected outright, never coerced.
+ *
+ * Returns:
+ *   undefined  — the variable is absent, or present but empty/whitespace-only (treated
+ *                identically to absent — an empty string carries no governance intent)
+ *   "invalid"  — present with content that is not a strictly positive safe integer
+ *   number     — the parsed value
+ */
+function parseStrictPositiveInt(raw: string | undefined): number | undefined | "invalid" {
+  if (raw === undefined) return undefined;
+  const trimmed = raw.trim();
+  if (trimmed === "") return undefined;
+  if (!/^[0-9]+$/.test(trimmed)) return "invalid";
+  const n = Number(trimmed);
+  if (!Number.isSafeInteger(n) || n <= 0) return "invalid";
+  return n;
 }
 
 export function loadIamConfig(env: RawEnv = process.env): IamConfig {
@@ -71,6 +109,29 @@ export function loadIamConfig(env: RawEnv = process.env): IamConfig {
     problems.push("IAM_INTROSPECTION_SERVICE_TOKEN too short");
   } else if (iamInternalServiceToken && iamIntrospectionServiceToken === iamInternalServiceToken) {
     problems.push("IAM_INTROSPECTION_SERVICE_TOKEN must differ from IAM_INTERNAL_SERVICE_TOKEN");
+  }
+
+  // FND-FIND-010 — explicit IAM DB-pool capacity inputs. `base.environment` is already validated
+  // (loadConfig above throws before this point if ENVIRONMENT is missing/invalid), so it is a
+  // trustworthy discriminator for the prod-required rule.
+  const isProd = base.environment === "prod";
+
+  const dbPoolMax = parseStrictPositiveInt(env.IAM_DB_POOL_MAX);
+  if (dbPoolMax === "invalid") {
+    problems.push("IAM_DB_POOL_MAX must be a strictly positive integer (no fractional/negative/zero/non-numeric value)");
+  } else if (dbPoolMax === undefined && isProd) {
+    problems.push("IAM_DB_POOL_MAX is required when ENVIRONMENT=prod (FND-FIND-010 — explicit IAM DB-pool capacity, no production default)");
+  }
+
+  const dbConnectionTimeoutMs = parseStrictPositiveInt(env.IAM_DB_CONNECTION_TIMEOUT_MS);
+  if (dbConnectionTimeoutMs === "invalid") {
+    problems.push(
+      "IAM_DB_CONNECTION_TIMEOUT_MS must be a strictly positive integer in milliseconds (no fractional/negative/zero/non-numeric value)",
+    );
+  } else if (dbConnectionTimeoutMs === undefined && isProd) {
+    problems.push(
+      "IAM_DB_CONNECTION_TIMEOUT_MS is required when ENVIRONMENT=prod (FND-FIND-010 — explicit IAM DB-pool acquisition timeout, no production default)",
+    );
   }
 
   const bootstrapEnabled = (env.IAM_BOOTSTRAP_ENABLED ?? "false").trim().toLowerCase() === "true";
@@ -101,6 +162,8 @@ export function loadIamConfig(env: RawEnv = process.env): IamConfig {
     refreshTokenTtlSeconds: parsePositiveInt(env.IAM_REFRESH_TOKEN_TTL_SECONDS, 1_209_600),
     mfaSecretEncryptionKey:
       env.IAM_MFA_SECRET_ENC_KEY?.trim() || "CHANGE_ME_DEV_ONLY_MFA_KEY_PLACEHOLDER_NOT_FOR_PROD",
+    ...(typeof dbPoolMax === "number" ? { dbPoolMax } : {}),
+    ...(typeof dbConnectionTimeoutMs === "number" ? { dbConnectionTimeoutMs } : {}),
     rateLimit: {
       loginMaxAttempts: parsePositiveInt(env.IAM_LOGIN_MAX_ATTEMPTS, 5),
       loginLockoutMinutes: parsePositiveInt(env.IAM_LOGIN_LOCKOUT_MINUTES, 15),

@@ -7,11 +7,37 @@ import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 export type Sql = Pool | PoolClient;
 
+/**
+ * FND-FIND-010 remediation — a deliberately narrow options surface. Only these two capacity
+ * inputs are accepted, never an arbitrary `PoolConfig` pass-through, so a caller can govern its
+ * own concurrency ceiling and acquisition timeout without gaining the ability to alter any other
+ * pg connection behaviour through this seam.
+ */
+export interface PoolCapacityOptions {
+  max?: number;
+  connectionTimeoutMillis?: number;
+}
+
 let pool: Pool | undefined;
 
-export function initPool(connectionString: string): Pool {
+/**
+ * `options` is honoured ONLY on the call that actually constructs the singleton (the first call
+ * after process start, or the first call after `closePool()`). Once `pool` exists, every
+ * subsequent `initPool()` call — with or without options — returns the SAME pool instance
+ * unchanged; it never reconfigures a live pool. Callers that pass no `options` (all services
+ * except IAM-01) construct the pool exactly as before this change — `max`/`connectionTimeoutMillis`
+ * are added to the constructor object only when explicitly supplied, never as `undefined` keys.
+ */
+export function initPool(connectionString: string, options?: PoolCapacityOptions): Pool {
   if (!pool) {
-    pool = new Pool({ connectionString, application_name: "aix-fnd" });
+    pool = new Pool({
+      connectionString,
+      application_name: "aix-fnd",
+      ...(options?.max !== undefined ? { max: options.max } : {}),
+      ...(options?.connectionTimeoutMillis !== undefined
+        ? { connectionTimeoutMillis: options.connectionTimeoutMillis }
+        : {}),
+    });
   }
   return pool;
 }

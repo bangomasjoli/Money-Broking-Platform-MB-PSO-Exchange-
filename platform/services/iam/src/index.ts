@@ -10,7 +10,15 @@ import { buildApp } from "./server.js";
 
 async function main(): Promise<void> {
   const config = loadIamConfig(process.env);
-  initPool(config.databaseUrl);
+  // FND-FIND-010: pass IAM's explicit pool-capacity inputs only when configured (prod-required,
+  // optional elsewhere — see config.ts). When absent, initPool() constructs the pool exactly as
+  // it did before this remediation; the options object below is never `{ max: undefined }`.
+  initPool(config.databaseUrl, {
+    ...(config.dbPoolMax !== undefined ? { max: config.dbPoolMax } : {}),
+    ...(config.dbConnectionTimeoutMs !== undefined
+      ? { connectionTimeoutMillis: config.dbConnectionTimeoutMs }
+      : {}),
+  });
 
   await runBootstrap(config);
 
@@ -27,7 +35,16 @@ async function main(): Promise<void> {
 
   await app.listen({ port: config.port, host: "0.0.0.0" });
   app.log.info(
-    { environment: config.environment, release: config.releaseVersion, port: config.port },
+    {
+      environment: config.environment,
+      release: config.releaseVersion,
+      port: config.port,
+      // FND-FIND-010 auditability: record the EFFECTIVE pool capacity inputs (never a secret —
+      // DATABASE_URL itself is never logged here or elsewhere in this line) so a deployed
+      // ceiling is verifiable against the governed value of record, not merely assumed.
+      dbPoolMax: config.dbPoolMax ?? "unset (node-postgres library default)",
+      dbConnectionTimeoutMs: config.dbConnectionTimeoutMs ?? "unset (node-postgres library default)",
+    },
     "iam_service_started",
   );
 }

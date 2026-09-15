@@ -1,0 +1,5 @@
+# Generated run evidence (TLS handshake results, certificate metadata, HTTP responses). May
+# reflect local environment details and must never be committed raw. Only this .gitignore is
+# tracked.
+*
+!.gitignore

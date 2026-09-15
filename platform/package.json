@@ -19,6 +19,7 @@
     "migrate:down": "node-pg-migrate -m infra/migrations --no-check-order down",
     "edge:validate": "node edge/validate.mjs",
     "edge:topology:verify": "bash edge/uat-topology/topology.sh up && bash edge/uat-topology/run-a3.sh",
+    "edge:tls:verify": "bash edge/uat-topology/topology.sh up && bash edge/uat-tls/tls-verify.sh",
     "dev:fnd": "tsx watch services/fnd/src/index.ts",
     "start:fnd": "tsx services/fnd/src/index.ts",
     "dev:iam": "tsx watch services/iam/src/index.ts",

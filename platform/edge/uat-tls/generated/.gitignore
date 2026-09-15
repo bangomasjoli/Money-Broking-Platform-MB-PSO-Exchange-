@@ -1,0 +1,5 @@
+# Generated ephemeral TLS material (CA, server certs, private keys). Never committed — a
+# private key or a real certificate has no place in version control. Only this .gitignore is
+# tracked.
+*
+!.gitignore

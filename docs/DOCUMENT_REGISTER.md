@@ -122,7 +122,7 @@ adjudicate any of these; adjudication requires a dedicated Opus review per modul
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | IMP-01 | AIX Master Implementation Handover | Platform-wide | Build order, dependency map, migration order, go-live roadmap | v1.0 | DRAFT | IN_PROGRESS | `03_implementation/IMP-01/README.md` | Unassigned | N/A | Draft / ready for implementation use | — | c1765f5 |
-| IMP-02 | AIX Platform Deployment and Perimeter Implementation Pack | Platform-wide | Trusted edge, network isolation, deployment perimeter (`DECISION_LOG.md` DEC-010 L1/L2; closes `FND-FIND-001` once implemented and independently accepted) | v1.0 | DRAFT | NOT_STARTED | `03_implementation/IMP-02/README.md` | Unassigned | N/A | N/A | none | 6262a81 |
+| IMP-02 | AIX Platform Deployment and Perimeter Implementation Pack | Platform-wide | Trusted edge, network isolation, deployment perimeter (`DECISION_LOG.md` DEC-010 L1/L2; closes `FND-FIND-001` once implemented and independently accepted) | v1.0 | DRAFT | IN_PROGRESS | `03_implementation/IMP-02/README.md` | Unassigned | N/A | N/A | none | 6262a81 |
 
 ---
 
@@ -140,6 +140,20 @@ forward.
 | FND-01-ACC-003 | FND-01 Shared Rate-Limit Engine — Independent Acceptance + Post-Acceptance Hardening | FND-01 | Shared rate-limit engine (`POST /foundation/rate-limit/check`) — WLT-01 BLOCKER-2 prerequisite; migrations `068`/`069`/`070` | N/A | APPROVED | ACCEPTED | [`02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md`](02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md) | Unassigned | N/A | N/A | none | eb4a767 |
 | WLT-01-ACC-001 | WLT-01 Public Client Surface — Independent Acceptance | WLT-01 | Client-facing public `/wlt1/*` surface (6-route contract) — downstream consumer of WLT-01 BLOCKER-1/BLOCKER-2 | N/A | APPROVED | ACCEPTED | [`02_modules/WLT-01/acceptance/WLT-01_Public_Client_Surface_Opus_Acceptance_v1.0.md`](02_modules/WLT-01/acceptance/WLT-01_Public_Client_Surface_Opus_Acceptance_v1.0.md) | Unassigned | N/A | N/A | none | 7f9fc8a |
 | WLT-01-ACC-002 | WLT-01 Public Perimeter Application Gate — Independent Acceptance | WLT-01 | Public-surface enablement gate + perimeter-provenance admission (DECISION_LOG.md DEC-010, layer L3) | N/A | APPROVED | ACCEPTED | [`02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md`](02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md) | Unassigned | N/A | N/A | none | af52fe8 |
+
+---
+
+## 4b. Implementation-Level Independent Acceptance Records
+
+The `03_implementation/` tier's own acceptance records — distinct from §4a
+because packs registered in §4 (`IMP-01`, `IMP-02`, …) are explicitly not
+`02_modules/` entries (see `DECISION_LOG.md` DEC-010 Turn 2 Prerequisites and
+`03_implementation/IMP-02/README.md`'s "Why IMP-02, and Not an 18th Module").
+Registering these under §4a's "Module-Level" heading would misclassify them.
+
+| Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| IMP-02-ACC-001 | IMP-02 UAT Trusted Edge (Turn A) — Independent Acceptance | Platform-wide | DEC-010 Layer L1 UAT HTTP reference implementation (HAProxy 3.0.27) — six-path allowlist, header strip/inject, pre-auth request-rate/connection limiting, VERSION enforcement. Turn A only; Turn B (L2 network isolation) NOT STARTED | N/A | APPROVED | ACCEPTED | [`03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md`](03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md) | Unassigned | N/A | N/A | none | 65fca52 |
 
 ---
 

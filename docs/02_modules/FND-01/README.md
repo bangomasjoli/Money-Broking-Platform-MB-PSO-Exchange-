@@ -54,12 +54,18 @@ architecture review (DEC-010 Turn 2 Prerequisites, no code) has **RESOLVED**
 implementation ownership of the trusted edge (L1) and mandatory network
 isolation (L2) — the layers that alone close this finding — to
 [**`IMP-02`**](../../03_implementation/IMP-02/README.md)
-(`03_implementation/IMP-02/README.md`, `NOT_STARTED`; a second instance of the
+(`03_implementation/IMP-02/README.md`, `IN_PROGRESS`; a second instance of the
 already-governed `03_implementation` document class, explicitly **not** an 18th
-`02_modules/` pack). Production numeric pre-auth policy remains **NOT
-approved**; an explicitly non-production INTERNAL-UAT-only provisional policy
-is authorized for `IMP-02` engineering/abuse-test purposes only. No L1/L2
-implementation exists yet. FND-FIND-001 **REMAINS OPEN**.
+`02_modules/` pack), staged as two sub-turns: **Turn A (L1 UAT trusted-edge
+HTTP reference implementation) is COMPLETE / ACCEPTED at commit `65fca52`**
+([`IMP-02-ACC-001`](../../03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md));
+**Turn B (L2 mandatory network isolation) remains NOT STARTED, and TLS
+termination remains PENDING IMP-02 work.** Production numeric pre-auth policy
+remains **NOT approved**; the explicitly non-production INTERNAL-UAT-only
+provisional policy Turn A implements is authorized for `IMP-02`
+engineering/abuse-test purposes only. **Turn A alone does not close this
+finding** — L2 and an approved production numeric policy are both still
+required. FND-FIND-001 **REMAINS OPEN**.
 
 ## Open findings
 

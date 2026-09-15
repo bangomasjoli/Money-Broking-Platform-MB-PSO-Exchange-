@@ -591,6 +591,40 @@ Future decisions should be appended below this line, oldest first, using the sam
   FND-FIND-001 (independent acceptance already confirmed that a valid
   perimeter token combined with an invalid bearer still reaches IAM-01 —
   provenance is admission control, not pre-authentication abuse throttling).
+- **IMP-02 Turn A / L1 UAT trusted edge — IMPLEMENTED and independently
+  accepted COMPLETE / ACCEPTED at commit `65fca52`** (implementation
+  `3d4c00f`; first independent review returned REVISE BEFORE ACCEPTANCE on
+  two MEDIUM findings — E1 non-admitted traffic could poison shared
+  request-rate counters, E2 the HAProxy VERSION pin was not enforced;
+  remediated at `65fca52`; narrow independent re-review returned COMPLETE /
+  ACCEPTED). Reference technology: HAProxy 3.0.27, pinned upstream source
+  build. Delivers the exact six-path allowlist, path-confusion rejection,
+  `/internal/*` exclusion, wildcard `x-aix-*` header stripping,
+  forwarding-header stripping, trusted `x-aix-perimeter-token` injection,
+  IPv4 `/32`+`/24` and IPv6 `/64`+`/48` source-bucket limiting,
+  bounded/evicting in-memory limiter state, TOTAL/READ/MUTATE and aggregate
+  request-rate limiting, a per-source TCP connection ceiling, `429`+
+  `Retry-After`, edge-local `404`, `Cache-Control: no-store`, no wildcard
+  CORS, and enforced HAProxy version pinning — all independently verified
+  live against a rebuilt binary, not merely declared. Full record:
+  `03_implementation/IMP-02/acceptance/
+  IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md` (`IMP-02-ACC-001`).
+  Four LOW, non-blocking findings registered (`IMP-02-FIND-001` through
+  `IMP-02-FIND-004`) — none blocked acceptance.
+  **This closes NEITHER `FND-FIND-001` nor the internet-exposure
+  prohibition.** DEC-010's staging is now explicit as two IMP-02 sub-turns:
+  **Turn A (L1 UAT trusted edge) COMPLETE / ACCEPTED at `65fca52`; Turn B (L2
+  mandatory network isolation, direct-to-WLT bypass proof) remains NOT
+  STARTED.** **TLS termination** — named in IMP-02's own in-scope list —
+  was deliberately NOT implemented or validated in Turn A (a TLS-neutral HTTP
+  UAT reference edge was built instead); this is an adjudicated, explicit
+  scope deferral, not a defect, and **TLS termination REMAINS PENDING IMP-02
+  work** before any production-perimeter-readiness determination. Production
+  numeric pre-authentication policy **REMAINS NOT APPROVED** — Turn A
+  implements only the already-governed provisional UAT values, invents no
+  new number, and does not touch the M1–M8/A1–A10/OPS-05 production approval
+  path. **`FND-FIND-001` REMAINS HIGH/OPEN. `INTERNET EXPOSURE` REMAINS
+  PROHIBITED.**
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

@@ -3,7 +3,7 @@ document_id: IMP-02
 title: AIX Platform Deployment and Perimeter Implementation Pack
 version: v1.0
 document_status: DRAFT
-implementation_status: NOT_STARTED
+implementation_status: IN_PROGRESS
 module: N/A
 control: Trusted edge, network isolation, deployment perimeter
 owner: Unassigned
@@ -14,6 +14,37 @@ baseline_commit: 6262a81
 ---
 
 # IMP-02 AIX Platform Deployment and Perimeter Implementation Pack v1.0
+
+## Turn A / Turn B Split
+
+DEC-010 stages IMP-02's L1+L2 scope as a single "Turn 2" in its own text; this
+pack now records the controlled sub-turn split that Turn A's independent
+acceptance made explicit:
+
+- **Turn A — L1 UAT trusted-edge HTTP reference implementation.**
+  **COMPLETE / ACCEPTED at commit `65fca52`.** Full record:
+  [`acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md)
+  (`IMP-02-ACC-001`).
+- **Turn B — L2 mandatory network isolation** (the WLT listener must not be
+  directly internet-reachable; proven by external probe, abuse test A3).
+  **NOT STARTED.**
+
+**Turn A acceptance is not Turn B's acceptance, is not IMP-02's overall
+completion, and is not production-perimeter readiness.** It does NOT close
+`OPEN_FINDINGS.md` FND-FIND-001, and it does NOT approve internet exposure.
+
+## TLS Status
+
+**TLS termination remains PENDING IMP-02 work.** It is named in this pack's
+in-scope list below, but Turn A deliberately built a TLS-neutral HTTP UAT
+reference edge (HAProxy compiled without OpenSSL — none of Turn A's required
+capabilities involve TLS) and neither implemented nor validated it. This is
+an adjudicated scope deferral, not a defect — see
+`IMP-02-ACC-001` §7 for the full reasoning. Pending work includes at minimum:
+a TLS-capable edge runtime/build, certificate provisioning, certificate
+rotation, TLS configuration, the M7 TLS-handshake capacity measurement below,
+and production-shape validation. **No document in this pack claims TLS
+implemented, HTTPS production-ready, or the production perimeter complete.**
 
 ## Purpose
 
@@ -100,9 +131,9 @@ authority is unmodified by this pack; only cross-references are added.
 
 ### In scope (IMP-02 owns exclusively)
 
-- TLS termination
-- Exact six-public-path allowlist (`/internal/*` never proxied)
-- Pre-authentication source-based throttling
+- TLS termination — **PENDING**, not implemented in Turn A (see TLS Status above)
+- Exact six-public-path allowlist (`/internal/*` never proxied) — **Turn A: ACCEPTED**
+- Pre-authentication source-based throttling — **Turn A: ACCEPTED (UAT provisional values only)**
 - Inbound stripping of any client-supplied `x-aix-*` provenance header
 - Injection of the authentic `x-aix-perimeter-token` (custody/rotation at the
   edge; the token's WLT-01-side validation is unaffected, see Out of Scope)
@@ -134,8 +165,10 @@ authority is unmodified by this pack; only cross-references are added.
 
 | Layer | Owner | Status |
 |---|---|---|
-| L1 trusted edge | **IMP-02** | NOT_STARTED |
-| L2 network isolation | **IMP-02** | NOT_STARTED |
+| L1 trusted edge — Turn A (UAT HTTP reference) | **IMP-02** | **ACCEPTED (`65fca52`)** |
+| L1 trusted edge — TLS termination | **IMP-02** | PENDING |
+| L1 trusted edge — production numeric policy | **IMP-02** | NOT APPROVED |
+| L2 network isolation — Turn B | **IMP-02** | NOT_STARTED |
 | L3 app gate + perimeter provenance | WLT-01 | ACCEPTED (`af52fe8`) |
 | L4 authenticated chain + rate-limit engine | FND-01 / IAM-01 / CLT-01 | ACCEPTED (`eb4a767`) |
 | FND-FIND-001 register-holder | FND-01 | HIGH / OPEN |
@@ -334,32 +367,44 @@ calibration for M1/M2/M5 above. Tracked as `OPEN_FINDINGS.md` FND-FIND-010.
 
 ## Pack Contents
 
-No implementation artifacts exist yet — `implementation_status: NOT_STARTED`.
-This README is the sole content of `IMP-02` at this stage: governance scope,
-ownership, and constraints only. No deployment files, no edge/proxy
-configuration, no Dockerfiles, no Terraform/Kubernetes manifests, and no
-cloud-provider selection have been created by this pack or by the review
-that established it.
+Turn A landed real implementation artifacts under `platform/edge/`:
+`haproxy.base.cfg` (structure — six-path allowlist, path-confusion rejection,
+`/internal/*` exclusion, header strip/inject, security headers), `uat/
+haproxy.limits.cfg` (every governed PROVISIONAL numeric threshold),
+`validate.mjs` (Tier-2 `haproxy -c` validation with enforced HAProxy VERSION
+pinning), `VERSION` (`3.0.27`), `uat/.env.example`, and `production/README.md`
+(no `.cfg` file — no production configuration exists). Full inventory and
+independent verification: `IMP-02-ACC-001`. No Dockerfile, Docker Compose,
+Kubernetes manifest, Terraform, or cloud-provider selection exists anywhere
+in this pack — those remain out of scope for Turn A and are not part of
+Turn B's L2 network-isolation scope either without a separate decision.
 
 ## Status
 
 ```txt
-IMP-02 status = governance scope established, implementation NOT_STARTED
-L1/L2 owner = IMP-02 (resolved)
+IMP-02 status (overall) = IN_PROGRESS — Turn A accepted, Turn B not started
+Turn A (L1 UAT trusted-edge HTTP reference) = COMPLETE / ACCEPTED at 65fca52
+Turn B (L2 network isolation) = NOT_STARTED
+TLS termination = PENDING (deliberately deferred in Turn A, not a defect)
 L3 = WLT-01, COMPLETE / ACCEPTED at af52fe8
 Production numeric pre-auth policy = NOT APPROVED
-Internal-UAT provisional policy = AUTHORIZED, non-production only
+Internal-UAT provisional policy = AUTHORIZED, non-production only, IMPLEMENTED in Turn A
 Cloud provider = OPEN (ARC-11 §28 #1)
 IaC tooling = OPEN (ARC-11 §28 #5)
 Named accountable human owner = UNASSIGNED
-FND-FIND-001 = HIGH / OPEN
+FND-FIND-001 = HIGH / OPEN (Turn A acceptance does NOT close it)
+FND-FIND-010 = OPEN (IAM pool capacity gap; blocks M1/M2/M5)
+IMP-02-FIND-001..004 = LOW / OPEN (non-blocking Turn-A hardening residuals)
 Internet exposure = PROHIBITED
 ```
 
 ## Cross-references
 
 - `DECISION_LOG.md` DEC-010 — governing architecture decision.
+- `03_implementation/IMP-02/acceptance/IMP-02_UAT_Trusted_Edge_Turn_A_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-001`) — Turn A independent acceptance, full evidence record.
 - `OPEN_FINDINGS.md` FND-FIND-001 — the finding IMP-02 exists to close, and
-  FND-FIND-010 — the IAM capacity-gap cross-reference.
+  FND-FIND-010 — the IAM capacity-gap cross-reference — plus the `IMP-02`
+  section (IMP-02-FIND-001 through IMP-02-FIND-004, LOW/OPEN, non-blocking).
 - `02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md` — L3, already accepted.
 - `02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md` — L4 authenticated engine.

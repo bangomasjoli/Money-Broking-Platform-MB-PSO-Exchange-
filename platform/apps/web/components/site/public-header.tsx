@@ -49,13 +49,13 @@ import { cn } from "@/lib/utils";
  * whichever side has less content; grid's `1fr auto 1fr` keeps the middle (auto-sized) track
  * genuinely centered regardless of that asymmetry.
  *
- * Breakpoint: the full desktop row (all 5 nav items + wordmark + 2 actions) shows from `md:`
- * (768px) per UI-02 §10.4's tablet range, with the 20px→32px gap step at `lg:` (1024px) exactly
- * as specified. NOTE: this range was NOT empirically verified in a real browser viewport (no
- * screenshot/browser-automation tool was available this turn, and installing one solely for
- * screenshots was explicitly out of scope) — calculated character-width estimates suggest the
- * 768-1023px band may be tight for all 5 labels + wordmark + 2 actions. Flagged for specific
- * attention during the required user visual review; see UI-02's Phase 1B revision note.
+ * Breakpoint: REMEDIATION 01 — user visual QA at 768px showed the full desktop row (5 nav
+ * items + wordmark + 2 actions) visibly compressed under UI-02 §10.4's original `md:` (768px)
+ * tablet treatment. The full desktop composition now shows only from `lg:` (1024px), which
+ * visual QA confirmed has sufficient breathing room; below `lg:` the compact/mobile treatment
+ * applies. There is no intermediate squeezed tablet row — the composition is either the complete
+ * desktop row or the compact mobile row, never a partial version of either. UI-02 §10.4's
+ * original 768px tablet-gap rule is superseded; see UI-02's Phase 1B Remediation 01 note.
  */
 
 const NAV_ITEMS = [
@@ -73,7 +73,7 @@ const PILL_SURFACE =
 
 function DesktopNav() {
   return (
-    <div className="hidden md:block px-6">
+    <div className="hidden lg:block px-6">
       <div className="mx-auto grid max-w-none grid-cols-[1fr_auto_1fr] items-center gap-6">
         {/* LEFT — temporary AIX wordmark. BRAND ASSET PENDING. */}
         <Link
@@ -93,7 +93,10 @@ function DesktopNav() {
             aria-label="Primary" directly to NavigationMenu so exactly one <nav> landmark exists. */}
         <div className={cn("flex h-16 w-full max-w-[1120px] items-center px-6", PILL_SURFACE)}>
           <NavigationMenu aria-label="Primary" viewport={false} className="max-w-none flex-none">
-            <NavigationMenuList className="gap-5 lg:gap-8">
+            {/* REMEDIATION 01: fixed 32px item gap. The prior `gap-5 lg:gap-8` tablet step (20px
+                below `lg:`) is unreachable now that this row itself only renders at `lg:` and up
+                — kept as dead styling would have been misleading, so it was removed. */}
+            <NavigationMenuList className="gap-8">
               {NAV_ITEMS.map((item) => (
                 <NavigationMenuItem key={item.href}>
                   <NavigationMenuLink
@@ -124,7 +127,7 @@ function DesktopNav() {
 
 function MobileNav() {
   return (
-    <div className="flex md:hidden px-4">
+    <div className="flex lg:hidden px-4">
       <div
         className={cn(
           "flex h-14 w-full items-center justify-between px-4",
@@ -177,7 +180,7 @@ function MobileNav() {
 
 export function PublicHeader() {
   return (
-    <header className="fixed inset-x-0 top-4 z-40 md:top-6">
+    <header className="fixed inset-x-0 top-4 z-40 lg:top-6">
       <DesktopNav />
       <MobileNav />
     </header>

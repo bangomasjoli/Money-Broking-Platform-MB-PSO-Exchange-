@@ -459,3 +459,9 @@ treatment only. Nothing in this implementation claims to be, or was built
 from, Phantom's logo, palette, typography, exact measurements, search
 control, or CTA design — see the "what AIX takes / does not take" analysis
 already recorded in `UI-02` §18, which this implementation follows.
+
+**Remediation 01 update:** the 768–1023px tablet concern flagged above was
+confirmed by user visual QA — the `md:` (768px) full-desktop threshold was
+visibly compressed. The threshold is now `lg:` (1024px); see `UI-02` §10.7
+for the full empirical record. 1024px passes but remains under
+observation; 1440px and 440px passed for their current stage.

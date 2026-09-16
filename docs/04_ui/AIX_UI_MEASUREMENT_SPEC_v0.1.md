@@ -261,15 +261,21 @@ bounce, no dramatic easing, no attention-seeking motion.
 
 ### 10.4 Tablet behavior
 
-At tablet widths (768–1023px), the same floating-pill structure is
-retained, with:
+**SUPERSEDED, UI Phase 1B Remediation 01 — see 10.6 note below.** ~~At
+tablet widths (768–1023px), the same floating-pill structure is
+retained, with:~~
 
-- Outer horizontal page clearance reduced to the §8 tablet gutter (32px)
-- Nav-item gap reduced from 32px to 20px (`space-5`) to accommodate the
-  narrower viewport while items remain individually legible
-- If the full item set does not fit at 20px gap, **collapse to the mobile
-  treatment (§10.5) rather than compressing items further** — items must
-  never become illegibly cramped
+- ~~Outer horizontal page clearance reduced to the §8 tablet gutter (32px)~~
+- ~~Nav-item gap reduced from 32px to 20px (`space-5`) to accommodate the
+  narrower viewport while items remain individually legible~~
+- ~~If the full item set does not fit at 20px gap, collapse to the mobile
+  treatment (§10.5) rather than compressing items further — items must
+  never become illegibly cramped~~
+
+There is no longer a distinct tablet-width row treatment: the full
+desktop composition now begins at `lg:` (1024px), and every narrower
+width uses the §10.5 mobile/compact treatment directly. See 10.6 for the
+empirical reason.
 
 ### 10.5 Mobile behavior (dedicated treatment, not a squeeze)
 
@@ -293,14 +299,18 @@ dedicated mobile treatment:
 **IMPLEMENTED, PENDING USER VISUAL REVIEW** — `platform/apps/web/components/site/public-header.tsx`.
 Every dimension in §10.1–§10.5 was implemented exactly via governed
 Tailwind utilities and independently re-verified against the actual
-compiled CSS output (not assumed from class names): `top-4`/`md:top-6` =
+compiled CSS output (not assumed from class names): `top-4`/`top-6` =
 16/24px, `h-16`/`h-14` = 64/56px, `max-w-[1120px]`, `px-6`/`px-4` = 24/16px
-(outer clearance and inner padding, both contexts), `gap-5`/`lg:gap-8` =
-20/32px (tablet/desktop item gap), `rounded-full` on a 64px-tall element =
-exactly 32px radius. `shadow-sm`/`backdrop-blur-sm` and the `/85`,`/60`
-opacity modifiers were confirmed via the compiled CSS's `color-mix`
-`@supports` rules to resolve to genuine 85%/60% opacity, not merely
-assumed from the utility names.
+(outer clearance and inner padding, both contexts), `gap-8` = 32px item
+gap, `rounded-full` on a 64px-tall element = exactly 32px radius.
+`shadow-sm`/`backdrop-blur-sm` and the `/85`,`/60` opacity modifiers were
+confirmed via the compiled CSS's `color-mix` `@supports` rules to resolve
+to genuine 85%/60% opacity, not merely assumed from the utility names.
+**The breakpoint at which `top-4`→`top-6` and the desktop/mobile row
+switch was originally `md:` (768px); Remediation 01 (§10.7) revised this
+to `lg:` (1024px) after empirical visual QA — the tablet-specific 20px
+item gap this paragraph originally described no longer exists, since the
+full row now only renders at `lg:` and up.**
 
 **Findings recorded, not silently resolved:**
 
@@ -357,6 +367,30 @@ this remains scoped to the public site only per `UI-01` §3.
 acceptance is claimed by this document or by the implementation — see
 `UI-03`'s Phase 1B section for the full verification record (typecheck/
 lint/build/rendered-HTML/compiled-CSS review) and its explicit limits.
+
+### 10.7 Phase 1B Remediation 01 — empirical breakpoint correction
+
+User visual QA (real-browser review, not the source/compiled-CSS review
+of §10.6) was performed at 1440px, 1024px, 768px, and 440px after Phase
+1B's initial implementation. Result:
+
+- **1440px — pass for current stage.**
+- **1024px — pass for current stage, kept under observation.**
+- **768px — fail.** The full desktop row (wordmark + 5 nav items + 2
+  actions) at the `md:` (768px) threshold and 20px item gap was visibly
+  compressed, specifically in the side-column relationship — confirming
+  the risk flagged as unverified in §10.6.
+- **440px — pass for current stage.**
+
+**Decision: the full-desktop-composition threshold is revised from `md:`
+(768px) to `lg:` (1024px).** §10.4's dedicated tablet-gap treatment is
+superseded (struck through above) rather than retained as an
+intermediate state — there is no longer a squeezed tablet row between
+mobile and desktop. Below `lg:` (1024px), the §10.5 mobile/compact
+treatment applies directly. 1024px is the lowest width at which the full
+desktop composition is currently accepted; it remains **under
+observation**, not fully closed out. This was an empirical correction
+made from user-supplied screenshots, not a unilateral redesign.
 
 ---
 

@@ -27,18 +27,19 @@ only carried in chat memory.
 **UI Phase 0A — Design Governance Foundation: COMPLETE.**
 **UI Phase 0B — Visual Reference + Measurement Specification: COMPLETE.**
 **UI Phase 1A — Frontend Technical Foundation: COMPLETE.**
-**UI Phase 1B — Floating-Pill Public Navigation: IMPLEMENTED, PENDING USER
-VISUAL REVIEW.** The first real AIX visual component
+**UI Phase 1B — Floating-Pill Public Navigation: IMPLEMENTED, VISUAL
+REVISION REQUIRED (Remediation 01 applied, still PENDING USER VISUAL
+REVIEW).** The first real AIX visual component
 (`platform/apps/web/components/site/public-header.tsx`, `PublicHeader`) is
 built and independently verified via typecheck/lint/build and
 compiled-CSS-level measurement review — but **no visual acceptance is
-claimed**. No screenshot tool was available this turn; the user is
-expected to review the running app directly (`npm run dev:web` from
-`platform/`, then `http://localhost:3000`), in particular the 768–1023px
-tablet range, which could not be empirically verified. **No final color
-palette or font exists yet** — the header uses new, explicitly
-provisional, public-marketing-scope-only tokens. See
-[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6
+claimed**. User visual QA at 1440/1024/768/440px found the original
+768px (`md:`) full-desktop threshold visibly compressed; Remediation 01
+moved the full-desktop/compact-mobile switch to `lg:` (1024px) — 1024px
+now passes but remains **under observation**. **No final color palette or
+font exists yet** — the header uses new, explicitly provisional,
+public-marketing-scope-only tokens. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6–§10.7
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §19 for the full implementation record, findings, and deferred items.
 

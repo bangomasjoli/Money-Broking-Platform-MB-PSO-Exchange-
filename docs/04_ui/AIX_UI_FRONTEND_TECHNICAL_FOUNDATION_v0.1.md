@@ -471,3 +471,45 @@ passed at 1440px, 1024px, 768px (compact treatment), and 430/440px.
 component — not a final color palette, final font, final brand asset, or
 the full public website, all of which remain pending; shrink-on-scroll
 remains explicitly deferred.
+
+## 20. Phase 1C — Public Landing Hero
+
+**IMPLEMENTED, PENDING USER VISUAL REVIEW** —
+`platform/apps/web/components/site/public-hero.tsx` (`PublicHero`). Header
++ hero only, per this turn's scope; `PublicHeader` (VISUALLY ACCEPTED,
+`47c0f1a`) was consumed, not redesigned. Full geometry, copy, and status
+detail recorded in `UI-02` §21 rather than duplicated here.
+
+**No new dependency, package, or shadcn component was added.** Only the
+already-installed `Button` (shadcn) and `lucide-react` icons (`CheckCircle2`,
+`Clock`, `Circle` — verified to exist in the installed `lucide-react`
+version before use) are used. `platform/package-lock.json` is unchanged.
+
+**Root page** (`app/page.tsx`) replaced the Phase 1B review scaffold:
+now renders `PublicHeader` + `PublicHero`, plus a minimal blank scroll
+area explicitly labeled as a preview boundary — not the next homepage
+section.
+
+**A real measurement defect was found and fixed during implementation:**
+the product-preview panel's initial `rounded-xl` class was verified
+against the compiled CSS to resolve to 14px (`var(--radius)×1.4`), not
+this document's own `UI-02` §5 governed 12px "Cards/panels" tier — fixed
+to an explicit `rounded-[12px]`, re-verified against the compiled output.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded (both
+routes statically prerendered). **No backend regression required:**
+`package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched.
+
+**No screenshot was captured** — no browser-automation/screenshot tool
+was available, and installing one solely for this purpose remained out of
+scope. Verification performed instead: rendered-HTML structural review
+(single `<nav>` landmark preserved, one `<h1>`, correct heading nesting to
+the panel's `<h2>`, all 4 decorative icons `aria-hidden`) and compiled-CSS
+byte-level confirmation of every governed arbitrary value (`pt-[120px]`,
+`lg:pt-[136px]`, `max-w-[1280px]/[560px]/[480px]/[420px]`, `h-12`, `px-6`,
+`gap-4`, `lg:gap-16`, `text-[40px]`/`lg:text-[56px]`, `rounded-[12px]`) —
+not a claim of equivalent confidence to an actual rendered screenshot.
+**VISUAL ACCEPTANCE: PENDING USER REVIEW.**

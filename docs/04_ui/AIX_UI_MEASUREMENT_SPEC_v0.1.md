@@ -596,3 +596,110 @@ user decision.
 - No value in this document is presented as final-approved — every
   dimensional table is **PROVISIONAL** and/or **DESIGN REVIEW REQUIRED**
   pending screenshot-based visual QA once real implementation exists.
+
+---
+
+## 21. Phase 1C — Public Landing Hero (Geometry & Implementation Status)
+
+**IMPLEMENTED, PENDING USER VISUAL REVIEW** —
+`platform/apps/web/components/site/public-hero.tsx` (`PublicHero`). Header
++ hero only, per this turn's scope; `PublicHeader` (§10.8, VISUALLY
+ACCEPTED) is unchanged.
+
+**Header-to-hero top spacing (computed, not guessed):** the accepted
+header is `fixed` (out of flow). Compact header (below `lg:`): 16px top
+offset + 56px height = 72px bottom edge. Desktop header (`lg:` and up):
+24px top offset + 64px height = 88px bottom edge. A single governed 48px
+(`space-12`) breathing gap is added at both: **`pt-[120px]`** below `lg:`,
+**`lg:pt-[136px]`** at `lg:` and up. Both are exact 4px-grid multiples.
+
+**Container / gutters:** content capped at §7's `marketing-wide` 1280px,
+`mx-auto`-centered. Horizontal gutter: 16px mobile / 32px tablet (`md:`) /
+48px desktop (`lg:`) — matches §8 exactly for those three tiers. The
+§8 large-desktop (≥1440px) 64px gutter tier is **not** implemented as a
+distinct fourth breakpoint this turn — past 1280+2×48=1376px the
+container's own centering already produces growing whitespace, judged
+sufficient for this scope; flagged as a possible future refinement, not a
+silent gap.
+
+**Layout:** two-column at `lg:` (`grid-cols-[1.05fr_1fr]`, copy left /
+product-preview panel right), single column (copy, then preview) below
+`lg:`. Column gap: 40px mobile/tablet (`gap-10`/`md:gap-12`=48px), **64px
+desktop** (`lg:gap-16`).
+
+**Headline:** `max-w-[560px]` cap, independent of the grid column's own
+width. Size 40px / 48px (`md:`) / 56px (`lg:`) — within §6's Display role
+range (40–64px), deliberately not pushed to the top of that range (the
+brief explicitly warns against spectacle-sized headlines). Line-height
+`1.1` (within §6's 1.05–1.15), weight semibold.
+
+**Supporting paragraph:** `max-w-[480px]` (§7 reading measure), 16px
+(§6 Body role), line-height `1.5`.
+
+**CTAs:** "Request Access" (primary, `variant="default"`) / "Explore
+Platform" (secondary, `variant="outline"`) — both fully inert (no
+`href`/`onClick`), matching the header's already-accepted CTA treatment
+rather than introducing a new placeholder convention. Height **48px**
+(`h-12`, §4 Large role — this document's own "marketing hero CTAs" case),
+explicit `px-6` (24px) horizontal padding overriding the shared `Button`
+default (`px-2.5`, too tight at 48px height) — a documented, deliberate
+override per `UI-01` §2.1 rule 6. Gap **16px** (`gap-4`) — larger than the
+header's 12px CTA gap, a deliberate choice for the taller 48px controls,
+not an inconsistency. Full-width (`w-full`) below `sm:` (640px) as a
+deliberate mobile tap-target decision, `w-auto` (content-width, side by
+side) at `sm:` and up.
+
+**Product-preview panel:** an original AIX panel illustrating the
+maker-checker wallet-destination-approval workflow (a real, already-backed
+IAM-02 concept — not an invented capability), explicitly labeled "Demo
+preview" and "not connected to live data," with no fabricated financial
+figures. Width `max-w-[420px]` (`w-full` below that), radius **exactly
+12px** via `rounded-[12px]` — **not** the shared `rounded-xl` utility,
+which was verified against compiled CSS to resolve to 14px
+(`var(--radius)×1.4` = 10×1.4), missing this document's own §5
+"Cards/panels" 12px tier. Padding 24px (`p-6`, `space-6`), row
+padding 12px (`py-3`), row/icon gap 12px (`gap-3`), border `border-border/60`,
+`shadow-sm` — no backdrop blur (reserved for the floating-nav pill; kept
+this panel a plain solid card, not a second glass surface). Status icons
+16px (§14's dense/inline tier), `aria-hidden` (decorative; the row's own
+text label carries the accessible content).
+
+**Tablet (768–1023px) behavior:** single-column stack (same as mobile),
+32px page gutter, 48px inter-block gap; compact header (§10.5) applies,
+since the accepted header threshold is `lg:`/1024px, not `md:`/768px.
+
+**Mobile (<768px) behavior:** single-column stack, 16px page gutter,
+40px inter-block gap; CTAs full-width and stacked; headline/paragraph
+caps (560px/480px) do not bind at this width — text fills the actual
+(narrower) column width instead, which was a deliberate choice, not an
+oversight.
+
+**Background:** deliberately flat — no gradient/blob layer added. The
+brief permits a "very restrained" gradient, but a decorative layer was
+judged unnecessary for a first pass and is the single most explicitly
+flagged anti-pattern ("purple blob background"); safer to ship flat and
+add a reviewed treatment later if wanted.
+
+**Color:** no new CSS custom properties/tokens were added. Status icon
+colors use Tailwind's stock `emerald-600`/`amber-600` (and their `dark:`
+variants) directly, matching §17's Success/Warning direction role-for-role
+— not a token extension, not a final-hex approval.
+
+**Copy status:** headline/paragraph avoid every prohibited claim in this
+turn's brief (no "regulated exchange," "live trading," "bank-grade,"
+"audited," or hype words); direction taken from the brief's preferred
+vocabulary (money broking, payments, controlled digital-asset operations,
+compliance-first execution, operational transparency). Not a final,
+approved marketing-copy sign-off — copy review is separate from visual
+review.
+
+**Anti-AI-look review performed:** no gradient/blob background, no
+KPI-card row, no badge/chip row beyond the panel's own "Demo preview"
+label, no icon-circle decoration, no oversized headline, exactly 2 CTAs,
+no glass panel beyond the already-accepted header pill.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset/logo
+(still pending — wordmark unchanged), the accepted header (unchanged
+except as consumed, not redesigned). **VISUAL ACCEPTANCE: PENDING USER
+REVIEW** — not self-declared.

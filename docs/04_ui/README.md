@@ -46,6 +46,18 @@ shrink-on-scroll remains explicitly deferred. See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6–§10.8
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §19 for the full implementation record, findings, and deferred items.
+**UI Phase 1C — Public Landing Hero: IMPLEMENTED, PENDING USER VISUAL
+REVIEW.** The second real AIX visual component
+(`platform/apps/web/components/site/public-hero.tsx`, `PublicHero`) adds
+only the header + hero (no feature/pricing/footer/testimonial/dashboard
+content) — the accepted `PublicHeader` is unchanged. Headline/copy avoid
+every prohibited regulatory claim; the product-preview panel illustrates
+the real, already-backed IAM-02 maker-checker workflow, explicitly
+labeled "Demo preview," with no fabricated figures. **No new package, no
+new shadcn component, no final color/font/brand-asset approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §21
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§20 for the full implementation record.
 
 ## Contents
 

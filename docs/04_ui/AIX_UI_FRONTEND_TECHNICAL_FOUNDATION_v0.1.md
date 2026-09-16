@@ -526,3 +526,12 @@ alignment only. No other Phase 1C geometry, wording, or breakpoint
 changed; see `UI-02` §21.1 for the full record. Quality gates re-run
 clean; `package-lock.json`/backend unchanged, no regression required.
 **VISUAL ACCEPTANCE: still PENDING USER REVIEW.**
+
+**Visual acceptance:** following Remediation 01, user visual review
+passed at 1440px, 1024px, 768–1023px, and 430px. **AIX UI PHASE 1C:
+VISUALLY ACCEPTED** — accepted implementation baseline `ddc33a4`
+(implementation `1f9a49b` + remediation `ddc33a4`); see `UI-02` §21.2 for
+the full record. This acceptance covers only the header + hero — not a
+final color palette, final font, final brand asset, the full public
+website, remaining homepage sections, production API wiring, live
+onboarding, or live product workflows, all of which remain pending.

@@ -46,16 +46,29 @@ shrink-on-scroll remains explicitly deferred. See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6–§10.8
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §19 for the full implementation record, findings, and deferred items.
-**UI Phase 1C — Public Landing Hero: IMPLEMENTED, PENDING USER VISUAL
-REVIEW.** The second real AIX visual component
-(`platform/apps/web/components/site/public-hero.tsx`, `PublicHero`) adds
-only the header + hero (no feature/pricing/footer/testimonial/dashboard
-content) — the accepted `PublicHeader` is unchanged. Headline/copy avoid
+**UI Phase 1C — Public Landing Hero: VISUALLY ACCEPTED.** The second real
+AIX visual component
+(`platform/apps/web/components/site/public-hero.tsx`, `PublicHero`) —
+implemented at `1f9a49b`, remediated at `ddc33a4` — is accepted by user
+visual review at 1440px, 1024px, 768px, and 430px. It adds only the
+header + hero (no feature/pricing/footer/testimonial/dashboard content) —
+the accepted `PublicHeader` (§ above) is unchanged. Headline/copy avoid
 every prohibited regulatory claim; the product-preview panel illustrates
 the real, already-backed IAM-02 maker-checker workflow, explicitly
-labeled "Demo preview," with no fabricated figures. **No new package, no
-new shadcn component, no final color/font/brand-asset approval.** See
-[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §21
+labeled "Demo preview," with no fabricated figures. Remediation 01 fixed
+two defects the initial review found: "digital-asset" splitting across
+its internal hyphen (now an indivisible wrap unit via `whitespace-nowrap`,
+with unchanged accessible/text content), and the 768–1023px preview panel
+centering inconsistently against the left-aligned copy (now sharing the
+same left edge). `ddc33a4` is the accepted implementation baseline.
+**Accepted responsive rule:** two-column hero ≥1024px; single-column,
+left-aligned stack at 768–1023px; single-column mobile composition with
+stacked full-width CTAs <768px. **No new package, no new shadcn
+component.** **Not accepted by this turn:** a final AIX color palette, a
+final font, a final brand asset/logo, the full public website, remaining
+homepage sections, production API wiring, live onboarding, or live
+product workflows — all remain pending. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §21–§21.2
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §20 for the full implementation record.
 

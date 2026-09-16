@@ -738,3 +738,36 @@ breakpoint threshold changed.** Independently re-verified against the
 rendered HTML: headline text content is byte-identical to the original;
 the preview-wrapper class is now `justify-start` with no responsive
 variant. **VISUAL ACCEPTANCE: still PENDING USER REVIEW.**
+
+### 21.2 Phase 1C Visual Acceptance
+
+**AIX UI PHASE 1C: VISUALLY ACCEPTED**, following Remediation 01. User
+visual review confirmed:
+
+- **1440px — pass.** (The Remediation 01 headline-wrap fix corrected the
+  only defect noted at this width.)
+- **1024px — pass** (unchanged since initial review).
+- **768–1023px — pass**, following Remediation 01's tablet-alignment fix
+  (the preview panel now shares the copy column's left edge).
+- **430px — pass**, following Remediation 01's headline-wrap fix.
+
+**Accepted responsive rule:** two-column hero at ≥1024px (`lg:`);
+single-column, left-aligned stack (copy, then preview, sharing one left
+edge) at 768–1023px; single-column mobile composition with stacked
+full-width CTAs below 768px. "digital-asset" must not break across its
+internal hyphen at any width — enforced via `whitespace-nowrap`, not a
+per-viewport hard-coded line.
+
+**Accepted implementation baseline: `ddc33a4`** (implementation `1f9a49b`
++ Remediation 01 `ddc33a4`). Accepted hero state: headline "Infrastructure
+for governed money broking and digital-asset operations."; supporting
+copy as implemented; primary CTA "Request Access"; secondary CTA "Explore
+Platform"; product preview illustrating the maker-checker
+wallet-destination-approval workflow, explicitly demo / not connected to
+live data.
+
+**This acceptance does NOT extend to:** a final AIX color palette, a
+final AIX font, a final AIX brand asset/logo, the full public website,
+remaining homepage sections, production API wiring, live onboarding, or
+live product workflows — all remain pending. The accepted `PublicHeader`
+(§10.8) is unaffected — this section covers the hero only.

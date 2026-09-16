@@ -363,10 +363,12 @@ uses two new, explicitly PROVISIONAL, public-marketing-scope-only tokens
 token rationale) — never the shared `--background`/`--card` tokens, so
 this remains scoped to the public site only per `UI-01` §3.
 
-**SCREENSHOT VISUAL ACCEPTANCE: PENDING USER REVIEW.** No visual
-acceptance is claimed by this document or by the implementation — see
-`UI-03`'s Phase 1B section for the full verification record (typecheck/
-lint/build/rendered-HTML/compiled-CSS review) and its explicit limits.
+**SCREENSHOT VISUAL ACCEPTANCE: superseded — see §10.8.** No visual
+acceptance was claimed by this section or by the implementation at the
+time it was written; visual acceptance was subsequently granted after
+Remediation 01 (§10.7), recorded in §10.8. See `UI-03`'s Phase 1B section
+for the full verification record (typecheck/lint/build/rendered-HTML/
+compiled-CSS review) and its explicit limits.
 
 ### 10.7 Phase 1B Remediation 01 — empirical breakpoint correction
 
@@ -391,6 +393,35 @@ treatment applies directly. 1024px is the lowest width at which the full
 desktop composition is currently accepted; it remains **under
 observation**, not fully closed out. This was an empirical correction
 made from user-supplied screenshots, not a unilateral redesign.
+
+### 10.8 Phase 1B Visual Acceptance
+
+**AIX UI PHASE 1B: VISUALLY ACCEPTED**, following Remediation 01. User
+visual review confirmed:
+
+- **1440px — pass.**
+- **1024px — pass.**
+- **768px — pass** (compact floating navigation, after Remediation 01;
+  the original `md:` full-desktop treatment at this width was rejected —
+  see §10.7).
+- **430/440px — pass.**
+
+**Accepted responsive rule:** full desktop navigation ≥1024px (`lg:`);
+compact floating navigation <1024px. This is now the governed behavior
+for this component, superseding §10.4's original tablet-specific
+treatment.
+
+**Accepted implementation baseline: `47c0f1a`** (implementation `537c71d`
++ Remediation 01 `47c0f1a`). REF-UI-001's floating-pill concept was
+successfully **adapted, not copied** — its approved scope is unchanged
+(the floating/detached pill treatment only; never Phantom's branding,
+colors, typography, or exact measurements).
+
+**This acceptance does NOT extend to:** a final AIX color palette, a
+final AIX font, a final AIX brand asset/logo, or the full public website
+— all remain pending. Shrink-on-scroll (§10.3) remains explicitly
+deferred, not implemented. No further UI scope beyond this header has
+been implemented.
 
 ---
 

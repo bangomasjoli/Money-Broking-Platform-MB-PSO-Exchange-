@@ -444,15 +444,13 @@ independently re-verified against the **actual compiled Tailwind CSS
 output** (byte-offset inspection of the generated stylesheet), not
 inferred from class names alone.
 
-**No screenshot was captured** — no browser-automation/screenshot tool was
-available in this environment, and installing one solely for screenshots
-was explicitly out of this turn's scope. The source/computed-geometry
-review above is the documented substitute, not a claim of equivalent
-confidence to an actual rendered screenshot. **SCREENSHOT VISUAL
-ACCEPTANCE: PENDING USER REVIEW** — the user is expected to run
-`npm run dev:web` from `platform/` and view `http://localhost:3000`
-directly, in particular checking the 768–1023px tablet range this turn
-could not empirically verify (`UI-02` §10.6).
+**No screenshot was captured by this implementation turn** — no
+browser-automation/screenshot tool was available in this environment, and
+installing one solely for screenshots was explicitly out of scope. The
+source/computed-geometry review above is the documented substitute for
+that turn, not a claim of equivalent confidence to an actual rendered
+screenshot. The user subsequently performed real-browser visual QA
+directly (see below) — screenshot acceptance is no longer pending.
 
 **REF-UI-001's approved scope is unchanged**: floating pill navigation
 treatment only. Nothing in this implementation claims to be, or was built
@@ -463,5 +461,13 @@ already recorded in `UI-02` §18, which this implementation follows.
 **Remediation 01 update:** the 768–1023px tablet concern flagged above was
 confirmed by user visual QA — the `md:` (768px) full-desktop threshold was
 visibly compressed. The threshold is now `lg:` (1024px); see `UI-02` §10.7
-for the full empirical record. 1024px passes but remains under
-observation; 1440px and 440px passed for their current stage.
+for the full empirical record.
+
+**Visual acceptance:** following Remediation 01, user visual review
+passed at 1440px, 1024px, 768px (compact treatment), and 430/440px.
+**AIX UI PHASE 1B: VISUALLY ACCEPTED** — accepted implementation baseline
+`47c0f1a` (implementation `537c71d` + remediation `47c0f1a`); see `UI-02`
+§10.8 for the full record. This acceptance covers only the public header
+component — not a final color palette, final font, final brand asset, or
+the full public website, all of which remain pending; shrink-on-scroll
+remains explicitly deferred.

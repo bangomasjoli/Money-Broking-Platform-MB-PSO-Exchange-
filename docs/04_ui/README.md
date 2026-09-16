@@ -27,19 +27,23 @@ only carried in chat memory.
 **UI Phase 0A — Design Governance Foundation: COMPLETE.**
 **UI Phase 0B — Visual Reference + Measurement Specification: COMPLETE.**
 **UI Phase 1A — Frontend Technical Foundation: COMPLETE.**
-**UI Phase 1B — Floating-Pill Public Navigation: IMPLEMENTED, VISUAL
-REVISION REQUIRED (Remediation 01 applied, still PENDING USER VISUAL
-REVIEW).** The first real AIX visual component
-(`platform/apps/web/components/site/public-header.tsx`, `PublicHeader`) is
-built and independently verified via typecheck/lint/build and
-compiled-CSS-level measurement review — but **no visual acceptance is
-claimed**. User visual QA at 1440/1024/768/440px found the original
-768px (`md:`) full-desktop threshold visibly compressed; Remediation 01
-moved the full-desktop/compact-mobile switch to `lg:` (1024px) — 1024px
-now passes but remains **under observation**. **No final color palette or
-font exists yet** — the header uses new, explicitly provisional,
-public-marketing-scope-only tokens. See
-[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6–§10.7
+**UI Phase 1B — Floating-Pill Public Navigation: VISUALLY ACCEPTED.** The
+first real AIX visual component
+(`platform/apps/web/components/site/public-header.tsx`, `PublicHeader`) —
+implemented at `537c71d`, remediated at `47c0f1a` — is accepted by user
+visual review at 1440px, 1024px, 768px, and 430/440px. The original
+768px (`md:`) full-desktop threshold was rejected as visibly compressed;
+Remediation 01 moved the full-desktop/compact-mobile switch to `lg:`
+(1024px), and the resulting responsive rule (full desktop ≥1024px,
+compact floating navigation <1024px) is accepted at every tested width.
+`47c0f1a` is the accepted implementation baseline. REF-UI-001's floating-
+pill concept was successfully adapted, not copied — its scope remains
+unchanged (treatment only, never Phantom's branding/colors/typography).
+**Not accepted by this turn:** a final AIX color palette, a final font, a
+final brand asset/logo, or the full public website — the header still
+uses new, explicitly provisional, public-marketing-scope-only tokens, and
+shrink-on-scroll remains explicitly deferred. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6–§10.8
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §19 for the full implementation record, findings, and deferred items.
 

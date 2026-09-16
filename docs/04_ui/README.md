@@ -25,14 +25,16 @@ only carried in chat memory.
 ## Status
 
 **UI Phase 0A — Design Governance Foundation: COMPLETE.**
-**UI Phase 0B — Visual Reference + Measurement Specification: CURRENT.**
-Phase 0B turns Phase 0A's approved direction into explicit, measurable
-values (spacing, typography, radii, control heights, floating-navigation
-geometry, visual QA tolerances). **No frontend code, page, component, or
-package exists yet.** See
-[`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md) §18
-and [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
-§20 for the explicit lists of what each phase did not do.
+**UI Phase 0B — Visual Reference + Measurement Specification: COMPLETE.**
+**UI Phase 1A — Frontend Technical Foundation: COMPLETE.**
+**UI Phase 1B — Floating-Pill Navigation Implementation: NEXT.**
+Phase 1A established the actual Next.js/Tailwind/shadcn runtime at
+`platform/apps/web/` — a toolchain, not a visual design. **No approved
+visual component, page design, color palette, or font exists yet.** See
+[`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md) §18,
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §20,
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§18 for the explicit lists of what each phase did not do / deferred.
 
 ## Contents
 
@@ -51,10 +53,17 @@ and [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
   radius/border/shadow), visual QA tolerances, grid/alignment rules, icon
   sizes, and table/form/color direction. Every dimension is PROVISIONAL
   and/or DESIGN REVIEW REQUIRED, not final-approved.
-- [`references/`](references/) — reference image storage. **Currently
-  empty** — see [`references/README.md`](references/README.md) for the
-  registration rule; no image may be registered unless it actually exists
-  in this directory.
+- [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+  (`UI-03`, DRAFT / CONTROLLED IMPLEMENTATION FOUNDATION) — the actual
+  `platform/apps/web/` runtime: npm-workspace integration, exact installed
+  versions, shadcn/Tailwind initialization decisions (and what was
+  overridden from their defaults — font, one stray accent color),
+  TypeScript model, directory structure, verification performed, and
+  every deferred decision. Toolchain only — no visual design accepted.
+- [`references/`](references/) — reference image storage.
+  [`REF-UI-001`](references/REF-UI-001_phantom-floating-pill.png) is
+  registered; see [`references/README.md`](references/README.md) for the
+  registration rule.
 
 ## Companion Project Skill
 

@@ -6,7 +6,8 @@
   "description": "AIX Money Broking + PSO Platform — implementation monorepo. FND-01 Platform Foundation first.",
   "workspaces": [
     "packages/*",
-    "services/*"
+    "services/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=20"
@@ -37,7 +38,12 @@
     "dev:kyc1": "tsx watch services/kyc1/src/index.ts",
     "start:kyc1": "tsx services/kyc1/src/index.ts",
     "dev:wlt1": "tsx watch services/wlt1/src/index.ts",
-    "start:wlt1": "tsx services/wlt1/src/index.ts"
+    "start:wlt1": "tsx services/wlt1/src/index.ts",
+    "dev:web": "npm run dev -w web",
+    "build:web": "npm run build -w web",
+    "start:web": "npm run start -w web",
+    "lint:web": "npm run lint -w web",
+    "typecheck:web": "npm run typecheck -w web"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

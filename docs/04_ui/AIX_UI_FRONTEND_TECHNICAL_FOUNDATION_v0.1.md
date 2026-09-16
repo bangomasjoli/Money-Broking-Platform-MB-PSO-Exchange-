@@ -1,0 +1,380 @@
+---
+document_id: UI-03
+title: AIX UI Frontend Technical Foundation
+version: v0.1
+document_status: DRAFT
+implementation_status: IN_PROGRESS
+module: N/A
+control: UI design governance — frontend runtime/toolchain foundation (Next.js, Tailwind, shadcn/ui, npm workspace integration)
+owner: Unassigned
+effective_date: UNKNOWN
+last_reviewed: UNKNOWN
+supersedes: none
+baseline_commit: 38c260c
+---
+
+# AIX UI Frontend Technical Foundation
+
+**Status: CONTROLLED IMPLEMENTATION FOUNDATION.** This document records the
+technical decisions behind `platform/apps/web/` — the AIX frontend runtime.
+**It records a toolchain, not a visual design.** No page design, no color
+palette, no font, and no component library beyond a single foundational
+primitive is approved here. See
+[`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)
+(`UI-01`) and [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+(`UI-02`) for the still-separately-governed direction and measurements this
+foundation will eventually be built out to satisfy.
+
+---
+
+## 1. Repository / Package-Manager Inspection
+
+Inspected before any edit: `platform/package.json` declares npm workspaces
+(`"workspaces": ["packages/*", "services/*"]`) with a single npm lockfile
+(`platform/package-lock.json`, npm-specific format — confirms npm, not
+pnpm/yarn/bun, is the repository's authoritative package manager). No
+root-level `package.json` exists above `platform/` — `platform/` is the
+sole JS/TS workspace root for the entire repository. `engines.node` is
+`>=20`; the actual toolchain used for this turn was Node v24.18.0 / npm
+11.16.0.
+
+## 2. Frontend Package Architecture
+
+**Decision: `platform/apps/web/`, added as a new `apps/*` glob to
+`platform/package.json`'s existing `workspaces` array — a one-line
+addition, not a workspace overhaul.** `platform/package.json` now reads
+`"workspaces": ["packages/*", "services/*", "apps/*"]`. The single existing
+lockfile (`platform/package-lock.json`) is used; no second lockfile was
+created. `npm install` was run from the workspace root (`platform/`), never
+from inside `apps/web/`.
+
+**Rejected alternative:** a fully separate repository/package-manager
+setup for the frontend was considered and rejected — it would duplicate
+dependency governance, introduce a second lockfile the backend's own
+tooling has no visibility into, and contradict the explicit instruction to
+use the repository's existing package manager. Adding one workspace glob
+is a minimal, well-understood, reversible change — not the
+"architecture-change-larger-than-this-turn" case that would have required
+stopping.
+
+**Structural separation:** `platform/services/*` (backend), `platform/apps/*`
+(frontend) — parallel, sibling top-level directories under the same
+workspace root, making backend/frontend ownership unambiguous at a glance.
+
+## 3. Scaffolding Method
+
+Used `create-next-app@16.3.5` (the current version at the time of this
+turn, verified against the live npm registry rather than assumed from
+memory) with explicit non-interactive flags:
+
+```
+npx create-next-app@16.3.5 apps/web --ts --tailwind --eslint --app --empty \
+  --import-alias "@/*" --use-npm --skip-install --disable-git --yes
+```
+
+- `--empty` — the current flag for a genuinely minimal scaffold (a bare
+  `<div>Hello world!</div>` page, no Next.js/Vercel demo logos or links,
+  no `public/` assets). This is why no default-demo removal was needed —
+  none was generated.
+- `--skip-install` — scaffolding only; dependencies were installed
+  afterward from the workspace root so the single lockfile updated
+  correctly, not a second one inside `apps/web/`.
+- `--disable-git` — critical in a monorepo: without this flag,
+  `create-next-app` would initialize a **nested git repository** inside
+  `apps/web/`, which would silently make every frontend file invisible to
+  the outer repository unless separately added as a submodule.
+- No `--src-dir` — `app/`, `components/`, `lib/` sit directly under
+  `apps/web/`, matching this turn's proposed structure exactly (not
+  nested under `src/`).
+- No React Compiler, no Rspack — neither was requested; both add moving
+  parts a foundation turn does not need.
+
+**`next.config.ts`** was left at its scaffolded default (`{}`, no options
+set) — no configuration was required for this foundation.
+
+## 4. Installed Versions (exact, as resolved into the lockfile)
+
+All current-stable versions, verified against the live npm registry at
+implementation time (not assumed from training-data memory) and confirmed
+against the actual resolved lockfile entries via `npm ls`:
+
+| Package | Version | Role |
+|---|---|---|
+| `next` | 16.3.5 | Framework (App Router) |
+| `react` / `react-dom` | 19.2.8 | UI runtime |
+| `typescript` | 5.9.3 (declared `^5`) | Language — **kept on the 5.x line**, not bumped to the new TypeScript 7.x major (a native-code rewrite that shipped very recently), to avoid running two structurally different type-checker toolchains (backend is TS `^5.7.0`) in one monorepo during a foundation turn |
+| `tailwindcss` | 4.3.3 | Styling engine (v4 — CSS-first, no `tailwind.config.js` content globs) |
+| `@tailwindcss/postcss` | 4.3.3 | Tailwind v4's PostCSS integration |
+| `eslint` | 9.39.5 | Lint |
+| `eslint-config-next` | 16.3.5 | Next.js's own lint ruleset |
+| `shadcn` | 4.21.0 (CLI) | Component-foundation scaffolding tool |
+| `radix-ui` | 1.6.7 | Consolidated Radix UI primitives package (the current official distribution — superseded the many individual `@radix-ui/react-*` packages) |
+| `lucide-react` | 1.46.0 | Icon components |
+| `class-variance-authority` | 0.7.1 | Variant-driven component styling (shadcn's `cva` pattern) |
+| `cn` | 0.3.0 | Official shadcn-maintained `clsx` + `tailwind-merge` replacement (verified via npm registry metadata: maintained by the shadcn project itself, zero runtime dependencies) |
+| `tw-animate-css` | 1.4.0 | Tailwind v4-compatible animation utility layer, pulled in by shadcn's own generated CSS |
+
+No floating/unpinned versions were hand-written — every version above is
+exactly what the lockfile resolved to; reproducibility comes from the
+committed `platform/package-lock.json`, not from re-resolving ranges later.
+
+## 5. TypeScript Model
+
+**`apps/web/` is deliberately NOT added to `platform/tsconfig.json`'s
+project-reference graph** (`tsc -b`, used by the backend's `packages/*` and
+`services/*`). Next.js apps manage their own incremental type checking
+(via `next build`/`next typegen`) and are not idiomatically composed into a
+`composite`/declaration-emitting reference graph the way backend libraries
+are — forcing it in would be non-standard and was rejected. `apps/web/`
+has its own independent, strict `tsconfig.json` (scaffolded by
+`create-next-app`, unmodified): `strict: true`, `noEmit: true`,
+`moduleResolution: "bundler"`, `jsx: "react-jsx"`, import alias `@/*`
+resolving to `./*`.
+
+**Real, empirically-found ordering issue and its fix:** the scaffolded
+`app/layout.tsx` used Next 16's `LayoutProps<"/">` global type, which is
+generated by Next.js's own route-type codegen (`.next/types/`) — it does
+**not** exist until that codegen has run at least once, so a cold
+`tsc --noEmit` failed with `Cannot find name 'LayoutProps'`. The correct
+fix (found via `next --help`, not assumed) is Next 16's dedicated
+`next typegen` command ("Generate TypeScript definitions for routes,
+pages, and layouts without running a full build") — `apps/web/package.json`'s
+`typecheck` script is `next typegen && tsc --noEmit`, and `layout.tsx`
+keeps the officially-scaffolded `LayoutProps<"/">` pattern rather than
+reverting to an older manual prop type. This is exactly the kind of
+Next-16-differs-from-training-data case `AGENTS.md` (§10 below) warns
+about — verified by running the actual tool, not assumed.
+
+## 6. App Router
+
+Confirmed: App Router (`app/`), not Pages Router — no repository constraint
+required otherwise. `app/layout.tsx` is the root layout; `app/page.tsx` is
+the sole route, the smoke page (§9).
+
+## 7. Directory Structure
+
+```
+platform/apps/web/
+  app/
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    ui/
+      button.tsx        # the one component shadcn init generated
+  lib/
+    utils.ts            # re-exports `cn` from the `cn` package
+  components.json        # shadcn CLI configuration
+  eslint.config.mjs
+  next.config.ts
+  next-env.d.ts           # generated, gitignored
+  postcss.config.mjs
+  tsconfig.json
+  package.json
+  README.md
+  AGENTS.md               # generated by Next.js itself, see §10
+  CLAUDE.md                # `@AGENTS.md` — a one-line include
+  .gitignore
+```
+
+No `trading/`, `wallet/`, `aml/`, `compliance/`, or `admin/` folders were
+pre-created — those are created only when those scopes are actually
+implemented, per this turn's explicit instruction. No `public/` directory
+exists — `--empty` generated none, and nothing yet needs a static asset.
+
+## 8. Import Aliases
+
+`@/*` → `./*` (the `create-next-app` default, matching this turn's
+preference exactly). shadcn's own `components.json` records the
+conventional sub-aliases on top of it: `@/components`, `@/components/ui`,
+`@/lib`, `@/lib/utils`, `@/hooks` (the last currently has no directory
+behind it — created lazily when the first hook is added, not pre-created
+empty).
+
+## 9. shadcn/ui Initialization
+
+Run from inside `apps/web/`:
+
+```
+npx shadcn@4.21.0 init -t next -b radix --no-monorepo --preset nova -y
+```
+
+**Genuinely new CLI behavior found by inspection, not memory:** this
+version of the `shadcn` CLI (4.21.0) requires selecting one of eight named
+presets (`nova`, `vega`, `maia`, `lyra`, `mira`, `luma`, `sera`, `rhea`) to
+initialize at all — there is no flag-driven "neutral/blank" path, and
+`--preset custom` (the interactive menu's escape-hatch label) is not a
+valid non-interactive value (`Invalid preset: custom`). **`nova`** was
+selected because it is the CLI's own first-listed/default preset and pairs
+with Lucide icons — already the icon source this project's docs named as
+"likely" (`UI-02` §14) — avoiding an unnecessary icon-library mismatch.
+`-b radix` selects the Radix-primitives base (the traditional, most mature
+accessible-primitives pairing for shadcn) over the CLI's newer `base`/`aria`
+alternatives. `baseColor: "neutral"` and `--css-variables` (default) were
+used — `components.json` confirms `"baseColor": "neutral"`.
+
+**The preset's actual color values were then treated as scaffolding, not
+accepted as AIX styling** (§11) — this satisfies "do NOT accept default
+shadcn styling as AIX styling" precisely because the values were inspected
+before being trusted, and two problems were found and corrected rather
+than shipped as-is:
+
+1. The `nova` preset wires in Google's **Geist** font by default
+   (`app/layout.tsx` imported `next/font/google`'s `Geist` and set
+   `--font-sans` to it) — a real, undocumented branding decision. **Removed**
+   — see §12.
+2. Dark mode's `--sidebar-primary` was the *one* chromatic value
+   (`oklch(0.488 0.243 264.376)`, a real blue-violet) among ~40 otherwise
+   fully achromatic (`oklch(_ 0 0)`) tokens — an unintentional-looking
+   stray accent color on an unused (not-yet-installed) sidebar component.
+   **Neutralized** to match its achromatic siblings, documented inline in
+   `globals.css`.
+
+`shadcn init` created exactly two files: `components/ui/button.tsx` and
+`lib/utils.ts` — a single foundational primitive, not "a library of
+unnecessary components." **Nothing was removed here** — a single Button
+primitive is precisely the minimal foundation this turn's own instructions
+call for, and no other demo/example component was generated to begin with.
+
+**Runtime dependencies added by `shadcn init`** — `class-variance-authority`,
+`cn`, `lucide-react`, `radix-ui`, `shadcn` itself, `tw-animate-css` — were
+each individually checked against npm registry metadata before being
+trusted (maintainer identity, dependency count, description) rather than
+accepted blindly; all are official, current shadcn/Radix-ecosystem
+packages (§4 records exactly what each is).
+
+## 10. Next.js's Own `AGENTS.md` / `CLAUDE.md`
+
+Next.js 16 itself generates `apps/web/AGENTS.md` (and Claude Code reads it
+via the one-line `apps/web/CLAUDE.md` → `@AGENTS.md` include this project's
+harness supports) — a self-regenerating file (confirmed: it is rewritten
+by `next dev`/`next build`, per its own text and
+`node_modules/next/dist/server/lib/generate-agent-files.js`) that warns
+coding agents Next.js 16 has breaking changes versus older training data
+and to consult `node_modules/next/dist/docs/` before writing code. **Kept**
+— this is Next.js's own safety mechanism, not project bloat, and it is
+exactly the caution that surfaced the real `LayoutProps`/`next typegen`
+issue in §5. It does not duplicate `.claude/skills/aix-ui-design/SKILL.md`
+(that skill governs AIX-specific design discipline; this file governs
+generic Next-16-version awareness).
+
+## 11. Design-Token Scaffolding
+
+`app/globals.css` carries the full semantic token set shadcn's `nova`
+preset generated — `background`, `foreground`, `card`, `popover`,
+`primary`, `primary-foreground`, `secondary`, `muted`, `muted-foreground`,
+`accent`, `destructive`, `border`, `input`, `ring`, `chart-1..5`,
+`sidebar*`, plus a `radius` scale — which already meets and exceeds this
+turn's example category list (`background`/`foreground`/`surface`/
+`surface-elevated`/`border`/`primary`/`primary-foreground`/`muted`/
+`muted-foreground`/`success`/`warning`/`danger`; `success`/`warning`/
+`danger` specifically are **not yet present** as named tokens — they exist
+only implicitly via `destructive` — and are flagged as a deferred decision,
+§18). **Every value is explicitly labeled `PROVISIONAL FOUNDATION VALUES`**
+in a header comment at the top of `globals.css`, referencing `UI-01`
+§10 and `UI-02` §17, and stating plainly that no final AIX palette exists.
+Spacing/geometry are explicitly **not** reimplemented as custom Tailwind
+utilities here — `UI-02`'s 4px-unit system remains the sole authority for
+that, unduplicated.
+
+## 12. Final-Color / Final-Font Status
+
+**FINAL AIX COLOR PALETTE: PENDING DESIGN APPROVAL.** The `nova` preset's
+achromatic neutral grayscale is used as inert scaffolding only (§11); no
+hex/oklch value in `globals.css` is presented as, or should be read as,
+an approved AIX color.
+
+**FINAL AIX FONT: PENDING DESIGN APPROVAL.** `app/layout.tsx` carries this
+exact statement in a header comment. The Geist font import shadcn's `nova`
+preset wired in was removed; `font-sans` now resolves to Tailwind v4's own
+built-in default system-ui stack — a safe technical placeholder, not a
+design choice.
+
+## 13. Root Smoke Page
+
+`app/page.tsx` — an intentionally minimal, text-only page (`<h1>`/`<p>`,
+Tailwind spacing/type utility classes only, **no shadcn component used**,
+so nothing on the page could be mistaken for an approved visual
+treatment) stating: *"AIX frontend foundation is initialized."* / *"This
+is a technical smoke page, not an approved UI design."* Verified rendering
+correctly by starting a real `next dev` server and fetching it — `HTTP
+200`, exact expected HTML content present in the response body (§14).
+
+## 14. Verification Performed
+
+- `next typegen && tsc --noEmit` (via `npm run typecheck:web`) — **0
+  errors**, after the §5 fix.
+- `eslint` (via `npm run lint:web`) — **0 issues**, zero output.
+- `next build` (via `npm run build:web`) — **succeeded**, both routes
+  (`/` and the built-in `/_not-found`) statically prerendered, Turbopack
+  build in 2.6s.
+- `next dev` started for real (port 34117, isolated from any default
+  port), `curl`'d directly — **HTTP 200**, response body independently
+  confirmed to contain the exact smoke-page text from §13, confirming the
+  running dev server (not merely the build step) genuinely serves the app.
+  Process cleanly terminated afterward.
+
+## 15. Accessibility Baseline
+
+Semantic HTML preserved (`<html lang="en">`, `<main>`, `<h1>`/`<p>`
+hierarchy on the smoke page); no accessibility-related ESLint rule was
+disabled or weakened (`eslint-config-next`'s defaults, including its
+`jsx-a11y`-derived rules, are untouched). shadcn's Radix-primitive base
+(§9) carries mature accessibility behavior (focus management, ARIA
+attributes, keyboard interaction) into every future component built on it
+— a material reason `-b radix` was chosen over the CLI's newer
+alternatives. Reduced-motion compatibility is available for later
+animation work via `tw-animate-css`'s own `prefers-reduced-motion` support
+(already present in `node_modules/shadcn/dist/tailwind.css`'s `shimmer`
+utility, §9) — nothing animated exists yet to test against it.
+
+## 16. Responsive Baseline
+
+Next.js's default `<meta name="viewport">` (confirmed present in the
+rendered HTML, §14) is correct out of the box — no manual meta-tag
+authoring was required. No component-level breakpoints are implemented in
+this turn; `UI-02`'s measured responsive rules (desktop/tablet/mobile
+behavior per component) remain the sole authority for that work once
+components exist to apply them to.
+
+## 17. No Backend API Coupling / Frontend Security Boundary
+
+No backend service source is imported from `apps/web/` — verified: no
+`import` anywhere in `apps/web/` references `platform/services/**` or
+`platform/packages/**`. No API client, no backend URL configuration, and
+no fake/invented API contract was created — Next.js required none of this
+to build or run. No frontend `.env` file was created (none was technically
+necessary); if one is ever added, it must carry **only** safe public,
+non-secret placeholders — `DATABASE_URL`, any internal service token, the
+perimeter token, and the IAM introspection token must never appear in
+frontend configuration. **Documented rule: anything bundled to the browser
+is public** — no regulated/backend secret may ever be referenced from a
+Client Component. No such reference exists today because no backend
+integration exists today.
+
+## 18. Known Deferred Decisions
+
+Recorded explicitly, not silently left implicit:
+
+- Final AIX color palette (§12) and font (§12) — both `PENDING DESIGN
+  APPROVAL`.
+- `success`/`warning`/`danger` are not yet distinct named semantic tokens
+  (§11) — only `destructive` exists today; adding the other two role
+  tokens (values still provisional) is deferred to when they are actually
+  needed by a real component.
+- The Phantom-inspired floating-pill navigation (`UI-02` §10) — not
+  implemented; Phase 1B.
+- Testing status: **no frontend test runner is installed** — this
+  foundation turn did not add Vitest/Playwright/Testing Library for the
+  frontend; establishing one is deferred to a later turn once there is
+  real component behavior worth testing.
+- Screenshot-based visual-QA tooling status: **not installed** — `UI-01`
+  §7/§8 requires it before page acceptance, but no page exists yet to
+  QA; tooling selection is deferred alongside the first real page turn.
+- API integration status: **none** — §17.
+- `success`/`warning`/`danger` color roles, the exact `--radius` base
+  value's relationship to `UI-02` §5's radius hierarchy, and Tailwind v4
+  theme mapping for `UI-02`'s 4px spacing scale are all **not yet
+  reconciled** between this file's inherited shadcn defaults and `UI-02`'s
+  own specification — flagged for the first turn that builds a real
+  component against both documents simultaneously.

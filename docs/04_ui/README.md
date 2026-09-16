@@ -24,11 +24,15 @@ only carried in chat memory.
 
 ## Status
 
-**UI Phase 0A — Design Governance Foundation.** This phase establishes the
-design direction, discipline, and reference register only. **No frontend
-code, page, component, or package exists yet.** See
+**UI Phase 0A — Design Governance Foundation: COMPLETE.**
+**UI Phase 0B — Visual Reference + Measurement Specification: CURRENT.**
+Phase 0B turns Phase 0A's approved direction into explicit, measurable
+values (spacing, typography, radii, control heights, floating-navigation
+geometry, visual QA tolerances). **No frontend code, page, component, or
+package exists yet.** See
 [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md) §18
-for the explicit list of what this phase did not do.
+and [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§20 for the explicit lists of what each phase did not do.
 
 ## Contents
 
@@ -39,6 +43,18 @@ for the explicit list of what this phase did not do.
   navigation concept, backend-reality rule, regulatory UI boundary,
   reference register, portal categories, model-use guidance, and UI
   implementation discipline.
+- [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+  (`UI-02`, DRAFT) — the measurable specification built on `UI-01`:
+  spacing tokens, control-height system, radius hierarchy, typography
+  roles, content-width categories, page gutters, the full floating-pill-
+  navigation geometry (desktop/tablet/mobile, sticky/scroll behavior,
+  radius/border/shadow), visual QA tolerances, grid/alignment rules, icon
+  sizes, and table/form/color direction. Every dimension is PROVISIONAL
+  and/or DESIGN REVIEW REQUIRED, not final-approved.
+- [`references/`](references/) — reference image storage. **Currently
+  empty** — see [`references/README.md`](references/README.md) for the
+  registration rule; no image may be registered unless it actually exists
+  in this directory.
 
 ## Companion Project Skill
 

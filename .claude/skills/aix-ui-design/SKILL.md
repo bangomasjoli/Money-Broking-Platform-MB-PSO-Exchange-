@@ -12,12 +12,16 @@ change independently of this skill and must stay Git-tracked in one place.
 
 ## Before any UI work
 
-1. **Read `docs/04_ui/README.md` and `docs/04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md`
-   (or their current successors) before writing or changing any UI code.**
-   If a later, more specific UI governance document exists (finalized
-   tokens, a navigation-architecture doc, a page acceptance record), read
-   that too — the foundation document is a starting point, not necessarily
-   the latest word on every subject.
+1. **Read `docs/04_ui/README.md`, `docs/04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md`,
+   and `docs/04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md` (or their current
+   successors — the index README always lists what is current) before
+   writing or changing any UI code.** The measurement spec is where actual
+   dimensions live (spacing tokens, control heights, radii, typography
+   roles, floating-nav geometry, visual QA tolerances) — do not guess a
+   value the spec already states. If an even later, more specific UI
+   governance document exists (a navigation-architecture doc, a page
+   acceptance record), read that too — these documents are a starting
+   point, not necessarily the latest word on every subject.
 2. **Inspect the actual component/page you are about to change** — its
    current markup, its current styles, its current props/variants — before
    editing it. Do not redesign from memory or assumption.

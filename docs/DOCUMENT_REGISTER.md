@@ -173,6 +173,7 @@ every `02_modules/<MODULE>/README.md`.
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | UI-01 | AIX UI Design Foundation | N/A | UI design governance — direction, visual references, measurement discipline, token policy, model-use guidance. DRAFT / CONTROLLED FOUNDATION; no frontend code, page, component, or package exists yet; no final token values approved | v0.1 | DRAFT | N/A | [`04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md`](04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md) | Unassigned | N/A | N/A | none | 4c30c58 |
+| UI-02 | AIX UI Measurement Specification | N/A | UI design governance — dimensional/measurement specification: spacing tokens, control-height system, radius hierarchy, typography roles, content-width categories, page gutters, floating-pill-navigation geometry, visual QA tolerances, icon sizes, table/form/color direction. DRAFT / MEASUREMENT SPECIFICATION; every dimension PROVISIONAL and/or DESIGN REVIEW REQUIRED; no frontend code or package exists yet; Phantom reference image PENDING USER-SUPPLIED FILE | v0.1 | DRAFT | N/A | [`04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md`](04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md) | Unassigned | N/A | N/A | none | c5981ac |
 
 ---
 

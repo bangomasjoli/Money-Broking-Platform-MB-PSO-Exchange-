@@ -45,3 +45,15 @@ Carried, non-blocking, from the Session Introspection acceptance: IAM1-FIND-001 
 IAM1-FIND-005 (INFORMATIONAL/LOW/MEDIUM, none fixed by design). IAM1-FIND-006 and
 IAM1-FIND-007 (test-harness only) are CLOSED. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md)
 for the full register and current status of each.
+
+**FND-FIND-010** (shared `@aix/foundation` connection pool — unconfigured
+capacity/timeout) is CLOSED at commit `6af0d25`: IAM-01 gained its own explicit
+`IAM_DB_POOL_MAX`/`IAM_DB_CONNECTION_TIMEOUT_MS` configuration (required when
+`ENVIRONMENT=prod`, optional and genuinely absent otherwise), independently
+proven fail-closed in production and correctly bounded under saturation
+(`POST /internal/auth/session/validate` returns `503
+AUTH_SESSION_INTROSPECTION_UNAVAILABLE` when the pool is saturated, rather than
+hanging or returning a misleading `401`). This governs IAM's own DB-pool
+capacity INPUTS only — it does NOT calibrate production capacity or approve any
+production pool value. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md)
+FND-FIND-010/FND-FIND-011 and `DECISION_LOG.md` DEC-010.

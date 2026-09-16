@@ -716,6 +716,47 @@ Future decisions should be appended below this line, oldest first, using the sam
   PENDING. Production numeric pre-authentication policy REMAINS NOT
   APPROVED. `FND-FIND-001` REMAINS HIGH/OPEN. `FND-FIND-010` REMAINS
   OPEN. `INTERNET EXPOSURE` REMAINS PROHIBITED.**
+- **FND-FIND-010 (shared `@aix/foundation` connection pool — unconfigured
+  capacity/timeout) — IMPLEMENTED and independently accepted, `CLOSED` at
+  commit `6af0d25`** (`fix(iam): govern database pool capacity inputs`;
+  single commit, no remediation turn required). Architecture selected IAM
+  as the capacity-policy owner and `@aix/foundation` as the mechanism
+  owner: `initPool()` gained a deliberately narrow optional
+  `{ max?, connectionTimeoutMillis? }` seam, never an arbitrary
+  `PoolConfig` pass-through. IAM-01 alone gained `IAM_DB_POOL_MAX`/
+  `IAM_DB_CONNECTION_TIMEOUT_MS` — strictly-positive-integer only,
+  **required when `ENVIRONMENT=prod`** (independently reproduced: the real
+  IAM process aborts before any listener binds if either is missing/empty/
+  invalid), optional and genuinely absent (no substituted default) in
+  every other environment. Independent review proved, via constructor
+  key-sequence comparison against the pre-remediation shape, that all
+  eight non-IAM services remain byte-for-byte unaffected, and independently
+  proved the mechanism live against the REAL IAM service under a
+  controlled TEST-ONLY configuration (`pool.max=1`,
+  `connectionTimeoutMillis=800ms`): a second concurrent
+  `POST /internal/auth/session/validate` issued while the pool's only
+  connection was held returned `503 AUTH_SESSION_INTROSPECTION_UNAVAILABLE`
+  in ~0.8s — bounded, not a hang, not a misleading 401 — with clean
+  recovery after release. Two INFORMATIONAL, non-blocking observations
+  registered as `FND-FIND-011`. **CLOSURE MEANS ONLY that IAM's DB-pool
+  capacity inputs are now explicitly governed — it does NOT mean capacity
+  calibrated, any production pool value approved, or M2/M5 measurement
+  complete.** Preserved for later M1/M2/M5 work: `pool.max` is IAM's
+  per-process ceiling, not guaranteed dedicated introspection capacity
+  under competing IAM DB traffic; `connectionTimeoutMillis` bounds
+  acquisition only, never total request execution once a connection is
+  held (independently demonstrated at ~22s under an 800ms acquisition
+  timeout) — the eventual production value must be chosen together with
+  WLT's caller-side IAM HTTP timeout; and the shared pool's
+  `application_name` remains `"aix-fnd"` for all nine services, so
+  `pg_stat_activity` cannot attribute connections to IAM by name alone. No
+  migration, no grant, no schema change; migration head unchanged at
+  `070`; `platform/edge/**` untouched, no IMP-02 re-acceptance implied.
+  **`FND-FIND-001` REMAINS HIGH/OPEN — this closure removes one
+  calibration blocker only; M1–M8 measurement, production numeric policy,
+  production TLS lifecycle, production L2 proof, production deployment,
+  and independent acceptance all remain outstanding. `INTERNET EXPOSURE`
+  REMAINS PROHIBITED.**
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

@@ -84,10 +84,15 @@ engine's implementation/hardening, or by DEC-010's architecture acceptance alone
 — **REMAINS OPEN**, mandatory precondition before any WLT-01 public route is
 internet-exposed; Required Action now names `IMP-02` as the designated
 implementation owner of the remaining L1/L2 work). Plus FND-FIND-002 through
-FND-FIND-009 (Shared Rate-Limit Engine acceptance/hardening findings), and
-**FND-FIND-010** (MEDIUM, newly opened by the DEC-010 Turn 2 Prerequisites
-review — the shared `@aix/foundation` connection pool configures neither
-`pool.max` nor `connectionTimeoutMillis`, blocking accurate production capacity
-calibration for FND-FIND-001's eventual closure) — see
+FND-FIND-009 (Shared Rate-Limit Engine acceptance/hardening findings).
+**FND-FIND-010** (originally opened by the DEC-010 Turn 2 Prerequisites
+review — the shared `@aix/foundation` connection pool configured neither
+`pool.max` nor `connectionTimeoutMillis`) is now **CLOSED at commit
+`6af0d25`**: IAM-01 database-pool capacity inputs are explicitly governed,
+validated, and fail-closed in production (independently accepted; see
+`DECISION_LOG.md` DEC-010). This closure does NOT mean capacity calibrated
+or any production pool value approved — M2/M5 measurement against
+FND-FIND-001's eventual closure remains outstanding. Two INFORMATIONAL
+observations from that review are tracked as **FND-FIND-011**. See
 [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current
 state of each.

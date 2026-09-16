@@ -211,8 +211,24 @@ before implementation.
 | Outer horizontal page clearance | Fluid — never less than 24px from the viewport edge at any width above mobile | Guarantees visible breathing room on both sides at all times, not just at the max-width cap |
 | Inner horizontal padding | 24px (`space-6`) | Internal left/right padding inside the pill container |
 | Nav-item gap | 32px (`space-8`) between primary nav items | Generous, matching the Phantom-inspired "breathing room" characteristic (`UI-01` §11) without becoming sparse |
-| Logo-area relationship | Logo sits flush to the pill's left inner padding; a vertical divider or additional gap (`space-6`, 24px) separates it from the first nav item | Keeps the logo as a distinct anchor, not crowded by nav items |
-| CTA relationship | Primary CTA sits flush to the pill's right inner padding, at the Default control height (40px, §4), vertically centered in the 64px bar | CTA reads as the terminal, weighted action — standard nav-bar convention |
+| Logo-area relationship | **REVISED, UI Phase 1B — see note below.** ~~Logo sits flush to the pill's left inner padding; a vertical divider or additional gap (`space-6`, 24px) separates it from the first nav item~~ | ~~Keeps the logo as a distinct anchor, not crowded by nav items~~ |
+| CTA relationship | **REVISED, UI Phase 1B — see note below.** ~~Primary CTA sits flush to the pill's right inner padding, at the Default control height (40px, §4), vertically centered in the 64px bar~~ | ~~CTA reads as the terminal, weighted action — standard nav-bar convention~~ |
+
+> **Revision (UI Phase 1B, explicit, not silent):** the two rows above were
+> written conceptually in Phase 0B, before `REF-UI-001`'s image existed
+> (§1). Now that the image is available, it shows the logo and the
+> right-side actions sitting **outside** the pill — not inside its inner
+> padding as originally assumed. Phase 1B's own governing instructions
+> explicitly directed following that composition ("the reference image
+> places logo and right-side actions outside the pill. Preserve that
+> general composition unless measured layout evidence shows it does not
+> work for AIX"). The implemented architecture is therefore: **LEFT**
+> (wordmark, outside the pill) / **CENTER** (the pill — nav items only) /
+> **RIGHT** (actions, outside the pill) — a 3-column CSS grid
+> (`1fr auto 1fr`) keeps the pill genuinely centered regardless of the
+> logo/actions columns' differing content widths, which a flexbox
+> `justify-between` would not guarantee. See `AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`
+> ("UI-03") §Phase 1B for the implemented component.
 
 ### 10.2 Radius, border, shadow, background
 
@@ -271,6 +287,76 @@ dedicated mobile treatment:
   the expanded menu is its own distinct surface/treatment, out of scope
   for this document's geometry (a future, dedicated specification)
 - Outer horizontal page clearance follows the §8 mobile gutter (16px)
+
+### 10.6 Phase 1B Implementation Status
+
+**IMPLEMENTED, PENDING USER VISUAL REVIEW** — `platform/apps/web/components/site/public-header.tsx`.
+Every dimension in §10.1–§10.5 was implemented exactly via governed
+Tailwind utilities and independently re-verified against the actual
+compiled CSS output (not assumed from class names): `top-4`/`md:top-6` =
+16/24px, `h-16`/`h-14` = 64/56px, `max-w-[1120px]`, `px-6`/`px-4` = 24/16px
+(outer clearance and inner padding, both contexts), `gap-5`/`lg:gap-8` =
+20/32px (tablet/desktop item gap), `rounded-full` on a 64px-tall element =
+exactly 32px radius. `shadow-sm`/`backdrop-blur-sm` and the `/85`,`/60`
+opacity modifiers were confirmed via the compiled CSS's `color-mix`
+`@supports` rules to resolve to genuine 85%/60% opacity, not merely
+assumed from the utility names.
+
+**Findings recorded, not silently resolved:**
+
+- **Tablet range (768–1023px) NOT empirically verified.** No browser/
+  screenshot tool was available this turn (none was installed, per this
+  turn's explicit instruction not to add one solely for screenshots).
+  Calculated character-width estimates (5 nav labels + wordmark + 2
+  actions at the specified paddings/gaps) suggest this range may be tight
+  for the full row at 20px gap. Flagged specifically for the user's visual
+  review at this breakpoint — the implementation was NOT unilaterally
+  changed to a different collapse point based on unverified hand-math.
+- **Button radius deviation, out of this turn's explicit scope.**
+  shadcn's `Button` primitive's `rounded-lg` resolves to the shared
+  `--radius` token (`0.625rem` = **10px**), not this document's §5
+  "Standard" tier value (**8px**). This turn's explicit Button Geometry
+  instruction governed height only (40px Default) — not radius — so
+  `Button.tsx` was not modified. Recorded here as an unresolved,
+  precisely-measured deviation for a future reconciliation, not shipped
+  silently.
+- **A real accessibility defect was found and fixed during implementation
+  (not shipped):** an initial draft wrapped shadcn's `NavigationMenu` (which
+  renders its own semantic `<nav>`, defaulting to `aria-label="Main"`) in
+  an additional outer `<nav aria-label="Primary">` — producing two nested
+  `<nav>` landmarks for one navigation area. Fixed by styling a `<div>` for
+  the pill surface and passing `aria-label="Primary"` directly to
+  `NavigationMenu`, leaving exactly one `<nav>` landmark in the rendered
+  DOM (independently re-verified: `grep -c "<nav"` on the live-rendered
+  HTML = 1).
+- **CSS shorthand/longhand override ambiguity, investigated and resolved
+  correctly, not assumed.** shadcn's `NavigationMenuLink` base classes
+  include `p-2`; an initial override attempt of `px-1` alone left `p-2`'s
+  vertical padding unexamined. The `cn()` utility (verified directly via
+  `node -e`) does **not** dedupe `p-2` against `px-*`/`py-*` the way it
+  dedupes same-property utilities (`h-8`→`h-10` was confirmed to dedupe
+  cleanly) — both classes remain in the rendered `class` attribute, and
+  which one's overlapping declarations win is determined by their order in
+  the *compiled stylesheet*, not the JSX. Verified directly against the
+  compiled CSS byte offsets that Tailwind v4 consistently orders
+  directional longhand utilities (`px-*`/`py-*`) after the `p-*` shorthand,
+  so a longhand override does reliably win — but the fix applied was to
+  fully specify both axes explicitly (`px-3 py-0`) rather than rely on
+  partial-override cascade ordering, removing the ambiguity entirely
+  rather than merely trusting it.
+
+No shrink-on-scroll was implemented (explicitly deferred per this turn's
+instruction). No final AIX color palette or font was selected — the pill
+uses two new, explicitly PROVISIONAL, public-marketing-scope-only tokens
+(`--marketing-background`, `--marketing-surface`; see
+`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md` §Phase 1B for the full
+token rationale) — never the shared `--background`/`--card` tokens, so
+this remains scoped to the public site only per `UI-01` §3.
+
+**SCREENSHOT VISUAL ACCEPTANCE: PENDING USER REVIEW.** No visual
+acceptance is claimed by this document or by the implementation — see
+`UI-03`'s Phase 1B section for the full verification record (typecheck/
+lint/build/rendered-HTML/compiled-CSS review) and its explicit limits.
 
 ---
 

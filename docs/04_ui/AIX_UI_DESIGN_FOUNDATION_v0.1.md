@@ -86,6 +86,47 @@ AIX must customize, at minimum:
 No installation or configuration of shadcn happens in this phase — see
 `README.md`.
 
+### 2.1 shadcn-first, controlled use (approved UI Phase 1B)
+
+AIX uses shadcn/ui **extensively, but in a controlled, efficient, and
+precise way** — not as a rarely-touched dependency, and not as a bulk
+component library installed wholesale. The governing rules:
+
+1. Prefer official shadcn primitives whenever they correctly solve the UI
+   need — do not hand-roll a component shadcn already provides correctly.
+2. Do not bulk-install the entire shadcn catalogue. Add a component only
+   when a real, current screen/component actually requires it.
+3. Search existing AIX/shadcn components before creating a new one — a
+   duplicate component is a defect, not a style choice.
+4. shadcn source is **owned and customized by AIX** after addition — it is
+   not a vendored, hands-off dependency. Editing an added component's
+   source is expected, not a workaround.
+5. Default shadcn styling is never automatically accepted as final AIX
+   design (restates §2 above, made explicit as a rule of this policy too).
+6. Measurements, tokens, variants, spacing, and states must follow AIX
+   specs (`UI-02` and successor documents) — a shadcn default that
+   conflicts with a governed AIX value must be overridden, not shipped
+   as-is, and the override should be recorded where it happened.
+7. Preserve Radix/shadcn accessibility behavior when restyling — visual
+   customization must never regress keyboard navigation, focus
+   management, or ARIA semantics the primitive already provides correctly.
+8. Do not create thin `AixXxx` wrappers merely to rename a shadcn
+   primitive — that adds indirection without value.
+9. Create an AIX/domain wrapper only where it adds real value: repeated
+   AIX visual behavior, financial-domain behavior, regulated-workflow
+   behavior, shared variants/states, or measurable consistency across
+   multiple call sites. Name wrappers by domain/role (e.g. `PublicHeader`),
+   never by implementation detail (e.g. never `AixShadcnNavbar`).
+10. Prefer composition over duplication — build a new UI need by composing
+    existing primitives before reaching for a new one.
+11. Community registries or third-party shadcn-ecosystem components
+    require a separate, explicit review before adoption — they are not
+    pre-approved merely because they use the same CLI/registry format as
+    the official shadcn catalogue.
+
+Detailed rationale and precedent live here; `.claude/skills/aix-ui-design/SKILL.md`
+references this policy concisely rather than restating it.
+
 ## 3. Public Website vs. Authenticated Platform
 
 These are related but **distinct visual modes**, not one visual language

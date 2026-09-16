@@ -59,11 +59,22 @@ change independently of this skill and must stay Git-tracked in one place.
    futures, principal dealing, market making, MYR pairs, privacy coins,
    algorithmic stablecoins, staking, lending, or yield; exchange
    functionality stays visually gated).
-8. **Prefer shadcn primitives, but customize them.** shadcn/ui is the
-   component foundation, not the finished visual identity — "default
-   shadcn look" is never an acceptable final state. Customize typography,
-   spacing, color, radii, shadows, borders, tables, forms, navigation,
-   status presentation, empty/loading states, and interaction treatment.
+8. **shadcn-first, controlled use.** Prefer official shadcn primitives
+   whenever they correctly solve the need — but never bulk-install the
+   catalogue; add a component only when a real current screen requires it,
+   and search existing AIX/shadcn components first. Once added, shadcn
+   source is owned and customized by AIX (editing it is expected, not a
+   workaround) — "default shadcn look" is never an acceptable final state.
+   Measurements/tokens/variants/states must follow AIX specs; a shadcn
+   default that conflicts with a governed value must be overridden, not
+   shipped as-is. Preserve Radix/shadcn accessibility behavior when
+   restyling. Do not create thin `AixXxx` rename-only wrappers — wrap a
+   primitive only when it adds repeated AIX/financial/regulated behavior,
+   shared variants, or measurable consistency value, and name the wrapper
+   by domain/role, never by implementation detail. Prefer composition over
+   duplication. Community/third-party registry components need a separate
+   review before adoption. Full rationale:
+   `docs/04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md` §2.1.
 9. **Never change unrelated files.** Keep diffs focused on the coherent UI
    scope for the current session (e.g. one shell, one page, one table) —
    do not opportunistically touch unrelated components, pages, or backend

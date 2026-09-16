@@ -65,6 +65,28 @@
    built-in default (a system-ui font stack) applies undisturbed. FINAL AIX FONT: PENDING
    DESIGN APPROVAL — see app/layout.tsx's own header comment and UI-02 §6. */
 
+/*
+ * PUBLIC-MARKETING-SCOPE PROVISIONAL TOKENS (UI Phase 1B).
+ *
+ * --marketing-background / --marketing-surface are deliberately SEPARATE from the shared
+ * --background/--card tokens above, not a replacement for them. UI-01 §3 requires the public
+ * website and the authenticated platform to use distinct visual modes — the "very soft cool
+ * lavender" page background and "soft near-white elevated" pill-surface direction requested for
+ * this turn's public header/preview belong to the PUBLIC site only. Overloading the shared
+ * --background token would incorrectly tint every future authenticated dashboard/table/form
+ * lavender too, which UI-01 explicitly prohibits (marketing decoration must not leak into
+ * staff/admin/compliance screens).
+ *
+ * Values are PROVISIONAL — a low-chroma, independently-chosen lavender direction, NOT sampled
+ * or copied from REF-UI-001's Phantom screenshot (UI-02 §18: "Exact color palette" and "Exact
+ * measurements" are explicitly things AIX does NOT take from that reference). No final AIX
+ * palette exists — UI-02 §17.
+ */
+:root {
+    --marketing-background: oklch(0.975 0.008 296);
+    --marketing-surface: oklch(0.995 0.002 296);
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);

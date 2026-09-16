@@ -378,3 +378,84 @@ Recorded explicitly, not silently left implicit:
   reconciled** between this file's inherited shadcn defaults and `UI-02`'s
   own specification — flagged for the first turn that builds a real
   component against both documents simultaneously.
+
+## 19. Phase 1B — Floating-Pill Public Navigation
+
+**Status: IMPLEMENTED, PENDING USER VISUAL REVIEW.** The first real AIX
+visual component — `platform/apps/web/components/site/public-header.tsx`,
+exporting `PublicHeader`. Full geometry record, revision notes, and
+findings: `AIX_UI_MEASUREMENT_SPEC_v0.1.md` ("UI-02") §10.6. This section
+records the technical/component-structure side only.
+
+**shadcn components added** (pinned CLI `shadcn@4.21.0`, matching the
+version already established in Phase 1A — not an unversioned `@latest`
+invocation): `navigation-menu` and `sheet`. `button` was requested in the
+same command and correctly **skipped by the CLI itself** ("files might be
+identical") — direct, tool-verified confirmation that search-before-create
+worked: no duplicate `Button` was generated. No other shadcn component was
+added — `separator` was considered (listed as a "possibly" candidate) but
+not used anywhere in the implemented header, so it was not installed, per
+the shadcn-first policy's "add a component only when a real current
+screen/component requires it" (`UI-01` §2.1).
+
+**Component structure:**
+
+```
+components/
+  ui/
+    button.tsx            # Phase 1A, unmodified
+    navigation-menu.tsx    # Phase 1B, unmodified shadcn source
+    sheet.tsx               # Phase 1B, unmodified shadcn source
+  site/
+    public-header.tsx       # Phase 1B — the domain component (PublicHeader)
+```
+
+`public-header.tsx` composes the three `ui/` primitives directly — no
+`AixXxx` rename-wrapper was created around any of them individually; the
+one new domain component (`PublicHeader`) is named by role, not
+implementation detail, per the shadcn-first policy's naming rule.
+
+**Root page:** `app/page.tsx` replaced with a Phase 1B preview
+(`Home` — unnamed-export retained implicitly via the default export
+convention) rendering only `<PublicHeader />` plus a tall blank scroll
+region, explicitly to validate the fixed-position header through scroll —
+not a hero, not a dashboard, not marketing copy, per this turn's explicit
+scope.
+
+**New provisional tokens** (`app/globals.css`): `--marketing-background`
+and `--marketing-surface` — deliberately **separate** from the shared
+`--background`/`--card` tokens (§11 of this document), because the
+requested "very soft cool lavender" public-site background direction must
+not leak into the shared token set future authenticated-platform screens
+also depend on (`UI-01` §3's public-vs-authenticated distinction). Values
+are an independently-chosen low-chroma lavender (`oklch(0.975 0.008 296)`
+background, `oklch(0.995 0.002 296)` surface) — explicitly not sampled
+from `REF-UI-001`'s Phantom screenshot.
+
+**Verification performed** (full detail in `UI-02` §10.6): `typecheck:web`
+0 errors, `lint:web` 0 issues (after fixing one real finding — internal
+`href="/"` must use `next/link`'s `Link`, not a bare `<a>`, per
+`@next/next/no-html-link-for-pages`), `build:web` succeeded. Live `next
+dev` server started on an isolated port, fetched via `curl`: HTTP 200,
+full structural HTML review performed (single `<nav aria-label="Primary">`
+landmark confirmed after the accessibility fix, inert CTA buttons
+confirmed to carry no `href`/route). Every governed dimension
+independently re-verified against the **actual compiled Tailwind CSS
+output** (byte-offset inspection of the generated stylesheet), not
+inferred from class names alone.
+
+**No screenshot was captured** — no browser-automation/screenshot tool was
+available in this environment, and installing one solely for screenshots
+was explicitly out of this turn's scope. The source/computed-geometry
+review above is the documented substitute, not a claim of equivalent
+confidence to an actual rendered screenshot. **SCREENSHOT VISUAL
+ACCEPTANCE: PENDING USER REVIEW** — the user is expected to run
+`npm run dev:web` from `platform/` and view `http://localhost:3000`
+directly, in particular checking the 768–1023px tablet range this turn
+could not empirically verify (`UI-02` §10.6).
+
+**REF-UI-001's approved scope is unchanged**: floating pill navigation
+treatment only. Nothing in this implementation claims to be, or was built
+from, Phantom's logo, palette, typography, exact measurements, search
+control, or CTA design — see the "what AIX takes / does not take" analysis
+already recorded in `UI-02` §18, which this implementation follows.

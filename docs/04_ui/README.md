@@ -27,14 +27,20 @@ only carried in chat memory.
 **UI Phase 0A — Design Governance Foundation: COMPLETE.**
 **UI Phase 0B — Visual Reference + Measurement Specification: COMPLETE.**
 **UI Phase 1A — Frontend Technical Foundation: COMPLETE.**
-**UI Phase 1B — Floating-Pill Navigation Implementation: NEXT.**
-Phase 1A established the actual Next.js/Tailwind/shadcn runtime at
-`platform/apps/web/` — a toolchain, not a visual design. **No approved
-visual component, page design, color palette, or font exists yet.** See
-[`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md) §18,
-[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §20,
+**UI Phase 1B — Floating-Pill Public Navigation: IMPLEMENTED, PENDING USER
+VISUAL REVIEW.** The first real AIX visual component
+(`platform/apps/web/components/site/public-header.tsx`, `PublicHeader`) is
+built and independently verified via typecheck/lint/build and
+compiled-CSS-level measurement review — but **no visual acceptance is
+claimed**. No screenshot tool was available this turn; the user is
+expected to review the running app directly (`npm run dev:web` from
+`platform/`, then `http://localhost:3000`), in particular the 768–1023px
+tablet range, which could not be empirically verified. **No final color
+palette or font exists yet** — the header uses new, explicitly
+provisional, public-marketing-scope-only tokens. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §10.6
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
-§18 for the explicit lists of what each phase did not do / deferred.
+§19 for the full implementation record, findings, and deferred items.
 
 ## Contents
 

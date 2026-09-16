@@ -757,6 +757,76 @@ Future decisions should be appended below this line, oldest first, using the sam
   production TLS lifecycle, production L2 proof, production deployment,
   and independent acceptance all remain outstanding. `INTERNET EXPOSURE`
   REMAINS PROHIBITED.**
+- **IMP-02 M1-M8 Capacity Calibration Architecture** — an independent Opus
+  architecture review (architecture-only, no file changes) validated and
+  refined the M1-M8 framework: split `M2` into `M2a` (application-side
+  `pool.max`, observable now) and `M2b` (deployment IAM process count,
+  currently blocked — no evidence source exists anywhere in this
+  repository); split `M7` into `M7-UAT` (functional/relative only) and
+  `M7-PROD` (the only admissible capacity evidence, additionally blocked on
+  a HAProxy stats-socket prerequisite and production TLS decisions); split
+  `M8` into `M8a` (the NAT-fairness mechanism test, an engineering
+  measurement) and `K_max` (the demographic-sharing assumption, a
+  governance input, never an engineering measurement result). Established
+  the engineering-vs-governance boundary: `U`/`N`/`K_max` are never
+  produced by, defaulted in, or inferable from any harness. Source
+  inspection surfaced four architectural gaps, none remediated by that
+  turn: production IAM process/deployment topology does not exist; total
+  IAM request execution is unbounded after pool acquisition (no
+  `statement_timeout` anywhere), so the IAM-acquisition-timeout/WLT-caller-
+  timeout inequality is currently unenforceable; HAProxy has no governed
+  stats socket; WLT's `IAM_CLIENT_TIMEOUT_MS` is hard-coded. Verdict:
+  **SELECTED — READY FOR CONTROLLED MEASUREMENT-HARNESS IMPLEMENTATION.**
+  Followed by **Measurement Harness Turn M-A — IMPLEMENTED and
+  independently accepted, `COMPLETE / ACCEPTED` at commit `d57b436`**
+  (`feat(imp02): add measurement harness foundation`; single commit,
+  originally committed locally as `84a1725`, never published, amended once
+  before its first push after a GitHub push-protection rejection of a
+  Stripe-key-shaped test fixture — independently confirmed as an
+  INFORMATIONAL process deviation only, since `84a1725` reached no remote
+  branch). **FOUNDATION ONLY — no capacity calibration was performed.**
+  Built under `platform/perf/`: a controlled result schema (`OBSERVED`/
+  `PASS`/`FAIL`/`INCONCLUSIVE`/`INVALID`, `OBSERVED` default) whose
+  `PASS`/`FAIL`-requires-a-governed-`threshold_ref` invariant independent
+  review attacked directly with roughly two dozen malformed objects
+  (undefined, null, empty, whitespace-only, numeric coercion, object/array
+  forms) and found airtight; an environment fingerprint that fails
+  explicitly on a missing mandatory field rather than substituting
+  "unknown"; a secret scanner and atomic evidence writer (construct → scan
+  → validate → write, confined to git-ignored `perf/evidence/`)
+  independently attacked across PEM markers, credential URLs, bearer
+  tokens, and known-secret values, never echoing a matched secret in its
+  own error output; an **M2a observer** reading the EFFECTIVE runtime
+  `pool.max`/`connectionTimeoutMillis` a controlled `@aix/foundation`
+  `initPool()` call actually constructs, independently verified against an
+  independently-constructed control `pg.Pool` across two distinct
+  configurations; and pure `C_iam`/DB-wide-budget calculators,
+  independently verified across many combined malformed-input cases to
+  always return `UNDETERMINED` rather than a fabricated or recommended
+  number. The dirty-tree refusal (observer returns `INVALID` without ever
+  opening a database connection) was independently reproduced against a
+  genuinely dirty tree targeting an unroutable address (33ms, no connection
+  attempt). Independent review additionally proved, by direct exploit, that
+  a symlink placed inside `perf/evidence/` is followed (registered
+  `IMP-02-FIND-010`, LOW) and that `status`/`measurement_id` are validated
+  only by TypeScript, not at runtime (registered `IMP-02-FIND-011`, LOW) —
+  both assessed non-blocking today (no untrusted/external entrypoint exists
+  in Turn M-A) but registered as a **mandatory Turn M-B gate**: both MUST
+  close before Turn M-B introduces any externally-influenced path segment
+  or untyped/CLI/JSON entrypoint. Two further LOW/INFORMATIONAL findings
+  registered as `IMP-02-FIND-012`/`013` (schema cleanliness; bundled
+  scanner/test refinements) — none blocked acceptance. Independently
+  reproduced the full canonical suite from a fresh scratch Postgres twice
+  (**204/207 files passed, 5165/5218 tests passed, 53 skipped, 0
+  failures**), migration head unchanged at `070`, all 9 grants
+  byte-unchanged, zero `services/`/`packages/`/`edge/`/`infra/` changes.
+  **M2a IS NOT M2: does not establish production IAM process count,
+  production `C_iam`, approve `IAM_DB_POOL_MAX`, complete M2, or establish
+  throughput capacity — verified in runtime output, not only README prose.**
+  **`FND-FIND-001` REMAINS HIGH/OPEN. `FND-FIND-010` REMAINS CLOSED
+  (unaffected). M1-M8 REMAIN NOT PERFORMED. PRODUCTION `C_IAM` REMAINS
+  UNDETERMINED. PRODUCTION PRE-AUTH POLICY REMAINS NOT APPROVED.
+  `INTERNET EXPOSURE` REMAINS PROHIBITED.**
 - **Supersedes / Related:** Builds on DEC-008 (IAM-01 introspection, L4) and
   DEC-009 (authenticated FND-01 engine + numeric policy, L4) — both left
   unchanged. Directly addresses `OPEN_FINDINGS.md` FND-FIND-001 (HIGH) and

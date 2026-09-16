@@ -207,10 +207,14 @@ inputs are not yet measured:
 - `S_neg` — negative-introspection DB service time (one indexed SELECT plus
   one autocommit `iam.auth_event` INSERT and commit; the table has no
   retention/eviction policy today, so cost grows with accumulated volume).
-- IAM deployed concurrency — `pool.max` × IAM process/instance count. The
-  shared `@aix/foundation` pool (`packages/foundation/src/db.ts`) currently
-  sets no `max` (node-pg default 10) and no `connectionTimeoutMillis`
-  (unbounded pool waits under saturation) — see IAM Capacity Gap below.
+- IAM deployed concurrency — `pool.max` × total live IAM processes across the
+  named deployment. The application-side mechanism is now explicitly
+  governed (`OPEN_FINDINGS.md` FND-FIND-010, CLOSED at `6af0d25`) and its
+  runtime value is now independently observable (Measurement Harness Turn
+  M-A, `IMP-02-ACC-004` — see below) — but the deployment-side factor
+  (production IAM process/instance count) has no evidence source anywhere in
+  this repository, so production `C_iam` remains **UNDETERMINED**. See IAM
+  Capacity Gap below.
 - Deployment shape (instance counts, edge node count) — undetermined; ARC-11
   §28 lists cloud provider and launch capacity/headroom thresholds as open.
 - `K_max` — distinct legitimate clients observed per source bucket (NAT/CGNAT
@@ -229,6 +233,17 @@ R_max     = C_iam / S_neg
 R_budget  = R_max × U
 L_ip      = R_budget / N          subject to: L_ip >= K_max × (DEC-009 frl_wlt1_read_list rate)
 ```
+
+**`C_iam` model, refined by the M1-M8 architecture turn and implemented as
+pure calculation helpers in Measurement Harness Turn M-A
+(`platform/perf/src/capacity.ts`, `IMP-02-ACC-004`):** `IAM process count`
+means `iam_processes_total` — the TOTAL count of live IAM processes across
+the entire named deployment, never a separate "process count" and "instance
+count" silently multiplied together. For homogeneous IAM processes,
+`C_iam = pool.max × iam_processes_total`; for heterogeneous pool sizes,
+`C_iam = Σ(pool.max_i)`. **If deployment process-topology evidence is
+absent — which it currently is, repository-wide — `C_iam` is
+`UNDETERMINED`, never `0`, never `1`, never an assumed value.**
 
 ### Provisional INTERNAL-UAT policy — NOT APPROVED FOR PRODUCTION
 
@@ -323,14 +338,111 @@ of this pack's creation.**
 
 | ID | Measurement |
 |---|---|
-| M1 | Negative-introspection DB service time — mean/p95/p99 |
-| M2 | Deployed `pool.max` + IAM process/instance count |
-| M3 | IAM legitimate login/introspection latency under attack |
-| M4 | Authenticated WLT public-route latency under attack |
-| M5 | IAM pool saturation and post-saturation behaviour |
-| M6 | `iam.auth_event` unauthenticated-traffic write amplification |
+| M1 | Negative-introspection DB service time — mean/p95/p99 — **NOT PERFORMED** |
+| M2a | Deployed `pool.max` (application-side, runtime-observable) — **OBSERVATION CAPABILITY BUILT** by Measurement Harness Turn M-A (`IMP-02-ACC-004`); no production value observed, since only a controlled non-production pool was ever run |
+| M2b | IAM process/instance count (deployment-side) — **BLOCKED**; no Dockerfile/compose/Kubernetes/PM2/systemd/`node:cluster` artifact exists anywhere in this repository from which a production process count could be read |
+| M3 | IAM legitimate login/introspection latency under attack — **NOT PERFORMED** |
+| M4 | Authenticated WLT public-route latency under attack — **NOT PERFORMED** |
+| M5 | IAM pool saturation and post-saturation behaviour — **NOT PERFORMED** |
+| M6 | `iam.auth_event` unauthenticated-traffic write amplification — **NOT PERFORMED** |
 | M7 | Edge throughput / TLS handshake rate / connection capacity — **NOT PERFORMED**; Turn C proved TLS is functional, never how fast it is; no benchmark/capacity figure was produced or claimed |
-| M8 | `K_max` — distinct legitimate clients per source bucket |
+| M8 | `K_max` — distinct legitimate clients per source bucket — **NOT PERFORMED**; `K_max` itself is a governance/demographic input, not an engineering measurement (see Measurement Harness Turn M-A below) |
+
+**M2 is deliberately split into M2a/M2b above, not recorded as one row.**
+Merging them invites exactly the "M2 complete" overclaim the M1-M8
+architecture turn and Turn M-A were both explicitly instructed to avoid —
+M2a being observable does not mean M2 is complete; M2b remains the blocking
+factor.
+
+## Measurement Harness — Turn M-A
+
+**FOUNDATION ONLY. No capacity calibration has been performed by this turn.**
+Implemented at commit `d57b436` (`feat(imp02): add measurement harness
+foundation`), independently accepted `COMPLETE / ACCEPTED`. Full record:
+[`acceptance/IMP-02_Measurement_Harness_Turn_M-A_Opus_Acceptance_v1.0.md`](acceptance/IMP-02_Measurement_Harness_Turn_M-A_Opus_Acceptance_v1.0.md)
+(`IMP-02-ACC-004`). Platform source: `platform/perf/` (`platform/perf/README.md`
+is the implementation-level reference; this section records only the
+governance-relevant boundary).
+
+Turn M-A built the **trusted measurement foundation** the M1-M8 framework
+above depends on, and nothing beyond it:
+
+- A controlled result schema (`OBSERVED`/`PASS`/`FAIL`/`INCONCLUSIVE`/
+  `INVALID`, `OBSERVED` the default) enforcing — independently verified
+  against direct malformed-object attack, not merely the shipped tests —
+  that `PASS`/`FAIL` require a non-empty `threshold_ref` naming a governed,
+  approved threshold, and that every other status forbids one. No governed
+  threshold exists anywhere in this repository yet, so no producer may
+  legitimately emit `PASS`/`FAIL`.
+- An environment fingerprint (provenance/host/runtime/database/
+  service_topology/placement/dataset) that fails explicitly on a missing
+  mandatory field rather than substituting `"unknown"`.
+- A secret scanner and atomic evidence writer enforcing construct →
+  secret-scan → validate → write (never write-then-scan), confined to
+  `platform/perf/evidence/` (git-ignored).
+- An **M2a observer** — reads the EFFECTIVE, runtime `pool.max` /
+  `connectionTimeoutMillis` a controlled `@aix/foundation` `initPool()` call
+  actually constructs against a caller-supplied (non-production) database,
+  independently verified against an independently-constructed control `pg
+  Pool` across two distinct configurations. **M2a is not M2** — see the
+  M2a/M2b table split above and "M2a Boundary" immediately below.
+- Pure `C_iam` and DB-wide connection-budget calculation helpers — see the
+  refined capacity formula above and "DB-Budget Boundary" below.
+
+**Explicitly NOT built:** a token corpus, a load generator (open-loop or
+closed-loop), a dataset seeder, or a continuous pool-counter sampler. No
+`M1`/`M3`/`M4`/`M5`/`M6`/`M7`/`M8a` result was produced or claimed.
+
+### M2a Boundary
+
+M2a may observe: runtime `pool.max`, runtime `connectionTimeoutMillis`. It
+does **NOT** establish: M2 completion, production IAM process count,
+production `C_iam`, throughput capacity, or any approved pool value. A local
+`iam_processes_total = 1` observation is tagged `source:
+"observed_local_process"` in every result — it is a single harness-owned
+process in that run, never production deployment topology.
+
+### DB-Budget Boundary
+
+The Turn M-A DB-wide connection-budget calculator
+(`platform/perf/src/db-budget.ts`) provides **arithmetic evidence only** —
+`Σ(service pool.max × process count) + reserved + admin allowance` versus
+PostgreSQL `max_connections`. It never emits a recommended, safe, or
+approved IAM pool value; every input is caller-supplied, with zero embedded
+production defaults. Production DB-wide capacity still requires explicit
+deployment facts this repository does not yet have.
+
+### Four Architectural Blockers (surfaced by inspection, not remediated)
+
+Independently confirmed accurate during the acceptance review; no
+remediation was performed by Turn M-A, and no new `IMP-02-FIND` ID is
+assigned to the blockers themselves (they are prerequisites, not defects):
+
+1. **Production IAM process/deployment topology does not yet exist.** Blocks
+   M2b and, therefore, production `C_iam`.
+2. **Total IAM request execution after acquiring a DB connection is
+   currently unbounded.** No `statement_timeout`,
+   `idle_in_transaction_session_timeout`, `lock_timeout`, or Fastify
+   `requestTimeout` exists anywhere in `services/`/`packages/`. The
+   FND-FIND-010 `connectionTimeoutMillis` seam bounds acquisition only, so
+   the final IAM-acquisition-timeout / WLT-caller-timeout inequality cannot
+   yet be made enforceable.
+3. **HAProxy has no governed stats socket or runtime stats surface.**
+   `edge/haproxy.base.cfg` declares neither — authoritative M7 remains
+   blocked on that prerequisite.
+4. **WLT's IAM caller timeout is currently hard-coded.**
+   `IAM_CLIENT_TIMEOUT_MS = 5000` in `services/wlt1/src/lib/iam-client.ts`
+   is a source constant, not yet a governed, configurable production input.
+
+### Independent Review Findings
+
+Registered in `OPEN_FINDINGS.md`'s `IMP-02` section as `IMP-02-FIND-010`
+through `IMP-02-FIND-013` (severities LOW/LOW/LOW/INFORMATIONAL — none
+blocked acceptance; see that section for full text). **Turn M-B gate:
+`IMP-02-FIND-010` and `IMP-02-FIND-011` MUST be closed before Turn M-B
+introduces any externally-influenced path segment or untyped/CLI/JSON
+entrypoint** — both findings are contained today only because Turn M-A's
+producers are exclusively internal, typed, TypeScript callers.
 
 ## Abuse-Test Matrix — IMP-02 Acceptance Obligations
 
@@ -383,11 +495,18 @@ this pack.
 
 ## IAM Capacity Gap — Cross-Reference
 
-The `@aix/foundation` shared connection pool (`packages/foundation/src/db.ts`,
-used by every service including IAM-01) currently configures neither
-`pool.max` nor `connectionTimeoutMillis` — both remain at node-pg's library
-defaults. This gap materially blocks accurate production capacity
-calibration for M1/M2/M5 above. Tracked as `OPEN_FINDINGS.md` FND-FIND-010.
+**`OPEN_FINDINGS.md` FND-FIND-010 is CLOSED (`6af0d25`).** The `@aix/foundation`
+shared connection pool (`packages/foundation/src/db.ts`) gained a narrow
+`{ max?, connectionTimeoutMillis? }` seam, and IAM-01 alone gained explicit
+`IAM_DB_POOL_MAX`/`IAM_DB_CONNECTION_TIMEOUT_MS` configuration (required in
+`prod`, optional elsewhere) — the eight other services remain unaffected.
+**Closure means the application-side capacity INPUTS are now explicitly
+governed — it does NOT mean capacity calibrated, any production pool value
+approved, or M1/M2/M5 complete.** Measurement Harness Turn M-A
+(`IMP-02-ACC-004`) subsequently built the ability to OBSERVE this seam's
+runtime effective values (M2a); M2b (deployment process count) and the
+M1/M3-M8 measurements themselves remain entirely unperformed. See "Measurement
+Harness — Turn M-A" above.
 
 ## Pack Contents
 
@@ -429,28 +548,53 @@ No Dockerfile, Docker Compose, Kubernetes manifest, Terraform, or
 cloud-provider selection exists anywhere in this pack — those remain out of
 scope for Turn A, Turn B, and Turn C without a separate decision.
 
+Measurement Harness Turn M-A landed a trusted measurement-foundation
+instrument under `platform/perf/`: `schema.ts` (result envelope,
+status/threshold model), `run-id.ts`, `environment-manifest.ts`,
+`evidence-store.ts`/`secret-scan.ts` (construct → scan → validate → write,
+confined to git-ignored `evidence/`), `capacity.ts` (pure `C_iam`
+calculator), `db-budget.ts` (pure DB-wide budget calculator), and
+`m2a-observe.ts` (the M2a runtime observer) — plus `README.md` and
+`tsconfig.json`. `platform/perf/` is outside Vitest's `tests/**/*.test.ts`
+collection glob (independently confirmed: 207 collected files, zero under
+`perf/`) but is fully typechecked via a `platform/tsconfig.json` project
+reference. Ten new test files (`platform/tests/unit/perf-*.test.ts` ×9,
+`platform/tests/integration/perf-m2a-observe.test.ts` ×1, the latter
+DB-gated). Zero `services/`/`packages/`/`edge/`/`infra/` changes. Full
+inventory and independent verification: `IMP-02-ACC-004`.
+
 ## Status
 
 ```txt
-IMP-02 status (overall) = IN_PROGRESS — Turn A/B/C accepted, production L2 + TLS + calibration pending
+IMP-02 status (overall) = IN_PROGRESS — Turn A/B/C + Measurement Harness Turn M-A accepted, production L2 + TLS + calibration pending
 Turn A (L1 UAT trusted-edge HTTP reference) = COMPLETE / ACCEPTED at 65fca52
 Turn B (L2 network isolation, UAT proof) = COMPLETE / ACCEPTED at 7132057
 Turn C (UAT TLS termination, functional) = COMPLETE / ACCEPTED at d568fa0
+Measurement Harness Turn M-A (foundation only) = COMPLETE / ACCEPTED at d57b436
 Production L2 network isolation (deployed) = NOT PROVEN / PENDING
 TLS termination (UAT, functional) = ACCEPTED (Turn C, d568fa0)
 TLS termination (production lifecycle/cipher/SNI/backend mTLS) = PENDING
 L3 = WLT-01, COMPLETE / ACCEPTED at af52fe8
 Production numeric pre-auth policy = NOT APPROVED
 Internal-UAT provisional policy = AUTHORIZED, non-production only, IMPLEMENTED in Turn A
+M1 = NOT PERFORMED
+M2a (application-side pool.max, runtime-observable) = OBSERVATION CAPABILITY BUILT (Turn M-A); no production value observed
+M2b (deployment IAM process count) = BLOCKED — no evidence source exists in this repository
+M2 (overall) = NOT COMPLETE
+Production C_iam = UNDETERMINED
+M3/M4/M5/M6 = NOT PERFORMED
 M7 (TLS handshake rate / capacity) = NOT PERFORMED / PENDING
+M8a (NAT-fairness mechanism) = NOT PERFORMED; K_max (governance/demographic input) = NOT AN ENGINEERING MEASUREMENT
 Cloud provider = OPEN (ARC-11 §28 #1)
 IaC tooling = OPEN (ARC-11 §28 #5)
 Named accountable human owner = UNASSIGNED
 FND-FIND-001 = HIGH / OPEN (no turn closes it)
-FND-FIND-010 = MEDIUM / OPEN (IAM pool capacity gap; blocks M1/M2/M5; untouched by Turn C)
+FND-FIND-010 = CLOSED at 6af0d25 (IAM pool capacity INPUTS now governed; does not mean calibrated or M2/M5 complete)
 IMP-02-FIND-001..004 = LOW / OPEN (non-blocking Turn-A hardening residuals)
 IMP-02-FIND-005..007 = LOW / OPEN (non-blocking Turn-B hardening residuals)
 IMP-02-FIND-008..009 = LOW / OPEN (non-blocking Turn-C hardening residuals)
+IMP-02-FIND-010..012 = LOW / OPEN (non-blocking Turn-M-A hardening residuals; 010/011 MUST close before Turn M-B introduces an untyped/CLI/JSON entrypoint)
+IMP-02-FIND-013 = INFORMATIONAL / OPEN (bundled Turn-M-A test/scanner refinement observations)
 Internet exposure = PROHIBITED
 ```
 
@@ -463,8 +607,12 @@ Internet exposure = PROHIBITED
   (`IMP-02-ACC-002`) — Turn B independent acceptance, full evidence record.
 - `03_implementation/IMP-02/acceptance/IMP-02_UAT_TLS_Termination_Turn_C_Opus_Acceptance_v1.0.md`
   (`IMP-02-ACC-003`) — Turn C independent acceptance, full evidence record.
+- `03_implementation/IMP-02/acceptance/IMP-02_Measurement_Harness_Turn_M-A_Opus_Acceptance_v1.0.md`
+  (`IMP-02-ACC-004`) — Measurement Harness Turn M-A independent acceptance,
+  full evidence record. Foundation only — no capacity calibration performed.
 - `OPEN_FINDINGS.md` FND-FIND-001 — the finding IMP-02 exists to close, and
-  FND-FIND-010 — the IAM capacity-gap cross-reference — plus the `IMP-02`
-  section (IMP-02-FIND-001 through IMP-02-FIND-009, LOW/OPEN, non-blocking).
+  FND-FIND-010 (CLOSED) — the IAM capacity-gap cross-reference — plus the
+  `IMP-02` section (IMP-02-FIND-001 through IMP-02-FIND-013, LOW/
+  INFORMATIONAL, non-blocking).
 - `02_modules/WLT-01/acceptance/WLT-01_Public_Perimeter_Application_Gate_Opus_Acceptance_v1.0.md` — L3, already accepted.
 - `02_modules/FND-01/acceptance/FND-01_Rate_Limit_Hardening_Opus_v1.0.md` — L4 authenticated engine.

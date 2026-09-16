@@ -10,6 +10,7 @@
     { "path": "./services/clt1" },
     { "path": "./services/aml1" },
     { "path": "./services/kyc1" },
-    { "path": "./services/wlt1" }
+    { "path": "./services/wlt1" },
+    { "path": "./perf" }
   ]
 }

@@ -1,0 +1,6 @@
+# Generated measurement evidence (environment manifests, observation results, raw samples).
+# May reflect local environment details and must never be committed raw. Only this .gitignore
+# is tracked — mirrors platform/edge/uat-topology/evidence/.gitignore and
+# platform/edge/uat-tls/evidence/.gitignore.
+*
+!.gitignore

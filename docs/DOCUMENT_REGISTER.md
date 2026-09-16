@@ -160,6 +160,22 @@ Registering these under §4a's "Module-Level" heading would misclassify them.
 
 ---
 
+## 4c. UI Design Governance
+
+A new, non-`02_modules/` governed tier for AIX UI design direction and
+discipline — parallel in nature to `03_implementation/`'s master handover
+packs (see `03_implementation/IMP-01`), registered here rather than under §4
+because its subject is UI design governance, not backend implementation
+handover. Index-only documents (`<CODE>-IDX`, e.g. `04_ui/README.md`) are
+not separately registered here, matching the convention already used for
+every `02_modules/<MODULE>/README.md`.
+
+| Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| UI-01 | AIX UI Design Foundation | N/A | UI design governance — direction, visual references, measurement discipline, token policy, model-use guidance. DRAFT / CONTROLLED FOUNDATION; no frontend code, page, component, or package exists yet; no final token values approved | v0.1 | DRAFT | N/A | [`04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md`](04_ui/AIX_UI_DESIGN_FOUNDATION_v0.1.md) | Unassigned | N/A | N/A | none | 4c30c58 |
+
+---
+
 ## 5. Cross-Module Documents
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
@@ -179,6 +195,7 @@ This document applies to two modules and is deliberately **not duplicated**. Bot
 | `01_masters/` | Current authoritative master documents (00–11) + `reviews/` |
 | `02_modules/<MODULE>/` | `blueprint/v1.x/`, `reviews/`, `acceptance/`, `notes/` per module |
 | `02_modules/_cross_module/` | Documents that genuinely span more than one module |
+| `04_ui/` | AIX UI design governance: direction, visual references, measurement discipline, token policy — see §4c |
 | `03_implementation/` | Master implementation handover pack(s) |
 | `90_archive/masters/` | Superseded master document versions |
 | `90_archive/modules/<MODULE>/v1.0/` | Superseded v1.0 blueprint packs |

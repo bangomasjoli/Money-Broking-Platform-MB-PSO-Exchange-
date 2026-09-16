@@ -30,17 +30,24 @@ corresponding Reference Register row must state:
 
 A design specification may still proceed *conceptually* from a reference
 whose image is pending — see `AIX_UI_MEASUREMENT_SPEC_v0.1.md` §1 for how
-`REF-UI-001` (Phantom.com floating pill navigation) is currently handled
-under this rule.
+`REF-UI-001` (Phantom.com floating pill navigation) was handled under this
+rule before its image was supplied.
 
 ## Current contents
 
-**Empty.** No reference image has been copied into this repository as of
-this revision. `REF-UI-001`'s Phantom.com screenshot has not been supplied.
+`REF-UI-001`'s Phantom.com screenshot has been supplied and copied into
+this directory.
 
 | File | Reference ID | Status |
 |---|---|---|
-| — | `REF-UI-001` | **PENDING USER-SUPPLIED FILE** |
+| [`REF-UI-001_phantom-floating-pill.png`](REF-UI-001_phantom-floating-pill.png) | `REF-UI-001` | **SUPPLIED** |
+
+**Registering this file does not change `REF-UI-001`'s approved scope.**
+Per `AIX_UI_DESIGN_FOUNDATION_v0.1.md` §14, the reference remains scoped to
+the **floating pill navigation treatment only** — the image is a reference
+for that treatment, not an approval of Phantom's branding, colors,
+typography, proportions, search control, CTA treatment, or wider site
+design. None of those is approved by this registration.
 
 ## When an image is supplied
 

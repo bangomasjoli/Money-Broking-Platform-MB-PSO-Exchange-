@@ -35,14 +35,17 @@ governance rules — it assumes them. Read `UI-01` first.
 [`UI-01`](AIX_UI_DESIGN_FOUNDATION_v0.1.md) §14) is the primary reference
 this specification's §10 draws from.
 
-**REFERENCE IMAGE FILE: PENDING USER-SUPPLIED FILE.** No image has been
-copied into [`references/`](references/) as of this revision — confirmed
-by direct inspection before writing this document. §10 proceeds
-**conceptually**, from the scope and characteristics already recorded in
-`UI-01` §11/§14, not from pixel-measuring a screenshot. Once the reference
-image is supplied (see [`references/README.md`](references/README.md)),
-every dimension in §10 should be re-validated against it, and any
-correction recorded as a revision to this document — not silently.
+**REFERENCE IMAGE FILE:**
+[`references/REF-UI-001_phantom-floating-pill.png`](references/REF-UI-001_phantom-floating-pill.png)
+— supplied and registered (see [`references/README.md`](references/README.md)).
+Registration does not change `REF-UI-001`'s approved scope (floating pill
+navigation treatment only; see `UI-01` §14) and does not itself constitute
+a re-approval of any dimension below. **§10's dimensions have NOT yet been
+re-validated pixel-for-pixel against this image** — they were written
+conceptually, from the scope and characteristics already recorded in
+`UI-01` §11/§14, before the image existed. That re-validation is a
+separate, later task; any correction it produces must be recorded as an
+explicit revision to this document, not applied silently.
 
 ## 2. Measurement Philosophy
 

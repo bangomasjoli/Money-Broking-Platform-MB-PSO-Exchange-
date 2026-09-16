@@ -513,3 +513,16 @@ byte-level confirmation of every governed arbitrary value (`pt-[120px]`,
 `gap-4`, `lg:gap-16`, `text-[40px]`/`lg:text-[56px]`, `rounded-[12px]`) —
 not a claim of equivalent confidence to an actual rendered screenshot.
 **VISUAL ACCEPTANCE: PENDING USER REVIEW.**
+
+**Remediation 01 update:** user visual QA found two defects, both
+corrected in `public-hero.tsx` — (1) "digital-asset" splitting across its
+internal hyphen at 1440px/430px, fixed via `whitespace-nowrap` on that
+term only (no `<br>`, no viewport-hard-coded lines, text content
+unchanged); (2) the tablet (768–1023px) product-preview panel centered
+beneath left-aligned copy, fixed by changing its wrapper from
+`justify-center`-below-`lg:` to an unconditional `justify-start`, aligning
+it to the same grid left edge as the copy column via normal flexbox
+alignment only. No other Phase 1C geometry, wording, or breakpoint
+changed; see `UI-02` §21.1 for the full record. Quality gates re-run
+clean; `package-lock.json`/backend unchanged, no regression required.
+**VISUAL ACCEPTANCE: still PENDING USER REVIEW.**

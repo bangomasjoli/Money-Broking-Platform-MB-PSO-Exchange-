@@ -136,7 +136,18 @@ export function PublicHero() {
               id="hero-heading"
               className={`mt-4 text-[40px] leading-[1.1] font-semibold tracking-tight text-foreground md:text-[48px] lg:text-[56px] ${HEADLINE_MAX_WIDTH}`}
             >
-              Infrastructure for governed money broking and digital-asset operations.
+              {/* REMEDIATION 01: "digital-asset" was observed splitting across the internal
+                  hyphen ("digital-" / "asset" on separate lines) at multiple widths. Wrapped in
+                  `whitespace-nowrap` so the browser treats the compound term as one unbreakable
+                  unit for line-wrapping purposes — the whole term now moves to the next line
+                  together when it doesn't fit, rather than being cut mid-word. This changes only
+                  wrapping behavior: the text node is still the plain string "digital-asset" (a
+                  real hyphen-minus, not a substituted Unicode character), so textContent/
+                  copy-paste/screen-reader pronunciation are byte-identical to before. No <br>
+                  was added and no viewport-specific line is hard-coded — natural wrapping is
+                  otherwise unchanged. */}
+              Infrastructure for governed money broking and{" "}
+              <span className="whitespace-nowrap">digital-asset</span> operations.
             </h1>
 
             <p className={`mt-6 text-base leading-[1.5] text-muted-foreground ${PARAGRAPH_MAX_WIDTH}`}>
@@ -158,7 +169,17 @@ export function PublicHero() {
             </div>
           </div>
 
-          <div className="flex w-full justify-center lg:justify-start">
+          {/* REMEDIATION 01: previously `justify-center` below `lg:`, which visibly centered the
+              420px-capped panel beneath the left-aligned copy at the stacked tablet width
+              (768-1023px), creating two different horizontal anchors on one screen. `justify-start`
+              at every width instead aligns the panel to this wrapper's own left edge — the same
+              left edge the copy column already uses, since both are full-width tracks of the same
+              grid sharing the container's padding. Pure normal-flow flexbox alignment: no magic
+              margin, no relative/absolute offset, no transform. At mobile (<768px) this is visually
+              a no-op — the panel already fills the (narrower-than-420px) available track width, so
+              centered vs. left-aligned looks identical there; at desktop (`lg:`) behavior is
+              unchanged (`justify-start` was already the `lg:` value). */}
+          <div className="flex w-full justify-start">
             <ProductPreviewPanel />
           </div>
         </div>

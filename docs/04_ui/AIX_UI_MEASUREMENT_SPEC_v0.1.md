@@ -703,3 +703,38 @@ final AIX color palette (still pending), final AIX brand asset/logo
 (still pending — wordmark unchanged), the accepted header (unchanged
 except as consumed, not redesigned). **VISUAL ACCEPTANCE: PENDING USER
 REVIEW** — not self-declared.
+
+### 21.1 Phase 1C Remediation 01 — headline wrap + tablet preview alignment
+
+User visual QA found two defects, corrected without changing any other
+Phase 1C geometry, wording, or breakpoint architecture:
+
+- **Compound-word wrapping defect.** "digital-asset" was observed
+  splitting across its internal hyphen (`digital-` / `asset` on separate
+  lines) at 1440px and 430px. Fixed by wrapping the term in
+  `whitespace-nowrap` so the browser treats it as one unbreakable unit for
+  line-wrapping — no `<br>`, no hard-coded viewport-specific line breaks,
+  no change to the underlying text (still the plain string
+  "digital-asset," a real hyphen-minus; `textContent`/copy-paste/
+  screen-reader pronunciation unaffected — independently verified against
+  the rendered HTML). The headline continues to wrap naturally everywhere
+  else.
+- **Tablet horizontal-anchor inconsistency.** At the stacked 768–1023px
+  state, the product-preview panel's wrapper used `justify-center` below
+  `lg:`, centering the 420px-capped panel beneath the left-aligned copy
+  column — two different horizontal anchors on one screen. Fixed by
+  changing the wrapper to `justify-start` unconditionally (it was already
+  `justify-start` at `lg:`, so this is now a single value at every
+  width) — pure normal-flow flexbox alignment, no margin/offset/transform/
+  absolute positioning. The panel now shares the copy column's own left
+  edge, since both are full-width tracks of the same grid sharing the
+  container's padding. At mobile (<768px) this is a visual no-op — the
+  panel already fills the narrower-than-420px available track width, so
+  centered vs. left-aligned looked identical there.
+
+**No other Phase 1C geometry, wording, color, font, shadow, border,
+container width, column gap, CTA sizing, preview width/radius/content, or
+breakpoint threshold changed.** Independently re-verified against the
+rendered HTML: headline text content is byte-identical to the original;
+the preview-wrapper class is now `justify-start` with no responsive
+variant. **VISUAL ACCEPTANCE: still PENDING USER REVIEW.**

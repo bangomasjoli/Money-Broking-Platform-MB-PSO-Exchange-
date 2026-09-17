@@ -1402,3 +1402,169 @@ pending), the accepted header/hero/operating-model/trust-control/
 capabilities sections (unchanged except as consumed). **VISUAL QA:
 DEFERRED** — not self-declared as accepted; screenshot-based review has
 not yet been requested for this section.
+
+---
+
+## 26. Phase 1H — Public Final CTA / Request Access Section (Geometry, Status, Visual-Risk Register)
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-final-cta.tsx`
+(`PublicFinalCta`), the seventh real AIX visual component and the
+**closing content block** of the current homepage, below
+`PublicProductPreview` (§25); every prior component is unchanged. **Full
+visual QA is intentionally deferred this turn, per explicit
+instruction.**
+
+**Audience/claim discipline:** institutional / HNWI / professional only
+— matches the platform's own MVP client scope (`docs/01_masters/
+03_Master_Module_Index_v1.2.md`: "MVP client type = institutional and
+HNWI/professional only... Retail onboarding is disabled by default,"
+already used in Phase 1F, §24). No retail-oriented copy ("Start trading
+now," "Open an account in minutes," "Sign up free") appears. The
+regulatory-boundary note uses this turn's exact suggested wording —
+"Access and available functionality are subject to eligibility,
+onboarding, applicable approvals, and controlled platform enablement" —
+deliberately, since it was already calibrated to avoid implying that
+Money Broking/PSO (already approved, per `docs/01_masters/
+00_Licence_Scope_And_Feature_Lock_v1.3.md`, already used in Phase 1F)
+are themselves unapproved.
+
+**Copy status:** heading "Start a conversation about your operating
+needs."; supporting copy states the institutional/HNWI/professional
+audience and the eligibility/onboarding/enablement conditions; primary
+CTA "Request Access" (the exact same label `PublicHeader`'s own CTA
+already uses — deliberate continuity, not a coincidence); secondary CTA
+"Speak With Our Team" (chosen over "Contact AIX" to complete the
+heading's own "conversation" framing). Not a final, approved marketing-
+copy sign-off — copy review is separate from visual review, consistent
+with every prior section's own copy-status statement.
+
+**Interaction:** both CTAs fully inert (no `href`, no `onClick`) — the
+same treatment `PublicHeader`'s and `PublicHero`'s CTAs already use. No
+email/KYC/waitlist/account-opening form was built.
+
+**Section spacing:** identical to §22–§25's values — top `pt-16`/
+`md:pt-20`/`lg:pt-24` = 64/80/96px, bottom `pb-20`/`md:pb-24`/`lg:pb-28`
+= 80/96/112px — reused for homepage-wide section-rhythm consistency, not
+re-derived for a "closing" section.
+
+**Container:** `max-w-[1280px]`, same gutters as every prior section.
+
+**Content width:** no separate content cap beyond the container — the
+two-column grid spans the full container width, the same approach
+`PublicHero` and `PublicTrustControl` already use for their own
+two-column layouts.
+
+**Heading width:** `max-w-[480px]` — the exact same value
+`PublicTrustControl` (§23) already uses for its own heading, reused
+rather than re-derived.
+
+**Copy width:** `max-w-[440px]` — the exact same value `PublicHero`
+(§21) and `PublicTrustControl` (§23) already use.
+
+**CTA dimensions:** `h-12` (48px) on **both** the primary and secondary
+button — identical class string on both, so the "0px height mismatch"
+requirement is structurally guaranteed, not merely visually close;
+`px-6` (24px) horizontal padding on both, reusing the exact override
+`PublicHero`'s own 48px CTAs already established (overriding `Button`'s
+default `px-2.5`, too tight at 48px height).
+
+**CTA gap:** `gap-4` (16px) — the exact same value `PublicHero`'s own
+48px-CTA row already uses.
+
+**Layout gap (desktop two-column):** `lg:gap-16` (64px) — the same
+value `PublicHero`, `PublicTrustControl`, and `PublicCapabilities`'s
+matrix all already use.
+
+**Boundary-note width:** `max-w-[320px]` — a new, deliberately narrow,
+grid-aligned value (320/4=80) chosen so a short quiet note reads as 1–2
+lines rather than stretching the full action column's width; flagged
+here as a new value, not silently introduced as if already governed.
+
+**Surface treatment:** a full-bleed section background using the
+existing `--marketing-surface` token (the same token `PublicHero`'s
+pill and every subsequent section's icon markers already use) — not a
+new token, and not a contained bordered panel, so **no radius applies**
+(radius is reported here as N/A for the same honest reason
+`PublicCapabilities`, §24, reported "no separate category-column width"
+rather than inventing one). This gives the closing section the
+"slightly stronger surface separation" this turn suggested from
+`PublicProductPreview` above it, without introducing new color.
+
+**Desktop layout (`lg:`, 1024px+):** two-column grid (`grid-cols-2`),
+LEFT heading/copy, RIGHT actions + boundary note — deliberately echoing
+`PublicHero`'s own LEFT-copy/RIGHT-content asymmetry (without repeating
+its content), so the closing section reads as a visual "bookend" to the
+opening hero.
+
+**Tablet (768–1023px) behavior:** single column, left-aligned — matching
+`PublicTrustControl`'s own collapse treatment, since both sections share
+the same LEFT/RIGHT desktop structure; copy above, actions below. CTAs
+are side by side (`sm:flex-row` is already active at this width, `sm:`
+= 640px) rather than stacked.
+
+**Mobile (<768px) behavior:** single column; CTAs full-width and
+stacked below `sm:` (640px) — the exact same pattern `PublicHero`'s own
+CTAs already use and that passed Phase 1C's visual acceptance, reused
+rather than re-derived.
+
+**Accessibility:** semantic `<section>`/heading hierarchy (`h2` section
+heading); focus treatment is inherited unmodified from the shared
+`Button` component (no custom focus override was added, so the existing
+`focus-visible` ring remains intact); no misleading live-navigation
+implication — both CTAs are visually and semantically plain buttons with
+no `href`, consistent with `PublicHeader`'s/`PublicHero`'s own
+established inert-CTA convention.
+
+**Anti-AI-look review performed:** no giant rounded CTA card, no purple
+gradient, no glowing button, no email-capture form, no three-button row,
+no fake urgency, no random badge, no "Ready to get started?" cliché, no
+generic SaaS closing-section tone.
+
+**Known visual-risk register** (real, observed/credible risks only — none
+invented):
+
+- **Phase 1D — still open.** Desktop 6-column process row fit at
+  1024–1100px (§22). Untouched this turn.
+- **Phase 1E — still open.** Mobile control-stack density; large-desktop
+  two-column width balance (§23). Untouched this turn.
+- **Phase 1F — still open.** Mobile capability-list density; matrix
+  quadrant height imbalance; Exchange-boundary note prominence (§24).
+  Untouched this turn.
+- **Phase 1G — still open.** Destination-table fit at 1024px/mobile;
+  sidebar/content proportion; demo-disclosure prominence; status-badge
+  color-neutral hierarchy (§25). Untouched this turn.
+- **Phase 1H — closing-section surface prominence vs. hero (new).** The
+  `--marketing-surface` full-bleed background was a deliberate choice to
+  give this section "slightly stronger separation" per this turn's own
+  instruction — but whether the resulting contrast reads as appropriately
+  subtle (not competing with the hero, per the explicit "do not make it
+  louder than the hero" instruction) or as too faint/too strong has not
+  been verified in a rendered viewport.
+- **Phase 1H — actions-column alignment at tablet width (new).** The
+  right-hand actions column has no tablet-specific alignment override
+  (only `lg:flex lg:flex-col lg:items-start`), relying on default block
+  behavior below `lg:` — calculated as correct, but not yet visually
+  confirmed at exactly 768–1023px alongside the left column's own
+  collapse.
+- **Phase 1H — regulatory-note visibility (new).** The boundary note
+  uses the same quiet `text-xs text-muted-foreground` treatment already
+  flagged for Phase 1F's Exchange-boundary note and Phase 1G's
+  demo-disclosure — the same honest, recurring tension (a
+  regulatory-relevant statement styled to avoid being a "marketing
+  distraction," which also makes it easy to scan past), now present a
+  third time in a section whose primary visual focus (the CTA buttons)
+  competes directly with it.
+- **Phase 1H — cumulative vertical whitespace (new).** `PublicProductPreview`
+  (§25) already carries its own generous bottom padding (80–112px) before
+  `PublicFinalCta`'s own top padding (64–96px) begins — the combined gap
+  between the preview shell's bottom edge and this section's content
+  could read as excessive "dead space" (the specific anti-pattern named
+  in `UI-01` §4) between two adjacent sections. Calculated from the
+  stacked padding values, not observed in a rendered viewport.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), every prior section (unchanged except as consumed). **VISUAL
+QA: DEFERRED** — not self-declared as accepted; screenshot-based review
+has not yet been requested for this section.

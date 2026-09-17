@@ -748,3 +748,57 @@ proportion, demo-disclosure prominence, and status-badge color-neutral
 hierarchy. Phase 1D's, 1E's, and 1F's still-open flags were **not**
 touched or resolved this turn, per explicit instruction. **VISUAL QA:
 DEFERRED.**
+
+## 25. Phase 1H — Public Final CTA / Request Access Section
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-final-cta.tsx`
+(`PublicFinalCta`) — the closing content block of the current homepage,
+below `PublicProductPreview`; every prior component was consumed, not
+redesigned. Full geometry, copy, audience/claim discipline, and the
+visual-risk register are recorded in `UI-02` §26 rather than duplicated
+here.
+
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — no screenshot review was requested or performed.
+
+**No new dependency, package, or shadcn component was added.** Only the
+already-installed `Button` (shadcn) is used — no `Card`, no new
+component, per this turn's explicit "reuse official shadcn Button, no
+need to add new components" instruction. `platform/package-lock.json`
+is unchanged.
+
+**Root page** (`app/page.tsx`) adds `PublicFinalCta` below
+`PublicProductPreview`; no footer or further homepage section was
+added.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded
+(both routes statically prerendered). **No backend regression
+required:** `package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched. No API, auth, or form-submission work of any kind.
+
+**One real lint error was found and fixed during implementation:** the
+root page's own new preview-status caption used literal `"` characters
+around "Request Access" in JSX text (`react/no-unescaped-entities`) —
+fixed with `&ldquo;`/`&rdquo;` HTML entities, re-verified with a clean
+`lint:web` afterward.
+
+**Verification performed instead of screenshot QA:** rendered-HTML
+structural review (heading/copy/CTA-label/boundary-note text
+byte-verified against the intended wording; both CTA buttons confirmed
+to share the identical `h-12 w-full px-6 sm:w-auto` class string,
+structurally guaranteeing the "0px height mismatch" requirement rather
+than merely appearing close) and compiled-CSS byte-level confirmation of
+every governed value (`max-w-[480px]`/`[440px]`/`[320px]`, `h-12`,
+`gap-4`, `lg:gap-16`). Four real, credible visual-risk flags were
+identified from layout/content calculation (not invented) and recorded
+rather than silently resolved — see `UI-02` §26's visual-risk register:
+closing-section surface prominence vs. the hero, actions-column
+alignment at tablet width, regulatory-note visibility (the third
+occurrence of an already-recorded recurring tension from Phases 1F/1G),
+and cumulative vertical whitespace between `PublicProductPreview` and
+this section. Phase 1D's, 1E's, 1F's, and 1G's still-open flags were
+**not** touched or resolved this turn, per explicit instruction.
+**VISUAL QA: DEFERRED.**

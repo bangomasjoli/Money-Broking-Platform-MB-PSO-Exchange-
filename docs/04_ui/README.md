@@ -165,6 +165,31 @@ register (Phase 1D's, 1E's, and 1F's still-open flags, plus four new
 Phase 1G flags: destination-table fit at 1024px/mobile,
 sidebar/content proportion, demo-disclosure prominence, and
 status-badge color-neutral hierarchy).
+**UI Phase 1H — Public Final CTA / Request Access Section: IMPLEMENTED,
+VISUAL QA DEFERRED.** The seventh real AIX visual component
+(`platform/apps/web/components/site/public-final-cta.tsx`,
+`PublicFinalCta`) is the **closing content block** of the current
+homepage, below the product-experience preview — institutional/HNWI/
+professional audience only, no retail-oriented copy, and a
+regulatory-boundary note ("Access and available functionality are
+subject to eligibility, onboarding, applicable approvals, and controlled
+platform enablement") calibrated to avoid implying that already-approved
+Money Broking/PSO scope is itself unapproved. Primary CTA "Request
+Access" (the same label `PublicHeader`'s own CTA already uses) and
+secondary "Speak With Our Team," both fully inert — no form, no
+auth/API work. Two-column at `lg:` (heading/copy left, actions/note
+right) deliberately echoes `PublicHero`'s own asymmetry as a visual
+"bookend" to the homepage. No new shadcn component (`Button` reused
+only). **Full visual QA is intentionally deferred this turn** — no
+screenshot review requested. **No final color/font/brand-asset
+approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §26
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§25 for the full implementation record and the known visual-risk
+register (Phase 1D's, 1E's, 1F's, and 1G's still-open flags, plus four
+new Phase 1H flags: closing-section surface prominence vs. the hero,
+actions-column alignment at tablet width, regulatory-note visibility,
+and cumulative vertical whitespace against `PublicProductPreview`).
 
 ## Contents
 

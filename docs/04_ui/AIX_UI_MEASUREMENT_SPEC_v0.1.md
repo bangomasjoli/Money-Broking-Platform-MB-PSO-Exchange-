@@ -890,3 +890,139 @@ filler).
 final AIX color palette (still pending), final AIX brand asset (still
 pending), the accepted header/hero (unchanged except as consumed).
 **VISUAL ACCEPTANCE: PENDING USER REVIEW** — not self-declared.
+
+---
+
+## 23. Phase 1E — Public Trust, Governance & Control Section (Geometry, Status, Visual-Risk Register)
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-trust-control.tsx`
+(`PublicTrustControl`), the fourth real AIX visual component. One
+homepage section ("Trust & Control"), below `PublicOperatingModel`
+(§22); `PublicHeader`/`PublicHero`/`PublicOperatingModel` are unchanged.
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — this section is not being sent for screenshot/visual
+acceptance now; it is verified via source/layout review and quality
+gates only, with known visual-risk flags recorded below for a later
+consolidated QA pass.
+
+**Regulatory/claim discipline:** no visible copy claims "fully
+regulated," "bank-grade security," "institutional-grade custody,"
+"audited security," "regulator certified," a blanket "approved by LFSA,"
+or "fully compliant." No regulator logo or certification-seal imagery is
+used. Every statement describes AIX's own control *architecture*,
+checked against `docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md`
+("The platform must use default-deny permission enforcement"; "role,
+permission, maker-checker, and segregation-of-duties model") and
+`docs/01_masters/02_Software_Requirement_Specification_v1.2.md`
+("Client money safeguarding account = required"; safeguarding
+computation/reconciliation), plus the real, already-implemented
+IAM-02/SEC-01 sensitive-read-logging concept referenced in
+`docs/00_project_state/PROJECT_HANDOVER.md`
+(`aml1.screening.sensitive_read`, tier-based redaction). The section
+carries its own explicit "Platform design / control model" disclosure
+line rather than implying completed external audit or certification.
+
+**Content structure:** four control groups — Authority / Approval /
+Funds Control / Evidence — rendered as **one** ordered control list
+(`<ol>`, `divide-y divide-border`, 1px dividers per the compiled CSS,
+i.e. the "one continuous vertical rule" the brief asked for) rather than
+four boxed/bordered cards. No per-row background fill, no rounded
+container around the whole list.
+
+**Section spacing:** identical to §22's Phase 1D values — top
+`pt-16`/`md:pt-20`/`lg:pt-24` = 64/80/96px, bottom `pb-20`/`md:pb-24`/
+`lg:pb-28` = 80/96/112px — reused deliberately for homepage-wide
+section-rhythm consistency, not re-derived per section.
+
+**Container:** `max-w-[1280px]`, same gutters as every other section
+(16px mobile / 32px tablet (`md:`) / 48px desktop (`lg:`)) — no new,
+unrelated container width introduced.
+
+**Intro width:** `max-w-[480px]` (heading) / `max-w-[440px]` (supporting
+copy and disclosure) within the left grid column.
+
+**Control-system (right column) width:** no separate cap on the column
+itself — it fills its grid track; each row's description text is capped
+at `max-w-[440px]` (same value as the intro copy, for a consistent
+reading measure across both columns).
+
+**Desktop layout (`lg:`, 1024px+):** two-column grid, `grid-cols-2`,
+`gap-16` (64px) — the same column-gap value `PublicHero` already
+established, reused rather than re-derived. LEFT: intro (eyebrow/
+heading/copy/disclosure), left-aligned — matching `PublicHero`'s own
+left-aligned intro treatment, a deliberate difference from
+`PublicOperatingModel`'s *centered* intro (that section's intro sits
+above full-width content; this one sits beside a column, so left-aligned
+is the layout-appropriate choice each time, not an inconsistency).
+RIGHT: the control list.
+
+**Control-row geometry:** `py-6` (24px vertical padding per row,
+verified in compiled CSS as `padding-block: 24px`), `first:pt-0`/
+`last:pb-0` (no extra padding outside the list's own bounds), `gap-4`
+(16px) between the 40px circle marker and the text block. No internal
+horizontal padding — deliberately a plain flush list, not a padded card,
+so this is reported as 0 rather than an invented value.
+
+**Divider treatment:** `divide-y divide-border`, confirmed 1px via
+compiled CSS (`border-bottom-width: calc(1px * ...)`). Not necessary for
+understanding order — the `<ol>`'s native semantics and each row's own
+number/title/description carry the sequence regardless.
+
+**Icon source/sizes:** Lucide (`KeyRound`, `Users`, `LockKeyhole`,
+`ListChecks`), 20px (`size-5`) inside a 40px (`size-10`) circle — the
+same governed marker convention `PublicOperatingModel` established,
+reused rather than reinvented. Deliberately a *different* icon set than
+`PublicOperatingModel`'s, even where a concept could overlap (e.g. "Funds
+Control" here uses `LockKeyhole`, not the `Wallet` icon
+`PublicOperatingModel`'s "Funding" step already uses), so the two
+sections don't visually repeat the same icon+label pairing.
+
+**Tablet (768–1023px) / Mobile (<768px):** single-column stack (intro,
+then the full-width control list) for both — a deliberate choice over a
+2×2 matrix at tablet, since restructuring a divided *list* into a grid
+would introduce a second, incompatible visual structure just for one
+breakpoint; single-column keeps the same list semantics and divider
+treatment at every width below `lg:`.
+
+**Accessibility:** native `<ol>`/`<li>` list semantics; all icons
+`aria-hidden`; each row's own title/description text carries the
+meaning; the divider is not necessary for understanding.
+
+**Anti-AI-look review performed:** no four-card grid, no shield-icon
+cliché (`ShieldCheck` was in the brief's suggested icon list but
+deliberately not used, to avoid the exact cliché this turn's review
+explicitly names), no green checkmarks, no pill labels, no fake
+compliance badges, no gradient, no glow, no glass, no excessive rounded
+containers.
+
+**shadcn:** no new component added — `Separator`/`Tooltip`/`Accordion`
+were all considered and judged unnecessary (the divider is a native
+`divide-y` Tailwind utility, cheaper than adding `Separator` for the same
+visual result; no interactive hover/expand content exists to warrant
+`Tooltip`/`Accordion`).
+
+**Known visual-risk register** (real, observed/credible risks only — none
+invented):
+
+- **Phase 1D — still open.** The desktop 6-column process row's fit at
+  1024–1100px (§22) remains unresolved; **not** addressed or touched this
+  turn, per explicit instruction.
+- **Phase 1E — control-stack density at mobile (new).** At <768px, each
+  of the 4 rows carries a 1–2 line title plus a 2–3 line, 12px
+  description in a narrow (~300–320px) text column beside a 40px icon —
+  calculated as tight but legible; not verified in a real mobile
+  viewport.
+- **Phase 1E — two-column width balance at large desktop (new).** The
+  left column's text is capped at 440–480px, while the right column (the
+  control list) has no matching cap and fills its full ~50%-width grid
+  track — at wide desktop viewports (≥1280px) this could read as
+  asymmetric (narrower, capped left text next to a wider, uncapped right
+  list), calculated from the grid math but not verified visually.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), the accepted header/hero/operating-model (unchanged except as
+consumed). **VISUAL QA: DEFERRED** — not self-declared as accepted or
+even as "pending review" in the screenshot sense Phases 1B–1D used;
+screenshot-based review for this section has not yet been requested.

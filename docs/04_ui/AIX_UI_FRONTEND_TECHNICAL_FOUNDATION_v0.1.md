@@ -575,3 +575,47 @@ byte-level confirmation of every governed value (`pt-16`/`md:pt-20`/
 screenshot. The desktop 6-column row's fit at exactly 1024–1100px is
 flagged as a specific open question for the user's visual review (`UI-02`
 §22). **VISUAL ACCEPTANCE: PENDING USER REVIEW.**
+
+## 22. Phase 1E — Public Trust, Governance & Control Section
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-trust-control.tsx`
+(`PublicTrustControl`). One homepage section ("Trust & Control"), below
+`PublicOperatingModel`; `PublicHeader`/`PublicHero`/`PublicOperatingModel`
+were consumed, not redesigned. Full geometry, copy, regulatory/claim
+discipline, and the visual-risk register are recorded in `UI-02` §23
+rather than duplicated here.
+
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — no screenshot review was requested or performed; this
+section is not being sent for visual acceptance now.
+
+**No new dependency, package, or shadcn component was added.** Only the
+already-installed `lucide-react` icons (`KeyRound`, `Users`,
+`LockKeyhole`, `ListChecks` — verified to exist in the installed version
+before use) are used; `Separator`/`Tooltip`/`Accordion` were considered
+per this turn's shadcn policy and judged unnecessary.
+`platform/package-lock.json` is unchanged.
+
+**Root page** (`app/page.tsx`) adds `PublicTrustControl` below
+`PublicOperatingModel`; no further homepage section was added.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded (both
+routes statically prerendered). **No backend regression required:**
+`package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched.
+
+**Verification performed instead of screenshot QA:** rendered-HTML
+structural review (single `<ol>` present, all 4 control-group titles and
+descriptions byte-verified against the intended wording, all decorative
+icons `aria-hidden`) and compiled-CSS byte-level confirmation of every
+governed value (`max-w-[480px]`/`[440px]`, `py-6`, `divide-y` at 1px,
+`lg:gap-16`, `size-10`, `size-5`). Two real, credible visual-risk flags
+were identified from layout calculation (not invented) and recorded
+rather than silently resolved — see `UI-02` §23's visual-risk register:
+mobile control-stack density, and two-column width balance at large
+desktop. Phase 1D's own still-open six-column-row flag (§21) was **not**
+touched or resolved this turn, per explicit instruction. **VISUAL QA:
+DEFERRED.**

@@ -71,8 +71,8 @@ product workflows — all remain pending. See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §21–§21.2
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §20 for the full implementation record.
-**UI Phase 1D — Public Operating Model Section: IMPLEMENTED, PENDING USER
-VISUAL REVIEW.** The third real AIX visual component
+**UI Phase 1D — Public Operating Model Section: IMPLEMENTED, VISUAL QA
+DEFERRED.** The third real AIX visual component
 (`platform/apps/web/components/site/public-operating-model.tsx`,
 `PublicOperatingModel`) adds one homepage section ("How AIX Works") below
 the accepted hero — no feature grid, pricing, testimonials, partners,
@@ -89,7 +89,31 @@ brand-asset approval.** See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §22
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §21 for the full implementation record, including an open measurement
-flag on the desktop 6-column row's fit at exactly 1024–1100px.
+flag on the desktop 6-column row's fit at exactly 1024–1100px — this flag
+remains open; Phase 1E did not touch or resolve it.
+**UI Phase 1E — Public Trust, Governance & Control Section: IMPLEMENTED,
+VISUAL QA DEFERRED.** The fourth real AIX visual component
+(`platform/apps/web/components/site/public-trust-control.tsx`,
+`PublicTrustControl`) adds one homepage section ("Trust & Control") below
+the operating-model section — not a certification wall, trust-badge
+section, regulator-logo section, or feature-card dump. Four control
+groups (Authority/Approval/Funds Control/Evidence) are checked against
+`docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md` and
+`docs/01_masters/02_Software_Requirement_Specification_v1.2.md`
+(default-deny enforcement, maker-checker/segregation-of-duties, client
+money safeguarding, audit/reconciliation) and rendered as one divided
+control list, not four cards. No claim of "fully regulated," "bank-grade
+security," "audited security," "regulator certified," or "fully
+compliant" appears; the section carries its own "Platform design /
+control model" disclosure. **Full visual QA is intentionally deferred
+this turn** — no screenshot review requested. **No new package, no new
+shadcn component, no final color/font/brand-asset approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §23
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§22 for the full implementation record and the known visual-risk
+register (Phase 1D's still-open six-column flag, plus two new Phase 1E
+flags: mobile control-stack density, and two-column width balance at
+large desktop).
 
 ## Contents
 

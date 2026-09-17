@@ -984,3 +984,26 @@ altered — verified via rendered-HTML inspection.
 code. The Phase 1H "cumulative whitespace"/"closing-section prominence"
 flags are incidentally affected by the rhythm change but were **not**
 independently re-validated or closed this turn.
+
+## 32. Phase 1O — Low-Severity Polish / QA Closure
+
+**`UI-QA-005` and all 16 retained Phase 1E–1I polish flags adjudicated.**
+Full per-flag decision table (CLOSED / CLOSED BY LATER CHANGE / OPEN /
+ACCEPTED RISK — none silently dropped) recorded in `UI-02` §28.13, not
+duplicated here. `UI-QA-005` (Trust & Control large-desktop balance)
+closed with **no code change** — re-verification found the left/right
+columns' actual used width (480px vs. 476px at 1280px/1440px) to be a
+conclusive near-exact match, not the originally-suspected imbalance.
+Two small code changes were made, both using only existing governed
+tokens: (1) `public-capabilities.tsx` — a thin `border-border/60` top
+divider added before the Exchange-boundary note (the same "quiet
+footnote" pattern already used elsewhere on the page), wording
+unchanged; (2) `public-footer.tsx` — a dead `lg:justify-between` removed
+so the section's own already-present `lg:gap-16` (64px) takes effect,
+closing a real ≈681px empty-middle-of-row defect at desktop. No package,
+dependency, or shadcn component added; `platform/package-lock.json`
+unchanged, so no backend regression was required.
+`typecheck:web`/`lint:web`/`build:web` all re-run clean on the final
+code. **PUBLIC HOMEPAGE: READY FOR FINAL VISUAL REVIEW** — not a
+self-declared visual acceptance; no screenshot review was performed
+this turn.

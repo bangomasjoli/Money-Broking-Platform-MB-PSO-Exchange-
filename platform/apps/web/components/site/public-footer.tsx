@@ -96,7 +96,17 @@ export function PublicFooter() {
   return (
     <footer className="border-t border-border pt-12 pb-8">
       <div className={CONTAINER_CLASS}>
-        <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-16">
+        {/* UI Phase 1O (footer review): removed `lg:justify-between`. With only two flex
+            children far narrower than the 1184px container, `justify-between` pushed the brand
+            block to the row's left edge and the nav-groups block to its right edge regardless of
+            `lg:gap-16` — leaving that gap value dead (CSS-confirmed: justify-content:
+            space-between only lets `gap` act as a minimum, and these two items were nowhere
+            close to that minimum) and a ~681px empty span in the middle of the row (280px brand +
+            ~223px nav-groups content vs. 1184px container). Removing `justify-between` lets the
+            existing, already-governed `lg:gap-16` (64px) finally take effect, pulling the
+            nav-groups block to sit a deliberate 64px after the brand block instead of flush
+            against the container's far edge — see UI-02 §28.13 for the full arithmetic. */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-16">
           <div className="max-w-[280px]">
             <Link
               href="/"

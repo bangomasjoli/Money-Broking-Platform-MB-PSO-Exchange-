@@ -170,7 +170,13 @@ function DomainCapabilityList({ domain }: { domain: CapabilityDomain }) {
         ))}
       </ul>
       {domain.boundaryNote ? (
-        <p className="mt-4 max-w-[440px] text-xs leading-[1.5] text-muted-foreground">
+        // UI Phase 1O (Capabilities review): a thin top divider added before the boundary
+        // note — the same "quiet footnote" pattern PublicHero's product-preview panel (Phase
+        // 1C) and PublicFooter's own legal row (Phase 1I) already use — a small, restrained
+        // structural adjustment (no color, no badge, no banner) giving this regulatory-relevant
+        // sentence a distinct visual boundary from the ordinary capability bullets above it,
+        // without making it louder. See UI-02 §28.13.
+        <p className="mt-4 max-w-[440px] border-t border-border/60 pt-3 text-xs leading-[1.5] text-muted-foreground">
           {domain.boundaryNote}
         </p>
       ) : null}

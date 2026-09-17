@@ -314,6 +314,30 @@ incidentally affected but not independently re-validated or closed. The
 remaining 15 flags in the §28 register (all MEDIUM/LOW/INFORMATIONAL)
 are unaffected — **the homepage remains not visually accepted.**
 
+**UI Phase 1O — Low-Severity Polish / QA Closure: COMPLETE —
+`UI-QA-005` CLOSED, remaining Phase 1E–1I flags adjudicated.**
+`UI-QA-005` (Trust & Control large-desktop balance) closed with **no
+code change** — re-verification found the left/right columns' actual
+used width (480px vs. 476px at 1280px/1440px) to be a conclusive
+near-exact match. All 16 retained Phase 1E–1I polish flags were
+individually re-verified against the current code: 6 CLOSED (2 by a
+small, evidence-backed code change — a quiet top divider on
+Capabilities' Exchange-boundary note, and a dead `lg:justify-between`
+removed from the footer so its own existing `lg:gap-16` takes effect —
+4 by re-verification finding no actual defect), 4 CLOSED BY LATER
+CHANGE (resolved as a side effect of Phase 1N's rhythm remediation), 6
+remain OPEN / ACCEPTED RISK with recorded reasoning for each (real,
+calculated characteristics judged acceptable, not defects). No
+regulatory or product-boundary wording was changed anywhere — every
+note's exact meaning is preserved, verified byte-identical against the
+rendered HTML. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.13 for the full per-flag adjudication table and code-change
+arithmetic. **PUBLIC HOMEPAGE: READY FOR FINAL VISUAL REVIEW** — every
+BLOCKER, HIGH, and MEDIUM finding from the Phase 1J register is now
+CLOSED; this is not a self-declared visual acceptance — no screenshot
+review was performed this turn.
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

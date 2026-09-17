@@ -12,6 +12,9 @@ import type { NavItem, Surface } from "@/components/shell/nav-data";
  *
  * Structure matches `UI-04` §13's diagram exactly: a full-width top bar above everything, then a
  * row containing the persistent sidebar (`xl:` and up) beside the main content workspace.
+ * `UI Phase 2C`'s `SURFACE-1` treatment is applied inside `AuthenticatedTopbar`/
+ * `AuthenticatedSidebar` themselves (`bg-sidebar`/`text-sidebar-foreground`), not here — this
+ * root stays a plain `BASE`-tier (`bg-background`) wrapper.
  *
  * Main content: fluid width, responsive horizontal padding only (`px-4 sm:px-6 xl:px-8`,
  * matching the top bar's own gutters so both align vertically) — deliberately NO max-width

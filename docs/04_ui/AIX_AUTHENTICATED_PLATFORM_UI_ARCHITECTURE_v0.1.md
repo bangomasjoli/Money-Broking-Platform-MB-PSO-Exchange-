@@ -1621,3 +1621,234 @@ implemented.** Both facts are unchanged by this turn.
 - The public homepage was not touched or reopened.
 - No backend, API, database, migration, grant, or edge/perimeter artifact
   was touched.
+
+---
+
+## 36. UI Phase 2D — Authenticated Shell Visual Implementation + QA
+
+**Status: STYLED / TECHNICALLY VERIFIED — RENDERED VISUAL ACCEPTANCE
+BLOCKED.** §35's Phase 2C direction is now applied to the real shell code
+(`UI Phase 2B`, §34). Every change was independently verified via
+`typecheck:web`/`lint:web`/`build:web` (all pass) and direct
+rendered-HTML/compiled-CSS inspection (§36.9). **It was NOT verified by an
+actual rendered screenshot/browser review**, because no such tooling is
+available in this environment — checked directly this turn (`ToolSearch`,
+`package.json`/`node_modules` inspection, `PATH` lookups for Playwright/
+Puppeteer/a headless browser binary — none found; a system Chrome/Safari
+app exists on the host machine but this session has no mechanism to drive
+it or capture from it). Per this turn's own explicit instruction — *"Do not
+substitute source/CSS inspection for rendered acceptance"* — **the
+authenticated shell is NOT marked VISUALLY ACCEPTED this turn.** The code
+is real, committed, and technically sound; the rendered visual judgment
+call this project has required before every prior "visually accepted"
+claim (public homepage, `UI Phase 1B`/`1C`/`1R`) still belongs to the
+user, using their own browser.
+
+### 36.1 Sidebar — `SURFACE-1` treatment applied
+
+`AuthenticatedSidebar`'s `<aside>` now carries `xl:bg-sidebar
+xl:text-sidebar-foreground xl:border-r xl:border-sidebar-border` (was
+plain `bg-background`/`text-foreground`/`border-border`, inherited/
+generic). The brand block's own bottom divider switched from
+`border-border` to `border-sidebar-border` (currently equal in value —
+semantic correctness, not a visible change). Brand ("AIX") now uses full
+`text-sidebar-foreground`; the surface label uses
+`text-sidebar-foreground/60` (was `text-muted-foreground`), formalizing
+"surface labels subordinate to AIX" as an explicit opacity relationship
+rather than an unrelated token. **Structural geometry unchanged** — 240px
+width, 40px rows, 20px icons, 24px group spacing all preserved exactly,
+no defect found requiring revision.
+
+### 36.2 Top bar — `SURFACE-1` treatment applied, client-context refined
+
+`AuthenticatedTopbar`'s `<header>` switched from `bg-background`/
+`border-border` to `bg-sidebar`/`border-sidebar-border`/
+`text-sidebar-foreground` — grouped with the sidebar as one chrome tier,
+per §35.6's own example. **56px height unchanged.**
+
+**Client-context treatment refined** exactly as §35.12 directed: the
+bordered/backgrounded box (`rounded-md border border-border px-3 py-1.5`)
+is replaced with a plain inline text pairing (`Organisation` / `Demo
+placeholder`, separated by a quiet `border-l border-sidebar-border pl-3`,
+no background, no full border) — reads as contextual metadata, not a
+badge. **A conservative breakpoint change accompanies this:** it now shows
+only at `xl:` (was `sm:` up). This is a Phase 2D judgment call, not
+directed verbatim by §35.12 — recorded honestly: with no rendered browser
+available to confirm the tighter text pairing fits the 640–1279px tablet
+topbar without collision alongside the mobile-nav trigger, page label, and
+account button, the safer choice was to show it only where the topbar has
+the most room (`xl:`, alongside the 240px sidebar) and to carry the same
+context into `AuthenticatedMobileNav`'s Sheet header for every narrower
+width instead (§36.3) — satisfying "if it cannot fit in topbar: move it
+into the mobile Sheet" without needing to prove a fit that cannot be
+confirmed without rendering it.
+
+### 36.3 Mobile Sheet — restyled to match the sidebar, not a separate language
+
+`AuthenticatedMobileNav`'s `SheetHeader` previously showed only a bare
+`SheetTitle` (the surface label, shadcn's own default styling). Now
+mirrors `AuthenticatedSidebar`'s brand block exactly: an "AIX" wordmark
+(`text-sm font-semibold tracking-tight`, overriding `SheetTitle`'s default
+`text-base font-medium` via the existing `cn` Tailwind-merge utility — not
+a raw class concatenation, confirmed via direct inspection of the `cn`
+package, so the override reliably takes effect) plus the subordinate
+surface label beneath. For the Client surface, the same organisation-
+context text pairing from §36.2 is repeated here (`border-t
+border-border pt-3`, since it sits below the header rather than beside
+page content) — carrying the context into every viewport below `xl:`
+where the top bar itself no longer shows it. The Sheet's own container
+(`OVERLAY` tier, `bg-popover`) is unchanged — already correct per §35.6,
+not touched. Nav rows are unchanged by construction — `NavList` is one
+shared implementation; restyling it once restyles both the sidebar and
+the Sheet identically, so active state, inert/disabled treatment, and
+icon sizing were never at risk of diverging.
+
+### 36.4 Active / inert nav treatment
+
+**Active-nav 2px leading edge preserved** — reviewed and found still
+visually appropriate per this turn's own permission to keep it as-is; not
+adjusted. **Inert-nav accessibility refined:** every `href`-less row now
+carries `aria-disabled="true"` in addition to the existing sr-only "not
+yet available" note — a direct response to this turn's "render as clearly
+disabled/unavailable nav rows with accessible disabled semantics"
+instruction. No "Coming Soon" badge or pill was added (would have
+reintroduced a status-badge system this project has repeatedly declined
+to build prematurely) — muted text plus the two accessible signals above
+is the complete treatment. Confirmed via rendered-HTML inspection: exactly
+3/4/7 `aria-disabled="true"` occurrences on `/app`/`/ops`/`/admin`
+respectively, matching each surface's exact inert-item count.
+
+### 36.5 Page-header — new shared `PageHeader` component
+
+A new `components/shell/page-header.tsx` implements §35.13's exact
+spacing (context→title 4px, title→description 8px, header→content 24px)
+as one shared component — justified by three real call sites needing
+byte-identical governed spacing (`UI-01` §2.1 rule 9), not a thin rename
+wrapper. All three placeholder pages (`/app`, `/ops`, `/admin`) now render
+through it. **`context` is omitted on all three** — each is its surface's
+own root page with no deeper breadcrumb hierarchy yet, so a context label
+above the title would only repeat information the top bar's own
+breadcrumb (§34) and the sidebar's own active-nav state already show;
+adding one would have violated this turn's own "avoid duplicated large
+surface titles" principle extended to a third repetition. Titles use the
+existing "Page title" role (`text-2xl font-semibold tracking-tight`) —
+unchanged from Phase 2B, now flowing through the shared component instead
+of being hand-typed identically on each page. **Placeholder content
+remains unchanged in substance** — same explanatory one-line description
+per surface, no card, table, chart, metric, or fake activity added.
+
+### 36.6 Borders / radius / shadow — confirmed, one semantic correction
+
+Border weights (1px, via Tailwind's default `border`/`border-b`/`border-l`
+utilities) were already correct — unchanged. Radius (`rounded-md` = 8px on
+nav rows, matching `UI-02` §5's Standard tier) — unchanged, no large-radius
+container exists anywhere in the shell. Shadow — confirmed zero shadow
+classes anywhere in `AuthenticatedShell`/`AuthenticatedSidebar`/
+`AuthenticatedTopbar` before and after this turn; `Sheet`'s own existing
+`shadow-lg` is untouched, per this turn's explicit "existing shadcn
+behavior only" instruction. The one semantic correction: sidebar/top-bar
+internal dividers now reference `--sidebar-border` instead of the generic
+`--border` (§36.1/§36.2) — both tokens are currently equal in value, so
+this is a correctness change for when a future palette turn diverges them,
+not a visible change today.
+
+### 36.7 Admin nav density — verified by arithmetic, not rendering
+
+Admin's 8 nav items were checked for overflow risk without a browser, by
+direct arithmetic against the already-implemented geometry: 56px brand
+block + 24px top nav padding + (8 × 40px rows) + 24px bottom nav padding =
+**424px** of sidebar content below the 56px top bar. Any viewport with
+≥480px of usable vertical space below the top bar (i.e. almost any laptop
+screen) accommodates this without triggering the sidebar `<nav>`'s own
+`overflow-y-auto` scroll — already present, unchanged, and functions as
+the safety net if a future surface ever needs more items than fit. Long
+labels (e.g. "Feature Flags / Configuration," "Client Risk / KYC-KYB")
+rely on the existing `truncate` (single-line ellipsis) treatment on each
+row's label span — unchanged from Phase 2B, confirmed still present;
+wrapping was not introduced, since a 40px row cannot comfortably
+accommodate two text lines and truncation is the established, already-
+governed choice for dense nav rows. **This is arithmetic/source
+verification, not rendered confirmation** — recorded as such.
+
+### 36.8 Accessibility — reviewed against the turn's checklist
+
+- Nav landmarks: unchanged, already correct (`<nav aria-label="{surface}
+  primary">` on both sidebar and Sheet).
+- `aria-current="page"` on the active link: unchanged, already present.
+- Inert items not keyboard-focusable: unchanged, already correct (plain
+  `<div>`, no tabindex, no interactive role) — `aria-disabled="true"`
+  added this turn as a supplementary signal (§36.4).
+- Sheet trigger labelled: unchanged, already correct
+  (`aria-label="Open navigation"`).
+- Focus rings: unchanged — inherited from `Button`'s own
+  `focus-visible:ring-3 focus-visible:ring-ring/50`, not overridden.
+- Contrast under current tokens: **not independently re-measured this
+  turn** — the sidebar/topbar switched from `--background` (pure white,
+  `oklch(1 0 0)`) to `--sidebar` (`oklch(0.985 0 0)`, a 1.5%-lightness-
+  point difference) against the same `--foreground`/`--sidebar-foreground`
+  text color (`oklch(0.145 0 0)` either way) — the text/background contrast
+  ratio is unchanged by this swap (the background barely moved, the text
+  color did not move at all), so no new contrast risk was introduced, but
+  this reasoning is arithmetic, not a measured/rendered contrast check.
+- 40px nav touch targets: unchanged, preserved.
+- Mobile controls not overlapping: reasoned via §36.2's conservative
+  breakpoint choice, not rendered-confirmed.
+- Semantic heading hierarchy: each placeholder page has exactly one `<h1>`
+  (via `PageHeader`) — unchanged in substance, now guaranteed structurally
+  identical across all three pages by the shared component.
+
+### 36.9 Verification method performed (and its explicit limit)
+
+A real `next dev` server was started; all four routes (`/`, `/app`,
+`/ops`, `/admin`) confirmed `HTTP 200`. Rendered HTML for `/app`, `/ops`,
+`/admin` was fetched and inspected directly: every new class
+(`bg-sidebar`, `border-sidebar-border`, `text-sidebar-foreground`,
+`aria-disabled="true"`, the `PageHeader`'s `mb-6` wrapper and `<h1>`
+markup) confirmed present exactly where intended; the Client-only
+org-context block confirmed present on `/app` and absent on `/ops`/
+`/admin`. The compiled CSS chunk was fetched and inspected byte-for-byte:
+`.bg-sidebar { background-color: var(--sidebar); }`,
+`.border-sidebar-border { border-color: var(--sidebar-border); }`,
+`.text-sidebar-foreground { color: var(--sidebar-foreground); }`, the
+`text-sidebar-foreground/60` opacity variant's `color-mix()` progressive-
+enhancement rule, and `.mb-6`/`.mt-1`/`.mt-2`/`.pl-3`/`.border-l` all
+confirmed compiling to their intended values. **This confirms the code is
+technically correct and wired as designed — it does not confirm the
+result looks correct, balanced, or free of visual defects when actually
+rendered in a browser**, which is precisely the gap this turn's own
+explicit instruction anticipated and requires reporting honestly rather
+than papering over.
+
+### 36.10 Findings raised and remediated (technical, pre-visual)
+
+One technical finding, found and fixed before any commit: none — no
+build/type/lint defect was introduced by this turn's changes (all three
+gates passed on the first run after the edits). The one genuine judgment
+call requiring a deviation from literal instruction is §36.2's
+conservative topbar-breakpoint choice for the client-context block,
+recorded there in full rather than silently applied.
+
+### 36.11 Remaining shell visual risks (unconfirmed, flagged for the user's own review)
+
+Recorded honestly, since no rendered check was possible:
+
+- Whether the sidebar/topbar's new `--sidebar` tint (`oklch(0.985 0 0)`)
+  reads as a *visible, intentional* separation from the `--background`
+  main content area, or as an imperceptible non-difference at typical
+  monitor brightness/color settings — the two values are numerically
+  close on purpose (no new color was introduced), but "close" and
+  "visually distinct enough to read as SURFACE-1" are not the same
+  question, and only a rendered check can answer the second one.
+- Whether the client-context text pairing's new `xl:`-only visibility
+  reads as a deliberate design choice or as a surprising disappearance
+  when resizing a window across the 1280px breakpoint.
+- Whether `PageHeader`'s spacing reads as intentionally tight (institutional,
+  per §35's direction) or merely under-filled, given the placeholder pages
+  have no content below the header to balance against yet.
+- General cross-browser/OS font-rendering variance in how `text-sidebar-
+  foreground/60`'s `color-mix()` opacity renders, which this session
+  cannot observe.
+
+None of these is a code defect — each is a genuine visual judgment that
+requires eyes on a rendered page, which is exactly what this turn's own
+gate exists to require before claiming acceptance.

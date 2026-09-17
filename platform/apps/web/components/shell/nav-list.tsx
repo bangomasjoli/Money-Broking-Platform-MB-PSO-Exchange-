@@ -20,10 +20,12 @@ import { NAV_ICONS } from "@/components/shell/nav-icons";
  * perceive the color shift still sees the border/weight change.
  *
  * Items without `href` (approved IA per `UI-04`, but no page exists this turn) render as
- * non-interactive, muted rows — not a link, not a button, not focusable — with a visually-hidden
- * "not yet available" note appended to the accessible name for screen-reader users, since a
- * nav-shaped-but-inert row would otherwise be ambiguous to non-visual navigation. This is
- * accessible labeling, not a status-badge system (explicitly not built this turn).
+ * non-interactive, muted rows — not a link, not a button, not focusable, `aria-disabled="true"`
+ * (`UI Phase 2D` refinement) — with a visually-hidden "not yet available" note appended to the
+ * accessible name for screen-reader users, since a nav-shaped-but-inert row would otherwise be
+ * ambiguous to non-visual navigation. This is accessible labeling, not a status-badge system
+ * (explicitly not built this turn) — no "Coming Soon" pill, muted text + the sr-only note is the
+ * whole treatment.
  */
 export function NavList({
   navItems,
@@ -42,7 +44,10 @@ export function NavList({
         if (!item.href) {
           return (
             <li key={item.label}>
-              <div className="flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground/60">
+              <div
+                aria-disabled="true"
+                className="flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground/60"
+              >
                 <Icon className="size-5 shrink-0" aria-hidden="true" />
                 <span className="truncate">
                   {item.label}

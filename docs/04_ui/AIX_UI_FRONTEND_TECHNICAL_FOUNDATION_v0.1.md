@@ -1247,3 +1247,65 @@ taxonomy (which existing surface/border/spacing tokens each panel type
 uses), not new component APIs; whether any panel type eventually warrants
 its own reusable component remains an implementation-turn decision, per
 `UI-01` §2.1's "wrap only where it adds real value" rule.
+
+## 39. Phase 2D — Authenticated Shell Visual Implementation (code, not visually accepted)
+
+**Frontend styling implementation — shell only, no product page.** Applies
+`UI-04` §35's Phase 2C visual direction to the existing Phase 2B shell.
+Adds 1 new file, modifies 6:
+
+```
+components/shell/page-header.tsx          [NEW]
+components/shell/authenticated-sidebar.tsx    [modified — SURFACE-1 tokens]
+components/shell/authenticated-topbar.tsx     [modified — SURFACE-1 tokens, client-context refinement]
+components/shell/authenticated-mobile-nav.tsx [modified — Sheet header restyled to match sidebar]
+components/shell/nav-list.tsx                  [modified — aria-disabled on inert rows]
+app/app/page.tsx / app/ops/page.tsx / app/admin/page.tsx [modified — now use PageHeader]
+```
+
+**shadcn/dependency impact: none.** No new component installed;
+`Sheet`/`Button` remain the only ones in use, unmodified as primitives
+(only usage-site classNames changed). `platform/package-lock.json`
+unchanged — confirmed via diff.
+
+**No structural geometry changed** — 240px sidebar, 40px rows, 20px icons,
+56px top bar all preserved exactly; only color tokens, one border-token
+reference, one accessibility attribute, and the page-header markup
+changed.
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues. `build:web` — succeeded; all 6 routes statically
+prerendered, unchanged from Phase 2B's route set (no new route added).
+
+**Verification method and its explicit limit — the load-bearing fact of
+this turn:** this session has no browser/screenshot/automation tooling
+available. Checked directly rather than assumed: `ToolSearch` for
+screenshot/browser/Playwright/Puppeteer tools (none found);
+`package.json`/`node_modules` inspected for a locally installed browser-
+automation package (none found; `npx playwright` refused to run without
+an explicit install, which this turn did not authorize — installing a new
+dev dependency solely to work around this turn's own stated stop
+condition would defeat its purpose, not satisfy it); `PATH` checked for
+`chromium`/`chromium-browser`/`google-chrome`/`playwright`/`puppeteer`
+binaries (none found); a system Chrome/Safari application exists on the
+host machine, but this session has no mechanism to drive one or capture
+from it. Verification actually performed instead: a real `next dev`
+server, all routes confirmed `HTTP 200`, rendered HTML fetched and
+inspected directly for every new class/attribute, and the compiled CSS
+chunk fetched and inspected byte-for-byte (full record: `UI-04` §36.9,
+`UI-02`'s new "UI Phase 2D" section). **Per this turn's own explicit
+instruction ("do not substitute source/CSS inspection for rendered
+acceptance"), this technical verification is not treated as, and does not
+constitute, visual acceptance.** `AUTHENTICATED SHELL: VISUALLY ACCEPTED`
+is not recorded in this document, `UI-04`, `UI-02`, or `docs/04_ui/
+README.md` as a result of this turn.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` change;
+zero package/lockfile change. **No API call, no fetch, no server action,
+no cookie/session parsing, no auth middleware** — confirmed via source
+inspection of every changed file; unchanged from Phase 2B. **Public
+homepage: unaffected** — `app/page.tsx`, `app/layout.tsx`,
+`app/globals.css`, and every `components/site/*` file are byte-identical
+to baseline, confirmed via `git diff --name-only` (none appear in the
+diff).

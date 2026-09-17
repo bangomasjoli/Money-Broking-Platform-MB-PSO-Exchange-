@@ -510,11 +510,34 @@ claim.** Public homepage unaffected.
   Broking Terminal pages (none implemented); Staff/Ops and Admin/
   Compliance adaptation. Full record: `UI-04` §35, `UI-02`'s new "UI
   Phase 2C" section, `UI-03` §38.
-- **Shell visual acceptance: PENDING.** Not reviewed or accepted this
-  turn — `UI Phase 2B`'s shell still renders with its original
-  placeholder tokens; no restyling occurred.
-- **First real page: NOT YET IMPLEMENTED.** No `platform/apps/web/**`
-  file was touched this turn — no CSS, no component, no page.
+- **Phase 2D:** shell restyled per Phase 2C direction — **NOT visually
+  accepted.** `SURFACE-1` tokens (`--sidebar`/`--sidebar-foreground`/
+  `--sidebar-border`) applied to the sidebar and top bar; client-context
+  treatment refined from a bordered box to a plain inline text pairing,
+  shown at `xl:` in the top bar and carried into the mobile Sheet header
+  below that; inert nav rows gained `aria-disabled="true"`; a new shared
+  `PageHeader` component applies the governed 4px/8px/24px spacing to all
+  three placeholder pages; the mobile Sheet header now mirrors the
+  sidebar's own brand treatment instead of a bare title. Structural
+  geometry (240px sidebar, 40px rows, 20px icons, 56px top bar)
+  unchanged. `typecheck:web`/`lint:web`/`build:web` all pass; verified via
+  rendered-HTML and compiled-CSS inspection (`UI-04` §36.9). **No
+  browser/screenshot tool is available in this environment — checked
+  directly this turn, none found.** Per this turn's own explicit
+  instruction not to substitute source/CSS inspection for rendered
+  acceptance, **`AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded**
+  anywhere in this document or `UI-04`/`UI-02`/`UI-03`. Full record:
+  `UI-04` §36, `UI-02`'s new "UI Phase 2D" section, `UI-03` §39.
+- **Shell visual acceptance: PENDING — BLOCKED ON RENDERED REVIEW.** The
+  shell is now styled and technically verified (types/lint/build/source-
+  and-CSS inspection all pass), but has not been reviewed in an actual
+  browser by anyone — this session has no tooling for it. The user's own
+  rendered check remains required before any "visually accepted" claim,
+  exactly as every prior visual-acceptance record in this project has
+  required.
+- **First real page: NOT YET IMPLEMENTED.** No product page, API call, or
+  authentication logic exists — only the shell's own visual treatment
+  changed this turn.
 
 ## Contents
 

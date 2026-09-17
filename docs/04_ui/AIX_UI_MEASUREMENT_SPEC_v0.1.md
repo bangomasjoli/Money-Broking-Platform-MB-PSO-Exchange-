@@ -2412,3 +2412,33 @@ own 240px plus one content-width step, `UI-02` §7's `authenticated-app`
 category's lower bound), collapsing to a full-width stacked/routed view
 below that — **not measured against a real component, not implemented,
 explicitly provisional.**
+
+---
+
+## UI Phase 2D — Authenticated Shell Visual Implementation (compiled-CSS confirmed, not rendered-QA confirmed)
+
+The `SURFACE-1` token mapping this document's own "UI Phase 2C" section
+recommended is now applied in code — confirmed by fetching the compiled
+Tailwind CSS chunk directly, the same methodology used for every prior
+geometry record in this document:
+
+| Rule | Compiled value |
+|---|---|
+| `.bg-sidebar` | `background-color: var(--sidebar)` — `oklch(0.985 0 0)`, vs. `--background`'s `oklch(1 0 0)` |
+| `.border-sidebar-border` | `border-color: var(--sidebar-border)` — `oklch(0.922 0 0)`, currently equal to `--border` |
+| `.text-sidebar-foreground` | `color: var(--sidebar-foreground)` — `oklch(0.145 0 0)`, currently equal to `--foreground` |
+| `.text-sidebar-foreground\/60` | `color-mix(in oklab, var(--sidebar-foreground) 60%, transparent)` (progressive-enhancement rule; solid fallback for browsers without `color-mix()` support) |
+| Page-header context→title gap (`mt-1`) | `margin-top: calc(var(--spacing) * 1)` — **4px** |
+| Page-header title→description gap (`mt-2`) | `margin-top: calc(var(--spacing) * 2)` — **8px** |
+| Page-header block→content gap (`mb-6`) | `margin-bottom: calc(var(--spacing) * 6)` — **24px** |
+| Top-bar/Sheet client-context divider (`border-l`) | 1px, `--sidebar-border`/`--border` |
+| Client-context divider padding (`pl-3`) | `padding-left: calc(var(--spacing) * 3)` — **12px** |
+
+**This table confirms the CSS compiles to its intended values — it is not
+a rendered visual measurement.** No screenshot/browser tool was available
+this turn (`UI-04` §36's own governing record); `AUTHENTICATED SHELL:
+VISUALLY ACCEPTED` is **not** recorded anywhere in this document as a
+result. All prior geometry in this document (§ "UI Phase 2B —
+Authenticated Shell Geometry") remains structurally unchanged — Phase 2D
+did not alter sidebar width, row height, icon size, or top-bar height,
+only the tokens/colors/spacing layered onto that unchanged structure.

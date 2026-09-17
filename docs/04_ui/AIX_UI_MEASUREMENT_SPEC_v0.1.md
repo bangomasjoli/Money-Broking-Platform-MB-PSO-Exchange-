@@ -1808,6 +1808,7 @@ requested for this section or for the homepage as a whole.
 ### 28.1 New findings
 
 **UI-QA-001 — Same-page anchor targets are occluded by the fixed header (no scroll-margin compensation)**
+- **Status: CLOSED (UI Phase 1L — see §28.10 for the full remediation record and arithmetic).** The finding below is preserved verbatim as the original evidence.
 - **Severity:** HIGH
 - **Viewport(s):** all (mechanism is present at every width; the outcome differs by width — see below)
 - **Component/section:** all 5 anchor targets added in Phase 1I (`#how-it-works`, `#trust`, `#capabilities`, `#product`, `#request-access`) and, by the same mechanism, every anchor the header nav already points to
@@ -1901,7 +1902,7 @@ All carried-forward flags remain **status: OPEN**.
 
 ### 28.8 Recommended remediation grouping
 
-- **Remediation A — Anchor scroll-offset compensation.** UI-QA-001 only. Single root-cause CSS fix (scroll-margin-top on the 5 anchor targets), low risk, no visual redesign.
+- **Remediation A — Anchor scroll-offset compensation.** UI-QA-001 — **CLOSED in UI Phase 1L, see §28.10.**
 - **Remediation B — Product Preview responsive/table restructuring (BLOCKER).** UI-QA-002 — **CLOSED in UI Phase 1K, see §28.9.** The still-open Phase 1G demo-disclosure-prominence and status-badge-hierarchy flags remain for a future pass (informed by UI-QA-006's accessibility counterpoint); sidebar/content proportion is likely improved as a side effect but not independently re-verified.
 - **Remediation C — Operating Model desktop density.** UI-QA-004 (refined Phase 1D flag) — a breakpoint/layout decision specific to this one component.
 - **Remediation D — Global rhythm & repetition.** UI-QA-003, the Phase 1H cumulative-whitespace flag, and the Phase 1I CTA-to-footer-spacing flag — all genuinely the same root category (section-boundary spacing and pattern variety), reviewed together rather than as isolated per-section tweaks.
@@ -1949,3 +1950,39 @@ All carried-forward flags remain **status: OPEN**.
 **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
 **UI-QA-002: CLOSED.** Both required conditions are met: (1) the responsive-overflow defect at the named 1024–1100px range is resolved with a positive, calculated margin; (2) the keyboard-accessibility defect is resolved for every width, including the (narrower than originally scoped, now precisely bounded) range where overflow genuinely remains unavoidable.
+
+### 28.10 UI Phase 1L — Remediation A (UI-QA-001 closure record)
+
+**Root cause:** no `scroll-margin-top` (or equivalent CSS scroll-offset compensation) existed anywhere in the codebase — confirmed by the original UI-QA-001 finding's own `grep` across `globals.css` and every `site/*.tsx` file (zero matches). Native anchor-scroll therefore placed each target section's top edge at viewport `y=0`, directly behind the fixed `PublicHeader`.
+
+**Implementation selected:** native CSS `scroll-margin-top`, via Tailwind's built-in `scroll-mt-*` utility scale — **no JavaScript** (`window.scrollTo`, click-handler offsets, `setTimeout`, history manipulation, viewport-specific script, or invisible spacer elements were all considered and explicitly avoided, per instruction). `PublicHeader` itself was not touched — Phase 1B's visual acceptance is unaffected; this remediation adapts anchor behavior to the header's existing, already-accepted geometry, not the other way around.
+
+**Measurement basis (re-derived from the actual header geometry, not assumed):** compact header (below `lg:`, i.e. <1024px) occupies `top-4`(16px) + `h-14`(56px) = **72px**. Desktop header (`lg:`, ≥1024px) occupies `lg:top-6`(24px) + `h-16`(64px) = **88px** — both figures identical to the original UI-QA-001 finding's own measurement, re-verified against the current compiled CSS before use.
+
+**Values chosen — one shared rule, not five unrelated ones:** `scroll-mt-24` (Tailwind's own named spacing-scale step, `24 × 4px = 96px` — **not** arbitrary-bracket syntax, since Tailwind's default scale already includes this exact step) below `lg:`, and `lg:scroll-mt-28` (`28 × 4px = 112px` — the same numeric step this codebase's own `lg:pb-28` already uses elsewhere, a meaningful coincidence, not a new value invented for this fix) at `lg:` and up. `96px = 72px (compact header envelope) + 24px` and `112px = 88px (desktop header envelope) + 24px` — a **deliberate, identical 24px breathing margin added to each header state's own occupied envelope**, per this turn's own preferred target concept, verified rather than blindly copied: `scroll-margin-top` governs where the **section's own top edge** lands after an anchor jump — it does **not** need to additionally account for the section's own top padding (`pt-16`/`pt-20`/`pt-24`, already present between the section's top edge and its heading) on top of the header-clearance value, since that padding was already going to render as visible space below the (now correctly positioned) section top edge regardless. Adding the section's own padding into the `scroll-margin-top` value as well would have been the exact double-counting this turn's instruction warned against — confirmed not done, by inspecting what `scroll-margin-top` actually controls before choosing a number, not by assumption.
+
+**Identical value applied to all 5 anchored sections** (`PublicOperatingModel`/`#how-it-works`, `PublicTrustControl`/`#trust`, `PublicCapabilities`/`#capabilities`, `PublicProductPreview`/`#product`, `PublicFinalCta`/`#request-access`) — the exact same `scroll-mt-24 ... lg:scroll-mt-28` string in each file, since all five share the identical relationship to the identical header. One shared rule, applied consistently, not five independently-derived values.
+
+**Responsive clearance arithmetic (7-viewport matrix) — resulting clearance is identical and positive at every width, never negative or marginal:**
+
+| Viewport | Header state | Header envelope | `scroll-margin-top` | Resulting clearance |
+|---|---|---|---|---|
+| 1440×900 | Desktop (`lg:`) | 88px | 112px (`lg:scroll-mt-28`) | **+24px** |
+| 1280×800 | Desktop (`lg:`) | 88px | 112px | **+24px** |
+| 1024×768 | Desktop (`lg:` — 1024px matches the `lg:` breakpoint exactly) | 88px | 112px | **+24px** |
+| 834×1194 | Compact (<`lg:`) | 72px | 96px (`scroll-mt-24`) | **+24px** |
+| 768×1024 | Compact (<`lg:`) | 72px | 96px | **+24px** |
+| 430×932 | Compact (<`lg:`) | 72px | 96px | **+24px** |
+| 390×844 | Compact (<`lg:`) | 72px | 96px | **+24px** |
+
+Every tested viewport clears the header by an identical, deliberate **24px** — up from the original ~8px (tablet/desktop) and the original **negative** clearance (mobile, where the heading was previously occluded by ~8px). No viewport produces a negative or marginal result.
+
+**Section-layout status:** unaffected. No section's own padding, heading typography, layout, container width, surface color, icon, or divider was changed — verified: `git diff --stat` shows exactly one class-string addition per file (`scroll-mt-24`/`lg:scroll-mt-28`), no other line touched. `PublicHeader`/`PublicFooter` were not modified.
+
+**Accessibility:** native browser anchor navigation is fully preserved — `scroll-margin-top` is a pure CSS scroll-positioning property; it does not intercept navigation, does not require JavaScript, does not alter keyboard activation, browser history behavior (`#fragment` still updates the URL exactly as before), or native focus behavior on activation. No `tabindex` was added to any anchor target — not required for this remediation and not introduced speculatively, per explicit instruction.
+
+**Anchors verified still resolving correctly:** `#how-it-works`, `#trust`, `#capabilities`, `#product`, `#request-access` — all confirmed present exactly once each in the rendered DOM (unchanged from Phase 1I), each now carrying the identical `scroll-mt-24`/`lg:scroll-mt-28` class, confirmed via the compiled CSS (`scroll-margin-top: calc(var(--spacing) * 24)` = 96px; `× 28` = 112px, both re-verified against the actual compiled output, not assumed from the class names).
+
+**Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+**UI-QA-001: CLOSED.** All four required conditions are met: (1) all five current anchors now receive deliberate, sufficient (24px) fixed-header clearance; (2) the solution works identically and correctly across every tested responsive width; (3) no JavaScript workaround was introduced — a pure CSS fix; (4) no section-layout regression was created — verified via diff and rendered-HTML inspection.

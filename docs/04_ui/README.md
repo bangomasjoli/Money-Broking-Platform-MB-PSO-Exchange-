@@ -261,6 +261,22 @@ treatment, section spacing, or other section was changed. See
 INFORMATIONAL) are unaffected — **the homepage remains not visually
 accepted.**
 
+**UI Phase 1L — Remediation A (Anchor Scroll Offset / Fixed Header
+Occlusion): COMPLETE — `UI-QA-001` (the sole remaining HIGH) CLOSED.**
+A pure-CSS fix — Tailwind's own `scroll-mt-24`(96px)/`lg:scroll-mt-28`
+(112px) utilities, applied identically to all 5 anchored sections — adds
+the accepted header's own occupied envelope (72px compact/88px desktop)
+plus a deliberate 24px breathing margin, verified not to double-count
+against each section's existing top padding. Every tested viewport now
+clears the header by an identical, positive 24px (up from ~8px, and
+negative at mobile, before this fix). No JavaScript, no header change,
+no section-layout change. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.10 for the full closure record and the 7-viewport clearance table.
+The remaining 17 flags in the §28 register (all MEDIUM/LOW/
+INFORMATIONAL) are unaffected — **the homepage remains not visually
+accepted.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

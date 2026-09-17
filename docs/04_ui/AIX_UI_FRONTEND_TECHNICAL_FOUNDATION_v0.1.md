@@ -913,3 +913,24 @@ so no backend regression was required. Demo data, status-badge treatment, sectio
 radius, top-bar height, and overall section spacing are all unchanged — verified against the
 rendered HTML, byte-identical to before this remediation.
 `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+## 29. Phase 1L — Remediation A: Anchor Scroll Offset / Fixed Header Occlusion
+
+**UI-QA-001 (HIGH) CLOSED.** A pure-CSS fix — Tailwind's own named `scroll-mt-24`
+(96px, below `lg:`) / `lg:scroll-mt-28` (112px, `lg:` and up) utilities, applied
+identically to all 5 anchored `<section>` roots
+(`public-operating-model.tsx`, `public-trust-control.tsx`,
+`public-capabilities.tsx`, `public-product-preview.tsx`,
+`public-final-cta.tsx`). No JavaScript, no `tabindex`, no header change.
+Values are the accepted header's own occupied envelope (72px compact /
+88px desktop) plus a deliberate 24px breathing margin, verified not to
+double-count against each section's own existing top padding — full
+arithmetic and the 7-viewport clearance table (uniformly +24px, never
+negative or marginal) recorded in `UI-02` §28.10, not duplicated here.
+No package, dependency, or shadcn component added; `platform/package-lock.json`
+unchanged, so no backend regression was required. Section padding,
+typography, layout, container width, surfaces, icons, dividers, and both
+`PublicHeader` and `PublicFooter` are all unchanged — verified via
+`git diff --stat` (one class-string addition per file) and rendered-HTML
+inspection. `typecheck:web`/`lint:web`/`build:web` all re-run clean on
+the final code.

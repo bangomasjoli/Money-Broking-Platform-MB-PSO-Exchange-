@@ -122,9 +122,12 @@ export function PublicTrustControl() {
   return (
     <section
       // id added in UI Phase 1I for PublicFooter's same-page anchor — no visual change.
+      // scroll-mt-24/lg:scroll-mt-28 added in UI Phase 1L (UI-QA-001 fix) — clears the fixed
+      // header's occupied envelope plus 24px breathing margin; see public-operating-model.tsx's
+      // own comment for the full arithmetic, identical across all 5 anchored sections.
       id="trust"
       aria-labelledby="trust-control-heading"
-      className="pt-16 pb-20 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28"
+      className="scroll-mt-24 pt-16 pb-20 md:pt-20 md:pb-24 lg:scroll-mt-28 lg:pt-24 lg:pb-28"
     >
       <div className={CONTAINER_CLASS}>
         <div className="grid grid-cols-1 gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">

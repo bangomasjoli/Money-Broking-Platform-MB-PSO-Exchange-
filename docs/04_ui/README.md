@@ -140,6 +140,31 @@ and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_F
 register (Phase 1D's and 1E's still-open flags, plus three new Phase 1F
 flags: mobile capability-list density, matrix quadrant height imbalance,
 and the Exchange-boundary note's deliberately low visual prominence).
+**UI Phase 1G — Public Product Experience / Platform Preview: IMPLEMENTED,
+VISUAL QA DEFERRED.** The sixth real AIX visual component
+(`platform/apps/web/components/site/public-product-preview.tsx`,
+`PublicProductPreview`) adds one homepage section below the capabilities
+section — a **public demo of the authenticated client portal's
+wallet-destination workflow**, not the authenticated portal itself and
+not a claim that any of it is connected to live production services.
+Adds shadcn `table` and `badge` (pinned CLI 4.21.0; both pure Tailwind/
+semantic-HTML with zero new npm dependencies, verified via lockfile diff
+before use, so no backend regression was required). Three demo
+destinations and statuses (Active / Pending Approval / Evidence
+Required) map to real governed states from
+`docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md` and
+`docs/01_masters/05_Master_Workflow_Map_v1.2.md` (payout-destination
+maker-checker approval, cooling-off, wallet address ownership evidence)
+— no fake portfolio metrics, prices, PnL, or balances appear anywhere.
+**Full visual QA is intentionally deferred this turn** — no screenshot
+review requested. **No final color/font/brand-asset approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §25
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§24 for the full implementation record and the known visual-risk
+register (Phase 1D's, 1E's, and 1F's still-open flags, plus four new
+Phase 1G flags: destination-table fit at 1024px/mobile,
+sidebar/content proportion, demo-disclosure prominence, and
+status-badge color-neutral hierarchy).
 
 ## Contents
 

@@ -677,3 +677,74 @@ partner), and the Exchange-boundary note's deliberately low visual
 prominence. Phase 1D's and Phase 1E's still-open flags were **not**
 touched or resolved this turn, per explicit instruction. **VISUAL QA:
 DEFERRED.**
+
+## 24. Phase 1G — Public Product Experience / Platform Preview
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-product-preview.tsx`
+(`PublicProductPreview`) — a **public demo of the authenticated client
+portal's wallet-destination workflow**, not the authenticated portal
+itself. One homepage section, below `PublicCapabilities`; every prior
+component was consumed, not redesigned. Full geometry, copy, source
+validation, and the visual-risk register are recorded in `UI-02` §25
+rather than duplicated here.
+
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — no screenshot review was requested or performed.
+
+**shadcn components added:** `table`, `badge` (pinned CLI 4.21.0).
+**Both are pure Tailwind/semantic-HTML components — zero new npm
+dependencies.** Verified directly: `git diff --stat` on
+`platform/package-lock.json` and `platform/apps/web/package.json`
+after running `npx shadcn@4.21.0 add table badge` showed no changes at
+all, confirmed **before** writing any component code that consumes
+them. `Tabs`/`DropdownMenu`/`Tooltip`/`ScrollArea`/`Separator` were
+considered per this turn's shadcn policy and judged unnecessary (fully
+static presentation — see `UI-02` §25's Interaction status).
+
+**No API client, no API route, no auth integration, no migration, no
+grant.** All demo data (`DESTINATIONS`, `SELECTED_DESTINATION_DETAIL`,
+`CONTEXT_RAIL_ITEMS`) is a local `const` inside the component file — no
+global mock-data architecture, no backend fixture import, per this
+turn's explicit "Demo Data Location" instruction.
+
+**Root page** (`app/page.tsx`) adds `PublicProductPreview` below
+`PublicCapabilities`; no further homepage section was added.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded
+(both routes statically prerendered). **No backend regression
+required** — `package-lock.json` unchanged (confirmed above), no
+`platform/services/**`, `platform/packages/**`, `platform/edge/**`, or
+`platform/infra/**` file touched.
+
+**One real type error was found and fixed during implementation:** an
+`as const` array where only one context-rail item declared `active:
+true` produced a discriminated union where the other items lacked the
+`active` property entirely, so `tsc` correctly rejected accessing
+`item.active` on them — fixed by giving every item an explicit `active:
+boolean` field, re-verified with a clean `typecheck:web` afterward.
+
+**Two real geometry/token deviations were found and fixed during
+implementation** (not silently shipped): a context-rail item height of
+`h-9` (36px, matching no existing UI-02 control-height tier) was
+changed to `h-8` (32px, the existing "Compact" tier); its radius of
+`rounded-[6px]` (matching no existing radius tier) was changed to
+`rounded-[8px]` (the existing "Standard" tier). Both re-verified
+against the compiled CSS after the fix.
+
+**Verification performed instead of screenshot QA:** rendered-HTML
+structural review (heading/disclosure/destination-name/status-badge/
+masked-address text byte-verified against the intended wording, a real
+`<table>` and `<dl>` present, context-rail items rendered as plain
+non-interactive `<span>`s rather than fake buttons/links) and
+compiled-CSS byte-level confirmation of every governed value
+(`max-w-[1120px]`, `rounded-[12px]`/`[8px]`, `h-12`, `h-8`,
+`lg:w-[280px]`, `w-[200px]`). Four real, credible visual-risk flags were
+identified from layout/content calculation (not invented) and recorded
+rather than silently resolved — see `UI-02` §25's visual-risk register:
+destination-table fit at 1024px and on mobile, sidebar/content
+proportion, demo-disclosure prominence, and status-badge color-neutral
+hierarchy. Phase 1D's, 1E's, and 1F's still-open flags were **not**
+touched or resolved this turn, per explicit instruction. **VISUAL QA:
+DEFERRED.**

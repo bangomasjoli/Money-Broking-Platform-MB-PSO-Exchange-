@@ -1191,3 +1191,214 @@ pending), the accepted header/hero/operating-model/trust-control
 (unchanged except as consumed). **VISUAL QA: DEFERRED** — not
 self-declared as accepted; screenshot-based review has not yet been
 requested for this section.
+
+---
+
+## 25. Phase 1G — Public Product Experience / Platform Preview (Geometry, Status, Visual-Risk Register)
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-product-preview.tsx`
+(`PublicProductPreview`), the sixth real AIX visual component and the
+first to present a **public demo of the authenticated client portal
+experience**. One homepage section, below `PublicCapabilities` (§24);
+every prior component is unchanged. **Full visual QA is intentionally
+deferred this turn, per explicit instruction.**
+
+**Workflow chosen:** Wallet Destination / Approval Status — confirmed
+against `docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md`
+("Payout destination: Create, verify, approve, reject, delete/
+deactivate"; `deposit_address_assignment = maker_checker`; SOD-003
+blocks self-approval) and
+`docs/01_masters/05_Master_Workflow_Map_v1.2.md` ("Destination becomes
+active after cooling-off";
+`payout_destination_cooling_off_hard_gate = true`). The three demo
+statuses map to real governed states: "Active" (post-cooling-off),
+"Pending Approval" (the maker-checker step), and "Evidence Required"
+(matching the masters' own "Wallet address ownership evidence"
+requirement — deliberately "Evidence," not the brief's suggested
+"Proof," to track that exact phrase).
+
+**No fake metrics.** No portfolio value, PnL, price, volume, yield, APY,
+or TVL appears anywhere. The detail panel deliberately **omits** the
+brief's suggested "Last Review" field — no governed document was found
+grounding a specific last-review timestamp for a payout destination
+precisely enough to include with confidence, so it was dropped rather
+than invented. The one address-like value shown
+(`bc1q••••••••92F1`) is a clearly masked placeholder, never a
+real-format address.
+
+**Disclosure:** a quiet sentence near the section intro
+("Illustrative product preview — demo data only, not connected to live
+production services") plus a small "Demo" `Badge` inside the preview
+shell's own top bar — deliberately redundant, since this is the most
+product-like public section so far.
+
+**shadcn additions this turn:** `table` and `badge` (pinned CLI 4.21.0).
+**Both are pure Tailwind/semantic-HTML components with zero new npm
+dependencies** — verified: `package-lock.json` unchanged after adding
+them, so no backend regression was required. `Badge`'s `outline` variant
+is used uniformly for all three statuses — **no per-status color** — per
+this turn's explicit "do not invent arbitrary color semantics"
+instruction; status is differentiated by label text only.
+**`Tabs`/`DropdownMenu`/`Tooltip`/`ScrollArea`/`Separator` were all
+considered and judged unnecessary** — the preview is fully static, no
+interaction improves comprehension over showing the table and detail
+panel simultaneously.
+
+**A precisely-flagged, out-of-scope shadcn deviation:** `Badge`'s default
+radius (`rounded-4xl`, ≈26px, effectively a full pill given the 20px
+badge height) does not match this document's own §5 "Micro" 4px chip
+tier — the same category of deviation already recorded for `Button`'s
+radius in Phase 1B. Not silently shipped, not unilaterally redesigned
+this turn (that would be a shared-component change beyond this section's
+scope).
+
+**Two real geometry values were corrected during implementation** (found
+by reasoning through the governed token tables, not assumed correct):
+the context-rail item height was initially `h-9` (36px, matching no
+existing control-height tier) — changed to `h-8` (32px, the existing
+"Compact" tier); its radius was initially `rounded-[6px]` (matching no
+existing radius tier) — changed to `rounded-[8px]` (the existing
+"Standard" tier). Both re-verified against the compiled CSS after the
+fix.
+
+**Section spacing:** identical to §22/§23/§24's values — top `pt-16`/
+`md:pt-20`/`lg:pt-24` = 64/80/96px, bottom `pb-20`/`md:pb-24`/`lg:pb-28`
+= 80/96/112px — reused for homepage-wide section-rhythm consistency.
+
+**Container:** `max-w-[1280px]`, same gutters as every prior section.
+
+**Intro width:** `max-w-[720px]`, centered — the same value
+`PublicOperatingModel` (§22) and `PublicCapabilities` (§24) already use.
+
+**Preview shell max width:** `max-w-[1120px]` — the top of UI-02 §7's
+existing `authenticated-app` content-width tier (960–1120px), reused
+rather than inventing a new cap, since this shell is explicitly a
+preview of authenticated-platform content.
+
+**Preview shell height:** no fixed height — a `min-h` was deliberately
+**not** set; the shell's height is fully content-driven (top bar + table
++ detail panel), verified not to consume excessive vertical space by
+construction (a 3-row table plus a compact detail panel), rather than
+forcing an arbitrary minimum.
+
+**Preview radius:** `rounded-[12px]` — UI-02 §5's existing "Cards/
+panels" 12px tier, reused (the same exact value/reasoning as `PublicHero`'s
+product-preview panel in Phase 1C).
+
+**Top-bar height:** `h-12` = 48px — UI-02 §4's existing "Large" control-
+height tier, reused (chosen over "Default" 40px since the bar holds both
+a title and a `Badge` comfortably).
+
+**Context-rail/sidebar width:** `w-[200px]` — a new, deliberately
+grid-aligned value (200/4=50) — no existing UI-02 token covers sidebar
+width specifically; flagged here, not silently introduced as if
+governed.
+
+**Content padding:** `p-6` (24px) on the main content area; `p-4` (16px)
+on the context rail — both existing spacing tokens (§3).
+
+**List/table structure:** an official shadcn `Table` (native `<table>`
+semantics) — genuinely appropriate given 3 destinations across 3 real
+columns (Destination/Network/Status), not a styled `<div>` grid.
+
+**Row height:** the table header row is exactly 40px (`TableHead`'s own
+default `h-10`) — this happens to already match UI-02 §4's "Default"
+control-height/§15's "Default rows using the 40px rhythm" exactly,
+verified rather than assumed. Body rows are content-driven (no explicit
+height override) — their default `TableCell` padding (`p-2` = 8px) plus
+14px body text produces a compact row close to, but not forced to, the
+same 40px rhythm.
+
+**Detail-panel geometry:** `w-full` below `lg:`, `lg:w-[280px]` fixed at
+desktop; `rounded-[8px]` (§5 "Standard" tier, reused); `p-4` (16px)
+internal padding; a native `<dl>`/`<dt>`/`<dd>` field list (Destination
+name as an `<h3>`, then Network/Address/Control Status/Approval Status
+as description-list pairs) — real semantic structure, not styled `<div>`
+rows pretending to be a list.
+
+**Status treatment:** `Badge` `outline` variant, identical for all three
+statuses (see shadcn section above) — restrained, text-differentiated,
+no invented color semantics.
+
+**Desktop (`lg:`, 1024px+) behavior:** full shell — top bar, context
+rail (200px), table, and detail panel (280px) all visible, table and
+detail side by side.
+
+**Tablet (768–1023px) / Mobile (<768px) behavior:** context rail hidden
+(`hidden ... lg:block`) — de-emphasizing secondary navigation per this
+turn's suggested mobile strategy; detail panel stacks below the table
+(`flex-col` below `lg:`) rather than beside it, per the brief's explicit
+suggested mobile strategy ("stack detail below list").
+
+**Accessibility:** semantic `<section>`/heading hierarchy (`h2` section
+heading, `h3` shell title and detail-panel title); a real `<table>` via
+shadcn `Table` (proper `<thead>`/`<tbody>`/`<th>`/`<td>` semantics); the
+context rail uses plain `<span>` elements, **not** `<button>`/`<a>`/`<nav>`
+— since none of it is functional, avoiding any misleading clickable
+affordance was judged more important than using nav-shaped markup for a
+non-functional demo list; a real `<dl>` for the detail panel; all
+decorative icons `aria-hidden`.
+
+**Interaction status:** fully static. No fake dropdown, filtering, modal,
+or tabs were added. No real interaction was implemented either (this is
+Phase 1G's own explicit "prefer static preview" instruction) — nothing
+in the shell responds to click/hover beyond the `Table`'s own inherited
+row-hover highlight (a harmless scanning aid, not a false interactive
+claim, since no cursor/focus affordance implies clickability).
+
+**Anti-AI-look review performed:** no KPI cards, no chart, no fake
+prices, no glass dashboard (a plain solid `--marketing-surface`
+background, no backdrop blur), no floating cards, no neon badges, no
+avatars, no "Welcome back," no generic icon-laden SaaS sidebar (the
+context rail is 4 plain text labels, no icons, no user avatar, no
+collapse control), no excessive rounding, exactly one shadow
+(`shadow-sm` on the outer shell only).
+
+**Known visual-risk register** (real, observed/credible risks only — none
+invented):
+
+- **Phase 1D — still open.** Desktop 6-column process row fit at
+  1024–1100px (§22). Untouched this turn.
+- **Phase 1E — still open.** Mobile control-stack density; large-desktop
+  two-column width balance (§23). Untouched this turn.
+- **Phase 1F — still open.** Mobile capability-list density; matrix
+  quadrant height imbalance; Exchange-boundary note prominence (§24).
+  Untouched this turn.
+- **Phase 1G — destination-table fit at 1024px and on mobile (new).**
+  Calculated column math: at a 1024px viewport, the shell's content area
+  after the 200px sidebar and `p-6` padding leaves roughly 680px for
+  table + detail panel + gap; the fixed 280px detail panel and 24px gap
+  leave only ~376px for a 3-column table whose longest label
+  ("Institutional Payout Destination") alone approaches or exceeds that
+  width — likely triggering the `Table`'s built-in horizontal scroll
+  (`overflow-x-auto`) at this range, and more severely at mobile widths
+  where even less width is available. Calculated from the box model, not
+  observed in a rendered viewport.
+- **Phase 1G — sidebar/content proportion (new).** The 200px context
+  rail is a fixed width regardless of shell width; at the shell's
+  narrower end (near 1024px) this is a larger proportion of the
+  available space for 4 short static text labels than the same rail
+  would be at wider desktop widths — a proportion-balance question, not
+  a claim that it is wrong.
+- **Phase 1G — demo-disclosure prominence (new).** The disclosure
+  sentence and the in-shell "Demo" badge are both intentionally quiet
+  (matching this turn's "not a giant warning banner" instruction) — but
+  for the most product-like public section so far, a cropped or
+  out-of-context screenshot could plausibly omit both. Recorded as an
+  open question for user review, the same honest tension already
+  recorded for Phase 1F's Exchange-boundary note.
+- **Phase 1G — status-badge color-neutral hierarchy (new).** All three
+  statuses use the identical `outline` badge treatment by deliberate
+  design (avoiding invented color semantics while the final semantic
+  status palette remains pending) — this means status urgency/state can
+  only be distinguished by reading the label text, not by glancing at
+  color. An intentional trade-off, not an oversight, but worth revisiting
+  once a real status-color system is approved.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), the accepted header/hero/operating-model/trust-control/
+capabilities sections (unchanged except as consumed). **VISUAL QA:
+DEFERRED** — not self-declared as accepted; screenshot-based review has
+not yet been requested for this section.

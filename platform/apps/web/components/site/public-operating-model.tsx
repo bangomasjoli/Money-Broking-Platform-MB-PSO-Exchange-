@@ -35,21 +35,25 @@ import {
  *
  * LAYOUT: `<ol>` (native ordinal semantics — a screen reader announces "item N of 6" regardless
  * of the visual numbering, so the connector/number styling below is presentational only, never
- * load-bearing for understanding order). Desktop (`lg:`, 1024px+): a single horizontal row of 6
- * steps with a thin connector line running through each step marker — the brief's preferred
- * "measured horizontal process/timeline". Tablet (768-1023px): a 2-row x 3-column grid, no
- * connector line (a line crossing a wrapped 2-row grid reads as broken, not measured; the
- * visible "01"-"06" numbers already carry the sequence). Mobile (<768px): a single vertical
- * column with a thin vertical connector behind the step markers.
+ * load-bearing for understanding order). Desktop (`xl:`, 1280px+ — revised, see UI Phase 1M
+ * below): a single horizontal row of 6 steps with a thin connector line running through each step
+ * marker — the brief's preferred "measured horizontal process/timeline". Tablet (768-1279px —
+ * revised range): a 2-row x 3-column grid, no connector line (a line crossing a wrapped 2-row
+ * grid reads as broken, not measured; the visible "01"-"06" numbers already carry the sequence).
+ * Mobile (<768px, unchanged): a single vertical column with a thin vertical connector behind the
+ * step markers.
  *
- * OPEN MEASUREMENT FLAG: the desktop 6-column row was sized against the 1024px width tightly
- * (928px available content width at 1024px viewport / 6 columns ≈ 141px per column before gaps)
- * — this was verified against the actual compiled CSS column width, but NOT verified in a real
- * browser viewport (no screenshot/browser-automation tool was available this turn, and installing
- * one solely for this purpose remained out of scope). Flagged for specific attention during user
- * visual review at exactly 1024-1100px, the same category of risk the Phase 1B header breakpoint
- * turned out to have — this section was NOT unilaterally pushed to a later/safer breakpoint based
- * on unverified reasoning alone.
+ * UI PHASE 1M REMEDIATION (UI-QA-004, closes the below-noted open flag): the 6-column row's
+ * breakpoint moved from `lg:` (1024px) to `xl:` (1280px). At 1024px the row was tight — 928px
+ * available content width / 6 columns minus `gap-6`'s 5×24px ≈ 134.67px per column, producing an
+ * estimated ~5-line wrap on the longest step description. At `xl:` (1280px) and up, the container
+ * (capped at its own `max-w-[1280px]`) yields a constant 1184px inner content width regardless of
+ * how much wider the viewport grows beyond 1280px — (1184 − 120px gaps) / 6 ≈ **177.33px per
+ * column**, a **+31.7%** increase, dropping the same longest description to an estimated ~4 lines.
+ * Materially better, verified by arithmetic before implementing, not merely asserted — see
+ * `UI-02` §28.11 for the full calculation across 1024/1280/1440. The 3×2 tablet grid's own range
+ * widened correspondingly (now 768-1279px, was 768-1023px) rather than redesigned — same
+ * `grid-cols-3`/`gap-x-8`/`gap-y-10` values, unchanged.
  *
  * ICONS: Lucide, decorative (`aria-hidden`) — each step's own text title/description already
  * carries the meaning. Neutral (foreground/border), not accent-colored, per this turn's "prefer
@@ -129,7 +133,7 @@ function StepMarker({
 
 function DesktopProcessRow() {
   return (
-    <ol className="hidden list-none lg:grid lg:grid-cols-6 lg:gap-6">
+    <ol className="hidden list-none xl:grid xl:grid-cols-6 xl:gap-6">
       {STEPS.map((step, index) => (
         <li key={step.number} className="flex flex-col items-center px-2 text-center">
           <span className="text-xs font-semibold tracking-wide text-muted-foreground">
@@ -152,7 +156,7 @@ function DesktopProcessRow() {
 
 function TabletProcessGrid() {
   return (
-    <ol className="hidden list-none grid-cols-3 gap-x-8 gap-y-10 md:grid lg:hidden">
+    <ol className="hidden list-none grid-cols-3 gap-x-8 gap-y-10 md:grid xl:hidden">
       {STEPS.map((step) => {
         const Icon = step.icon;
         return (

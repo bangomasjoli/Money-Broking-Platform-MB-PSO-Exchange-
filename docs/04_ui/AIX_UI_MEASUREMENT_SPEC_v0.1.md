@@ -1844,6 +1844,7 @@ requested for this section or for the homepage as a whole.
 ### 28.2 Refinements to existing flags (existing flag retained; new precision added)
 
 **UI-QA-004 — refines Phase 1D's "desktop six-column process fit around 1024–1100px" (`UI-02` §22)**
+- **Status: CLOSED (UI Phase 1M — see §28.11 for the full remediation record and arithmetic).** The finding below is preserved verbatim as the original evidence; Phase 1D's own underlying flag (§22) is also CLOSED by the same remediation.
 - **Severity:** MEDIUM (elaborates, does not itself upgrade, the existing flag's severity — this turn does not reclassify Phase 1D's own risk, only adds precision)
 - **Viewport(s):** 1024×768 specifically
 - **Component/section:** `PublicOperatingModel`'s `DesktopProcessRow`
@@ -1891,7 +1892,7 @@ All seven sections plus the footer use the identical `mx-auto max-w-[1280px] px-
 
 Every flag below was re-checked against the current code (confirmed still present/applicable) and is **retained exactly as originally recorded** — none was discarded, none was resolved this turn:
 
-- **Phase 1D** (`UI-02` §22): desktop six-column process fit around 1024–1100px — **see UI-QA-004 above for refined precision on this same flag.**
+- **Phase 1D** (`UI-02` §22): desktop six-column process fit around 1024–1100px — **CLOSED in UI Phase 1M, see §28.11 (via UI-QA-004).**
 - **Phase 1E** (`UI-02` §23): mobile control-stack density; large-desktop two-column width balance — **see UI-QA-005 above for a partial-downgrade candidate on the second of these two.**
 - **Phase 1F** (`UI-02` §24): mobile capability-list density/scroll length; matrix quadrant height imbalance; Exchange-boundary note prominence.
 - **Phase 1G** (`UI-02` §25): destination-table fit at 1024px and on mobile — **superseded by UI-QA-002, CLOSED in UI Phase 1K (§28.9).** Sidebar/content proportion — **substantially addressed as a side effect of UI-QA-002's fix (the sidebar breakpoint move to `xl:`); see §28.9 for why this is not marked separately CLOSED without visual confirmation.** Demo-disclosure prominence; status-badge color-neutral hierarchy — **see UI-QA-006 above for an accessibility-positive counterpoint on this one.** Both remain OPEN.
@@ -1904,7 +1905,7 @@ All carried-forward flags remain **status: OPEN**.
 
 - **Remediation A — Anchor scroll-offset compensation.** UI-QA-001 — **CLOSED in UI Phase 1L, see §28.10.**
 - **Remediation B — Product Preview responsive/table restructuring (BLOCKER).** UI-QA-002 — **CLOSED in UI Phase 1K, see §28.9.** The still-open Phase 1G demo-disclosure-prominence and status-badge-hierarchy flags remain for a future pass (informed by UI-QA-006's accessibility counterpoint); sidebar/content proportion is likely improved as a side effect but not independently re-verified.
-- **Remediation C — Operating Model desktop density.** UI-QA-004 (refined Phase 1D flag) — a breakpoint/layout decision specific to this one component.
+- **Remediation C — Operating Model desktop density.** UI-QA-004 (refined Phase 1D flag) — **CLOSED in UI Phase 1M, see §28.11.**
 - **Remediation D — Global rhythm & repetition.** UI-QA-003, the Phase 1H cumulative-whitespace flag, and the Phase 1I CTA-to-footer-spacing flag — all genuinely the same root category (section-boundary spacing and pattern variety), reviewed together rather than as isolated per-section tweaks.
 - **Remediation E — Trust & Control / Capabilities polish.** UI-QA-005 (re-verify before touching), Phase 1F's matrix quadrant imbalance and Exchange-boundary-note prominence.
 - **Remediation F — Final CTA / Footer closure polish.** The remaining Phase 1H flags (closing-section prominence, tablet action alignment, regulatory-note visibility) and Phase 1I flags (footer surface-boundary contrast, legal-text prominence, desktop column balance).
@@ -1986,3 +1987,33 @@ Every tested viewport clears the header by an identical, deliberate **24px** —
 **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
 **UI-QA-001: CLOSED.** All four required conditions are met: (1) all five current anchors now receive deliberate, sufficient (24px) fixed-header clearance; (2) the solution works identically and correctly across every tested responsive width; (3) no JavaScript workaround was introduced — a pure CSS fix; (4) no section-layout regression was created — verified via diff and rendered-HTML inspection.
+
+### 28.11 UI Phase 1M — Remediation C (UI-QA-004 / Phase 1D closure record)
+
+**Root cause:** the 6-column horizontal process row activated at `lg:` (1024px), the same breakpoint the section's own container first reaches its own `lg:px-12` gutter but is still narrower than its `max-w-[1280px]` cap — at exactly 1024px this left only ≈134.67px per column, producing an estimated ~5-line wrap on the longest step description against a ~3-line wrap on the shortest, a visibly uneven row.
+
+**Old six-column breakpoint:** `lg:` (1024px) — `DesktopProcessRow`'s `lg:grid lg:grid-cols-6 lg:gap-6`; `TabletProcessGrid`'s corresponding upper bound was `lg:hidden` (i.e. active 768–1023px).
+
+**New six-column breakpoint:** `xl:` (1280px, Tailwind's own default breakpoint — `@media (min-width: 80rem)`, re-confirmed in the compiled CSS; no custom/arbitrary breakpoint was introduced) — `DesktopProcessRow`'s `xl:grid xl:grid-cols-6 xl:gap-6`; `TabletProcessGrid`'s upper bound moved to `xl:hidden` (now active 768–1279px). `MobileProcessList` (`md:hidden`, <768px) is untouched.
+
+**Arithmetic (verified against the compiled CSS before implementing, per this turn's own required sequencing — not silently assumed):**
+
+| Viewport | Container inner width | Six-column math | Step width |
+|---|---|---|---|
+| 1024px (old threshold, no longer six-column) | 1024 − 96 (`lg:px-12`) = 928px | (928 − 5×24 gap) / 6 | **≈134.67px** |
+| 1280px (new threshold) | min(1280, 1280) − 96 = 1184px | (1184 − 120) / 6 | **≈177.33px** |
+| 1440px | min(1440, 1280) − 96 = 1184px (container caps at its own `max-w-[1280px]`, so 1440px produces the **identical** inner width to 1280px) | (1184 − 120) / 6 | **≈177.33px (identical to 1280px)** |
+
+**Materially improved, not merely relocated:** 177.33px vs. 134.67px is a **+31.7%** increase in step width. Re-estimating the same longest description ("AIX acts on an agency / back-to-back basis with approved external counterparties," 84 characters, minus the `li`'s own `px-2` = ≈161px text width at the new column width) using the identical character-width heuristic the original Phase 1D estimate used: **≈4 lines**, down from the previous **≈5 lines** — a real, calculable reduction in both the raw tightness and the row-height imbalance between the longest and shortest step descriptions (shortest remains ≈3 lines at both widths, so the gap narrows from 2 lines to 1 line). This was verified as "materially better" by arithmetic before implementing, per explicit instruction — 1280px was not adopted on assumption, and the turn was prepared to stop and report if the math had not supported it.
+
+**Retained 3×2 tablet behavior:** `grid-cols-3`/`gap-x-8`(32px)/`gap-y-10`(40px) values are byte-identical to before — only the upper bound of the range these values apply across moved (768–1023px → 768–1279px). Not redesigned, per explicit instruction.
+
+**Retained mobile behavior:** `MobileProcessList`'s `md:hidden` threshold (<768px), its vertical connector, marker sizes, and copy are all untouched — confirmed via diff (zero lines changed in that function).
+
+**Desktop rail, markers, icons, numbering, copy:** all unchanged — step order, the 1px connector-line rail, the 40px/20px marker/icon convention, "01"–"06" numbering, and every step's own title/description text are byte-identical to before this remediation; only the two breakpoint prefixes (`lg:`→`xl:`) changed.
+
+**Accessibility / DOM order:** unaffected — the `<ol>`/`<li>` native ordinal semantics and each variant's own internal `STEPS.map()` order were not touched; CSS `grid`/breakpoint changes do not reorder DOM nodes. Verified via rendered HTML: steps 01→06 appear in that order within `DesktopProcessRow`'s markup, unchanged.
+
+**Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+**UI-QA-004: CLOSED** (and Phase 1D's own underlying flag, `UI-02` §22, closed by the same fix). All five required conditions are met: (1) 1024px no longer uses the cramped six-column state (it now renders the 3×2 grid); (2) 1280px/1440px arithmetic demonstrates a materially improved, calculated step width (+31.7%, ~1 fewer wrapped line on the longest description); (3) the tablet 3×2 state remains unchanged and readable; (4) mobile is unchanged; (5) no typography, copy, icon, or marker size was reduced — the fix is a breakpoint relocation only.

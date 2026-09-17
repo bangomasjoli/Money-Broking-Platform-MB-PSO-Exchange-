@@ -277,6 +277,22 @@ The remaining 17 flags in the §28 register (all MEDIUM/LOW/
 INFORMATIONAL) are unaffected — **the homepage remains not visually
 accepted.**
 
+**UI Phase 1M — Remediation C (Operating Model Responsive Density):
+COMPLETE — `UI-QA-004` CLOSED (and Phase 1D's own underlying flag with
+it).** `PublicOperatingModel`'s 6-column horizontal process row moved
+from `lg:` (1024px) to `xl:` (1280px) — verified by arithmetic before
+implementing: step width increases from ≈134.67px at the old 1024px
+threshold to ≈177.33px at 1280px/1440px (+31.7%, since the container
+caps at its own 1280px max-width), dropping the longest step
+description's estimated wrap from ~5 lines to ~4. The 3×2 tablet grid's
+own values are unchanged, only its active range widened to match
+(768-1279px); mobile, desktop-rail geometry, markers, icons, step
+copy, and numbering are all byte-identical to before. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.11 for the full arithmetic. The remaining 16 flags in the §28
+register (all MEDIUM/LOW/INFORMATIONAL) are unaffected — **the
+homepage remains not visually accepted.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

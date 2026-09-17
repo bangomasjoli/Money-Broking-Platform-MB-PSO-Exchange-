@@ -934,3 +934,23 @@ typography, layout, container width, surfaces, icons, dividers, and both
 `git diff --stat` (one class-string addition per file) and rendered-HTML
 inspection. `typecheck:web`/`lint:web`/`build:web` all re-run clean on
 the final code.
+
+## 30. Phase 1M — Remediation C: Operating Model Responsive Density
+
+**UI-QA-004 (MEDIUM) and Phase 1D's own underlying flag CLOSED.** The
+6-column horizontal process row's breakpoint moved from `lg:` (1024px)
+to `xl:` (1280px, Tailwind's own default) in
+`public-operating-model.tsx` — the only change: two breakpoint prefixes
+(`lg:`→`xl:`) on `DesktopProcessRow`'s and `TabletProcessGrid`'s own
+className strings. Verified by arithmetic before implementing (per
+explicit instruction to stop and report otherwise): 1024px step width
+≈134.67px → 1280px/1440px step width ≈177.33px (+31.7%, container caps
+at its own `max-w-[1280px]` so 1280px and 1440px produce an identical
+result) — full calculation in `UI-02` §28.11, not duplicated here. The
+3×2 tablet grid's own values (`grid-cols-3`/`gap-x-8`/`gap-y-10`) are
+unchanged, only its active range widened to match; mobile, desktop-rail
+geometry, markers, icons, numbering, and every step's copy are
+byte-identical to before. No package, dependency, or shadcn component
+added; `platform/package-lock.json` unchanged, so no backend regression
+was required. `typecheck:web`/`lint:web`/`build:web` all re-run clean
+on the final code.

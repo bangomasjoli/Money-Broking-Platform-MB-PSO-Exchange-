@@ -57,11 +57,15 @@ import { cn } from "@/lib/utils";
  * desktop row or the compact mobile row, never a partial version of either. UI-02 §10.4's
  * original 768px tablet-gap rule is superseded; see UI-02's Phase 1B Remediation 01 note.
  *
- * UI-QA-008 (Phase 1Q): a restrained `HeaderMask` (defined below) was added as this header's own
- * first child, isolating `DesktopNav`'s unprotected LEFT wordmark and RIGHT actions from
- * scrolling page content passing behind them — see that component's own doc comment for the full
- * mask architecture, and UI-02 §28.15 for the closure record. This header's own accepted geometry
- * (offsets, heights, pill dimensions, radius, breakpoint) is otherwise completely unchanged.
+ * UI-QA-008 (Phase 1Q, stacking corrected in Remediation 01): a restrained `HeaderMask` (defined
+ * below) isolates `DesktopNav`'s unprotected LEFT wordmark and RIGHT actions from scrolling page
+ * content passing behind them. Phase 1Q's first implementation relied on plain DOM/paint order,
+ * which rendered visual recheck showed was wrong (the wordmark/buttons came out visibly blurred,
+ * not just isolated from page content) — Remediation 01 replaced it with an explicit local
+ * stacking model (`isolate` + explicit `z-0`/`z-10`) — see `HeaderMask`'s and `PublicHeader`'s own
+ * doc comments for the full architecture and root-cause analysis, and UI-02 §28.15/§28.16 for the
+ * closure record. This header's own accepted geometry (offsets, heights, pill dimensions, radius,
+ * breakpoint) remains completely unchanged throughout.
  */
 
 const NAV_ITEMS = [
@@ -79,7 +83,9 @@ const PILL_SURFACE =
 
 function DesktopNav() {
   return (
-    <div className="hidden lg:block px-6">
+    // UI-QA-008 Remediation 01 (Phase 1Q R1): `relative z-10` added — see PublicHeader's own
+    // stacking-model comment for why this is required, not merely defensive.
+    <div className="relative z-10 hidden lg:block px-6">
       <div className="mx-auto grid max-w-none grid-cols-[1fr_auto_1fr] items-center gap-6">
         {/* LEFT — temporary AIX wordmark. BRAND ASSET PENDING. */}
         <Link
@@ -133,7 +139,9 @@ function DesktopNav() {
 
 function MobileNav() {
   return (
-    <div className="flex lg:hidden px-4">
+    // UI-QA-008 Remediation 01 (Phase 1Q R1): `relative z-10` added — see PublicHeader's own
+    // stacking-model comment for why this is required, not merely defensive.
+    <div className="relative z-10 flex lg:hidden px-4">
       <div
         className={cn(
           "flex h-14 w-full items-center justify-between px-4",
@@ -203,17 +211,12 @@ function MobileNav() {
  * deriving a new pair of numbers: `h-24` = 96px (compact: 16px top offset + 56px height = 72px
  * envelope + 24px), `lg:h-28` = 112px (desktop: 24px + 64px = 88px envelope + 24px).
  *
- * Layering: `position: fixed` (its own containing block is the true viewport, not this
- * `<header>` — `<header>` has no `transform`/`filter`/`perspective` that would change that), so
- * it starts at true `top: 0` regardless of the header's own `top-4`/`lg:top-6` offset. Rendered as
- * the FIRST child inside this `<header>`, before `DesktopNav`/`MobileNav`: since neither the mask
- * nor those two components carries its own `z-index`, all three participate in the SAME stacking
- * context this `<header>`'s existing `z-40` already establishes, ordered by DOM/paint order — the
- * mask (painted first) sits behind the nav content (painted after) with **no new z-index
- * introduced anywhere**, the smallest deliberate layering change available. `aria-hidden` (purely
- * decorative) and `pointer-events-none` (never intercepts clicks, never enters the tab order,
- * never affects focus rings) — verified via rendered-HTML inspection that it carries no
- * interactive semantics.
+ * `position: fixed` — its own containing block is the true viewport, not this `<header>`
+ * (`<header>` has no `transform`/`filter`/`perspective` that would change that), so it starts at
+ * true `top: 0` regardless of the header's own `top-4`/`lg:top-6` offset. `z-0` is now explicit
+ * (Remediation 01, see `PublicHeader`'s own stacking-model comment for why) — this mask does not,
+ * on its own, determine where it paints relative to `DesktopNav`/`MobileNav`; the header root's
+ * `isolate` + the mask's `z-0` + those two components' own `relative z-10` together guarantee it.
  *
  * Not implemented: a blur intensity that itself fades alongside the color gradient — `backdrop-
  * filter` cannot easily express a smooth blur ramp with a single flat layer, and a second stacked
@@ -226,14 +229,50 @@ function HeaderMask() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--marketing-background)] to-transparent backdrop-blur-sm lg:h-28"
+      className="pointer-events-none fixed inset-x-0 top-0 z-0 h-24 bg-gradient-to-b from-[var(--marketing-background)] to-transparent backdrop-blur-sm lg:h-28"
     />
   );
 }
 
+/**
+ * STACKING MODEL — UI-QA-008 Remediation 01 (Phase 1Q R1): the first implementation (Phase 1Q)
+ * relied on plain DOM/paint order — `HeaderMask` rendered before `DesktopNav`/`MobileNav`, with
+ * none of the three carrying an explicit `z-index`, on the (incorrect) assumption that painting
+ * would follow simple source order within the header's shared `z-40` context. Rendered visual
+ * recheck showed the opposite result: the wordmark and "Client Login"/"Request Access" buttons
+ * came out visibly blurred, while the pill (which has its own opaque-ish `PILL_SURFACE`
+ * background) did not.
+ *
+ * Verified root cause (CSS stacking-context painting order, not guessed): within one stacking
+ * context, **non-positioned, in-flow block-level descendants paint in an earlier tier than
+ * positioned descendants with `z-index: auto`/`0`** — regardless of DOM source order. `HeaderMask`
+ * is `position: fixed` (a positioned element, landing in the later tier). `DesktopNav`'s and
+ * `MobileNav`'s own outer wrapper `<div>`s (`hidden lg:block`/`flex lg:hidden`) previously had
+ * *no* `position` property at all — plain non-positioned block elements, landing in the earlier
+ * tier. The practical result: `DesktopNav`/`MobileNav` painted first (earlier tier) and
+ * `HeaderMask` painted second/on top (later tier) — the exact inverse of "DOM order determines
+ * paint order," and precisely why the mask's own `backdrop-filter: blur` ended up sampling
+ * already-drawn header text and blurring it, rather than sampling only the scrolling page content
+ * beneath everything.
+ *
+ * Fix: an explicit local stacking model, so paint order is decided by an unambiguous numeric
+ * comparison instead of the positioned-vs-non-positioned tier rule. `isolate` on this `<header>`
+ * (`isolation: isolate`) makes explicit that everything inside forms its own self-contained
+ * stacking context — technically near-redundant, since the existing `z-40` already forces one, but
+ * named explicitly here for clarity given the tier subtlety above. `HeaderMask` now carries an
+ * explicit `z-0`. `DesktopNav`'s and `MobileNav`'s own wrapper `<div>`s now carry `relative z-10`
+ * (`relative` with no offset does not move either element — it only makes `z-index` apply). With
+ * every relevant element now explicitly positioned and explicitly z-indexed, paint order is
+ * decided purely by that number: mask (`z-0`) reliably behind, nav content (`z-10`) reliably in
+ * front — for the pill, the wordmark, and both action buttons alike, not just the pill.
+ *
+ * Final stacking order, back to front: scrolling page content → `HeaderMask` (`z-0`) →
+ * `DesktopNav`/`MobileNav` (`z-10`) — all still inside this `<header>`'s own existing `z-40`
+ * relative to the rest of the page, which is unchanged. No `z-50`, no arbitrary escalation.
+ */
 export function PublicHeader() {
   return (
-    <header className="fixed inset-x-0 top-4 z-40 lg:top-6">
+    <header className="fixed inset-x-0 top-4 z-40 isolate lg:top-6">
       <HeaderMask />
       <DesktopNav />
       <MobileNav />

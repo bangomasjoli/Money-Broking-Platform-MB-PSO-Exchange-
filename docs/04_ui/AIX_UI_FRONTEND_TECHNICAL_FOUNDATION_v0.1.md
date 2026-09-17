@@ -1060,3 +1060,48 @@ shrink-on-scroll — pure CSS. `typecheck:web`/`lint:web`/`build:web` all
 re-run clean on the final code. Full mask architecture and stacking-
 order reasoning recorded in `UI-02` §28.15, not duplicated here.
 **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
+## 35. Phase 1Q Remediation 01 — Header Mask Stacking Correction
+
+**UI-QA-008's first fix (§34) FAILED the user's own rendered visual
+recheck** — the wordmark and both action buttons came out visibly
+blurred, while the pill did not; the mask was affecting the header's own
+interactive content, not only isolating it from scrolling page content.
+Reopened OPEN / REMEDIATION REQUIRED, corrected here.
+
+**Verified root cause (CSS stacking-context spec, inspected directly,
+not guessed):** within one stacking context, non-positioned in-flow
+block elements paint in an earlier tier than positioned elements with
+`z-index: auto`/`0`, regardless of DOM order. `HeaderMask`
+(`position: fixed`) landed in the later/"on top" tier; `DesktopNav`'s
+and `MobileNav`'s own wrapper `<div>`s had no `position` at all,
+landing in the earlier/"underneath" tier — the exact inverse of the
+DOM-order assumption the first implementation relied on, so the mask's
+own `backdrop-filter: blur` ended up sampling already-drawn header text.
+
+**Fix in `public-header.tsx`:** an explicit local stacking model —
+`isolate` added to `<header>`, explicit `z-0` added to `HeaderMask`,
+explicit `relative z-10` added to `DesktopNav`'s and `MobileNav`'s own
+wrapper `<div>`s (`relative` with no offset does not move either
+element). With every relevant element now explicitly positioned and
+z-indexed, paint order is decided by unambiguous numeric comparison
+instead of the tier rule above — `z-0` reliably behind, `z-10`
+reliably in front, for the pill, wordmark, and both buttons alike.
+
+**No mask geometry, blur, gradient, or accepted header dimension was
+retuned** — the defect was entirely stacking, confirmed by the fix
+resolving it without touching any of those values; all re-verified
+byte-identical/unchanged in the rendered HTML and compiled CSS. No
+`z-50` or arbitrary escalation — `z-0`/`z-10` are the smallest explicit
+hierarchy, both local to the header's own `isolate`d context. No
+package, dependency, or shadcn component added; `package-lock.json`
+unchanged, so no backend regression was required. No other homepage
+component changed — verified via `git diff`.
+`typecheck:web`/`lint:web`/`build:web` all re-run clean on the final
+code. Full root-cause analysis and stacking-model reasoning recorded in
+`UI-02` §28.16, not duplicated here.
+
+**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK (second attempt)** —
+not self-declared visually confirmed; still awaiting rendered
+confirmation, since no screenshot tool is available this turn either.
+**PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**

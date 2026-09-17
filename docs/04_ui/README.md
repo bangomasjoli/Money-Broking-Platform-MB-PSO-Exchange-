@@ -378,6 +378,34 @@ pure CSS. See
 §28.15 for the full mask architecture and stacking-order reasoning.
 **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
 
+**UPDATE — Phase 1Q's fix above did NOT pass the user's own rendered
+recheck.** Observed: the AIX wordmark and both action buttons came out
+visibly blurred, while the center pill did not — the mask was affecting
+the header's own interactive content, not only isolating it from
+scrolling page content. `UI-QA-008` reopened OPEN / REMEDIATION
+REQUIRED.
+
+**UI Phase 1Q Remediation 01 — Header Mask Stacking Correction:
+COMPLETE — `UI-QA-008` CLOSED PENDING VISUAL RECHECK (second attempt).**
+Verified root cause (CSS stacking-context spec, not guessed): within one
+stacking context, non-positioned in-flow elements paint in an earlier
+tier than positioned elements with `z-index: auto`/`0`, regardless of
+DOM order — `HeaderMask` (`position: fixed`) landed in the later "on
+top" tier, while `DesktopNav`'s/`MobileNav`'s own wrapper `<div>`s had
+no `position` at all, landing in the earlier "underneath" tier — the
+exact inverse of the DOM-order assumption the first fix relied on. Fixed
+with an explicit local stacking model: `isolate` on `<header>`, explicit
+`z-0` on `HeaderMask`, explicit `relative z-10` on `DesktopNav`'s and
+`MobileNav`'s own wrappers (`relative` with no offset does not move
+either element) — paint order is now decided by unambiguous numeric
+comparison, not the tier rule that caused the defect. No mask geometry,
+blur, gradient, or accepted header dimension was retuned — the defect
+was entirely stacking. No `z-50` or arbitrary escalation. No other
+homepage component changed. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.16 for the full root-cause analysis and stacking-model reasoning.
+**PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

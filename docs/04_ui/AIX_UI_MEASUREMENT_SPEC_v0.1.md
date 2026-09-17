@@ -2167,6 +2167,7 @@ Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** 
 ## UI Phase 1Q — Final Visual Remediation 02 (§28.15)
 
 **UI-QA-008 — Fixed header scroll-content interference**
+- **Status: Phase 1Q's first fix (below) FAILED rendered visual verification — reopened OPEN / REMEDIATION REQUIRED, then corrected in Remediation 01 (§28.16). Currently: CLOSED PENDING USER VISUAL RECHECK, second attempt — not yet visually confirmed.** The chronology below is preserved in full, including the failed first attempt — not rewritten or hidden.
 - **Severity:** MEDIUM
 - **Discovered:** UI Phase 1Q, during the user's own rendered final visual review — the accepted `PublicHeader` (Phase 1B, VISUALLY ACCEPTED) was never previously reviewed for this specific interaction with scrolling page content, since visual acceptance was granted against the header viewed largely in isolation, before the full homepage's own scrollable content existed.
 - **Viewport(s):** primarily desktop (`lg:`, 1024px+, where `DesktopNav`'s wordmark and actions sit outside the pill's own protected surface); the compact/mobile header was not actually defective (its wordmark and menu trigger already share the same `PILL_SURFACE` wrapper as everything else) but received the same mask for consistency, per this turn's own instruction.
@@ -2187,4 +2188,47 @@ Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** 
 - **Floating-pill character:** preserved — the pill itself (`PILL_SURFACE`) was not touched at all; the mask sits entirely separate from and behind it, adding no visible box, border, or edge of its own.
 - **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
-**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK.** All five closure conditions are met by computed/inspected evidence: (1) scrolling content behind the outer header zones is now masked by a soft gradient + blur rather than passing through unobstructed; (2) the floating-pill visual character is fully preserved (the pill itself is untouched, and the mask introduces no visible box/edge of its own); (3) no opaque full-width navbar was introduced — the mask fades to fully transparent within 96–112px and has no flat opaque band; (4) interactions/focus are unaffected — verified `pointer-events-none`/`aria-hidden`, no interactive attributes; (5) desktop and compact header geometry are unchanged — every accepted dimension re-verified byte-identical. **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS** — not self-declared visually accepted.
+**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK (first attempt).** All five closure conditions were met by computed/inspected evidence at the time: (1) scrolling content behind the outer header zones is now masked by a soft gradient + blur rather than passing through unobstructed; (2) the floating-pill visual character is fully preserved (the pill itself is untouched, and the mask introduces no visible box/edge of its own); (3) no opaque full-width navbar was introduced — the mask fades to fully transparent within 96–112px and has no flat opaque band; (4) interactions/focus are unaffected — verified `pointer-events-none`/`aria-hidden`, no interactive attributes; (5) desktop and compact header geometry are unchanged — every accepted dimension re-verified byte-identical. **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS** — not self-declared visually accepted.
+
+**UPDATE — this first attempt did NOT pass the user's own rendered visual recheck.** The user's rendered review found: the AIX wordmark and "Client Login"/"Request Access" buttons were visibly blurred; the center pill remained sharp. The mask was affecting the header's own interactive content, not only isolating it from scrolling page content — the opposite of the intended effect. `UI-QA-008` reopened **OPEN / REMEDIATION REQUIRED**; box-model/CSS analysis alone was insufficient here — this defect could only be caught by rendered review, exactly the limitation this project's own documentation has repeatedly flagged. See §28.16 for Remediation 01's verified root cause and fix.
+
+---
+
+## UI Phase 1Q Remediation 01 — Header Mask Stacking Correction (§28.16)
+
+**Failed visual behavior (rendered, not computed):** after Phase 1Q's first `HeaderMask` implementation, the user's own rendered recheck showed the AIX wordmark and both action buttons ("Client Login"/"Request Access") visibly blurred, while the center navigation pill remained sharp — the mask was blurring the header's own interactive content instead of only the scrolling page content behind it.
+
+**Verified root cause (CSS stacking-context painting-order rules, inspected directly, not guessed):** within a single stacking context, non-positioned in-flow block-level descendants paint in an earlier tier than positioned descendants carrying `z-index: auto`/`0` — **regardless of DOM source order.** `HeaderMask` uses `position: fixed` (a positioned element, landing in the later/"on top" tier). `DesktopNav`'s and `MobileNav`'s own outer wrapper `<div>`s (`hidden lg:block`/`flex lg:hidden`) previously had **no `position` property at all** — plain non-positioned block elements, landing in the earlier/"underneath" tier. The practical effect: `DesktopNav`/`MobileNav` painted first (their content already fully drawn, text included) and `HeaderMask` painted second, on top of them — the exact inverse of the "DOM order = paint order" assumption Phase 1Q's original implementation relied on. Once `HeaderMask` (with its own `backdrop-filter: blur`) painted on top of the already-drawn wordmark/button text, that text is precisely what its blur sampled — explaining the observed defect exactly, including why the pill (whose own opaque-ish `PILL_SURFACE` background sits directly behind its own text) was comparatively less visibly affected than the plain-background wordmark/buttons.
+
+**Previous stacking model:** `<header className="fixed inset-x-0 top-4 z-40 lg:top-6">` with `HeaderMask`, `DesktopNav`, `MobileNav` as three plain children — none carrying an explicit `z-index`, relying entirely on DOM/paint-order assumptions that CSS's own positioned-vs-non-positioned tier rule does not actually guarantee.
+
+**New stacking model — an explicit local stacking context, so paint order is decided by unambiguous numeric comparison instead of the tier rule above:**
+- `<header>` root: `isolate` added (`isolation: isolate`) — makes explicit that everything inside forms its own self-contained stacking context. Technically near-redundant on its own (the existing `z-40` already forces a stacking context), but named explicitly here given how easily the tier subtlety above was missed the first time.
+- `HeaderMask`: explicit `z-0` added (was previously `z-index: auto` by omission).
+- `DesktopNav`'s wrapper `<div>`: `relative z-10` added (`relative` with no offset value does not move the element — it exists solely to make `z-index` apply).
+- `MobileNav`'s wrapper `<div>`: `relative z-10` added, same reasoning.
+
+With every relevant element now explicitly positioned and explicitly z-indexed, CSS's own paint-order rule (tier 6: positioned elements with non-negative `z-index`, ordered strictly by that number) applies uniformly — no more tier ambiguity. `z-0` reliably paints behind `z-10`, for the pill, the wordmark, and both buttons alike, not selectively.
+
+**Header-root z-index:** `z-40` — unchanged (the header's existing relationship to the rest of the page).
+**Mask z-index:** `z-0` (new, explicit).
+**DesktopNav z-index:** `z-10` (new, explicit, via `relative`).
+**MobileNav z-index:** `z-10` (new, explicit, via `relative`).
+**No `z-50`, no arbitrary escalation** — the numeric spread (`0`/`10`) is the smallest explicit hierarchy that removes the tier ambiguity; both values are local to the header's own `isolate`d context and do not affect or compare against z-index values anywhere else on the page.
+
+**Mask geometry — unchanged, per explicit instruction not to retune until the stacking fix alone proved insufficient (it did not; stacking was the entire defect):** compact `h-24` = 96px, desktop `lg:h-28` = 112px, both re-verified against the compiled CSS after this fix.
+**Blur/gradient — unchanged:** `backdrop-blur-sm` (the same strength `PILL_SURFACE` uses), `bg-gradient-to-b from-[var(--marketing-background)] to-transparent` — neither tuned, per explicit instruction.
+**Desktop header geometry — unchanged, re-verified byte-identical in the rendered HTML:** 24px top offset, 64px pill height, `max-w-[1120px]`, 24px outer clearance, 24px inner padding (`px-6`), 32px item gap (`gap-8`), full-pill radius.
+**Compact header geometry — unchanged, re-verified byte-identical:** 16px top offset, 56px height.
+**Desktop breakpoint — unchanged:** `lg:` (1024px).
+**Wordmark/pill/buttons/menu trigger — not moved or resized** — verified via `git diff`: only `relative z-10` was added to two wrapper `<div>`s' own class strings; no other class on any of those elements changed.
+
+**Wordmark sharpness expectation:** now sits at `z-10`, strictly above the `z-0` mask — no longer within the mask's own `backdrop-filter` sampling region. **Client Login/Request Access sharpness expectation:** same reasoning, same `z-10` tier via `DesktopNav`'s shared wrapper. **Center-pill status:** was already comparatively less affected, and remains correctly protected under the new model for the same `z-10` reason, now guaranteed rather than incidental.
+
+**Pointer-events / accessibility:** `HeaderMask` still carries `aria-hidden` and `pointer-events-none`, unchanged — re-verified via rendered-HTML inspection to still carry no interactive attributes. `relative` positioning on the two wrapper `<div>`s does not affect tab order, focus-ring rendering, or any ARIA semantics — focus rings render on the actual interactive elements inside those wrappers, which are now unambiguously above the mask in paint order, so they are not visually clipped or obscured either.
+
+**Other homepage components:** unaffected — this remediation is scoped entirely to `public-header.tsx`; `git diff` confirms no other file changed.
+
+**Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK (second attempt).** Not self-declared visually confirmed — the same discipline that caught the first attempt's failure applies here: this remediation is verified by CSS-specification-level root-cause analysis and compiled-CSS/rendered-HTML inspection, not by an actual screenshot (still unavailable this turn). **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**

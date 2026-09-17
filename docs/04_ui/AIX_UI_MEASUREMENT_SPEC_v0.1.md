@@ -1568,3 +1568,225 @@ final AIX color palette (still pending), final AIX brand asset (still
 pending), every prior section (unchanged except as consumed). **VISUAL
 QA: DEFERRED** — not self-declared as accepted; screenshot-based review
 has not yet been requested for this section.
+
+---
+
+## 27. Phase 1I — Public Footer (Geometry, Information Architecture, Anchor Policy, Visual-Risk Register)
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-footer.tsx` (`PublicFooter`),
+the eighth and **final structural component** of the current public
+homepage, after `PublicFinalCta` (§26). Every prior component is
+unchanged except for one minimal, semantic-only addition (see Anchor
+Policy below). **Full visual QA is intentionally deferred this turn,
+per explicit instruction** — the next activity is a **consolidated
+visual QA pass across the whole homepage**, not a further structural
+addition.
+
+**PUBLIC HOMEPAGE STRUCTURE: IMPLEMENTATION COMPLETE / CONSOLIDATED
+VISUAL QA PENDING.** This is a structural-completeness statement, not a
+visual-acceptance claim — the homepage is **not** visually accepted as a
+whole; Phases 1D–1I each remain individually `VISUAL QA DEFERRED` with
+their own recorded risk flags below, all still open.
+
+**Brand:** the same temporary "AIX" typographic wordmark `PublicHeader`
+already uses — BRAND ASSET PENDING, no logo invented. Descriptor:
+"Institutional digital-finance infrastructure for governed operations."
+— deliberately worded differently from `PublicHero`'s own headline
+("Infrastructure for governed money broking and digital-asset
+operations.") to avoid the top and bottom of the same page reading as
+repetitive.
+
+**Copyright / legal entity — a real finding, not silently resolved:**
+**no registered legal entity name exists anywhere in the governed
+project docs.** Checked `docs/01_masters/00_Licence_Scope_And_
+Feature_Lock_v1.3.md` and `docs/01_masters/01_Project_Charter_v1.3.md`'s
+own Document Control tables (`owner: Unassigned` in both files'
+frontmatter) — only "AIX Money Broking Platform" / "AIX MB Platform" (a
+*platform* name, not a *legal entity* name) appears anywhere. This
+turn's own brief suggested "© 2026 AIX Investment Group Company Ltd."
+as an illustrative example but explicitly required confirming the exact
+naming first and explicitly prohibited inventing a legal entity suffix —
+since none is governed, the copyright line reads **"© 2026 AIX. All
+rights reserved."**, with no corporate suffix, deliberately deviating
+from the brief's own suggested example because the brief's own
+instruction required exactly that verification-before-writing.
+
+**Anchor policy — real destinations only:** five existing section root
+elements were each given a same-page `id` this turn — `id="how-it-works"`
+on `PublicOperatingModel` (§22), `id="trust"` on `PublicTrustControl`
+(§23), `id="capabilities"` on `PublicCapabilities` (§24), `id="product"`
+on `PublicProductPreview` (§25), `id="request-access"` on
+`PublicFinalCta` (§26). Each addition is exactly one attribute plus one
+explanatory comment — **no visual or structural change to any of those
+five components** (re-verified: `typecheck:web`/`lint:web`/`build:web`
+all still pass, and each section's own existing className/content is
+untouched). **No "Platform" or "Company" standalone link, and no
+"Security"/"Regulatory Scope" link, was added** — none has a distinct
+real destination on this page without either duplicating an anchor
+already used for something else or pointing at nothing. "Contact" was
+deliberately mapped to `#request-access` (not a separate, duplicate
+link) because that section already contains the "Speak With Our Team"
+CTA — the genuine contact point. **No fake route, no dead link, no
+404-producing href exists in this footer.**
+
+**Contact details:** none shown (no email/phone/address) — none is
+approved for public display in any governed document; the existing
+`#request-access` anchor is the only contact mechanism, per explicit
+instruction not to invent one.
+
+**Social links:** none — no official social-media link exists in
+governed project data.
+
+**Boundary note:** "Availability of products and functionality is
+subject to eligibility, onboarding, applicable approvals, and controlled
+platform enablement" — the same family of language `PublicFinalCta`
+(§26) already uses, kept consistent rather than introducing new phrasing
+for the same underlying constraint.
+
+**Footer top padding:** `pt-12` = 48px — smaller than every other
+section's `pt-16`/`md:pt-20`/`lg:pt-24` sequence, deliberately: the
+footer follows `PublicFinalCta`'s own already-generous bottom padding
+(80–112px), so a full marketing-section-scale top padding would compound
+into excessive combined whitespace (the same category of concern already
+flagged in §26). Not responsive-stepped, since the footer's own content
+doesn't need to visually expand across breakpoints the way a hero/section
+intro does.
+
+**Footer bottom padding:** `pb-8` = 32px — the very end of the page;
+deliberately tighter than a mid-page section's bottom padding, since
+there is no more content below it to separate from.
+
+**Container:** `max-w-[1280px]`, same gutters as every prior section.
+
+**Desktop layout:** `flex lg:flex-row lg:justify-between lg:gap-16` —
+brand block (`max-w-[280px]`, reusing the same value
+`PublicProductPreview`'s detail panel, §25, already uses) on the left,
+a `<nav aria-label="Footer">` containing the two link groups on the
+right, `lg:gap-16` (64px) between them — the same 64px value every other
+section's own desktop layout gap already uses.
+
+**Navigation-column geometry:** the two link groups (Platform, Company)
+sit in a `flex sm:flex-row sm:gap-12` row (48px gap) once past `sm:`
+(640px); group heading `text-xs font-semibold uppercase` (12px, the
+site-wide Label-role tier).
+
+**Link vertical gap:** `space-y-2` = 8px between links within one group
+— verified in compiled CSS as `margin-block` 8px — a compact,
+footer-appropriate spacing, tighter than body-copy line gaps elsewhere
+on the page.
+
+**Divider treatment:** two plain `border-t border-border` (1px) rules —
+one at the footer's own top edge (separating it from `PublicFinalCta`
+above), one between the main footer content and the legal row —
+consistent with the plain-border-divider convention already established
+by `PublicTrustControl` (§23) and `PublicCapabilities` (§24).
+
+**Legal-row spacing:** `mt-8` (32px) above the row's own top divider,
+`pt-6` (24px) between that divider and the legal-row content
+(copyright + boundary note).
+
+**Copyright text size:** `text-xs` = 12px — the site-wide minimum text
+size already used throughout every prior section's captions/
+descriptions, **not** a smaller 10–11px legal-text size, per this
+turn's explicit instruction.
+
+**Mobile group spacing:** `gap-8` (32px) between the stacked brand
+block, nav block, and legal row at the outermost flex container; `gap-8`
+(32px) again between the two link groups themselves once they stack
+below `sm:` (640px).
+
+**Surface treatment:** deliberately **does not** repeat
+`PublicFinalCta`'s `--marketing-surface` tint — stacking the identical
+tinted background across two consecutive sections would blend them into
+one block with no visible seam, undermining "close the page cleanly."
+The footer instead inherits the page's own base
+`--marketing-background` with only the top `border-t` as the closure
+mechanism — a deliberate choice, not an oversight, and reported here as
+such rather than silently matching the section above it.
+
+**shadcn:** no new component — `Separator` was considered and judged
+unnecessary (a plain `border-t border-border` achieves the same result
+with one fewer dependency layer); no `Card` was used for the CTA-style
+footer content, per explicit instruction.
+
+**Tablet (768–1023px) behavior:** brand block and nav block stack
+(`flex-col` below `lg:`); the two link groups sit side by side
+(`sm:flex-row` is already active at 768px, `sm:` = 640px).
+
+**Mobile (<768px) behavior:** brand block, then the two link groups
+(stacked below `sm:` = 640px, since both `sm:flex-row` conditions are
+inactive below that), then the legal row — brand/descriptor first,
+navigation groups next, boundary/copyright last, matching this turn's
+explicit ordering instruction. No horizontal overflow — no element in
+this component has a fixed width wider than its container.
+
+**Accessibility:** semantic `<footer>`; `<nav aria-label="Footer">`
+around the two real link groups; every link uses `next/link`'s `Link`
+(matching `PublicHeader`'s own wordmark-link pattern) with a real
+`href` (a genuine same-page anchor in every case — no
+clickable-looking inert text); focus treatment is inherited unmodified
+from the browser/Next default link focus style (no custom override was
+added that could suppress it).
+
+**Anti-AI-look review performed:** no large black footer, no social-icon
+row, no newsletter input, no "Stay updated" copy, no giant CTA inside
+the footer, no 5-column sitemap (only brand + 2 compact link groups), no
+gradient/glow, no random legal badges, no crypto-community links, no
+over-rounding (no rounded elements at all in this component).
+
+**Known visual-risk register** (real, observed/credible risks only — none
+invented):
+
+- **Phase 1D — still open.** Desktop 6-column process row fit at
+  1024–1100px (§22). Untouched this turn.
+- **Phase 1E — still open.** Mobile control-stack density; large-desktop
+  two-column width balance (§23). Untouched this turn.
+- **Phase 1F — still open.** Mobile capability-list density; matrix
+  quadrant height imbalance; Exchange-boundary note prominence (§24).
+  Untouched this turn.
+- **Phase 1G — still open.** Destination-table fit at 1024px/mobile;
+  sidebar/content proportion; demo-disclosure prominence; status-badge
+  color-neutral hierarchy (§25). Untouched this turn.
+- **Phase 1H — still open.** Closing-section surface prominence vs. the
+  hero; actions-column alignment at tablet width; regulatory-note
+  visibility; cumulative vertical whitespace against
+  `PublicProductPreview` (§26). Untouched this turn.
+- **Phase 1I — footer navigation density on mobile (new).** Below
+  `sm:` (640px), the brand block and both link groups (Platform's 4
+  items, Company's 1 item) all stack into one long single column before
+  the legal row even begins — calculated as a real, if modest, length
+  concern, not verified in a rendered mobile viewport.
+- **Phase 1I — footer surface-boundary contrast (new).** The footer's
+  own base-background choice (vs. `PublicFinalCta`'s tinted surface,
+  separated only by a 1px `border-t`) was a deliberate mechanism choice
+  (see Surface treatment above) — whether a single 1px line reads as
+  sufficient visual closure, or too faint, has not been verified.
+- **Phase 1I — CTA-to-footer cumulative spacing (new).** `PublicFinalCta`'s
+  own bottom padding (80–112px) plus the footer's `pt-12` (48px) top
+  padding combine to 128–160px before footer content begins — a
+  distinct instance of the same "cumulative whitespace" category already
+  flagged for the `PublicProductPreview`→`PublicFinalCta` boundary in
+  §26, now recurring at the `PublicFinalCta`→`PublicFooter` boundary.
+- **Phase 1I — legal/boundary-text prominence (new, 4th recurrence).**
+  The footer's own boundary note uses the same quiet `text-xs
+  text-muted-foreground` treatment as the recurring tension already
+  recorded for `PublicCapabilities` (§24), `PublicProductPreview` (§25),
+  and `PublicFinalCta` (§26) — now a well-established, deliberate,
+  site-wide pattern rather than a newly-discovered issue each time, but
+  worth noting once more since this is the note's final, most
+  "legal-sounding" occurrence (paired directly with copyright text).
+- **Phase 1I — desktop column balance (new).** The brand block
+  (`max-w-[280px]`) and the nav-groups block (Platform + Company,
+  narrower combined width) are split by `justify-between` across the
+  full container width — at wide desktop viewports this could leave a
+  visually large gap between the two blocks rather than a balanced
+  composition. Calculated from the box model, not observed in a
+  rendered viewport.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), every prior section (unchanged except for the five minimal
+`id` additions recorded above). **VISUAL QA: DEFERRED** —
+not self-declared as accepted; screenshot-based review has not yet been
+requested for this section or for the homepage as a whole.

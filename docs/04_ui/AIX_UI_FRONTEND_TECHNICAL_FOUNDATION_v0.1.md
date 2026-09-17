@@ -802,3 +802,79 @@ and cumulative vertical whitespace between `PublicProductPreview` and
 this section. Phase 1D's, 1E's, 1F's, and 1G's still-open flags were
 **not** touched or resolved this turn, per explicit instruction.
 **VISUAL QA: DEFERRED.**
+
+## 26. Phase 1I — Public Footer
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-footer.tsx` (`PublicFooter`)
+— the **final structural component** of the current public homepage,
+after `PublicFinalCta`. Full geometry, information architecture, anchor
+policy, and the visual-risk register are recorded in `UI-02` §27 rather
+than duplicated here.
+
+**PUBLIC HOMEPAGE STRUCTURE: IMPLEMENTATION COMPLETE / CONSOLIDATED
+VISUAL QA PENDING** — every planned structural component now exists
+(`PublicHeader`, `PublicHero`, `PublicOperatingModel`,
+`PublicTrustControl`, `PublicCapabilities`, `PublicProductPreview`,
+`PublicFinalCta`, `PublicFooter`). This is a structural-completeness
+statement only — the homepage is **not** visually accepted as a whole;
+the next activity is a consolidated visual QA pass, not a further
+structural addition.
+
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — no screenshot review was requested or performed.
+
+**No new dependency, package, or shadcn component was added.** No
+component beyond `next/link`'s own `Link` (already used by
+`PublicHeader`) is used. `Separator` was considered per this turn's
+shadcn policy and judged unnecessary (a plain `border-t border-border`
+achieves the same result). `platform/package-lock.json` is unchanged.
+
+**Five existing files received a minimal, non-visual change:**
+`public-operating-model.tsx`, `public-trust-control.tsx`,
+`public-capabilities.tsx`, `public-product-preview.tsx`, and
+`public-final-cta.tsx` each had exactly one `id` attribute (plus one
+explanatory comment) added to their own `<section>` root element, so
+`PublicFooter`'s navigation links resolve to real same-page anchors
+rather than dead links. No className, content, or structure in any of
+those five files changed — re-verified via `typecheck:web`/`lint:web`/
+`build:web`, all still passing after the additions.
+
+**A real governance finding, not silently resolved:** no registered
+legal entity name exists anywhere in the governed project docs (checked
+`docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md` and
+`docs/01_masters/01_Project_Charter_v1.3.md`, both frontmatter `owner:
+Unassigned`, only the platform name "AIX Money Broking Platform"
+appears) — the copyright line therefore reads "© 2026 AIX. All rights
+reserved." with no invented corporate suffix, deliberately deviating
+from this turn's own suggested example wording because the same turn's
+instruction required confirming the exact naming first.
+
+**Root page** (`app/page.tsx`) adds `PublicFooter` after `main`
+(outside the `<main>` landmark, as a sibling `<footer>`, per standard
+document-structure convention); the prior "blank scroll headroom"
+placeholder div is removed, since the footer now closes the page.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded
+(both routes statically prerendered). **No backend regression
+required:** `package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched. No API, contact-form, or auth work.
+
+**Verification performed instead of screenshot QA:** rendered-HTML
+structural review (a single `<footer>`, correct `<nav aria-label=
+"Footer">`, all five new section `id`s present in the DOM, every
+footer link's `href` confirmed to be a real same-page anchor — no
+fake/dead route, copyright and boundary-note text byte-verified) and
+compiled-CSS byte-level confirmation of every governed value (`pt-12`,
+`pb-8`, `max-w-[280px]`/`[560px]`, `gap-16`, `sm:gap-12`, `space-y-2`).
+Five real, credible visual-risk flags were identified from layout
+calculation (not invented) and recorded rather than silently resolved —
+see `UI-02` §27's visual-risk register: footer navigation density on
+mobile, footer surface-boundary contrast, CTA-to-footer cumulative
+spacing, legal/boundary-text prominence (a fourth recorded occurrence of
+an already-established recurring pattern), and desktop column balance.
+Phase 1D's through 1H's still-open flags were **not** touched or
+resolved this turn, per explicit instruction. **VISUAL QA:
+DEFERRED.**

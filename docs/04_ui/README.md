@@ -190,6 +190,36 @@ register (Phase 1D's, 1E's, 1F's, and 1G's still-open flags, plus four
 new Phase 1H flags: closing-section surface prominence vs. the hero,
 actions-column alignment at tablet width, regulatory-note visibility,
 and cumulative vertical whitespace against `PublicProductPreview`).
+**UI Phase 1I — Public Footer: IMPLEMENTED, VISUAL QA DEFERRED.** The
+eighth and **final structural component** of the current public
+homepage (`platform/apps/web/components/site/public-footer.tsx`,
+`PublicFooter`), after the closing CTA section. Brand block (temporary
+"AIX" wordmark + descriptor), two real navigation groups (Platform: How
+AIX Works/Trust & Governance/Capabilities/Product Experience; Company:
+Contact — mapped to the real `#request-access` section), and a legal
+row (copyright + boundary note) — no fake routes, no 5-column sitemap,
+no social links, no invented contact details. Five prior sections each
+received one minimal `id` attribute (no visual change) so the footer's
+links resolve to real same-page anchors. **A real governance finding:**
+no registered legal entity name exists anywhere in the governed project
+docs, so the copyright line reads "© 2026 AIX. All rights reserved."
+with no invented corporate suffix, deliberately deviating from this
+turn's own suggested example wording. **No new package, no new shadcn
+component, no final color/font/brand-asset approval.**
+
+**PUBLIC HOMEPAGE STRUCTURE: IMPLEMENTATION COMPLETE / CONSOLIDATED
+VISUAL QA PENDING.** Every planned structural component now exists. This
+is **not** a visual-acceptance claim for the homepage as a whole — Phases
+1D through 1I each remain individually `VISUAL QA DEFERRED`, with every
+recorded risk flag across all six still open; the next activity is a
+consolidated visual QA pass, not a further structural addition. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §27
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§26 for the full implementation record and the known visual-risk
+register (Phase 1D's through 1H's still-open flags, plus five new Phase
+1I flags: footer navigation density on mobile, footer surface-boundary
+contrast, CTA-to-footer cumulative spacing, legal/boundary-text
+prominence, and desktop column balance).
 
 ## Contents
 

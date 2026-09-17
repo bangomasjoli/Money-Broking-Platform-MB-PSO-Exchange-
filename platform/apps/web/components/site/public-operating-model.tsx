@@ -205,6 +205,8 @@ function MobileProcessList() {
 export function PublicOperatingModel() {
   return (
     <section
+      // id added in UI Phase 1I for PublicFooter's same-page anchor — no visual change.
+      id="how-it-works"
       aria-labelledby="operating-model-heading"
       className="pt-16 pb-20 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28"
     >

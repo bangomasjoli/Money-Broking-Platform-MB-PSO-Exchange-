@@ -53,6 +53,8 @@ const CONTAINER_CLASS = "mx-auto max-w-[1280px] px-4 md:px-8 lg:px-12";
 export function PublicFinalCta() {
   return (
     <section
+      // id added in UI Phase 1I for PublicFooter's same-page anchor — no visual change.
+      id="request-access"
       aria-labelledby="final-cta-heading"
       className="bg-[var(--marketing-surface)] pt-16 pb-20 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28"
     >

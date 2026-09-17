@@ -293,6 +293,27 @@ copy, and numbering are all byte-identical to before. See
 register (all MEDIUM/LOW/INFORMATIONAL) are unaffected — **the
 homepage remains not visually accepted.**
 
+**UI Phase 1N — Remediation D (Global Rhythm / Repetition / Homepage
+Monotony): COMPLETE — `UI-QA-003` CLOSED.** A controlled-variation
+refinement across `PublicTrustControl`, `PublicCapabilities`,
+`PublicProductPreview`, and `PublicFinalCta` — `PublicOperatingModel`,
+`PublicHeader`, `PublicHero`, and `PublicFooter` intentionally
+unchanged. The 4-consecutive-identical section-boundary rhythm became a
+deliberate ascending pattern (a 2-run repeat at most); eyebrow treatment
+reduced to exactly 2 documented variants plus one deliberate removal;
+circular icon markers reduced from 3-of-4 to 1-of-4 icon-bearing
+sections (`PublicOperatingModel`'s process-rail markers explicitly
+preserved); one additional full-bleed surface tint added to
+`PublicTrustControl` (reasoned choice over `PublicProductPreview`, whose
+shell already has its own contained tint). No randomness, no new
+tokens, no new component pattern. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.12 for the full before/after arithmetic across every dimension. The
+Phase 1H cumulative-whitespace/closing-section-prominence flags are
+incidentally affected but not independently re-validated or closed. The
+remaining 15 flags in the §28 register (all MEDIUM/LOW/INFORMATIONAL)
+are unaffected — **the homepage remains not visually accepted.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

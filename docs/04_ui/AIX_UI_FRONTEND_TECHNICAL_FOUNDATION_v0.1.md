@@ -954,3 +954,33 @@ byte-identical to before. No package, dependency, or shadcn component
 added; `platform/package-lock.json` unchanged, so no backend regression
 was required. `typecheck:web`/`lint:web`/`build:web` all re-run clean
 on the final code.
+
+## 31. Phase 1N — Remediation D: Global Rhythm / Repetition / Homepage Monotony
+
+**UI-QA-003 (MEDIUM) CLOSED.** A cross-section, controlled-variation
+refinement — no randomness, no new tokens, no new component pattern —
+across `public-trust-control.tsx`, `public-capabilities.tsx`,
+`public-product-preview.tsx`, and `public-final-cta.tsx`.
+`public-operating-model.tsx` (the page's stable "process" archetype),
+`public-header.tsx`, `public-hero.tsx`, and `public-footer.tsx` were
+**intentionally left unchanged**. Four dimensions varied: (1) section-
+boundary rhythm — a 4-consecutive-identical gap sequence became a
+deliberate ascending pattern with only a 2-run repeat at the start; (2)
+eyebrow treatment — exactly 2 documented variants ("standard" and
+"quiet") plus one deliberate removal (`PublicProductPreview`, judged
+redundant against its own shell's top bar); (3) icon-marker treatment —
+the 40px circular marker reduced from 3-of-4 to 1-of-4 icon-bearing
+sections, replaced with a bare 20px icon on `PublicTrustControl`/
+`PublicCapabilities`; (4) background/surface — one additional full-bleed
+`--marketing-surface` tint added to `PublicTrustControl` (not
+`PublicProductPreview`, which already has its own contained shell tint
+and would lose contrast against a second full-bleed one). Full
+before/after arithmetic for every dimension is recorded in `UI-02`
+§28.12, not duplicated here. No package, dependency, or shadcn component
+added; `platform/package-lock.json` unchanged, so no backend regression
+was required. No heading, ARIA attribute, landmark, or reading order was
+altered — verified via rendered-HTML inspection.
+`typecheck:web`/`lint:web`/`build:web` all re-run clean on the final
+code. The Phase 1H "cumulative whitespace"/"closing-section prominence"
+flags are incidentally affected by the rhythm change but were **not**
+independently re-validated or closed this turn.

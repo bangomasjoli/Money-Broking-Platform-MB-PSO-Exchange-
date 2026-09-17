@@ -40,16 +40,36 @@ import { KeyRound, LockKeyhole, ListChecks, Users, type LucideIcon } from "lucid
  * ICONS: Lucide, decorative (`aria-hidden`), one per control group, deliberately different from
  * `PublicOperatingModel`'s icon set even where a concept could overlap (e.g. "Funds Control" here
  * uses `LockKeyhole`, not the `Wallet` icon `PublicOperatingModel`'s "Funding" step already uses)
- * so the two sections don't visually repeat the same icon+label pairing. Sized 20px inside a 40px
- * circle — the same governed Default-control-height/20px-icon reuse `PublicOperatingModel`
- * established, not a new marker size invented for this section.
+ * so the two sections don't visually repeat the same icon+label pairing. Sized 20px — the same
+ * governed 20px-icon tier `PublicOperatingModel` established, not a new size invented for this
+ * section.
+ *
+ * UI PHASE 1N REMEDIATION (UI-QA-003, homepage repetition/monotony): three changes, all
+ * documented in `UI-02` §28.12 with the full before/after rhythm arithmetic — (1) the 40px
+ * circular icon marker `PublicOperatingModel` established was found reused byte-identically by
+ * this section and `PublicCapabilities` (3 of 4 icon-bearing sections sharing one treatment) —
+ * removed here in favor of a bare icon (no circle, no border, no fill), per this turn's own
+ * "consider removing circular containers and using bare/quiet icons" guidance;
+ * `PublicOperatingModel`'s own circular markers are explicitly preserved unchanged (its process-
+ * rail numbering genuinely needs the marker; this section's list does not). (2) Section top
+ * padding reduced by one governed spacing step (`pt-16`→`pt-12`/`md:pt-20`→`md:pt-16`/
+ * `lg:pt-24`→`lg:pt-20`) — this section now follows `PublicOperatingModel` more closely, as part
+ * of the same "informative middle tier" flow, rather than repeating the identical
+ * `pt-16`/`pb-20` pairing three-to-four consecutive sections in a row used. (3) Added a full-bleed
+ * `--marketing-surface` background (the same already-established token `PublicHero`'s pill and
+ * `PublicFinalCta`'s own section background already use, not a new one) — chosen over
+ * `PublicProductPreview` for this turn's "at most one additional surface treatment" allowance,
+ * because `PublicProductPreview`'s shell already carries its own contained surface tint; adding a
+ * second, full-bleed tint immediately behind it would reduce the contrast that currently makes the
+ * shell read as a distinct "product window" against a plain page background — this section has no
+ * such existing treatment, so the addition is genuinely additive, not conflicting.
  *
  * VISUAL QA: intentionally DEFERRED this turn, per explicit instruction — this component was
  * verified via source/layout review, typecheck/lint/build, and rendered-HTML/compiled-CSS
  * inspection only. No screenshot review was requested or performed. See
- * `docs/04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md` §23 for the recorded visual-risk flags (this
- * section's own, plus Phase 1D's still-open six-column flag, both intentionally left open for a
- * later consolidated QA pass rather than resolved piecemeal here).
+ * `docs/04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md` §23 for this section's own recorded visual-risk
+ * flags, left open for a later consolidated QA pass rather than resolved piecemeal here — this
+ * turn's rhythm/repetition remediation does not address or close them.
  */
 
 type ControlGroup = {
@@ -99,9 +119,13 @@ function ControlList() {
         const Icon = group.icon;
         return (
           <li key={group.number} className="flex items-start gap-4 py-6 first:pt-0 last:pb-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[var(--marketing-surface)]">
-              <Icon className="size-5 text-foreground" aria-hidden />
-            </div>
+            {/* Bare icon — no circular container. UI Phase 1N (UI-QA-003): removed the 40px
+                circle/border/fill marker to reduce this page's repeated icon-marker treatment;
+                see the header comment above and UI-02 §28.12. `mt-0.5` (2px) is a documented
+                optical-correction exception (UI-01 §5) nudging the icon toward the "01" label's
+                own line — not verified in a rendered viewport, since no screenshot tool was
+                available this turn; flagged for confirmation in a future visual QA pass. */}
+            <Icon className="mt-0.5 size-5 shrink-0 text-foreground" aria-hidden />
             <div>
               <span className="text-xs font-semibold tracking-wide text-muted-foreground">
                 {group.number}
@@ -127,7 +151,13 @@ export function PublicTrustControl() {
       // own comment for the full arithmetic, identical across all 5 anchored sections.
       id="trust"
       aria-labelledby="trust-control-heading"
-      className="scroll-mt-24 pt-16 pb-20 md:pt-20 md:pb-24 lg:scroll-mt-28 lg:pt-24 lg:pb-28"
+      // UI Phase 1N (UI-QA-003): top padding reduced one step (pt-16/md:pt-20/lg:pt-24 →
+      // pt-12/md:pt-16/lg:pt-20) and a full-bleed --marketing-surface background added — both
+      // reasoned in the header comment above; full before/after rhythm arithmetic in UI-02
+      // §28.12. scroll-mt-24/lg:scroll-mt-28 (Phase 1L) are unaffected by this change — they
+      // govern where the section's own top edge lands, independent of the section's own top
+      // padding, so no retuning was needed.
+      className="scroll-mt-24 bg-[var(--marketing-surface)] pt-12 pb-20 md:pt-16 md:pb-24 lg:scroll-mt-28 lg:pt-20 lg:pb-28"
     >
       <div className={CONTAINER_CLASS}>
         <div className="grid grid-cols-1 gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">

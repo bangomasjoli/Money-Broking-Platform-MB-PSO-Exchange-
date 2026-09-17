@@ -235,16 +235,23 @@ export function PublicProductPreview() {
       // own comment for the full arithmetic, identical across all 5 anchored sections.
       id="product"
       aria-labelledby="product-preview-heading"
-      className="scroll-mt-24 pt-16 pb-20 md:pt-20 md:pb-24 lg:scroll-mt-28 lg:pt-24 lg:pb-28"
+      // UI Phase 1N (UI-QA-003): top padding increased one step (pt-16/md:pt-20/lg:pt-24 →
+      // pt-20/md:pt-24/lg:pt-28) — this is the "second-most product-focused" section per this
+      // turn's own visual-hierarchy guidance, deserving deliberately more separation from the
+      // informative middle tier above it. scroll-mt-24/lg:scroll-mt-28 (Phase 1L) are unaffected
+      // — they govern where the section's own top edge lands, independent of top padding. Full
+      // before/after rhythm arithmetic in UI-02 §28.12.
+      className="scroll-mt-24 pt-20 pb-20 md:pt-24 md:pb-24 lg:scroll-mt-28 lg:pt-28 lg:pb-28"
     >
       <div className={CONTAINER_CLASS}>
         <div className="mx-auto max-w-[720px] text-center">
-          <p className="text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
-            Product Experience
-          </p>
+          {/* Eyebrow removed — UI Phase 1N (UI-QA-003): the preview shell's own top bar (the
+              "Wallet Destinations" title + "Demo" badge) already establishes section identity;
+              a marketing eyebrow above it was judged redundant, per this turn's own "keep only
+              if it materially helps section identity" guidance. See UI-02 §28.12. */}
           <h2
             id="product-preview-heading"
-            className="mt-4 text-[32px] leading-[1.15] font-semibold tracking-tight text-foreground md:text-[36px] lg:text-[40px]"
+            className="text-[32px] leading-[1.15] font-semibold tracking-tight text-foreground md:text-[36px] lg:text-[40px]"
           >
             Operational clarity, from overview to action.
           </h2>

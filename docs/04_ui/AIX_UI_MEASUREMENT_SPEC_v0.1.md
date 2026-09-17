@@ -1832,6 +1832,7 @@ requested for this section or for the homepage as a whole.
 - **User visual confirmation required:** yes, to confirm the actual rendered overflow behavior and to validate whichever remediation approach is chosen — the box-model math is exact, but the *chosen fix* needs visual review.
 
 **UI-QA-003 — Site-wide repetition: 5 of 7 content sections share byte-identical eyebrow/heading typography, 3 of 4 icon-bearing sections share a byte-identical 40px marker, and 5 of 7 major page regions share one flat background**
+- **Status: CLOSED (UI Phase 1N — see §28.12 for the full remediation record, controlled-variation strategy, and before/after arithmetic).** The finding below is preserved verbatim as the original evidence.
 - **Severity:** MEDIUM
 - **Viewport(s):** all (a structural/pattern-level finding, not viewport-specific)
 - **Component/section:** `PublicOperatingModel`, `PublicTrustControl`, `PublicCapabilities`, `PublicProductPreview`, `PublicFinalCta` (eyebrow/heading); `PublicOperatingModel`, `PublicTrustControl`, `PublicCapabilities` (icon marker); the whole page (background)
@@ -1878,7 +1879,7 @@ requested for this section or for the homepage as a whole.
 
 ### 28.4 Global rhythm findings (verified, no new defect beyond what §28.1/§28.2 already cover)
 
-Computed every section-to-section combined gap (bottom padding of the section above + top padding of the section below) precisely: **Hero→OperatingModel:** 128/160/192px (mobile/tablet/desktop). **OperatingModel→TrustControl, TrustControl→Capabilities, Capabilities→ProductPreview:** all three boundaries are **identical**, 144/176/208px, because all four of those sections share byte-identical `pt-16 pb-20 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28` values (the same repetition already recorded as UI-QA-003). **ProductPreview→FinalCta:** 144/176/208px (already flagged in Phase 1H, `UI-02` §26). **FinalCta→Footer:** 128/144/160px (already flagged in Phase 1I, `UI-02` §27, since the footer's `pt-12` is not responsive-stepped). No new global-rhythm defect beyond the already-recorded Phase 1H/1I flags and the UI-QA-003 repetition finding — this section exists to show the actual arithmetic behind "cumulative whitespace," not to introduce a new ID.
+**Original (pre-Phase-1N) rhythm, computed precisely** (bottom padding of the section above + top padding of the section below): **Hero→OperatingModel:** 128/160/192px (mobile/tablet/desktop). **OperatingModel→TrustControl, TrustControl→Capabilities, Capabilities→ProductPreview, ProductPreview→FinalCta:** **four** consecutive boundaries were identical, 144/176/208px each — one more than this finding's own original description of "three consecutive," since `ProductPreview`'s section also shared the same `pt-16`/`pb-20` pairing (already separately flagged as Phase 1H's cumulative-whitespace concern, `UI-02` §26). **FinalCta→Footer:** 128/144/160px (already flagged in Phase 1I, `UI-02` §27, since the footer's `pt-12` is not responsive-stepped). **This rhythm has since been revised — see §28.12 for the full remediation and the current values.**
 
 ### 28.5 Global alignment findings
 
@@ -1896,8 +1897,8 @@ Every flag below was re-checked against the current code (confirmed still presen
 - **Phase 1E** (`UI-02` §23): mobile control-stack density; large-desktop two-column width balance — **see UI-QA-005 above for a partial-downgrade candidate on the second of these two.**
 - **Phase 1F** (`UI-02` §24): mobile capability-list density/scroll length; matrix quadrant height imbalance; Exchange-boundary note prominence.
 - **Phase 1G** (`UI-02` §25): destination-table fit at 1024px and on mobile — **superseded by UI-QA-002, CLOSED in UI Phase 1K (§28.9).** Sidebar/content proportion — **substantially addressed as a side effect of UI-QA-002's fix (the sidebar breakpoint move to `xl:`); see §28.9 for why this is not marked separately CLOSED without visual confirmation.** Demo-disclosure prominence; status-badge color-neutral hierarchy — **see UI-QA-006 above for an accessibility-positive counterpoint on this one.** Both remain OPEN.
-- **Phase 1H** (`UI-02` §26): closing-section surface prominence vs. the hero; actions-column alignment at tablet width; regulatory-note visibility; cumulative vertical whitespace against `PublicProductPreview` — **quantified precisely in §28.4 above (144/176/208px).**
-- **Phase 1I** (`UI-02` §27): footer navigation density on mobile; footer surface-boundary contrast; CTA-to-footer cumulative spacing — **quantified precisely in §28.4 above (128/144/160px)**; legal/boundary-text prominence; desktop column balance.
+- **Phase 1H** (`UI-02` §26): closing-section surface prominence vs. the hero; actions-column alignment at tablet width; regulatory-note visibility; cumulative vertical whitespace against `PublicProductPreview` — **the underlying gap value changed in UI Phase 1N (§28.12, now 176/208/240px, up from 144/176/208px) as a side effect of the rhythm remediation — incidentally affected, but this flag remains OPEN, not independently re-validated or closed.**
+- **Phase 1I** (`UI-02` §27): footer navigation density on mobile; footer surface-boundary contrast; CTA-to-footer cumulative spacing (unaffected — `FinalCta`→`Footer` was not changed in Phase 1N); legal/boundary-text prominence; desktop column balance.
 
 All carried-forward flags remain **status: OPEN**.
 
@@ -1906,7 +1907,7 @@ All carried-forward flags remain **status: OPEN**.
 - **Remediation A — Anchor scroll-offset compensation.** UI-QA-001 — **CLOSED in UI Phase 1L, see §28.10.**
 - **Remediation B — Product Preview responsive/table restructuring (BLOCKER).** UI-QA-002 — **CLOSED in UI Phase 1K, see §28.9.** The still-open Phase 1G demo-disclosure-prominence and status-badge-hierarchy flags remain for a future pass (informed by UI-QA-006's accessibility counterpoint); sidebar/content proportion is likely improved as a side effect but not independently re-verified.
 - **Remediation C — Operating Model desktop density.** UI-QA-004 (refined Phase 1D flag) — **CLOSED in UI Phase 1M, see §28.11.**
-- **Remediation D — Global rhythm & repetition.** UI-QA-003, the Phase 1H cumulative-whitespace flag, and the Phase 1I CTA-to-footer-spacing flag — all genuinely the same root category (section-boundary spacing and pattern variety), reviewed together rather than as isolated per-section tweaks.
+- **Remediation D — Global rhythm & repetition.** UI-QA-003 — **CLOSED in UI Phase 1N, see §28.12.** The Phase 1H cumulative-whitespace flag and the Phase 1I CTA-to-footer-spacing flag are **incidentally improved** by the same remediation (both boundaries now use different, larger, deliberately-chosen values) but are **not independently re-validated or closed** by this turn — they remain OPEN pending their own visual confirmation, per explicit instruction not to close a flag without its own validation.
 - **Remediation E — Trust & Control / Capabilities polish.** UI-QA-005 (re-verify before touching), Phase 1F's matrix quadrant imbalance and Exchange-boundary-note prominence.
 - **Remediation F — Final CTA / Footer closure polish.** The remaining Phase 1H flags (closing-section prominence, tablet action alignment, regulatory-note visibility) and Phase 1I flags (footer surface-boundary contrast, legal-text prominence, desktop column balance).
 
@@ -2017,3 +2018,62 @@ Every tested viewport clears the header by an identical, deliberate **24px** —
 **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
 **UI-QA-004: CLOSED** (and Phase 1D's own underlying flag, `UI-02` §22, closed by the same fix). All five required conditions are met: (1) 1024px no longer uses the cramped six-column state (it now renders the 3×2 grid); (2) 1280px/1440px arithmetic demonstrates a materially improved, calculated step width (+31.7%, ~1 fewer wrapped line on the longest description); (3) the tablet 3×2 state remains unchanged and readable; (4) mobile is unchanged; (5) no typography, copy, icon, or marker size was reduced — the fix is a breakpoint relocation only.
+
+### 28.12 UI Phase 1N — Remediation D (UI-QA-003 closure record)
+
+**Root cause:** five sections (`PublicOperatingModel`, `PublicTrustControl`, `PublicCapabilities`, `PublicProductPreview`, `PublicFinalCta`) were each built independently against the same governed spacing/typography/icon tokens, and — since each turn correctly reused the *previous* turn's own established values for consistency — the cumulative effect across turns was that most of the page's middle content converged on byte-identical eyebrow typography, byte-identical 40px icon markers, and byte-identical section padding, producing four consecutive identical section-boundary gaps (one more than originally described — see the corrected §28.4 above) and a uniform flat background across 5 of 7 major regions. Consistency was the correct instinct at each individual turn; only in aggregate did it become mechanical repetition.
+
+**Controlled-variation strategy:** introduce a small number of deliberate, documented, reusable variants — never arbitrary per-section improvisation — applied to exactly the sections this turn's own guidance specifically named as candidates, leaving `PublicOperatingModel` (the page's "process" archetype, and the pattern other sections were echoing) unchanged as the stable reference point. Four dimensions were varied: section-boundary rhythm, eyebrow treatment (at most 2 variants), icon-marker treatment (circle vs. bare), and background/surface (at most 1 new full-bleed tint).
+
+**1. Section rhythm — before/after boundary gaps** (mobile/tablet/desktop; only the changed cells are marked):
+
+| Boundary | Before | After | Changed? |
+|---|---|---|---|
+| Hero→OperatingModel | 128/160/192px | 128/160/192px | No — `PublicHero` not touched |
+| OperatingModel→TrustControl | 144/176/208px | **128/160/192px** | Yes — `TrustControl`'s own `pt-16`→`pt-12`/`md:pt-20`→`md:pt-16`/`lg:pt-24`→`lg:pt-20` (one governed spacing step down) |
+| TrustControl→Capabilities | 144/176/208px | 144/176/208px | No — this is now the page's only occurrence of this value, not a 4th repeat |
+| Capabilities→ProductPreview | 144/176/208px | **160/192/224px** | Yes — `ProductPreview`'s own `pt-16`→`pt-20`/`md:pt-20`→`md:pt-24`/`lg:pt-24`→`lg:pt-28` (one step up) |
+| ProductPreview→FinalCta | 144/176/208px | **176/208/240px** | Yes — `FinalCta`'s own `pt-16`→`pt-24`/`md:pt-20`→`md:pt-28`/`lg:pt-24`→`lg:pt-32` (two steps up — the largest top-padding value on the homepage, deliberately, for the page's conclusive section) |
+| FinalCta→Footer | 128/144/160px | 128/144/160px | No — not touched, already distinct |
+
+**Resulting sequence of the six boundary gaps (desktop values): 192, 192, 208, 224, 240, 160.** The only repeat is a 2-run at the very start (Hero→OperatingModel and OperatingModel→TrustControl, both 192) — well below the "three consecutive identical" threshold this turn's own instruction named as the actual problem; the old sequence was 192, 208, 208, 208, 208, 160 (a 4-run). The new sequence also reads as a **deliberate ascending rhythm** from `OperatingModel` through `FinalCta` (128→144→160→176 at mobile, or 192→208→224→240 at desktop) — each section gets incrementally more breathing room approaching the closing CTA, a controlled, intentional pattern (not randomness) that directly supports this turn's own "Final CTA conclusive" hierarchy goal. `scroll-mt-24`/`lg:scroll-mt-28` (Phase 1L, `UI-02` §28.10) were **not** retuned on `TrustControl`/`ProductPreview`/`FinalCta` — confirmed unnecessary, since `scroll-margin-top` governs where a section's own top edge lands, independent of that section's own top padding.
+
+**2. Eyebrow treatment — before/after, exactly 2 controlled variants:**
+
+- **Variant A ("standard"):** `text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase` — unchanged, still used by `PublicOperatingModel` ("How AIX Works"), `PublicTrustControl` ("Trust & Control"), and `PublicFinalCta` ("Request Access", explicitly retained as instructed).
+- **Variant B ("quiet"):** `text-xs font-medium text-muted-foreground` (no `uppercase`, no `tracking-[0.08em]`) — newly applied to `PublicCapabilities` ("Platform Capabilities"), same text content, visually differentiated treatment.
+- **Removed entirely:** `PublicProductPreview`'s eyebrow ("Product Experience") — judged not to "materially help section identity," since the preview shell's own top bar ("Wallet Destinations" title + "Demo" badge) already establishes that identity; its heading's `mt-4` top margin was also removed (now the first element in its intro block).
+
+Exactly 2 documented, reusable variants exist after this turn — not a unique style per section.
+
+**3. Heading pattern:** unchanged — no heading font-size, weight, line-height, or scale was altered anywhere. `PublicProductPreview`'s heading lost only its `mt-4` (since the eyebrow above it was removed, that margin no longer had anything to separate from).
+
+**4. Icon/marker treatment — before/after:**
+
+| Section | Before | After |
+|---|---|---|
+| `PublicOperatingModel` | 40px circle (`rounded-full`/`border`/`bg-[var(--marketing-surface)]`) around each 20px icon | **Unchanged** — explicitly preserved, the process rail's numbered markers genuinely need the visual anchor |
+| `PublicTrustControl` | Same 40px circle | **Removed** — bare 20px icon, `mt-0.5` (2px) documented optical-correction nudge toward the "01"-style number label beside it (`UI-01` §5 exception, flagged for visual confirmation, not verified in a rendered viewport) |
+| `PublicCapabilities` | Same 40px circle | **Removed** — bare 20px icon, no nudge needed (icon sits inline with the domain title, not beside a smaller number label) |
+| `PublicProductPreview` | No circular markers anywhere (top-bar `LayoutGrid` icon was already bare) | **Unchanged**, per explicit "already uses different product UI treatment; preserve" instruction |
+
+Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** — a measurable, real reduction, not merely reported qualitatively. No square colored tiles, gradient icon boxes, or new geometric shapes were introduced — bare icons only, still 20px, still neutral (`text-foreground`), still `aria-hidden`.
+
+**5. Background/surface — before/after:**
+
+- **Before:** only `PublicFinalCta` departed from the base `--marketing-background` (a single full-bleed `--marketing-surface` tint).
+- **After:** `PublicTrustControl` gains the identical `bg-[var(--marketing-surface)]` full-bleed treatment — the "at most one additional surface treatment" this turn allowed. `PublicProductPreview` was deliberately **not** chosen for this, and the reasoning is recorded, not merely asserted: its shell already carries its own contained surface tint, and a second, full-bleed tint immediately behind it would reduce the contrast that currently lets the shell read as a distinct "product window" against a plain page background — `PublicTrustControl` has no such existing treatment, so the addition there is genuinely additive. Result: base, base, **surface**, base, base, **surface**, base across the seven major regions (Hero through Footer) — two deliberate breaks in what was previously one long uniform run, not mechanical zebra-striping (5 of 7 regions still share the base background).
+
+**6. Section composition:** unchanged — `PublicOperatingModel` still uses its process rail/grid, `PublicTrustControl` still uses its divided control list, `PublicCapabilities` still uses its 2×2 matrix, `PublicProductPreview` still uses its product shell, `PublicFinalCta` still uses its closing two-column composition. Nothing was converted to a card; no decorative wrapper was added purely for variation.
+
+**7. Global alignment:** unaffected — every section (including the two now using `bg-[var(--marketing-surface)]`) still uses the identical `mx-auto max-w-[1280px] px-4 md:px-8 lg:px-12` container class; no left/right offset, no container-width change, no gutter change.
+
+**8. Responsive validation:** every rhythm/eyebrow/marker/background change is a plain, non-responsive-conditional class (or a full `pt-*`/`md:pt-*`/`lg:pt-*` triplet, matching the existing responsive-stepping pattern exactly) — none is a desktop-only addition that could break mobile flow; verified via the compiled CSS at each breakpoint (`pt-12`=48px, `md:pt-16`=64px, `lg:pt-20`=80px; `pt-20`=80px, `md:pt-24`=96px, `lg:pt-28`=112px; `pt-24`=96px, `md:pt-28`=112px, `lg:pt-32`=128px — all re-verified against the actual compiled output, not assumed).
+
+**9. Accessibility:** no heading was removed — only `PublicProductPreview`'s eyebrow (a decorative `<p>`, never a heading) was removed; its `<h2 id="product-preview-heading">` is unchanged and still correctly labelled by `aria-labelledby` on the section. No ARIA attribute, landmark, or reading order was altered on any of the four touched components — verified via rendered-HTML inspection.
+
+**10. Incidental effects on other open findings (recorded, not closed):** the Phase 1H "cumulative vertical whitespace against `PublicProductPreview`" flag (`UI-02` §26) and its "closing-section surface prominence vs. the hero" flag are both affected by this remediation (the `ProductPreview`→`FinalCta` gap changed from 144/176/208px to 176/208/240px, and `FinalCta`'s own top padding — hence its visual weight — increased) — **neither flag is closed by this turn**; both remain OPEN pending their own independent visual validation, per explicit instruction not to close a flag without its own confirmation. The Phase 1I flags are unaffected (`FinalCta`→`Footer` was not touched).
+
+**Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+**UI-QA-003: CLOSED.** All five required conditions are met: (1) the repeated section-boundary rhythm is reduced (4-consecutive-identical → a 2-run, with a deliberate ascending pattern replacing mechanical repetition); (2) the repeated eyebrow treatment is measurably reduced into a documented, controlled 2-variant system (plus one deliberate removal); (3) circular-marker repetition is reduced from 3-of-4 to 1-of-4 icon-bearing sections, removed specifically where the brief judged it semantically unnecessary; (4) the page still uses one coherent design system — no new colors, no new typography scale, no new component pattern; (5) no decorative or random visual noise was introduced — no gradients, no glow, no extra badges, no alternating zebra backgrounds, no randomized offsets.

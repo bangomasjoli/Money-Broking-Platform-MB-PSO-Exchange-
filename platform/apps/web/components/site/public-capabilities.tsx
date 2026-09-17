@@ -54,10 +54,21 @@ import {
  * maximum" instruction), decorative (`aria-hidden`), 20px — the same governed icon-size tier
  * every prior homepage section uses.
  *
+ * UI PHASE 1N REMEDIATION (UI-QA-003, homepage repetition/monotony): two changes, both documented
+ * in `UI-02` §28.12 with the full reasoning — (1) the domain-header icon no longer sits inside the
+ * 40px circular marker `PublicOperatingModel`/`PublicTrustControl` also used (that treatment was
+ * reused byte-identically by 3 of 4 icon-bearing sections) — now a bare icon, per this turn's own
+ * "consider a different restrained domain-header treatment, e.g. icon without circle" guidance.
+ * (2) The eyebrow ("Platform Capabilities") moved from the site's "standard" eyebrow treatment
+ * (uppercase, wide letter-tracking — still used by `PublicOperatingModel`/`PublicTrustControl`/
+ * `PublicFinalCta`) to a documented "quiet" variant (same text, no uppercase, no letter-tracking)
+ * — the second of at most 2 controlled eyebrow variants introduced this turn, not a one-off
+ * arbitrary style. No heading scale, copy, boundary note, or matrix structure was changed.
+ *
  * VISUAL QA: intentionally DEFERRED this turn, per explicit instruction. See
- * `docs/04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md` §24 for the recorded visual-risk flags (this
- * section's own, plus the still-open Phase 1D and Phase 1E flags, all intentionally left open
- * for a later consolidated QA pass).
+ * `docs/04_ui/AIX_UI_MEASUREMENT_SPEC_v0.1.md` §24 for this section's own recorded visual-risk
+ * flags, left open for a later consolidated QA pass rather than resolved piecemeal here — this
+ * turn's rhythm/repetition remediation does not address or close them.
  */
 
 type CapabilityDomain = {
@@ -139,10 +150,10 @@ function DomainCapabilityList({ domain }: { domain: CapabilityDomain }) {
   const Icon = domain.icon;
   return (
     <div>
+      {/* Bare icon — no circular container. UI Phase 1N (UI-QA-003): see the header comment
+          above and UI-02 §28.12. */}
       <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[var(--marketing-surface)]">
-          <Icon className="size-5 text-foreground" aria-hidden />
-        </div>
+        <Icon className="size-5 shrink-0 text-foreground" aria-hidden />
         <h3 className="text-sm font-semibold text-foreground">{domain.title}</h3>
       </div>
       <p className="mt-3 max-w-[440px] text-xs leading-[1.5] text-muted-foreground">
@@ -180,9 +191,11 @@ export function PublicCapabilities() {
     >
       <div className={CONTAINER_CLASS}>
         <div className="mx-auto max-w-[720px] text-center">
-          <p className="text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
-            Platform Capabilities
-          </p>
+          {/* Quiet eyebrow variant — UI Phase 1N (UI-QA-003): same label, no uppercase/
+              letter-tracking, the second of at most 2 controlled eyebrow variants introduced
+              this turn (the site-wide "standard" variant remains unchanged on
+              PublicOperatingModel/PublicTrustControl/PublicFinalCta). See UI-02 §28.12. */}
+          <p className="text-xs font-medium text-muted-foreground">Platform Capabilities</p>
           <h2
             id="capabilities-heading"
             className="mt-4 text-[32px] leading-[1.15] font-semibold tracking-tight text-foreground md:text-[36px] lg:text-[40px]"

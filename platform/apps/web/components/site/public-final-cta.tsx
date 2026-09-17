@@ -46,6 +46,13 @@ import { Button } from "@/components/ui/button";
  * width, not a boxed container within it). This gives the closing section the "slightly stronger
  * surface separation" this turn suggested from the busier `PublicProductPreview` section above
  * it, without introducing new color.
+ *
+ * UI PHASE 1N REMEDIATION (UI-QA-003, homepage repetition/monotony): top padding only, increased
+ * two governed spacing steps (see the `<section>` element's own inline comment for the exact
+ * values) — the largest top-padding step anywhere on the homepage, deliberately signaling this
+ * section as the page's conclusive moment per this turn's visual-hierarchy guidance. Copy, CTA
+ * labels, button heights, the regulatory note, and the existing surface treatment are all
+ * unchanged, per explicit instruction to preserve them. Full arithmetic in `UI-02` §28.12.
  */
 
 const CONTAINER_CLASS = "mx-auto max-w-[1280px] px-4 md:px-8 lg:px-12";
@@ -59,7 +66,14 @@ export function PublicFinalCta() {
       // own comment for the full arithmetic, identical across all 5 anchored sections.
       id="request-access"
       aria-labelledby="final-cta-heading"
-      className="scroll-mt-24 bg-[var(--marketing-surface)] pt-16 pb-20 md:pt-20 md:pb-24 lg:scroll-mt-28 lg:pt-24 lg:pb-28"
+      // UI Phase 1N (UI-QA-003): top padding increased two steps (pt-16/md:pt-20/lg:pt-24 →
+      // pt-24/md:pt-28/lg:pt-32) — the largest top-padding step on the homepage, deliberately,
+      // since this is the page's conclusive section per this turn's own visual-hierarchy
+      // guidance. Copy, CTA labels, both 48px button heights, the regulatory note, and the
+      // existing --marketing-surface background are all unchanged — only this one spacing value
+      // moved. scroll-mt-24/lg:scroll-mt-28 (Phase 1L) are unaffected, independent of top
+      // padding. Full before/after rhythm arithmetic in UI-02 §28.12.
+      className="scroll-mt-24 bg-[var(--marketing-surface)] pt-24 pb-20 md:pt-28 md:pb-24 lg:scroll-mt-28 lg:pt-32 lg:pb-28"
     >
       <div className={CONTAINER_CLASS}>
         <div className="grid grid-cols-1 items-center gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">

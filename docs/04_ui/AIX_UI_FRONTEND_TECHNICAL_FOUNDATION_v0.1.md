@@ -1031,3 +1031,32 @@ or shadcn component added; `platform/package-lock.json` unchanged, so
 no backend regression was required. `typecheck:web`/`lint:web`/
 `build:web` all re-run clean on the final code. **PUBLIC HOMEPAGE:
 FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
+## 34. Phase 1Q — Final Visual Remediation 02: Fixed Header Scroll-Content Isolation
+
+**UI-QA-008 (MEDIUM) — found during the user's own rendered final
+visual review — CLOSED PENDING USER VISUAL RECHECK.** The accepted
+`PublicHeader`'s center pill has its own protected surface, but the
+`DesktopNav`'s wordmark and actions (deliberately placed outside the
+pill per Phase 1B's own REF-UI-001-informed composition) had no
+equivalent isolation — scrolling content could visually pass behind
+them. Fixed in `public-header.tsx` with a new `HeaderMask` component: a
+short vertical gradient (`--marketing-background`, the page's own
+existing token, fading to `to-transparent`) plus the same
+`backdrop-blur-sm` strength the pill already uses. Height reuses the
+exact figures Phase 1L's `scroll-mt-24`/`lg:scroll-mt-28` fix already
+established (`h-24`=96px compact, `lg:h-28`=112px desktop — "header
+envelope + 24px"), not new numbers. **No new z-index anywhere** —
+`HeaderMask` is rendered as `<header>`'s first child with no `z-index`
+of its own, so it paints behind `DesktopNav`/`MobileNav` purely by DOM
+order within the header's existing `z-40` stacking context.
+`pointer-events-none` + `aria-hidden`, confirmed via rendered-HTML
+inspection to carry no interactive attributes. All accepted header
+geometry (offsets, heights, pill dimensions, radius, breakpoint) is
+unchanged — verified byte-identical. No package, dependency, or shadcn
+component added; `platform/package-lock.json` unchanged, so no backend
+regression was required. No JavaScript, no scroll listener, no
+shrink-on-scroll — pure CSS. `typecheck:web`/`lint:web`/`build:web` all
+re-run clean on the final code. Full mask architecture and stacking-
+order reasoning recorded in `UI-02` §28.15, not duplicated here.
+**PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**

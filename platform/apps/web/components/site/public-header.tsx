@@ -56,6 +56,12 @@ import { cn } from "@/lib/utils";
  * applies. There is no intermediate squeezed tablet row — the composition is either the complete
  * desktop row or the compact mobile row, never a partial version of either. UI-02 §10.4's
  * original 768px tablet-gap rule is superseded; see UI-02's Phase 1B Remediation 01 note.
+ *
+ * UI-QA-008 (Phase 1Q): a restrained `HeaderMask` (defined below) was added as this header's own
+ * first child, isolating `DesktopNav`'s unprotected LEFT wordmark and RIGHT actions from
+ * scrolling page content passing behind them — see that component's own doc comment for the full
+ * mask architecture, and UI-02 §28.15 for the closure record. This header's own accepted geometry
+ * (offsets, heights, pill dimensions, radius, breakpoint) is otherwise completely unchanged.
  */
 
 const NAV_ITEMS = [
@@ -178,9 +184,57 @@ function MobileNav() {
   );
 }
 
+/**
+ * UI-QA-008 remediation (Phase 1Q): the center nav pill has its own protected surface
+ * (`PILL_SURFACE`'s background/border/shadow/blur), but `DesktopNav`'s LEFT wordmark and RIGHT
+ * actions sit directly over scrolling page content with no surface behind them — during scroll,
+ * underlying section text can visually pass behind them. (The compact/mobile header does not
+ * have this problem: its wordmark and menu trigger already sit inside the same `PILL_SURFACE`
+ * wrapper as everything else, so this mask exists there only for visual consistency, not because
+ * it is strictly required.)
+ *
+ * This mask is a restrained top backdrop layer, not a navbar: a short vertical gradient
+ * (`--marketing-background`, the page's own existing token — fully opaque at the very top,
+ * smoothly fading to fully transparent by its own bottom edge) plus the same `backdrop-blur-sm`
+ * strength `PILL_SURFACE` already uses (not a new, stronger blur value). Height is derived from
+ * the accepted header's own occupied envelope plus a deliberate breathing margin — reusing the
+ * exact same figures Phase 1L's `scroll-mt-24`/`lg:scroll-mt-28` anchor-offset fix already
+ * established for the identical underlying concept ("header envelope + 24px margin"), rather than
+ * deriving a new pair of numbers: `h-24` = 96px (compact: 16px top offset + 56px height = 72px
+ * envelope + 24px), `lg:h-28` = 112px (desktop: 24px + 64px = 88px envelope + 24px).
+ *
+ * Layering: `position: fixed` (its own containing block is the true viewport, not this
+ * `<header>` — `<header>` has no `transform`/`filter`/`perspective` that would change that), so
+ * it starts at true `top: 0` regardless of the header's own `top-4`/`lg:top-6` offset. Rendered as
+ * the FIRST child inside this `<header>`, before `DesktopNav`/`MobileNav`: since neither the mask
+ * nor those two components carries its own `z-index`, all three participate in the SAME stacking
+ * context this `<header>`'s existing `z-40` already establishes, ordered by DOM/paint order — the
+ * mask (painted first) sits behind the nav content (painted after) with **no new z-index
+ * introduced anywhere**, the smallest deliberate layering change available. `aria-hidden` (purely
+ * decorative) and `pointer-events-none` (never intercepts clicks, never enters the tab order,
+ * never affects focus rings) — verified via rendered-HTML inspection that it carries no
+ * interactive semantics.
+ *
+ * Not implemented: a blur intensity that itself fades alongside the color gradient — `backdrop-
+ * filter` cannot easily express a smooth blur ramp with a single flat layer, and a second stacked
+ * layer was judged unnecessary complexity for a "short vertical depth only" mask; the blur is
+ * therefore flat across the mask's own height, matching the header's own pill (also a flat blur
+ * over a rectangular area), not a gradient blur. No JavaScript, no scroll listener, no
+ * shrink-on-scroll — pure CSS, per explicit instruction.
+ */
+function HeaderMask() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--marketing-background)] to-transparent backdrop-blur-sm lg:h-28"
+    />
+  );
+}
+
 export function PublicHeader() {
   return (
     <header className="fixed inset-x-0 top-4 z-40 lg:top-6">
+      <HeaderMask />
       <DesktopNav />
       <MobileNav />
     </header>

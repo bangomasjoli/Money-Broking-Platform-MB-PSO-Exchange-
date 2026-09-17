@@ -358,6 +358,26 @@ See
 VISUAL REVIEW STILL IN PROGRESS** — not re-declared "ready," pending the
 user's recheck of this specific fix.
 
+**UI Phase 1Q — Final Visual Remediation 02 (Fixed Header Scroll-Content
+Isolation): COMPLETE — `UI-QA-008` CLOSED PENDING VISUAL RECHECK.** The
+accepted `PublicHeader`'s center pill has its own protected surface, but
+the wordmark and actions flanking it (deliberately placed outside the
+pill since Phase 1B) had none — scrolling content could visually pass
+behind them. Fixed with a new `HeaderMask` inside `public-header.tsx`: a
+short gradient using the existing `--marketing-background` token plus
+the pill's own existing `backdrop-blur-sm` strength, height reusing
+Phase 1L's already-governed `scroll-mt-24`/`lg:scroll-mt-28` figures
+(96px compact / 112px desktop). **No new z-index anywhere** — the mask
+paints behind the header's interactive content purely by DOM order
+within the header's existing `z-40` context. `pointer-events-none` +
+`aria-hidden`; no interactive attributes. Every accepted header
+dimension (offsets, heights, pill geometry, radius, breakpoint) is
+unchanged — verified byte-identical. No JavaScript, no scroll listener,
+pure CSS. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.15 for the full mask architecture and stacking-order reasoning.
+**PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

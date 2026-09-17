@@ -53,6 +53,15 @@ import Link from "next/link";
  * page's own base `--marketing-background` (inherited, no override) with a `border-t
  * border-border` at its top edge — a plain divider is the actual closure mechanism here, not a
  * second surface color.
+ *
+ * DESKTOP LAYOUT (revised, UI Phase 1P / UI-QA-009 fix — see `UI-02` §28.14 for the full
+ * geometry): a two-zone `grid-cols-[1fr_auto]` layout at `lg:` (1024px+) — brand zone (`1fr`,
+ * absorbs the container's flexible remaining width) on the left, navigation zone (`auto`, sized
+ * to its own content) anchored toward the right. Phase 1O's own `flex`+`gap-16` fix (removing a
+ * dead `lg:justify-between`) resolved a ~681px empty-middle defect but introduced a left-heavy
+ * cluster instead — confirmed only by rendered visual review, not the earlier analytical-only QA
+ * pass — corrected here with a genuine two-zone grid rather than restoring `justify-between`
+ * (which had its own, different defect). Below `lg:`: unchanged single-column stack.
  */
 
 const PLATFORM_LINKS = [
@@ -96,17 +105,22 @@ export function PublicFooter() {
   return (
     <footer className="border-t border-border pt-12 pb-8">
       <div className={CONTAINER_CLASS}>
-        {/* UI Phase 1O (footer review): removed `lg:justify-between`. With only two flex
-            children far narrower than the 1184px container, `justify-between` pushed the brand
-            block to the row's left edge and the nav-groups block to its right edge regardless of
-            `lg:gap-16` — leaving that gap value dead (CSS-confirmed: justify-content:
-            space-between only lets `gap` act as a minimum, and these two items were nowhere
-            close to that minimum) and a ~681px empty span in the middle of the row (280px brand +
-            ~223px nav-groups content vs. 1184px container). Removing `justify-between` lets the
-            existing, already-governed `lg:gap-16` (64px) finally take effect, pulling the
-            nav-groups block to sit a deliberate 64px after the brand block instead of flush
-            against the container's far edge — see UI-02 §28.13 for the full arithmetic. */}
-        <div className="flex flex-col gap-8 lg:flex-row lg:gap-16">
+        {/* UI Phase 1P (UI-QA-009 fix): Phase 1O's own `lg:justify-between` removal (fixing a
+            real ~681px dead-middle gap) traded that defect for a different one — a plain
+            `lg:flex-row` with only two children far narrower than the container left the
+            navigation zone sitting immediately after the brand block (64px away), with all the
+            container's remaining width (~617px) trailing uselessly *after* the navigation zone
+            instead of separating the two zones — a left-heavy cluster, confirmed by rendered
+            visual review, that the earlier analytical-only QA pass did not catch. Fixed with a
+            genuine two-zone `grid-cols-[1fr_auto]` layout (this turn's own suggested concept):
+            the brand column takes all available flexible space (`1fr`) while the navigation
+            column sizes to its own content (`auto`) and is positioned immediately after the 1fr
+            track — which, because that track absorbs the container's full remaining width, places
+            the navigation zone at the container's right portion instead of directly beside the
+            brand block. `lg:items-start` is explicit (rather than relying on CSS Grid's own
+            default `align-items: stretch`) so neither zone is stretched to match the other's
+            height when switching layout modes. Full before/after geometry in `UI-02` §28.14. */}
+        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[1fr_auto] lg:items-start lg:gap-16">
           <div className="max-w-[280px]">
             <Link
               href="/"

@@ -1007,3 +1007,27 @@ unchanged, so no backend regression was required.
 code. **PUBLIC HOMEPAGE: READY FOR FINAL VISUAL REVIEW** — not a
 self-declared visual acceptance; no screenshot review was performed
 this turn.
+
+## 33. Phase 1P — Final Visual Remediation 01: Footer Desktop Horizontal Balance
+
+**UI-QA-009 (MEDIUM) — found during the user's own rendered final
+visual review, not by any prior analytical QA pass — CLOSED (pending
+the user's recheck).** Phase 1O's fix (removing a dead
+`lg:justify-between`) was correct on its own terms but left the footer's
+desktop content reading as left-heavy: brand and navigation clustered
+together with all remaining container width trailing after them. Fixed
+in `public-footer.tsx` by replacing the `flex`/`gap-16` row with a
+two-zone `grid-cols-[1fr_auto]` layout at `lg:` — the brand column
+absorbs the container's flexible remaining width, positioning the
+navigation column (sized to its own content) at the container's right
+portion instead of immediately beside the brand block. Full before/after
+geometry (nav-zone trailing clearance: ≈613px before → ≈0px after) is
+recorded in `UI-02` §28.14, not duplicated here. Brand content,
+navigation links (all 5 real same-page anchors, unchanged), legal
+copyright/boundary text, and both existing dividers are all unchanged —
+verified byte-identical against the rendered HTML. Tablet/mobile
+behavior (the `<lg:` base class) is untouched. No package, dependency,
+or shadcn component added; `platform/package-lock.json` unchanged, so
+no backend regression was required. `typecheck:web`/`lint:web`/
+`build:web` all re-run clean on the final code. **PUBLIC HOMEPAGE:
+FINAL VISUAL REVIEW STILL IN PROGRESS.**

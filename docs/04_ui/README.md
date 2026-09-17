@@ -338,6 +338,26 @@ BLOCKER, HIGH, and MEDIUM finding from the Phase 1J register is now
 CLOSED; this is not a self-declared visual acceptance — no screenshot
 review was performed this turn.
 
+**UI Phase 1P — Final Visual Remediation 01 (Footer Desktop Horizontal
+Balance): COMPLETE — `UI-QA-009` CLOSED, pending user recheck.** The
+user's own rendered final visual review found a real defect the prior
+analytical-only QA passes did not catch: Phase 1O's footer fix (removing
+a dead `lg:justify-between`) restored a functional gap but left the
+footer's desktop content reading as left-heavy — brand and navigation
+clustered together, with the container's remaining width (≈613px)
+trailing uselessly after them instead of separating two deliberate
+zones. Fixed with a genuine two-zone `grid-cols-[1fr_auto]` layout at
+`lg:` — the brand column absorbs the flexible remaining width, anchoring
+the navigation column at the container's right portion (≈0px trailing
+clearance, down from ≈613px). Brand content, all 5 real navigation
+links, the legal copyright/boundary text, and both existing dividers are
+unchanged — verified byte-identical. Tablet/mobile behavior untouched.
+See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.14 for the full before/after geometry. **PUBLIC HOMEPAGE: FINAL
+VISUAL REVIEW STILL IN PROGRESS** — not re-declared "ready," pending the
+user's recheck of this specific fix.
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

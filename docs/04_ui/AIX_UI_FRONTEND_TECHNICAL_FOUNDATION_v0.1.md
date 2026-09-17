@@ -987,7 +987,9 @@ independently re-validated or closed this turn.
 
 ## 32. Phase 1O — Low-Severity Polish / QA Closure
 
-**`UI-QA-005` and all 16 retained Phase 1E–1I polish flags adjudicated.**
+**`UI-QA-005` and all 17 retained Phase 1E–1I polish flags adjudicated
+(6 CLOSED, 3 CLOSED BY LATER CHANGE, 8 OPEN/ACCEPTED RISK — count
+corrected in UI Phase 1R; see `UI-02` §28.17).**
 Full per-flag decision table (CLOSED / CLOSED BY LATER CHANGE / OPEN /
 ACCEPTED RISK — none silently dropped) recorded in `UI-02` §28.13, not
 duplicated here. `UI-QA-005` (Trust & Control large-desktop balance)
@@ -1101,7 +1103,33 @@ component changed — verified via `git diff`.
 code. Full root-cause analysis and stacking-model reasoning recorded in
 `UI-02` §28.16, not duplicated here.
 
-**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK (second attempt)** —
-not self-declared visually confirmed; still awaiting rendered
-confirmation, since no screenshot tool is available this turn either.
+**UI-QA-008: VISUALLY CONFIRMED CLOSED (UI Phase 1R — second attempt
+passed).** The user's own rendered final visual review confirmed the
+AIX wordmark, center pill, "Client Login," and "Request Access" all
+render sharp, and scrolling content behind the fixed header is
+sufficiently softened with the floating-pill character preserved.
 **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
+## 36. Phase 1R — Final Public Homepage Visual Acceptance Closure (docs only)
+
+**PUBLIC HOMEPAGE: VISUALLY ACCEPTED / GOVERNED / CLOSED.** No frontend
+code changed this turn — a docs-only closure recording the user's own
+rendered final visual review of the complete homepage. `UI-QA-008`
+(header mask, second attempt) and `UI-QA-009` (footer desktop balance)
+are both **VISUALLY CONFIRMED CLOSED**, closing the loop the prior
+computed-evidence-only verification passes could not close on their
+own. Every formal finding `UI-QA-001`–`005` remains CLOSED;
+`UI-QA-006`/`007` remain INFORMATIONAL / ACCEPTED POSITIVE. The
+accepted-risk count is reconciled against the actual current `UI-02`
+§28.13 register at **8 OPEN / ACCEPTED RISKS** (the Phase 1O summary's
+"6" was an arithmetic error against the register's actual 17 rows — see
+`UI-02` §28.17 for the full corrected accounting and the retained-item
+list; nothing was removed). **Accepted implementation baseline:
+`42aa380`.** Final AIX font, palette, and brand asset/logo remain
+**PENDING DESIGN APPROVAL**; the authenticated Client/Staff-Ops/Admin
+portals, live API integration, Exchange functionality, full
+platform-module completeness, production readiness, and internet
+exposure are unaffected and separately governed. Backend/program state
+(module status, Turn M-B, `FND-FIND-001`, M1–M8, production exposure)
+is unchanged by this closure. Full record: `UI-02` §28.17. **Next UI
+phase: Authenticated Platform Design — not implemented this turn.**

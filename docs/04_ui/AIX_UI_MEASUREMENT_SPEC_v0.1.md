@@ -2124,7 +2124,7 @@ Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** 
 
 ### Homepage readiness (as of UI Phase 1O)
 
-**PUBLIC HOMEPAGE: READY FOR FINAL VISUAL REVIEW.** Every BLOCKER, HIGH, and MEDIUM finding from the Phase 1J consolidated register is now CLOSED (`UI-QA-001`/`002`/`003`/`004`, plus `UI-QA-005`). All 16 retained Phase 1E–1I polish flags have been adjudicated: 6 CLOSED by code change or re-verification this turn, 4 CLOSED BY LATER CHANGE (Phase 1N's rhythm remediation), 6 remain OPEN / ACCEPTED RISK — each with recorded evidence for why it is a real but acceptable characteristic, not a defect requiring further change before visual review. **This is not a self-declared visual acceptance** — no screenshot review was performed this turn either; the next activity is the final full-page visual acceptance review the user performs directly.
+**PUBLIC HOMEPAGE: READY FOR FINAL VISUAL REVIEW.** Every BLOCKER, HIGH, and MEDIUM finding from the Phase 1J consolidated register is now CLOSED (`UI-QA-001`/`002`/`003`/`004`, plus `UI-QA-005`). **Count corrected in UI Phase 1R** — the original figures above were arithmetically wrong (they summed to 16 but the table above contains 17 rows); the authoritative count, re-verified directly against the table above row by row, is: all 17 retained Phase 1E–1I polish flags have been adjudicated: 6 CLOSED (4 by re-verification, 2 by code change), 3 CLOSED BY LATER CHANGE (Phase 1N's rhythm remediation), 8 remain OPEN / ACCEPTED RISK — each with recorded evidence for why it is a real but acceptable characteristic, not a defect requiring further change before visual review. **This is not a self-declared visual acceptance** — no screenshot review was performed this turn either; the next activity is the final full-page visual acceptance review the user performs directly.
 
 **Update — UI Phase 1P:** the user's own rendered visual review that followed found a real defect the prior analytical-only QA passes did not catch — `UI-QA-009` (§28.14). This is exactly why "not a self-declared visual acceptance" mattered: an analytical pass, however precise the arithmetic, is not a substitute for rendered review. `UI-QA-009` is fixed this turn; **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS** — not re-declared "ready," pending the user's recheck of this specific fix.
 
@@ -2133,6 +2133,7 @@ Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** 
 ## UI Phase 1P — Final Visual Remediation 01 (§28.14)
 
 **UI-QA-009 — Public footer desktop horizontal balance**
+- **Status: VISUALLY CONFIRMED CLOSED (UI Phase 1R).** The user's own rendered final visual review confirmed the two-zone layout reads correctly — see §28.17 for the final acceptance record.
 - **Severity:** MEDIUM
 - **Discovered:** UI Phase 1P, during the user's own rendered final visual review — **not** caught by any prior analytical-only QA pass (Phases 1J or 1O), which computed the correct box-model numbers but did not (and, per this project's own repeated "requires rendered confirmation" caveats, could not) predict how the resulting composition would actually *read* visually.
 - **Viewport(s):** desktop (`lg:`, 1024px+) — mobile/tablet were already single-column and unaffected.
@@ -2160,14 +2161,14 @@ Circular-marker usage drops from **3 of 4** icon-bearing sections to **1 of 4** 
 - **Accessibility:** unchanged — `<footer>`, `<nav aria-label="Footer">`, every real link, and the DOM order are all untouched; only the CSS layout mechanism (`flex`→`grid` at `lg:` only) changed, which does not affect the accessibility tree or reading order.
 - **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
-**UI-QA-009: CLOSED — pending the user's own visual recheck.** All five closure conditions are met by computed evidence: (1) brand and navigation now form two deliberate desktop zones (`1fr`/`auto` grid, not a single flex row); (2) navigation is genuinely anchored right (≈0px trailing clearance, calculated); (3) no artificial middle distribution was reintroduced (`justify-between` was not restored; the separating space comes from the brand zone's own flexible track, not a forced `space-between`); (4) mobile/tablet ordering is unchanged (verified via diff); (5) the legal row is unchanged (verified byte-identical). **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS** — not self-declared visually accepted; this fix, like every fix in this project, awaits the user's own rendered confirmation.
+**UI-QA-009: VISUALLY CONFIRMED CLOSED (UI Phase 1R).** All five closure conditions are met by computed evidence: (1) brand and navigation now form two deliberate desktop zones (`1fr`/`auto` grid, not a single flex row); (2) navigation is genuinely anchored right (≈0px trailing clearance, calculated); (3) no artificial middle distribution was reintroduced (`justify-between` was not restored; the separating space comes from the brand zone's own flexible track, not a forced `space-between`); (4) mobile/tablet ordering is unchanged (verified via diff); (5) the legal row is unchanged (verified byte-identical) — **and the user's own rendered final visual review has now confirmed the two-zone composition reads correctly, closing the loop the computed evidence alone could not.**
 
 ---
 
 ## UI Phase 1Q — Final Visual Remediation 02 (§28.15)
 
 **UI-QA-008 — Fixed header scroll-content interference**
-- **Status: Phase 1Q's first fix (below) FAILED rendered visual verification — reopened OPEN / REMEDIATION REQUIRED, then corrected in Remediation 01 (§28.16). Currently: CLOSED PENDING USER VISUAL RECHECK, second attempt — not yet visually confirmed.** The chronology below is preserved in full, including the failed first attempt — not rewritten or hidden.
+- **Status: VISUALLY CONFIRMED CLOSED (UI Phase 1R).** Phase 1Q's first fix (below) FAILED rendered visual verification — reopened OPEN / REMEDIATION REQUIRED, corrected in Remediation 01 (§28.16), then **confirmed by the user's own rendered final visual review**: AIX wordmark sharp, center pill sharp, "Client Login" sharp, "Request Access" sharp, scrolling content behind the fixed header sufficiently softened, floating-pill character preserved — see §28.17 for the final acceptance record. The full chronology below is preserved, including the failed first attempt — not rewritten or hidden.
 - **Severity:** MEDIUM
 - **Discovered:** UI Phase 1Q, during the user's own rendered final visual review — the accepted `PublicHeader` (Phase 1B, VISUALLY ACCEPTED) was never previously reviewed for this specific interaction with scrolling page content, since visual acceptance was granted against the header viewed largely in isolation, before the full homepage's own scrollable content existed.
 - **Viewport(s):** primarily desktop (`lg:`, 1024px+, where `DesktopNav`'s wordmark and actions sit outside the pill's own protected surface); the compact/mobile header was not actually defective (its wordmark and menu trigger already share the same `PILL_SURFACE` wrapper as everything else) but received the same mask for consistency, per this turn's own instruction.
@@ -2231,4 +2232,72 @@ With every relevant element now explicitly positioned and explicitly z-indexed, 
 
 **Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
 
-**UI-QA-008: CLOSED PENDING USER VISUAL RECHECK (second attempt).** Not self-declared visually confirmed — the same discipline that caught the first attempt's failure applies here: this remediation is verified by CSS-specification-level root-cause analysis and compiled-CSS/rendered-HTML inspection, not by an actual screenshot (still unavailable this turn). **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+**UI-QA-008: VISUALLY CONFIRMED CLOSED (UI Phase 1R — second attempt passed).** The user's own rendered final visual review confirmed all five closure conditions hold in practice, not merely by computed evidence: (1) the AIX wordmark renders sharp; (2) the center floating pill renders sharp; (3) "Client Login" renders sharp; (4) "Request Access" renders sharp; (5) scrolling content behind the fixed header is sufficiently softened, and the floating-pill character is preserved. See §28.17 for the final homepage acceptance record.
+
+### 28.17 UI Phase 1R — Final Public Homepage Visual Acceptance Record
+
+**PUBLIC HOMEPAGE: VISUALLY ACCEPTED.** The user's own rendered final visual review of the complete homepage — `PublicHeader`, `PublicHero`, `PublicOperatingModel`, `PublicTrustControl`, `PublicCapabilities`, `PublicProductPreview`, `PublicFinalCta`, `PublicFooter` — is now complete, closing the loop every prior phase's computed-evidence-only verification could not close on its own. No further public-homepage structural section is required before closure.
+
+**Accepted implementation baseline: `42aa380`.** This commit is the accepted state of `platform/apps/web/components/site/*` for the public homepage. It includes, in order:
+
+- Phase 1B — Floating-Pill Public Navigation (`PublicHeader`), remediated at `47c0f1a` (full-desktop/compact-mobile switch moved to `lg:`/1024px).
+- Phase 1C — Public Landing Hero (`PublicHero`), remediated at `ddc33a4` (`whitespace-nowrap` on "digital-asset"; preview-panel left-edge alignment fix).
+- Phase 1D — Public Operating Model Section (`PublicOperatingModel`, `ac9bbc6`).
+- Phase 1E — Public Trust, Governance & Control Section (`PublicTrustControl`, `06694f6`).
+- Phase 1F — Public Platform Capabilities Section (`PublicCapabilities`, `cdb27d1`).
+- Phase 1G — Public Product Experience / Platform Preview (`PublicProductPreview`, `faebd94`).
+- Phase 1H — Public Final CTA / Request Access Section (`PublicFinalCta`, `7c21f7c`).
+- Phase 1I — Public Footer (`PublicFooter`, `3bcbe8b`).
+- Phase 1J — Consolidated Public Homepage Visual QA (`36d09fc`, docs-only defect register — `UI-QA-001`–`UI-QA-007`).
+- Phase 1K — Remediation B, `UI-QA-002` (BLOCKER) CLOSED (`c02a472`).
+- Phase 1L — Remediation A, `UI-QA-001` (HIGH) CLOSED (`c0640f9`).
+- Phase 1M — Remediation C, `UI-QA-004` CLOSED (`2cfd30b`).
+- Phase 1N — Remediation D, `UI-QA-003` CLOSED (`2715adb`).
+- Phase 1O — Low-Severity Polish / QA Closure, `UI-QA-005` CLOSED, 17 retained flags adjudicated (`6bbacea`).
+- Phase 1P — Final Visual Remediation 01, `UI-QA-009` (footer desktop balance) fixed (`7291a74`).
+- Phase 1Q — Final Visual Remediation 02, `UI-QA-008` (header mask) first attempt (`64088de`) — **failed rendered visual recheck.**
+- Phase 1Q Remediation 01 — header mask stacking correction (`42aa380`) — **passed rendered visual recheck.**
+
+**Final formal QA finding status:**
+
+| Finding | Severity | Status |
+|---|---|---|
+| `UI-QA-001` | HIGH | CLOSED |
+| `UI-QA-002` | BLOCKER | CLOSED |
+| `UI-QA-003` | MEDIUM | CLOSED |
+| `UI-QA-004` | MEDIUM | CLOSED |
+| `UI-QA-005` | LOW | CLOSED |
+| `UI-QA-006` | INFORMATIONAL | INFORMATIONAL / ACCEPTED POSITIVE |
+| `UI-QA-007` | INFORMATIONAL | INFORMATIONAL / ACCEPTED POSITIVE |
+| `UI-QA-008` | MEDIUM | VISUALLY CONFIRMED CLOSED |
+| `UI-QA-009` | MEDIUM | VISUALLY CONFIRMED CLOSED |
+
+**Accepted-risk count, reconciled against the actual current §28.13 register (not the erroneous prior summary):** **8 OPEN / ACCEPTED RISKS.** None removed, none silently dropped — this is the same 8-item set §28.13 has always carried; only the surrounding summary arithmetic (which previously mis-totaled 16 flags/6 accepted risks instead of the actual 17 flags/8 accepted risks) was wrong and is now corrected at §28.13's own closing paragraph. The 8 retained items:
+
+1. Mobile capability-list density/scroll length — Capabilities (1F).
+2. Matrix quadrant height imbalance — Capabilities (1F).
+3. Sidebar/content proportion at ≥1280px — Product Preview (1G).
+4. Demo-disclosure prominence — Product Preview (1G).
+5. Neutral status hierarchy (no color) — Product Preview (1G) — explicitly correct as-is per `UI-QA-006`.
+6. Regulatory-note visibility — Final CTA (1H).
+7. Footer navigation density on mobile — Footer (1I).
+8. CTA-to-footer cumulative spacing — Footer (1I).
+
+**What this acceptance does NOT cover — these remain separate, controlled matters, not implied or advanced by this closure:**
+- Final AIX brand asset/logo — **PENDING DESIGN APPROVAL.**
+- Final AIX font — **PENDING DESIGN APPROVAL.**
+- Final AIX color palette — **PENDING DESIGN APPROVAL.**
+- The authenticated Client Portal.
+- The Staff/Ops portal.
+- The Admin/Compliance portal.
+- Live API integration.
+- Exchange functionality (remains controlled/disabled per the existing boundary note).
+- All platform modules being complete.
+- Production readiness.
+- Internet exposure.
+
+The temporary typographic "AIX" wordmark remains approved only for the current public homepage implementation, not as a final brand decision.
+
+**Backend/program state — unchanged by this turn, preserved exactly:** module status is not changed by this closure; Turn M-B remains paused unless a separately governed document says otherwise; `FND-FIND-001` remains HIGH/OPEN unless separately closed by later governed work; M1–M8 remain governed separately; production public exposure remains governed separately. Public-homepage visual acceptance is a UI-governance closure only — it is not conflated with, and does not advance, backend readiness or go-live acceptance.
+
+**Next UI phase: Authenticated Platform Design.** Not implemented, not started, not scoped in this turn — this record only closes the public marketing homepage.

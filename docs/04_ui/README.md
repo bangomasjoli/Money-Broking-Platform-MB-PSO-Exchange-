@@ -319,15 +319,18 @@ are unaffected — **the homepage remains not visually accepted.**
 `UI-QA-005` (Trust & Control large-desktop balance) closed with **no
 code change** — re-verification found the left/right columns' actual
 used width (480px vs. 476px at 1280px/1440px) to be a conclusive
-near-exact match. All 16 retained Phase 1E–1I polish flags were
+near-exact match. All 17 retained Phase 1E–1I polish flags were
 individually re-verified against the current code: 6 CLOSED (2 by a
 small, evidence-backed code change — a quiet top divider on
 Capabilities' Exchange-boundary note, and a dead `lg:justify-between`
 removed from the footer so its own existing `lg:gap-16` takes effect —
-4 by re-verification finding no actual defect), 4 CLOSED BY LATER
-CHANGE (resolved as a side effect of Phase 1N's rhythm remediation), 6
+4 by re-verification finding no actual defect), 3 CLOSED BY LATER
+CHANGE (resolved as a side effect of Phase 1N's rhythm remediation), 8
 remain OPEN / ACCEPTED RISK with recorded reasoning for each (real,
-calculated characteristics judged acceptable, not defects). No
+calculated characteristics judged acceptable, not defects). **Count
+corrected in UI Phase 1R** — the figures originally recorded here
+summed to 16, but the §28.13 table actually contains 17 rows; the
+count above is re-verified row-by-row against that table. No
 regulatory or product-boundary wording was changed anywhere — every
 note's exact meaning is preserved, verified byte-identical against the
 rendered HTML. See
@@ -405,6 +408,33 @@ homepage component changed. See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
 §28.16 for the full root-cause analysis and stacking-model reasoning.
 **PUBLIC HOMEPAGE: FINAL VISUAL REVIEW STILL IN PROGRESS.**
+
+**UI Phase 1R — Final Public Homepage Visual Acceptance Closure: COMPLETE
+(docs only, no frontend code changed).** `PUBLIC HOMEPAGE: VISUALLY
+ACCEPTED / GOVERNED / CLOSED.` The user's own rendered final visual
+review confirmed `UI-QA-008` (header mask, second attempt) and
+`UI-QA-009` (footer desktop balance) both hold in practice — both now
+**VISUALLY CONFIRMED CLOSED**, closing the loop computed evidence alone
+could not close. Every BLOCKER/HIGH/MEDIUM/LOW formal finding
+(`UI-QA-001`–`005`) is CLOSED; `UI-QA-006`/`007` remain INFORMATIONAL /
+ACCEPTED POSITIVE. The accepted-risk count is reconciled against the
+actual current `UI-02` §28.13 register: **8 OPEN / ACCEPTED RISKS** (not
+6 — the prior summary's arithmetic was wrong; see the correction above
+and `UI-02` §28.13/§28.17). **Accepted implementation baseline: `42aa380`**
+— every component listed above (`PublicHeader` through `PublicFooter`)
+plus every remediation through Phase 1Q Remediation 01. No further
+public-homepage structural section is required before closure. **Not
+accepted by this closure:** final AIX font, final AIX palette, final AIX
+brand asset/logo (all **PENDING DESIGN APPROVAL**), the authenticated
+Client Portal, Staff/Ops portal, Admin/Compliance portal, live API
+integration, Exchange functionality, full platform-module completeness,
+production readiness, or internet exposure — all remain separate,
+separately-governed matters. Backend/program state (module status, Turn
+M-B, `FND-FIND-001`, M1–M8, production exposure) is unchanged by this
+UI-governance closure. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.17 for the full final acceptance record. **The next UI phase is
+Authenticated Platform Design — not implemented in this turn.**
 
 ## Contents
 

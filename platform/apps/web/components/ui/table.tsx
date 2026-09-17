@@ -5,9 +5,20 @@ import { cn } from "cn"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
+    // UI-QA-002 remediation (Phase 1K): this container is where the table's own overflow-x-auto
+    // scrolling lives. A scrollable region with no way to receive keyboard focus cannot be
+    // scrolled via arrow keys by a keyboard-only user — there is no touch/mouse-drag equivalent
+    // available to them. `tabIndex={0}` + `role="region"` + `aria-label` (the WAI-ARIA APG's own
+    // recommended pattern for a scrollable table wrapper) make the region reachable and
+    // identifiable; the visible focus-visible ring mirrors Button's own focus treatment
+    // (`focus-visible:ring-3 focus-visible:ring-ring/50`) for site-wide consistency. Applied here,
+    // not page-specific, so every current and future use of this shared primitive benefits.
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      role="region"
+      aria-label="Scrollable table"
+      tabIndex={0}
+      className="relative w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <table
         data-slot="table"

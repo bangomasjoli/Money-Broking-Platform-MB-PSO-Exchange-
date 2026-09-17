@@ -1819,6 +1819,7 @@ requested for this section or for the homepage as a whole.
 - **User visual confirmation required:** not strictly required to *identify* this defect (the math is exact and reproducible), but recommended to confirm the fix's chosen headroom feels right once applied.
 
 **UI-QA-002 — `PublicProductPreview`'s destination table overflows its column at 1024px and at mobile widths, and its overflow container is not keyboard-reachable**
+- **Status: CLOSED (UI Phase 1K — see §28.9 for the full remediation record and commit hash).** Both the responsive-overflow defect and the keyboard-accessibility defect are resolved; the finding below is preserved verbatim as the original evidence.
 - **Severity:** BLOCKER (per this turn's own severity rubric: "overflow" and "inaccessible content" are both named BLOCKER criteria, and this finding is precisely both at once)
 - **Viewport(s):** 1024×768 (and by the same math, the entire 1024–~1100px range the existing Phase 1G flag already named), and every width below `lg:` (768×1024, 430×932, 390×844) where the table is full-width instead of half-width
 - **Component/section:** `PublicProductPreview`'s `DestinationTable` inside `PreviewShell`
@@ -1892,7 +1893,7 @@ Every flag below was re-checked against the current code (confirmed still presen
 - **Phase 1D** (`UI-02` §22): desktop six-column process fit around 1024–1100px — **see UI-QA-004 above for refined precision on this same flag.**
 - **Phase 1E** (`UI-02` §23): mobile control-stack density; large-desktop two-column width balance — **see UI-QA-005 above for a partial-downgrade candidate on the second of these two.**
 - **Phase 1F** (`UI-02` §24): mobile capability-list density/scroll length; matrix quadrant height imbalance; Exchange-boundary note prominence.
-- **Phase 1G** (`UI-02` §25): destination-table fit at 1024px and on mobile — **superseded by UI-QA-002's confirmed, precisely-measured version above**; sidebar/content proportion; demo-disclosure prominence; status-badge color-neutral hierarchy — **see UI-QA-006 above for an accessibility-positive counterpoint on this one.**
+- **Phase 1G** (`UI-02` §25): destination-table fit at 1024px and on mobile — **superseded by UI-QA-002, CLOSED in UI Phase 1K (§28.9).** Sidebar/content proportion — **substantially addressed as a side effect of UI-QA-002's fix (the sidebar breakpoint move to `xl:`); see §28.9 for why this is not marked separately CLOSED without visual confirmation.** Demo-disclosure prominence; status-badge color-neutral hierarchy — **see UI-QA-006 above for an accessibility-positive counterpoint on this one.** Both remain OPEN.
 - **Phase 1H** (`UI-02` §26): closing-section surface prominence vs. the hero; actions-column alignment at tablet width; regulatory-note visibility; cumulative vertical whitespace against `PublicProductPreview` — **quantified precisely in §28.4 above (144/176/208px).**
 - **Phase 1I** (`UI-02` §27): footer navigation density on mobile; footer surface-boundary contrast; CTA-to-footer cumulative spacing — **quantified precisely in §28.4 above (128/144/160px)**; legal/boundary-text prominence; desktop column balance.
 
@@ -1901,10 +1902,50 @@ All carried-forward flags remain **status: OPEN**.
 ### 28.8 Recommended remediation grouping
 
 - **Remediation A — Anchor scroll-offset compensation.** UI-QA-001 only. Single root-cause CSS fix (scroll-margin-top on the 5 anchor targets), low risk, no visual redesign.
-- **Remediation B — Product Preview responsive/table restructuring (BLOCKER).** UI-QA-002, plus the still-open Phase 1G sidebar/content-proportion and status-badge-hierarchy flags (same component, same review pass) — informed by UI-QA-006's accessibility counterpoint.
+- **Remediation B — Product Preview responsive/table restructuring (BLOCKER).** UI-QA-002 — **CLOSED in UI Phase 1K, see §28.9.** The still-open Phase 1G demo-disclosure-prominence and status-badge-hierarchy flags remain for a future pass (informed by UI-QA-006's accessibility counterpoint); sidebar/content proportion is likely improved as a side effect but not independently re-verified.
 - **Remediation C — Operating Model desktop density.** UI-QA-004 (refined Phase 1D flag) — a breakpoint/layout decision specific to this one component.
 - **Remediation D — Global rhythm & repetition.** UI-QA-003, the Phase 1H cumulative-whitespace flag, and the Phase 1I CTA-to-footer-spacing flag — all genuinely the same root category (section-boundary spacing and pattern variety), reviewed together rather than as isolated per-section tweaks.
 - **Remediation E — Trust & Control / Capabilities polish.** UI-QA-005 (re-verify before touching), Phase 1F's matrix quadrant imbalance and Exchange-boundary-note prominence.
 - **Remediation F — Final CTA / Footer closure polish.** The remaining Phase 1H flags (closing-section prominence, tablet action alignment, regulatory-note visibility) and Phase 1I flags (footer surface-boundary contrast, legal-text prominence, desktop column balance).
 
 **No remediation was performed in this turn.** This section is a defect register only, per explicit instruction.
+
+### 28.9 UI Phase 1K — Remediation B (UI-QA-002 closure record)
+
+**Root cause:** the sidebar (`ContextRail`, `w-[200px]`) and the table+detail side-by-side split both activated at the identical `lg:` (1024px) breakpoint, so at exactly 1024px all three (200px sidebar, table, 280px detail panel) competed for the same 928px of available width at once — the table's own minimum unwrapped content (≈504px) could not fit in the ≈376px that remained after the sidebar and detail panel took their share.
+
+**Fix — cascading responsive restructuring (per this turn's required strategy: hide sidebar first, then allow table+detail side by side if that fits, only falling back to accessible scroll where content genuinely cannot fit):**
+
+- `ContextRail`'s wrapper: `hidden w-[200px] shrink-0 border-r border-border p-4 lg:block` → `hidden w-[200px] shrink-0 border-r border-border p-4 xl:block` (Tailwind's default `xl:` = `@media (min-width: 80rem)` = exactly 1280px, confirmed in the compiled CSS — no custom breakpoint config exists in this project).
+- `PreviewShell`'s sidebar+content outer row: `flex flex-col lg:flex-row` → `flex flex-col xl:flex-row` (kept in step with the sidebar's own new breakpoint).
+- The table+detail-panel inner row's own breakpoint (`lg:flex-row`, `lg:w-[280px]` on the detail panel) was **deliberately left unchanged** — proven below to fit cleanly once the sidebar is out of the way, satisfying the "if that fits cleanly" branch of the required strategy without needing to fall back to stacking.
+- `components/ui/table.tsx`'s `Table` container: added `role="region"`, `aria-label="Scrollable table"`, `tabIndex={0}`, and `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50` (mirroring `Button`'s own existing focus-visible treatment for site-wide consistency) — the WAI-ARIA APG's own recommended pattern for a scrollable-table wrapper. Applied to the **shared** primitive (not a page-specific wrapper), so every current and future use of `Table` benefits, not only this one page.
+
+**Width arithmetic proving the ~128px 1024px shortfall is resolved** (all values re-derived from the actual current compiled CSS, same estimation methodology as the original UI-QA-002 finding, so the comparison is apples-to-apples — the table's own minimum unwrapped content width, ≈504px, is unchanged, since no font size, padding, or truncation was altered, per explicit instruction):
+
+| Viewport | Sidebar | Available table width | vs. ≈504px minimum |
+|---|---|---|---|
+| 1024px (constrained desktop, sidebar hidden) | none | 1024 − 96 (gutter) = 928 → 928 − 48 (`p-6`) = 880 for table+detail → 880 − 280 (detail) − 24 (gap) = **576px** | **+72px margin** |
+| 1280px (`xl:`, sidebar visible) | 200px | container capped at 1120 (shell max-width) − 200 (sidebar) = 920 → 920 − 48 (`p-6`) = 872 for table+detail → 872 − 280 − 24 = **568px** | **+64px margin** |
+| 1279px (just below `xl:`, sidebar hidden) | none | container capped at 1120 − 48 = 1072 for table+detail → 1072 − 280 − 24 = **768px** | **+264px margin** |
+| 768px (tablet, stacked — table gets full width) | none | 768 − 64 (`md:` gutter) = 704 → 704 − 48 = **656px** | **+152px margin** |
+| 584px (calculated crossover point, 16px gutter, stacked) | none | 584 − 32 − 48 = **504px** | **0px — exact threshold** |
+| 430px / 390px (tested mobile viewports) | none | ≈398/358 − 32 − 48 = **≈318/278px** | **shortfall remains — genuine, unavoidable given content length** |
+
+**Conclusion:** the specific defect UI-QA-002 named — the 1024–1100px range — is fully resolved with a real, positive margin (+72px at the tightest point in that range, 1024px itself). **Below ≈584px (i.e., the tested 430px/390px viewports and phones generally in that range), horizontal scroll remains genuinely unavoidable** — the table's own content is simply wider than those viewports can show unwrapped, regardless of layout, confirming this turn's own instruction ("If horizontal scrolling remains genuinely necessary at narrower widths: the scroll region must be keyboard-accessible") was the correct fallback to apply there, not a failure to eliminate all overflow everywhere.
+
+**Full breakpoint behavior (7-viewport matrix):**
+- **1440×900 / 1280×800:** full shell — sidebar (200px) + table + detail panel (280px), all side by side (both ≥`xl:`/1280px).
+- **1024×768:** sidebar hidden; table + detail panel side by side, **576px available for the table (verified above, no overflow).**
+- **834×1194 / 768×1024:** sidebar hidden (below `lg:`); detail panel stacks below the table (below `lg:flex-row`'s own threshold); table gets full content-column width, **656px+ available (no overflow).**
+- **430×932 / 390×844:** sidebar hidden; detail panel stacked; table's own overflow-x-auto activates (content genuinely exceeds available width) — **now keyboard-reachable** via the container's `tabIndex={0}`/`role="region"`/visible focus ring.
+
+**Accessibility fix:** `tabIndex={0}` + `role="region"` + `aria-label="Scrollable table"` + a visible `focus-visible` ring (matching `Button`'s existing treatment) on `components/ui/table.tsx`'s scroll container — a keyboard user can now `Tab` to the region and use arrow keys to reveal the `Network`/`Status` columns whenever they are genuinely off-screen. **Trade-off, recorded rather than silently accepted:** the container is always focusable, even at widths where nothing actually overflows (e.g. 1024px+, per the table above) — a widely-accepted pattern in production use, since detecting *actual* overflow at runtime would require `ResizeObserver`-based measurement, which was judged unnecessary complexity for this turn's scope.
+
+**Demo data preservation:** all three destination rows (USDT Treasury Wallet/TRC-20/Active; BTC Settlement Wallet/Bitcoin/Pending Approval; Institutional Payout Destination/Bank Transfer/Evidence Required) and the selected detail panel's content (BTC Settlement Wallet, Bitcoin, masked address, Cooling-Off Complete, Pending Checker Review) are byte-identical to before this remediation — verified against the rendered HTML. No font size, padding, or truncation was altered anywhere, per explicit instruction — the fix works entirely by increasing available width, never by shrinking content.
+
+**Status colors:** unchanged — `Badge` `variant="outline"` remains uniform across all three statuses; no color semantics introduced this turn.
+
+**Quality gates:** `typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.
+
+**UI-QA-002: CLOSED.** Both required conditions are met: (1) the responsive-overflow defect at the named 1024–1100px range is resolved with a positive, calculated margin; (2) the keyboard-accessibility defect is resolved for every width, including the (narrower than originally scoped, now precisely bounded) range where overflow genuinely remains unavoidable.

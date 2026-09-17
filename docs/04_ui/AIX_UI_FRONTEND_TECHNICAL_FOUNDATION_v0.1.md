@@ -896,3 +896,20 @@ including 1 BLOCKER and 1 HIGH), all 19 previously-recorded Phase
 evidence for every claim, and the recommended remediation grouping — is
 recorded in `UI-02` §28, not duplicated here. **VISUAL QA:
 REMEDIATION REQUIRED. The homepage is not visually accepted.**
+
+## 28. Phase 1K — Remediation B: Product Preview Responsive / Table Accessibility
+
+**UI-QA-002 (BLOCKER) CLOSED.** `platform/apps/web/components/site/public-product-preview.tsx`:
+`ContextRail`'s wrapper and `PreviewShell`'s sidebar+content outer row moved from `lg:` (1024px)
+to `xl:` (1280px), so the sidebar no longer competes with the table+detail-panel split at the
+exact width the original defect named. `platform/apps/web/components/ui/table.tsx` (a **shared**
+primitive): its scroll container gained `role="region"`, `aria-label="Scrollable table"`,
+`tabIndex={0}`, and a `focus-visible` ring matching `Button`'s own — every current and future use
+of `Table` benefits, not only this page. Full width arithmetic (proving the named 1024–1100px
+shortfall is resolved with a positive margin, and precisely bounding the narrower range — below
+≈584px — where scroll genuinely remains unavoidable) is recorded in `UI-02` §28.9, not duplicated
+here. No package, dependency, or shadcn component added; `platform/package-lock.json` unchanged,
+so no backend regression was required. Demo data, status-badge treatment, section copy, shell
+radius, top-bar height, and overall section spacing are all unchanged — verified against the
+rendered HTML, byte-identical to before this remediation.
+`typecheck:web`/`lint:web`/`build:web` all re-run clean on the final code.

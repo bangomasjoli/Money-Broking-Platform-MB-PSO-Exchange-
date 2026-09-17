@@ -244,6 +244,23 @@ measured evidence for every finding, and the recommended remediation
 grouping (6 groups, by root cause/component, none bundled merely to
 reduce turn count). **The homepage is not visually accepted.**
 
+**UI Phase 1K — Remediation B (Product Preview Responsive / Table
+Accessibility): COMPLETE — `UI-QA-002` (the sole BLOCKER) CLOSED.**
+`PublicProductPreview`'s sidebar breakpoint moved from `lg:` (1024px)
+to `xl:` (1280px), so the sidebar no longer competes with the table at
+the exact width the defect named — proven with a positive margin
+(+72px at 1024px itself). The shared `Table` primitive
+(`components/ui/table.tsx`) gained `tabIndex={0}`/`role="region"`/a
+visible focus ring so its scroll region — now precisely bounded to
+viewports below ≈584px, where the table's own content genuinely cannot
+fit regardless of layout — is keyboard-reachable. No demo data, status
+treatment, section spacing, or other section was changed. See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md)
+§28.9 for the full closure record and width arithmetic. The remaining
+18 flags in the §28 register (1 HIGH, the rest MEDIUM/LOW/
+INFORMATIONAL) are unaffected — **the homepage remains not visually
+accepted.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

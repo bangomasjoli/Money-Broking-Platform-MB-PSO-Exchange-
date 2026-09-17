@@ -59,10 +59,22 @@ import {
  * SHELL STRUCTURE: top bar (full width) above a two-part body — a compact, non-interactive
  * context rail (plain text, not real `<nav>`/`<button>` elements, since none of it is
  * functional — avoiding any misleading clickable affordance) and the main content (the
- * destination table plus one selected destination's detail panel). Desktop (`lg:`, 1024px+):
- * context rail visible, table and detail panel side by side. Below `lg:`: context rail hidden
- * (de-emphasizing secondary navigation, per this turn's suggested mobile strategy) and the
- * detail panel stacks below the table rather than beside it.
+ * destination table plus one selected destination's detail panel).
+ *
+ * RESPONSIVE STRUCTURE (revised, UI Phase 1K / UI-QA-002 remediation — see UI-02 §28.9 for the
+ * full arithmetic proving each tier below): large desktop (`xl:`, 1280px+): context rail (200px)
+ * + table + detail panel (280px) all visible side by side. Constrained desktop (`lg:` to <`xl:`,
+ * 1024-1279px): context rail hidden first — table and detail panel remain side by side, which
+ * fits cleanly once the sidebar's 200px is freed (verified: ~576px available for the table
+ * against its own ~504px minimum unwrapped content width, a real margin, not merely "close").
+ * Tablet (768-1023px) and most mobile (584-767px): context rail hidden, detail panel stacks
+ * below the table (both comfortably fit the table's own minimum width with no scrolling). Narrow
+ * mobile (<584px, e.g. this turn's tested 430px/390px viewports): the table's own minimum
+ * unwrapped content genuinely exceeds the available column width regardless of layout (removing
+ * the sidebar and stacking the detail panel cannot manufacture width the viewport doesn't have) —
+ * `components/ui/table.tsx`'s own `overflow-x-auto` container now carries `tabIndex={0}` +
+ * `role="region"` + a visible focus ring (see that file) so this genuinely-unavoidable scroll
+ * region remains keyboard-reachable, rather than being silently inaccessible.
  */
 
 const CONTAINER_CLASS = "mx-auto max-w-[1280px] px-4 md:px-8 lg:px-12";
@@ -101,7 +113,13 @@ const SELECTED_DESTINATION_DETAIL = {
 
 function ContextRail() {
   return (
-    <div className="hidden w-[200px] shrink-0 border-r border-border p-4 lg:block">
+    // UI-QA-002 remediation (Phase 1K): moved from `lg:block` to `xl:block` — at exactly 1024px
+    // the sidebar + table + detail panel together left only ~376px for a 3-column table whose
+    // minimum unwrapped content is ~504px (a precisely measured ~128px shortfall, recorded in
+    // UI-02 §28's defect register). Hiding the sidebar first between 1024-1279px (per this
+    // remediation's required cascading strategy) leaves ~576px for the table at 1024px — see the
+    // full arithmetic in UI-02 §28.9.
+    <div className="hidden w-[200px] shrink-0 border-r border-border p-4 xl:block">
       <ul className="space-y-1">
         {CONTEXT_RAIL_ITEMS.map((item) => (
           <li key={item.label}>
@@ -187,9 +205,16 @@ function PreviewShell() {
         <Badge variant="outline">Demo</Badge>
       </div>
 
-      <div className="flex flex-col lg:flex-row">
+      {/* UI-QA-002 remediation (Phase 1K): outer row breakpoint moved to xl: alongside
+          ContextRail's own — below xl: only the content column renders, so flex-direction here
+          is moot until xl:, but keeping both at the same breakpoint keeps the code's own
+          breakpoint story coherent. */}
+      <div className="flex flex-col xl:flex-row">
         <ContextRail />
 
+        {/* Table+detail row breakpoint stays at lg: (1024px), unchanged — proven to fit without
+            the sidebar present: at 1024px this leaves ~576px for the table, above its ~504px
+            minimum unwrapped content width. See UI-02 §28.9 for the full arithmetic. */}
         <div className="min-w-0 flex-1 p-6">
           <div className="flex flex-col gap-6 lg:flex-row">
             <DestinationTable />

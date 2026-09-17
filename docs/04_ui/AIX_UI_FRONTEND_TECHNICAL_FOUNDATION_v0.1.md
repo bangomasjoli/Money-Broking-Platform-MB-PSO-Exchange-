@@ -878,3 +878,21 @@ an already-established recurring pattern), and desktop column balance.
 Phase 1D's through 1H's still-open flags were **not** touched or
 resolved this turn, per explicit instruction. **VISUAL QA:
 DEFERRED.**
+
+## 27. Phase 1J — Consolidated Public Homepage Visual QA
+
+**REVIEW ONLY — no code, markup, CSS, package, or lockfile change was
+made in this turn.** A full-homepage QA pass (`PublicHeader` through
+`PublicFooter`) was performed via source inspection, rendered-HTML
+inspection of the running dev server, and byte-level compiled-CSS
+inspection — the same verification discipline every implementation turn
+in this document has used, applied here to review rather than to build.
+No screenshot/browser-automation tool was available, and none was
+installed solely for this turn.
+
+The full defect register — 7 new findings (`UI-QA-001`–`UI-QA-007`,
+including 1 BLOCKER and 1 HIGH), all 19 previously-recorded Phase
+1D–1I flags carried forward verified and unresolved, exact measured
+evidence for every claim, and the recommended remediation grouping — is
+recorded in `UI-02` §28, not duplicated here. **VISUAL QA:
+REMEDIATION REQUIRED. The homepage is not visually accepted.**

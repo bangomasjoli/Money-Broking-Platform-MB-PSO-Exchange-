@@ -221,6 +221,29 @@ register (Phase 1D's through 1H's still-open flags, plus five new Phase
 contrast, CTA-to-footer cumulative spacing, legal/boundary-text
 prominence, and desktop column balance).
 
+**UI Phase 1J — Consolidated Public Homepage Visual QA: COMPLETE —
+REMEDIATION REQUIRED.** A review-only pass (no code/markup/CSS changed)
+across the whole homepage at the full 7-viewport matrix, via
+source/rendered-HTML/compiled-CSS analysis (no screenshot tool
+available; none installed solely for this turn). Produced a
+consolidated, numbered defect register (`UI-QA-001`–`UI-QA-007`) in
+`AIX_UI_MEASUREMENT_SPEC_v0.1.md` §28, including: **1 BLOCKER**
+(`UI-QA-002` — the product-preview destination table overflows its
+column at 1024px/mobile with a precisely measured ~128px shortfall, and
+its overflow container has no keyboard-focus mechanism, making that
+content genuinely unreachable for keyboard-only users); **1 HIGH**
+(`UI-QA-001` — every same-page anchor added in Phase 1I scrolls its
+target behind the fixed header, with no `scroll-margin-top`
+compensation anywhere in the codebase — confirmed occluded by ~8px at
+mobile widths specifically, uncomfortably tight everywhere else); **1
+MEDIUM new finding plus 2 refinements** of existing Phase 1D/1E flags
+with corrected arithmetic; and **all 19 previously-recorded Phase
+1D–1I visual-risk flags retained exactly, verified still open, none
+discarded**. See §28 for the full register, severity rationale, exact
+measured evidence for every finding, and the recommended remediation
+grouping (6 groups, by root cause/component, none bundled merely to
+reduce turn count). **The homepage is not visually accepted.**
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

@@ -413,6 +413,13 @@ specifications, unless a row explicitly states otherwise.
 | REF-UI-003 | Anchorage Digital | REFERENCE / UNDER REVIEW | Regulated / trustworthy digital-asset tone (conceptual tone only). |
 | REF-UI-004 | Copper | REFERENCE / UNDER REVIEW | Premium institutional minimalism (conceptual tone only). |
 | REF-UI-005 | Revolut Business | REFERENCE / UNDER REVIEW | Product usability and demonstration patterns (conceptual tone only). |
+| REF-UI-006 | Kraken Pro (`https://pro.kraken.com/`) | **APPROVED CONCEPT REFERENCE — AUTHENTICATED PLATFORM SCOPE ONLY** (UI Phase 2C) | Dense authenticated-workspace composition/interaction principles only — see `AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md` (`UI-04`) §35 for the full per-principle assessment. Explicitly NOT the public marketing homepage, NOT a regulatory/product-scope reference, NOT layout/color/iconography/typography/component styling to copy, NOT a statement about AIX's own available asset classes or feature availability. No screenshot captured — `pro.kraken.com` is a login-gated authenticated product and no browser/screenshot tool is available; registered from Kraken Pro's well-documented general characteristics only, same "conceptual tone only" posture as `REF-UI-002`–`REF-UI-005`. |
+
+**ID note:** UI Phase 2C's own brief requested registering Kraken Pro as
+`REF-UI-002` — verified against this table before registering and found
+`REF-UI-002` already permanently assigned to Fireblocks since UI Phase 0B.
+Not overwritten; Kraken Pro registered instead at the actual next-free ID,
+`REF-UI-006`. See `UI-04` §35.1 for the full reconciliation record.
 
 `REFERENCE / UNDER REVIEW` means: recorded as a conceptual inspiration
 category the user has previously discussed — **not** an approved visual

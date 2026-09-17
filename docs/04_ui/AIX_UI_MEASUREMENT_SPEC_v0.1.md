@@ -2352,3 +2352,63 @@ including inert ones, so no layout shift occurs when a row becomes active).
 Full component architecture, route structure, and the Server/Client
 prop-serialization defect found and fixed while building this geometry are
 recorded in `UI-04` §34, not duplicated here.
+
+---
+
+## UI Phase 2C — Authenticated Shell Visual Rules (provisional)
+
+New measured/provisional rules only — narrative rationale, the Kraken Pro
+(`REF-UI-006`) principle assessment, and per-surface adaptation are all in
+`UI-04` §35, not duplicated here. Nothing below changes any already-shipped
+CSS — no `platform/apps/web/**` file was touched this turn.
+
+### Surface hierarchy — token mapping (no new token introduced)
+
+| Tier | Existing token(s) | Status |
+|---|---|---|
+| `BASE` | `--background` | Already in use. |
+| `SURFACE-1` (sidebar/topbar) | `--sidebar` / `--sidebar-foreground` | Exists in `app/globals.css`, **not yet adopted** by the shell (`UI Phase 2B` currently uses plain `bg-background`) — recommended for a future styling turn. |
+| `SURFACE-2` (table/panel) | `--card` / `--card-foreground` | Exists, minimally used. |
+| `SURFACE-3` (interactive/control) | `--muted` / `--accent` / `--input` | Already in use. |
+| `OVERLAY` (sheet/dialog/popover) | `--popover` / `--popover-foreground` | Already in use (`sheet.tsx`'s own `SheetContent`). |
+
+### Border hierarchy (provisional — final palette pending)
+
+| Type | Token / mechanism |
+|---|---|
+| Default divider | `--border` (`border-border`) |
+| Strong divider | `--border` + a surface-tier background change (`--border`/`--input` currently resolve identically — no distinct "stronger" border color exists yet; separation comes from the background transition, not a new color) |
+| Focus ring | `--ring` (already wired into `Button`) |
+| Selected/active edge | `border-l-2` using `--foreground` (already implemented, `UI Phase 2B` active-nav state) |
+| Danger/warning separation | `--destructive` (already wired into `Button`'s `destructive` variant) |
+
+### Radius / shadow — confirmed unchanged
+
+§5's radius hierarchy and §9's elevation rule both **already** state the
+authenticated-appropriate values (Micro/Standard almost exclusively;
+little-to-no shadow except genuine overlays). UI Phase 2C found no reason
+to narrow either further — confirmed as-is, not restated in full here. One
+concrete value added: dialogs/popovers use the **already-shipped**
+`shadow-lg` (from `sheet.tsx`'s own `SheetContent`) as the platform's one
+governed elevation value — no new shadow token introduced.
+
+### Panel spacing (provisional)
+
+| Panel type (`UI-04` §35.17) | Border treatment | Internal spacing |
+|---|---|---|
+| `WORKSPACE PANEL` | None | Page-level spacing only (`space-6`/24px, matching the shell's own `py-6`) |
+| `DETAIL PANEL` / `EVIDENCE PANEL` | Single `border-l border-border` | `space-4`–`space-6` (16–24px) internal padding, not yet measured against real content |
+| `ACTION PANEL` | `bg-muted` or full border, where justified | `space-4` (16px) internal padding, provisional |
+| `FORM SECTION` | `border-t` only for long forms | `space-6` (24px) between sections, `space-3` (12px) within a section — reusing existing form-direction spacing (§16), not new values |
+
+### List-detail geometry assumptions (provisional, not implemented)
+
+No panel width is fixed this turn — `UI-04` §35.16 explicitly defers exact
+geometry to the implementation turn that first builds it (most likely
+Wallet & Payout Destinations). Recorded here only as a placeholder
+assumption for future sizing: a right-side detail panel would plausibly
+sit in the **320–400px** range at `≥1280px` (roughly matching the sidebar's
+own 240px plus one content-width step, `UI-02` §7's `authenticated-app`
+category's lower bound), collapsing to a full-width stacked/routed view
+below that — **not measured against a real component, not implemented,
+explicitly provisional.**

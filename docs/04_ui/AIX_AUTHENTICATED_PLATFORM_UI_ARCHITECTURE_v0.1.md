@@ -1112,3 +1112,512 @@ compiled-CSS verification, not a claim of visual acceptance** — no browser
 rendered these breakpoints for actual pixel/visual review this turn; that
 review remains the user's own, exactly as every prior UI phase in this
 project has required before a "visually accepted" claim could be made.
+
+---
+
+## 35. UI Phase 2C — Authenticated Platform Visual Direction
+
+**Status: GOVERNED / DESIGN DIRECTION ONLY.** No CSS, component, or page
+changed this turn. This section defines the visual language the
+authenticated shell (`UI Phase 2B`, §34) will be styled against in a later,
+separate implementation turn, and the direction future real pages (Wallet &
+Payout Destinations, Client Requests, etc.) must follow once built. **Shell
+visual acceptance remains PENDING; no real product page exists yet** —
+nothing in this section changes either fact.
+
+### 35.1 Reference registration — REF-UI-006 (ID correction from the brief's requested REF-UI-002)
+
+This turn's brief asked to register Kraken Pro as `REF-UI-002`. **Verified
+against the actual current Reference Register (`UI-01` §14) before
+registering, per this project's own established discipline (the same
+"verify against the actual register, do not silently overwrite" principle
+applied in UI Phase 1R's accepted-risk-count reconciliation):**
+`REF-UI-002` is already permanently assigned to **Fireblocks**
+("Institutional blockchain storytelling," `REFERENCE / UNDER REVIEW`),
+registered since UI Phase 0B, unchanged since. Overwriting it would corrupt
+an existing governed reference silently — not done. Kraken Pro is
+registered instead as **`REF-UI-006`**, the actual next-free ID (`001`
+Phantom, `002` Fireblocks, `003` Anchorage Digital, `004` Copper, `005`
+Revolut Business, all unchanged), added as a new row in `UI-01` §14's
+Reference Register.
+
+| Ref ID | Source | Status | Scope |
+|---|---|---|---|
+| `REF-UI-006` | Kraken Pro (`https://pro.kraken.com/`) | **APPROVED CONCEPT REFERENCE — AUTHENTICATED PLATFORM SCOPE ONLY** | Dense authenticated-workspace interaction/composition principles only (§35.2) — explicitly NOT the public marketing homepage, NOT a regulatory/product-scope reference, NOT layout/color/iconography/typography/component-styling to copy, NOT a statement about AIX's own available asset classes or feature availability. |
+
+**Screenshot capture status: `VISUAL REFERENCE REGISTERED — SCREENSHOT NOT
+LOCALLY CAPTURED`**, per this turn's own prescribed fallback. No browser/
+screenshot tool is available in this environment (consistent with every
+prior UI phase in this project); `pro.kraken.com` is additionally a
+login-gated authenticated trading product, so even a live fetch would not
+reach its actual dense-workspace UI without credentials this session does
+not have and should not attempt to obtain. No image was fabricated or
+substituted — `docs/04_ui/references/README.md` is updated accordingly
+(§35's documentation-update record below), and the principle assessment in
+§35.2 proceeds **conceptually**, from Kraken Pro's well-documented, publicly
+known general UI characteristics (a dense multi-panel trading-terminal
+layout, compact persistent navigation, restrained chrome) — the same
+"conceptual tone only, not pixel-level" posture already governed for
+`REF-UI-002`–`REF-UI-005` (none of which has a captured image either).
+
+### 35.2 Kraken Pro principle assessment
+
+| Principle | Verdict | Rationale |
+|---|---|---|
+| High information density | **APPROVED WITH AIX ADAPTATION** | Correct for Ops/Admin operational queues; Client Portal should sit toward the more comfortable end of the already-governed density tiers (§18/§35.14), not Kraken's own retail-trader intensity uniformly. |
+| Compact navigation | **APPROVED** | Directly reinforces the already-implemented 240px/40px-row sidebar (`UI Phase 2B`, §34) — no change needed, the reference confirms the existing structural direction rather than requiring one. |
+| Strong workspace hierarchy | **APPROVED** | Directly informs the Surface Hierarchy this section defines (§35.6). |
+| Restrained spacing | **APPROVED WITH AIX ADAPTATION** | Restrained relative to the public marketing site's generous spacing — but AIX's own governed 4px-grid tokens (`UI-02` §3) remain authoritative; "restrained" means favoring the smaller end of that existing scale, not inventing tighter arbitrary values. |
+| Low decorative overhead | **APPROVED** | Already governed independently — `UI-01` §4's Anti-"AI Look" rules; the reference reinforces, does not introduce. |
+| Operational / command-center feel | **APPROVED WITH AIX ADAPTATION** | Fits Ops/Admin (queues, approvals, evidence) well; explicitly adapted — not adopted — for Client Portal, which must read as "financial infrastructure," never "trading-app entertainment" (this turn's own explicit prohibition, §35.4). |
+| Modular panel composition | **APPROVED WITH AIX ADAPTATION** | Useful as a *composition* principle (§35.17's Panel System), but AIX's panel *types* are purpose-classified around regulated workflows (approval, evidence, form) — never Kraken's own trading-specific panel types (order book, depth, chart), none of which AIX may replicate (no order book, no market-making product). |
+| Strong separation of primary/secondary work areas | **APPROVED** | Same reasoning as workspace hierarchy; directly informs the List+Detail adjudication (§35.16). |
+| Compact controls | **APPROVED** | Matches the already-governed 32/40/48 control-height system (`UI-02` §4) — reinforces preferring the smaller end for operational contexts, introduces no new size. |
+| Data-first layouts | **APPROVED** | Already governed — `UI-01` §3's "authenticated platform prioritizes data hierarchy... tables... forms." Reinforcing, not new. |
+| Clear state/action hierarchy | **APPROVED** | Directly informs the Status System (`UI-04` §21) and Maker-Checker UI principles (`UI-04` §22), both already governed — reinforcing. |
+| Visually quiet chrome | **APPROVED** | Directly informs Sidebar/Topbar visual direction (§35.10/§35.11) — no gradients, no heavy shadows, restrained borders. |
+| Strong table/list/detail composition | **APPROVED WITH AIX ADAPTATION** | The *composition quality* (clear rows, numeric alignment, status columns) transfers; the *content types* (bid/ask ladders, live tickers) do not — AIX tables hold regulated records (destinations, approvals, audit trail), never live market data. |
+| Persistent context while working | **APPROVED** | Reinforces the already-implemented persistent sidebar/topbar shell (`UI Phase 2B`) and the page-header/breadcrumb standard (`UI-04` §17) — no change needed. |
+
+**No principle above required an outright REJECTED verdict** — all 14 are
+legitimate UI/UX composition principles independent of Kraken's own
+regulated trading capabilities, and each transfers either directly or with
+a named, specific adaptation. The **capability-level** and **literal-copy**
+exclusions below (§35.3) are a separate, harder boundary — not a 15th
+"principle," but a hard product/regulatory lock this reference can never
+override.
+
+### 35.3 Regulatory / product-scope exclusions — REJECTED outright, no adaptation possible
+
+Per `00_Licence_Scope_And_Feature_Lock_v1.3.md` (unchanged, not overridden
+by any UI reference) and this turn's explicit instruction, the following
+are **REJECTED**, not merely "adapted," because they are not styling
+choices — adopting any of them would misrepresent AIX's actual licensed
+scope:
+
+- A live public order book, market-depth ladder, or any matching-engine
+  visual (AIX has no Exchange approval; `00_Licence...` §6/§11.2).
+- Margin, leverage, derivatives, futures, principal-dealing, or
+  market-making controls/visuals of any kind.
+- Staking, lending, or yield modules/visuals.
+- Privacy-coin or algorithmic-stablecoin asset presentation.
+- MYR trading pairs.
+- Any UI element implying unapproved Exchange activity is live or
+  imminent.
+- Literal copying of Kraken's layout, colors, trade-terminal arrangement,
+  iconography, typography, component styling, or product capabilities —
+  the reference is principles only, never a visual clone target (this
+  turn's own explicit "reference, not copy" instruction).
+- "Trading-app entertainment" surface treatment — gamified fill
+  animations, streak/reward mechanics, ticker-tape marquees, or any
+  visual register associated with retail trading-as-entertainment
+  products; AIX must read as **financial infrastructure**, not a crypto
+  casino, retail exchange, gaming UI, or entertainment interface (this
+  turn's own explicit framing, restated as governance here).
+
+### 35.4 AIX product-model framing (restated as authenticated-visual governance)
+
+AIX is not a retail crypto exchange. The authenticated visual direction
+must read as **institutional financial infrastructure** for an
+institutional/HNWI audience, reflecting the platform's actual governed
+model: agency/back-to-back execution, maker-checker, pre-funded controls,
+settlement, reconciliation, auditability, client authority, safeguarding,
+compliance. Every visual decision in this section is made in service of
+that framing, not general dashboard-aesthetic preference.
+
+### 35.5 Light / Dark / Theme architecture — recommendation
+
+**Recommendation: C — DUAL / THEME-CAPABLE ARCHITECTURE, with LIGHT as the
+default/primary theme.** Not a personal-taste call — assessed against each
+named criterion:
+
+| Criterion | Assessment |
+|---|---|
+| Institutional readability | Light-on-dark-text has the most mature, best-understood contrast/legibility precedent for dense financial tables and compliance documents; a safer default with no final palette chosen yet. |
+| Dense tables | Works well in either theme; not a deciding factor on its own. |
+| Long operational sessions | Dark can reduce eye strain in low-light settings; light suits typical daylight office environments, which is realistically where Ops/Compliance staff work — not a clean win for either theme alone, which is itself an argument for offering both rather than forcing one. |
+| Accessibility | Light-mode contrast tooling and precedent is more mature; dark mode requires deliberate glare/halation-avoidance tuning this turn cannot perform without a final palette — light is the lower-risk default today. |
+| Current token architecture | **Decisive.** `app/globals.css` already carries a **complete, fully-wired `.dark` token set** (from the shadcn "Nova" init preset) alongside the `:root` light set — dual-theme capability already exists structurally at effectively zero marginal cost; not adopting it would waste tokens already present in the codebase. |
+| Future charting | No blocker either way; charting libraries commonly support both themes. |
+| Staff/Ops use | Long dense queues could benefit from an optional dark mode for power users — supported by "dual," not forced by it. |
+| Admin/Compliance use | Evidence/audit review skews toward a light, document-like reading mode in most enterprise compliance tooling — favors light as the surface-appropriate default here specifically. |
+| Client use | This turn's own brief prefers Client Portal "slightly more polished/comfortable" — light mode preserves visual continuity with the already-accepted, entirely-light public marketing site, easing the transition from public to authenticated experience without conflating the two governed visual modes (`UI-01` §3 keeps them distinct regardless of shared theme). |
+| Implementation complexity | Building a fully-tested, contrast-verified dark mode across every future authenticated screen from day one is real, ongoing work this turn should not force. **The recommendation is architectural, not a commitment to ship a working theme toggle now** — token-driven theming stays available, default ships light, a toggle/persistence mechanism is separately scoped, later work. |
+
+This is an **architectural direction, not a finalized palette** — no hex/
+oklch values are chosen or changed by this recommendation (final palette
+remains `PENDING DESIGN APPROVAL`, unaffected).
+
+### 35.6 Surface hierarchy
+
+Five tiers, each mapped to an **already-existing** token — no new CSS
+variable is proposed, per "do not add measurements without reason":
+
+| Tier | Purpose | Existing token(s) | Current usage |
+|---|---|---|---|
+| `BASE` | Page/workspace background | `--background` | Already used (`bg-background`, `UI Phase 2B` shell). |
+| `SURFACE-1` | Sidebar/topbar (persistent chrome) | `--sidebar` / `--sidebar-foreground` | **Not yet adopted** — `UI Phase 2B`'s implementation currently uses plain `bg-background` (inherited) for both; this section recommends a future styling turn switch to the existing, currently-unused `--sidebar` family instead, which already carries a distinct (if subtle) tint from `--background` in the shipped token set. |
+| `SURFACE-2` | Table/panel region | `--card` / `--card-foreground` | Exists, minimally used — closest existing semantic match; no new token needed. |
+| `SURFACE-3` | Interactive/control region (inputs, selected states) | `--muted` / `--accent` / `--input` | Already exist and already used (`bg-muted` active-nav treatment, `UI Phase 2B`). |
+| `OVERLAY` | Sheet/dialog/popover | `--popover` / `--popover-foreground` | Already used — `sheet.tsx`'s own `SheetContent` already carries `bg-popover text-popover-foreground`. |
+
+**No card-border-everywhere default.** Borders are used only where §35.7
+specifically calls for one — most `BASE`/`SURFACE-2` content is
+distinguished by background tint and spacing alone, not a border.
+
+### 35.7 Border hierarchy (provisional — final palette pending)
+
+| Border type | Treatment |
+|---|---|
+| Default divider | Existing `--border` token (`border-border`), already used throughout the public site and `UI Phase 2B`'s shell — reused, not reinvented. |
+| Strong divider | **Not a new, heavier border color** — `--border` and `--input` currently resolve to the identical value in the shipped light token set, so there is no distinct "stronger" border color to draw on yet. Strong separation is instead achieved by pairing the existing `border-border` with a **surface-tier background change** (e.g. `SURFACE-1`'s `--sidebar` tint against `BASE`) — directly reusing the precedent already established for the public `PublicFooter`→`PublicFinalCta` seam (a background-color transition plus a 1px border, `UI-02` §27), not inventing a new mechanism. |
+| Focus ring | Existing `--ring` token, already wired into `Button`'s own `focus-visible:ring-3 focus-visible:ring-ring/50` — reused as-is. |
+| Selected/active edge | Formalizing the pattern `UI Phase 2B` already implemented for active nav (`border-l-2`, using `--foreground`, not a new color) as the **governed authenticated selected-state pattern** — extended to table row selection (§35.15) for systemic consistency, not a one-off. |
+| Danger/warning separation | Existing `--destructive` token (already used by `Button`'s `destructive` variant) — no new token needed. |
+
+**Avoided, per this turn's explicit instruction:** thick card outlines,
+every-box-bordered treatment, heavy shadows.
+
+### 35.8 Radius — confirmed, not changed
+
+`UI-02` §5's existing radius hierarchy (Micro 4px / Standard 8px / Cards-
+panels 12px / Floating-nav full-pill / Full-pill controls) is **preserved
+unchanged**. §5 already states authenticated surfaces "should stay at
+Micro/Standard almost exclusively; Cards/panels only where a genuine panel
+boundary exists, never as decoration" — this section confirms that rule
+applies exactly as written to the shell and every future authenticated
+page; no narrower authenticated-specific carve-out was found necessary.
+Full-pill radius (the public floating nav's own scoped treatment,
+`REF-UI-001`) is explicitly **not** used in authenticated UI.
+
+### 35.9 Shadow — confirmed and extended slightly
+
+`UI-02` §9 already states authenticated surfaces default to "a hairline
+border... with little or no shadow except where a genuine floating/overlay
+element requires depth (dropdowns, modals, toasts)." This section confirms
+that rule and names the exact existing values already in use rather than
+inventing new ones: sidebar/topbar — **no shadow** (confirmed by `UI Phase
+2B`'s actual implementation, which carries none). Tables/panels — **no
+shadow**. Dialogs/popovers — **existing `shadow-lg`**, already present in
+`sheet.tsx`'s own `SheetContent` class — reused as the authenticated
+platform's one governed elevation value, not a new one introduced.
+Marketing-style floating/ambient shadows (the public site's `PILL_SURFACE`
+`shadow-sm` treatment) are **not** carried into authenticated UI.
+
+### 35.10 Sidebar visual direction
+
+Structural geometry (240px / 40px rows / 20px icons, `UI Phase 2B` §34)
+**preserved unchanged** — no defect found requiring revision. Visual
+treatment:
+
+- **Brand:** plain "AIX" text wordmark (already implemented) — no logo,
+  brand asset remains pending.
+- **Surface:** recommend adopting `SURFACE-1` (`--sidebar`/
+  `--sidebar-foreground`, §35.6) in a future styling turn, replacing the
+  current placeholder `bg-background`.
+- **Section spacing:** the already-implemented 24px group spacing
+  (`py-6`) is preserved.
+- **Active item:** the already-implemented `border-l-2 border-foreground
+  bg-muted font-medium` — formalized here as final governed treatment, not
+  merely a Phase 2B implementation detail. No pill, no glow, no heavy
+  shadow.
+- **Inactive item:** the already-implemented `text-muted-foreground`,
+  transparent left border, `hover:bg-muted` — confirmed final.
+- **Icon treatment:** 20px (`UI-02` §14's "standalone action icons at
+  Default control height," matching the 40px row), inherits the row's own
+  text color (`text-current`) — no separate icon-color system; icons here
+  are navigational, not status-bearing, so color independence is not
+  required the way `UI-QA-006` requires it for status.
+- **Text hierarchy:** brand wordmark small/semibold; surface label
+  extra-small/muted (`UI-02` §6's existing Caption role); nav item label
+  Body-adjacent, Medium weight only when active — no new type role
+  introduced.
+- **Bottom utility region:** **not added.** No real utility content (e.g.
+  logout) justifies one yet, since no authentication exists — deferred
+  rather than built speculatively.
+
+**Explicitly avoided:** large rounded pills on every nav item, heavy
+gradients, a floating sidebar card, glassmorphism.
+
+### 35.11 Top bar visual direction
+
+Structural geometry (56px, `UI Phase 2B` §34) **preserved unchanged**.
+Visual treatment:
+
+- **Background/surface:** the Surface Hierarchy (§35.6) groups sidebar and
+  top bar together as `SURFACE-1` — a future styling turn should apply the
+  same `--sidebar` family to the top bar, replacing its current
+  placeholder `bg-background`, for chrome consistency with the sidebar.
+- **Border:** the already-implemented `border-b border-border` — confirmed
+  final.
+- **Page/surface label treatment:** the already-implemented small
+  `text-sm font-medium` breadcrumb-style label — confirmed final.
+- **Client-context placement:** right side (already implemented) — see
+  §35.12 for the refined visual treatment.
+- **Account affordance:** the already-implemented plain ghost button, icon
+  + text, no avatar photo — confirmed final.
+
+**No new features added** — this section governs the visual treatment of
+what already exists structurally, not new top-bar content.
+
+### 35.12 Client-context treatment
+
+Must read as **current organisational context**, never a badge, a
+permission grant, or a fake account switcher (this turn's own explicit
+framing). `UI Phase 2B`'s current implementation (a bordered, padded box —
+`rounded-md border border-border px-3 py-1.5`) risks reading slightly
+badge-like due to its own visible border/background box. **Refined
+direction for a future styling turn:** a plain inline text pairing (label
++ value, e.g. "Organisation context" in `Caption`-role muted text next to
+the value in `Body`-role text), separated by a subtle `border-l
+border-border` rather than a full bordered/backgrounded box — reads as
+quiet contextual metadata, not an interactive or status-bearing element.
+Remains a static, non-interactive presentation — no real switching is
+built or implied; a selector is not adopted for this phase either (§11
+already recorded "prefer simpler presentation," reaffirmed here).
+
+### 35.13 Page-header visual standard
+
+Confirms and adds vertical-spacing philosophy to `UI-04` §17's existing
+pattern (breadcrumb → title → optional description → contextual actions):
+
+- Breadcrumb-to-title gap: **4px** (`UI-02` `space-1`).
+- Title-to-description gap (when a description is present): **8px**
+  (`UI-02` `space-2`).
+- Header-block-to-content gap: **24px** (`UI-02` `space-6`) — matching the
+  shell's own already-implemented main-content `py-6`, so the header does
+  not introduce a second, inconsistent vertical rhythm.
+
+Title uses the existing `Page title` typography role (`UI-02` §6, 24–28px)
+— **never** the public hero's `Display` role (40–64px). No marketing hero,
+no large "Welcome back" message, no oversized decorative title — restating
+`UI-01` §4's anti-pattern list in this specific context.
+
+### 35.14 Data-density usage mapping
+
+`UI-04` §18 already defines the three tiers (`COMFORTABLE` 48px /
+`COMPACT` 40px / `DENSE` 32px) generically ("standard forms," "operational
+tables/queues," "audit/reconciliation/high-volume"). This section adds the
+concrete per-page mapping, cross-checked against — not blindly copied from
+— that existing generic definition, which it matches exactly:
+
+| Page (from `UI-04` §6/§8/§9's approved IA) | Tier |
+|---|---|
+| Client forms (Profile/Organisation edits, future) | `COMFORTABLE` (48px) |
+| Standard lists (Wallet & Payout Destinations, Client Requests, Approval Queue, Wallet Destination Review) | `COMPACT` (40px) |
+| Audit/reconciliation/high-volume (Audit/Activity, Audit/Sensitive Access, AML/Transaction Monitoring, Maker-Checker Queue) | `DENSE` (32px) |
+
+**Admin/Compliance adaptation (§35.22):** evidence-review tasks
+(Client Risk/KYC-KYB, EDD/Review) benefit from slightly more breathing room
+than a high-frequency operational queue — these lean `COMPACT` rather than
+`DENSE` even though they sit in the Admin surface, a deliberate exception
+to "Admin defaults to dense," not an oversight.
+
+### 35.15 Table visual direction
+
+`UI-02` §15 already governs numeric alignment, restrained status
+presentation, governed row heights, "no giant card wrapper," sticky
+headers, and managed overflow — **confirmed unchanged**, not restated in
+full here. This section adds the specifics `UI-02` §15 left open:
+
+- **Header surface:** same background as body rows (no separate header
+  tint) — visual distinction comes from weight/color plus a `border-b
+  border-border` beneath the header row, per §15's own "distinct... not
+  necessarily height" guidance, resolved concretely as weight+border, not
+  a new surface tint.
+- **Row separation:** hairline `border-border` between rows — **no zebra
+  striping** (an older enterprise-table convention that adds visual noise
+  `UI-01` §4 discourages; hairline dividers alone are sufficient at the
+  governed row heights).
+- **Hover:** subtle `bg-muted/50` — existing token, no new color.
+- **Selected row:** the same `border-l-2 border-foreground` + `bg-muted`
+  pattern already governed for active sidebar nav (§35.7/§35.10) — one
+  consistent selected-state language across the whole authenticated
+  platform, not a separate table-specific treatment.
+- **Numeric alignment / status placement:** per `UI-02` §15/§6 — right-
+  aligned tabular numerics; status leading its own cell, text/icon-based.
+- **Actions:** trailing column; always visible at `COMFORTABLE`/`COMPACT`
+  tiers (clarity/touch-target priority); may reveal on row-hover at
+  `DENSE` tier only, to reduce visual noise in high-density queues — a
+  named refinement, not a universal rule.
+- **Sticky behavior:** per `UI-02` §15 — sticky header scoped to the
+  table's own scroll container.
+- **Empty/loading/error states:** reuse the already-governed conceptual
+  model (`UI-04` §28) — a muted icon, short text, and a primary action
+  where one exists; never an illustration or mascot.
+- **Detail-pane interaction:** per-page decision, guided by §35.16 — not a
+  universal rule.
+
+### 35.16 List + Detail pattern — adjudication
+
+**APPROVED WITH AIX ADAPTATION**, for the specific workflows named in this
+turn's brief: Wallet Destinations, Client Requests, Maker-Checker, KYC
+review, AML alerts, Audit evidence. **When it is appropriate:** the
+workflow requires reviewing or acting on one record while keeping shared
+list context visible — especially where maker-checker/SoD review benefits
+from seeing history or evidence alongside the list, without losing one's
+place in the queue. **When it is not appropriate:** simple single-record
+self-service forms with no list context to preserve (e.g. a client editing
+their own profile — a plain form page, no list needed); or content that
+needs substantial dedicated real estate (e.g. a future full trade-
+execution ticket with multi-panel market context, §35.20) — that likely
+deserves its own dedicated workspace route rather than a cramped detail
+sidebar. **Not created this turn** — no panel width, breakpoint collapse
+behavior, or exact geometry is fixed here; that is implementation-turn
+work once a specific page (most likely Wallet & Payout Destinations, §35.19)
+actually builds it.
+
+### 35.17 Panel system — classified by purpose, not generic cards
+
+Explicitly avoiding "dozens of generic cards" (this turn's own
+instruction) — five purpose-classified types, each with the minimum
+styling its purpose actually requires:
+
+| Panel type | Purpose | Treatment |
+|---|---|---|
+| `WORKSPACE PANEL` | Main content region of a page (e.g. a table + its toolbar) | Borderless; page-level spacing only, no card wrapper. |
+| `DETAIL PANEL` | The List+Detail pattern's detail view (§35.16) | A single leading-edge border (`border-l border-border`) — never a full box. |
+| `ACTION PANEL` | A focused region for taking a specific action (approving a request, confirming a destination) | One of the few places `SURFACE-2`/`SURFACE-3` distinction visually matters — a subtle `bg-muted` or full border is justified here, since the user needs a clear "this is where I act" cue. |
+| `EVIDENCE PANEL` | Read-only audit/evidence display | Same restrained treatment as `DETAIL PANEL` (single leading border) — evidence review is a "read carefully" task that benefits from minimal visual noise, never heavier styling. |
+| `FORM SECTION` | A grouped set of related form fields (`UI-04` §20) | Spacing + one small group label; a subtle `border-t` between sections only for unusually long forms where sectioning aids scanning — never a full box by default. |
+
+### 35.18 Future Client Overview — rule only, not designed
+
+**No default "4 KPI cards + chart + activity" template.** When Overview
+(§6, currently `B`-classified) is eventually built, it must surface actual
+operational status, funding/wallet/request context, and pending approvals
+only when backed by real data (per the existing A/B/C classification
+discipline) — **no fake metrics**, ever. Not designed further this turn.
+
+### 35.19 Future Wallet & Payout Destinations page — provisional direction only
+
+Likely the first real `A`-classified page (§7's implementation sequence).
+Provisional direction, **not implemented**:
+
+- A `COMPACT`-tier (40px row) list/table: destination label/address,
+  network + asset type, status (text/icon, `UI-02` §15), approval state,
+  trailing contextual actions (view proof-of-control, revoke where
+  authorized).
+- An optional right-side `DETAIL PANEL` (§35.16/§35.17) for a single
+  destination's full proof-of-control/screening history — a strong
+  List+Detail candidate per §35.16's own criteria (reviewing one record's
+  evidence while keeping the list visible).
+
+### 35.20 Future MB Spot Broking Terminal — reference boundary
+
+Kraken's influence can be strongest here **later**, but strictly bounded.
+**May eventually use:** a dense multi-panel workspace, market *context*
+(indicative External LP Market Depth display — per
+`00_Licence_Scope_And_Feature_Lock_v1.3.md` §11.1's governed term, never an
+"AIX Order Book"), request/order entry (an OTC/RFQ-style quote request,
+never a resting limit order), an activity/execution status view (governed
+term: "Open Requests," never "Open Orders"; "Quote History," never "Order
+Book History"). **Must never imply:** principal trading, market making,
+margin, derivatives, futures, staking, or unsupported assets — restating
+`UI-01` §13 and `00_Licence...` §11 explicitly in this authenticated-
+visual-direction context, not a new rule, a reinforced one. Governed UI
+terminology (`00_Licence...` §11.1) applies exactly, not loosely: "MB Spot
+Broking Terminal," never "Exchange Terminal."
+
+### 35.21 Staff/Operations Portal adaptation
+
+Priority: queues, approval states, exceptions, settlement, review actions,
+evidence, operational density. Kraken's influence here is **density,
+workspace structure, and context persistence only** — explicitly **not**
+market-trading aesthetics: no price tickers, no candlestick charts, no
+buy/sell green/red trading color convention (Ops screens have no "buy" or
+"sell" actions to color-code in the first place — the platform is agency
+broking, not a trading interface for Ops staff either). Density tier:
+predominantly `DENSE` (32px, queues) with `COMPACT` (40px) for simpler
+request lists — per §35.14's mapping.
+
+### 35.22 Admin/Compliance Portal adaptation
+
+Priority: risk, KYC/KYB, AML, EDD, approvals, roles, feature flags, audit
+evidence. UI favors **clarity, state, evidence, traceability** over visual
+excitement — closer in spirit to a case-management/evidence-review tool
+than a trading terminal; Kraken's density principle still applies but its
+trading-specific "command-center" flavor applies **least** of the three
+surfaces here. Per §35.14, evidence-review pages lean `COMPACT` rather than
+uniformly `DENSE`, a deliberate exception favoring careful review over raw
+throughput.
+
+### 35.23 Iconography — usage mapping (confirms `UI-02` §14, no new sizes)
+
+Lucide confirmed as the icon source (already in use, `UI Phase 2B`). Usage
+mapped onto `UI-02` §14's existing sizes — no new size introduced:
+
+| Context | Size | `UI-02` §14 basis |
+|---|---|---|
+| Navigation icon (sidebar/mobile nav) | 20px | "standalone action icons at Default control height" — matches the 40px nav row, already implemented. |
+| Table/action icon (row-level actions, status icons) | 16px | "dense table-row icons" — fits both `COMPACT` (40px) and `DENSE` (32px) rows. |
+| Standalone prominent action icon (e.g. a primary button icon) | 20px | Same "Default control height" basis as nav. |
+| Inline with body/caption/label text | 16–18px | Direct application of §14's own inline-icon rows. |
+
+**Status icon usage:** always paired with text (never icon-alone for
+status — `UI-QA-006`'s "not color-only" precedent extended to iconography
+generally). **Decorative icon containers avoided** unless they communicate
+function — extending the public site's own Phase 1N precedent (circular
+icon markers reduced from 3-of-4 to 1-of-4 sections) to authenticated UI:
+no default icon-in-circle treatment.
+
+### 35.24 Typography roles — usage mapping (confirms `UI-02` §6, no new roles)
+
+This turn's requested 8 categories (page title, section title, table
+header, body, metadata, label, numeric/data, helper/error) map directly
+onto `UI-02` §6's **already-governed** roles — no new role is introduced:
+
+| Requested category | `UI-02` §6 role |
+|---|---|
+| Page title | Page title (24–28px, Semibold) |
+| Section title | Section title (18–20px, Semibold) |
+| Table header | Label (12–13px, Medium/Semibold) |
+| Body | Body (14–16px, Regular) |
+| Metadata | Caption (12px, Regular/Medium) |
+| Label | Label (12–13px, Medium/Semibold) |
+| Numeric/data | Numeric/financial (13–16px, `tabular-nums`) |
+| Helper/error | Caption (12px), colored via the Status System (§21) for error — not a new size role |
+
+### 35.25 Status/color principles — confirmed, no new palette
+
+Final palette remains **PENDING DESIGN APPROVAL** — no hex/oklch values are
+chosen this turn. `UI-04` §21's 7 semantic categories and `UI-02` §17's
+high-level color direction both stand unchanged. Restated once more,
+explicitly, since this turn concerns visual direction: **status must never
+rely on color alone** — every status presentation pairs text and/or icon
+with any color treatment eventually chosen.
+
+### 35.26 Visual QA targets (future — not performed this turn)
+
+Once the shell is actually restyled per this section (a later, separate
+implementation turn), visual QA must cover `1440`/`1280`/`1024`/`768`/`430`
+across at minimum `/app`, `/ops`, `/admin`, inspecting: density, sidebar
+balance, topbar balance, workspace width, responsive drawer behavior,
+active-nav treatment, client-context presentation, surface hierarchy,
+contrast, focus visibility, and overflow — extending, not replacing, the
+methodology `UI Phase 2B` §34.10 already used (source/rendered-HTML/
+compiled-CSS inspection where no screenshot tool is available).
+
+### 35.27 Shell visual-acceptance status — restated, unchanged by this turn
+
+**The authenticated shell (`UI Phase 2B`) remains NOT visually accepted.**
+This section governs future visual direction; it does not itself constitute
+a visual review or acceptance of the existing shell's current (unstyled,
+placeholder-token) appearance. **No real product page has been
+implemented.** Both facts are unchanged by this turn.
+
+### 35.28 What This Phase Explicitly Did Not Do
+
+- No CSS, component, or page in `platform/apps/web/**` was changed.
+- No shell restyling was performed — the shell's actual rendered
+  appearance is unchanged from `UI Phase 2B`.
+- No new shadcn component was installed.
+- No product page (Wallet & Payout Destinations, Client Overview, or any
+  other) was built.
+- No final color palette, font, or brand asset was chosen — all remain
+  `PENDING DESIGN APPROVAL`.
+- No working theme toggle was built — §35.5 is an architectural
+  recommendation, not an implementation.
+- The public homepage was not touched or reopened.
+- No backend, API, database, migration, grant, or edge/perimeter artifact
+  was touched.

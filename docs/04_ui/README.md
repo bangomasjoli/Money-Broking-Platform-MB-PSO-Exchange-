@@ -485,6 +485,37 @@ section, `UI-03` §37. **No screenshot tool was available — verification
 was source/rendered-HTML/compiled-CSS only, not a visual-acceptance
 claim.** Public homepage unaffected.
 
+**AUTHENTICATED PLATFORM — updated status:**
+- **Phase 2A:** architecture established.
+- **Phase 2B:** shell structurally implemented.
+- **Phase 2C:** visual direction governed. Kraken Pro registered as
+  `REF-UI-006` (authenticated-platform scope only — the brief's requested
+  `REF-UI-002` was already permanently assigned to Fireblocks; verified
+  against the actual register before registering, not overwritten). 14
+  reference principles assessed (all APPROVED or APPROVED WITH AIX
+  ADAPTATION — none required outright rejection); a separate, harder
+  regulatory/product-scope exclusion list (margin, derivatives, staking,
+  live order book, literal Kraken-copying, "trading-app entertainment,"
+  etc.) was recorded independently of the principle assessment. Visual
+  direction defined: dual/theme-capable token architecture recommended
+  with **light as the default theme** (the codebase already ships a
+  complete, unused `.dark` token set — no new capability needed, no
+  toggle built this turn); a 5-tier surface hierarchy and a border/radius/
+  shadow hierarchy, both mapped entirely onto already-existing tokens (no
+  new CSS variable introduced); sidebar/top-bar/client-context/page-header
+  visual treatment; a density-tier-to-page mapping; table visual
+  direction; a List+Detail pattern adjudication (approved, not built);
+  a 5-type purpose-classified panel system; provisional direction for the
+  future Client Overview, Wallet & Payout Destinations, and MB Spot
+  Broking Terminal pages (none implemented); Staff/Ops and Admin/
+  Compliance adaptation. Full record: `UI-04` §35, `UI-02`'s new "UI
+  Phase 2C" section, `UI-03` §38.
+- **Shell visual acceptance: PENDING.** Not reviewed or accepted this
+  turn — `UI Phase 2B`'s shell still renders with its original
+  placeholder tokens; no restyling occurred.
+- **First real page: NOT YET IMPLEMENTED.** No `platform/apps/web/**`
+  file was touched this turn — no CSS, no component, no page.
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

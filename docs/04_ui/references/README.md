@@ -49,6 +49,25 @@ for that treatment, not an approval of Phantom's branding, colors,
 typography, proportions, search control, CTA treatment, or wider site
 design. None of those is approved by this registration.
 
+## Referenced but not captured
+
+`REF-UI-006` (Kraken Pro, `https://pro.kraken.com/` — UI Phase 2C,
+authenticated-platform scope only) is registered in
+`../AIX_UI_DESIGN_FOUNDATION_v0.1.md` §14, but **no image file exists in
+this directory for it.** `pro.kraken.com` is a login-gated authenticated
+trading product and no browser/screenshot tool is available in this
+environment — no screenshot was captured, fetched, or fabricated. Status
+per UI Phase 2C's own governed fallback:
+
+> **VISUAL REFERENCE REGISTERED — SCREENSHOT NOT LOCALLY CAPTURED**
+
+If a screenshot is supplied later, it must follow the naming convention
+below (`REF-UI-006_kraken-pro-authenticated-workspace.png`, or
+`REF-UI-006A_...`/`REF-UI-006B_...` if more than one) and the same
+"When an image is supplied" procedure applies — including not changing
+`REF-UI-006`'s approved scope (authenticated-workspace composition
+principles only, `UI-04` §35.2) merely because an image is added.
+
 ## When an image is supplied
 
 1. Copy the file into this directory (no external links — Git is

@@ -114,6 +114,32 @@ and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_F
 register (Phase 1D's still-open six-column flag, plus two new Phase 1E
 flags: mobile control-stack density, and two-column width balance at
 large desktop).
+**UI Phase 1F — Public Platform Capabilities Section: IMPLEMENTED,
+VISUAL QA DEFERRED.** The fifth real AIX visual component
+(`platform/apps/web/components/site/public-capabilities.tsx`,
+`PublicCapabilities`) adds one homepage section ("Platform Capabilities")
+below the trust/control section — not a feature-card dump, and not a
+claim that every capability (or Exchange functionality) is currently
+live. Four capability domains (Client & Compliance / Broking & Execution
+/ Payments & Settlement / Controls & Reporting) are checked against
+`docs/01_masters/03_Master_Module_Index_v1.2.md`,
+`docs/01_masters/02_Software_Requirement_Specification_v1.2.md`, and
+`docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md`'s Current
+Licence Status table, and rendered as a 2×2 rule-divided matrix, not
+cards. The Broking & Execution domain carries a quiet, near-verbatim
+Exchange-boundary sentence ("Exchange-related functionality remains
+controlled and disabled until the applicable approval and go-live
+conditions are satisfied") rather than a loud warning box. Retail
+onboarding is deliberately not listed (MVP scope is institutional/HNWI-
+professional only). **Full visual QA is intentionally deferred this
+turn** — no screenshot review requested. **No new package, no new
+shadcn component, no final color/font/brand-asset approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §24
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§23 for the full implementation record and the known visual-risk
+register (Phase 1D's and 1E's still-open flags, plus three new Phase 1F
+flags: mobile capability-list density, matrix quadrant height imbalance,
+and the Exchange-boundary note's deliberately low visual prominence).
 
 ## Contents
 

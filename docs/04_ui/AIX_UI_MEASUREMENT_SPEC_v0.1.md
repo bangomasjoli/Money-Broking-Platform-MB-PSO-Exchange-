@@ -1026,3 +1026,168 @@ pending), the accepted header/hero/operating-model (unchanged except as
 consumed). **VISUAL QA: DEFERRED** — not self-declared as accepted or
 even as "pending review" in the screenshot sense Phases 1B–1D used;
 screenshot-based review for this section has not yet been requested.
+
+---
+
+## 24. Phase 1F — Public Platform Capabilities Section (Geometry, Status, Visual-Risk Register)
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-capabilities.tsx`
+(`PublicCapabilities`), the fifth real AIX visual component. One
+homepage section ("Platform Capabilities"), below `PublicTrustControl`
+(§23); `PublicHeader`/`PublicHero`/`PublicOperatingModel`/
+`PublicTrustControl` are unchanged. **Full visual QA is intentionally
+deferred this turn, per explicit instruction.**
+
+**Regulatory/product boundary:** matches
+`docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md` §3's "Current
+Licence Status" table exactly (Money Broking Licence — Approved, active
+build scope; Payment System Operator Licence — Approved, active build
+scope; Exchange Application — Pending, "Locked until approval"). The
+Broking & Execution domain carries an explicit, quiet boundary sentence
+using near-verbatim language from the masters ("Exchange-related
+functionality remains controlled and disabled until the applicable
+approval and go-live conditions are satisfied") — not a loud warning box.
+No principal dealing, proprietary trading, market making, derivatives,
+margin, futures, staking, lending, yield, MYR pairs, privacy coins, or
+algorithmic stablecoins are named or implied.
+
+**Source validation:** every capability item was checked against
+`docs/01_masters/03_Master_Module_Index_v1.2.md` and
+`docs/01_masters/02_Software_Requirement_Specification_v1.2.md` before
+use — "institutional and HNWI/professional onboarding" (the masters
+state "MVP client type = institutional and HNWI/professional only...
+Retail onboarding is disabled by default," so retail is deliberately
+**not** listed as a capability), KYC/KYB, AML/transaction monitoring,
+Travel Rule enforcement, OTC/RFQ, MB Spot Broking Terminal, agency/
+back-to-back execution, `deposit_withdrawal = enabled`, pre-funded
+controls, settlement, reconciliation, maker-checker, audit logging,
+default-deny role/permission controls, and reconciliation/safeguarding
+reporting. No capability name was invented for marketing purposes.
+
+**Grouping:** 4 capability domains (Client & Compliance / Broking &
+Execution / Payments & Settlement / Controls & Reporting), each with its
+own short internal list — not 8–12 small cards.
+
+**Section spacing:** identical to §22/§23's values — top `pt-16`/
+`md:pt-20`/`lg:pt-24` = 64/80/96px, bottom `pb-20`/`md:pb-24`/`lg:pb-28`
+= 80/96/112px — reused for homepage-wide section-rhythm consistency.
+
+**Container:** `max-w-[1280px]`, same gutters as every prior section
+(16px mobile / 32px tablet (`md:`) / 48px desktop (`lg:`)).
+
+**Intro width:** `max-w-[720px]`, centered — the exact same
+`marketing-reading`-tier value `PublicOperatingModel` (§22) already uses,
+reused because this section's full-width matrix-below-centered-intro
+structure matches that section's own pattern (as opposed to
+`PublicTrustControl`'s left-aligned-intro-beside-a-column pattern).
+
+**Capability-system width:** the matrix spans the full container width;
+no separate cap. Category/detail split (Pattern A, an index + selectable
+detail panel) was **not** used, so there is no separate "category-column
+width" to report — see Desktop layout below for the pattern actually
+built.
+
+**Desktop layout (`lg:`, 1024px+):** a 2×2 "architectural capability
+matrix" (`grid-cols-2`, 4 domains), separated by thin rule dividers
+rather than card borders — Pattern B/C from the brief, not Pattern A
+(no Tabs, no click-to-reveal; all 4 domains are always visible, since
+showing everything at once was judged clearer for a first-time visitor
+than hiding 3 of 4 behind an interaction — see the Interaction
+Decision below).
+
+**Category/detail (matrix-cell) geometry:** each cell carries 32px
+(`lg:pl-8`/`lg:pr-8`/`lg:pt-8`/`lg:pb-8`) of internal padding on the
+divider-facing side(s) only, so two adjoining cells contribute 32px each
+— 64px combined — around a single 1px divider line, which sits centered
+in that combined gap rather than touching either cell's content.
+**A real defect was found and fixed during implementation:** the grid
+wrapper originally also carried `gap-x-8` (32px), which would have
+*added* to the per-cell padding rather than replacing it, producing a
+96px combined horizontal gap instead of the intended 64px — removed
+after being caught by reasoning through the box model, not assumed
+correct from the class names.
+
+**Internal padding:** row-gap-equivalent 32px per side (above); no
+separate horizontal card padding exists, since domains are not card
+boxes — the divider-facing padding above is the only padding this layout
+uses.
+
+**Divider treatment:** plain 1px (`border-border`) rules on two axes
+(`lg:border-l` for the right column, `lg:border-t` for the bottom row),
+forming a single cross rather than four boxed borders. Not necessary for
+understanding — heading hierarchy and list structure carry the grouping
+regardless.
+
+**Icon treatment:** Lucide (`IdCard`, `Handshake`, `Wallet`,
+`ClipboardCheck`), one per domain (not per capability item), 20px
+(`size-5`) inside a 40px (`size-10`) circle — the same governed marker
+convention every prior homepage section uses. `Wallet` is reused from
+`PublicOperatingModel`'s "Funding" step deliberately (both concern
+funds, and the label differs enough — "Payments & Settlement" vs.
+"Funding" — not to read as a duplicate pairing the way `PublicTrustControl`
+avoided reusing `PublicOperatingModel`'s icons for a near-identical
+concept/label pair).
+
+**Interaction pattern:** fully static — no Tabs/Accordion/carousel.
+`Tabs`/`Separator`/`Accordion` were all considered per this turn's shadcn
+policy and judged unnecessary: the divider is a plain Tailwind border
+utility, and no interaction was judged to improve comprehension over
+showing all 4 domains simultaneously for a capability overview.
+
+**Tablet (768–1023px) / Mobile (<768px):** single-column stack (one
+domain after another, full width) for both — the brief's explicit
+"simplify deliberately" instruction; a 2×2 grid was judged harder to
+read at tablet widths than a straightforward stack, so tablet and mobile
+share one simplified structure rather than introducing a third distinct
+layout.
+
+**Accessibility:** semantic `<section>`/heading hierarchy (`h2` section
+heading, `h3` per domain); capability items use a real `<ul>`/`<li>`
+list; all icons and the small dot bullets are `aria-hidden`; no fake
+clickable elements (fully static, no `role="button"` on non-interactive
+content); reading order is meaningful without CSS (intro, then domains
+in the same 1-2-3-4 order at every breakpoint).
+
+**Anti-AI-look review performed:** no card grid, no colored icon boxes
+(icons are neutral, `text-foreground`), no pill labels, no rainbow
+categories, no gradient panels, no badges, no checkmark list (a small
+neutral dot bullet was used instead), no "Everything you need"
+startup-copy tone, no fake metrics, no excessive rounding (only the
+40px circle markers use `rounded-full`, consistent with every prior
+section).
+
+**Known visual-risk register** (real, observed/credible risks only — none
+invented):
+
+- **Phase 1D — still open.** Desktop 6-column process row fit at
+  1024–1100px (§22). Untouched this turn.
+- **Phase 1E — still open.** Mobile control-stack density; large-desktop
+  two-column width balance (§23). Untouched this turn.
+- **Phase 1F — capability density on mobile (new).** Four stacked
+  domains, each with a description plus 3–4 short bullet items, produce
+  a long single-column scroll (roughly 150–200px per domain, ~600–800px
+  total) — calculated as legible per-item but not verified as a whole
+  scrolling experience in a real mobile viewport.
+- **Phase 1F — matrix quadrant height imbalance (new).** "Broking &
+  Execution" (top-right cell) carries one extra paragraph (the
+  Exchange-boundary note) that "Client & Compliance" (top-left, its row
+  partner) does not — since CSS Grid rows size to their tallest cell,
+  the top row's height will be set by the taller "Broking & Execution"
+  cell, leaving "Client & Compliance" with unused space above the
+  divider line. Calculated from the content/grid model, not observed in
+  a rendered viewport.
+- **Phase 1F — Exchange-boundary note prominence (new).** The boundary
+  note is styled identically to ordinary domain description text
+  (`text-xs text-muted-foreground`), deliberately per this turn's "not a
+  marketing distraction" instruction — but this creates a real, honest
+  tension worth flagging: a regulatory-boundary statement that is easy
+  to visually skip past. Recorded as an open question for user review,
+  not a claim that it is wrong.
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), the accepted header/hero/operating-model/trust-control
+(unchanged except as consumed). **VISUAL QA: DEFERRED** — not
+self-declared as accepted; screenshot-based review has not yet been
+requested for this section.

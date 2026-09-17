@@ -619,3 +619,61 @@ mobile control-stack density, and two-column width balance at large
 desktop. Phase 1D's own still-open six-column-row flag (§21) was **not**
 touched or resolved this turn, per explicit instruction. **VISUAL QA:
 DEFERRED.**
+
+## 23. Phase 1F — Public Platform Capabilities Section
+
+**IMPLEMENTED, VISUAL QA DEFERRED** —
+`platform/apps/web/components/site/public-capabilities.tsx`
+(`PublicCapabilities`). One homepage section ("Platform Capabilities"),
+below `PublicTrustControl`; `PublicHeader`/`PublicHero`/
+`PublicOperatingModel`/`PublicTrustControl` were consumed, not
+redesigned. Full geometry, copy, regulatory/product boundary, and the
+visual-risk register are recorded in `UI-02` §24 rather than duplicated
+here.
+
+**Full visual QA is intentionally deferred this turn, per explicit
+instruction** — no screenshot review was requested or performed.
+
+**No new dependency, package, or shadcn component was added.** Only the
+already-installed `lucide-react` icons (`IdCard`, `Handshake`, `Wallet`,
+`ClipboardCheck` — verified to exist in the installed version before
+use) are used; `Tabs`/`Separator`/`Accordion` were considered per this
+turn's shadcn policy and judged unnecessary (fully static presentation
+was chosen over any interactive pattern — see `UI-02` §24's Interaction
+Decision). `platform/package-lock.json` is unchanged.
+
+**Root page** (`app/page.tsx`) adds `PublicCapabilities` below
+`PublicTrustControl`; no further homepage section was added.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded (both
+routes statically prerendered). **No backend regression required:**
+`package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched.
+
+**A real geometry defect was found and fixed during implementation:**
+the 2×2 desktop matrix's grid wrapper originally carried both a
+`gap-x-8` grid gap AND per-cell `lg:pl-8`/`lg:pr-8` padding — these would
+have stacked (32px grid gap + 32px + 32px cell padding = 96px combined),
+not produced the intended 64px combined gap around the divider line.
+Found by reasoning through the box model rather than assumed correct
+from the class names, and fixed by removing the redundant grid `gap-x-8`
+entirely; re-verified against the compiled CSS after the fix.
+
+**Verification performed instead of screenshot QA:** rendered-HTML
+structural review (all 4 domain titles/descriptions/boundary-note text
+byte-verified against the intended wording, exactly 4 `<ul>` capability
+lists present, all decorative icons/bullets `aria-hidden`) and
+compiled-CSS byte-level confirmation of every governed value
+(`lg:pl-8`/`lg:pr-8`/`lg:pt-8`/`lg:pb-8` all resolving to 32px,
+`lg:border-l`/`lg:border-t` both 1px, `max-w-[720px]`/`[440px]`/`[420px]`,
+`size-10`, `size-5`, `size-1`). Three real, credible visual-risk flags
+were identified from layout/content calculation (not invented) and
+recorded rather than silently resolved — see `UI-02` §24's visual-risk
+register: mobile capability-list density, matrix quadrant height
+imbalance (the Exchange-boundary note makes one cell taller than its row
+partner), and the Exchange-boundary note's deliberately low visual
+prominence. Phase 1D's and Phase 1E's still-open flags were **not**
+touched or resolved this turn, per explicit instruction. **VISUAL QA:
+DEFERRED.**

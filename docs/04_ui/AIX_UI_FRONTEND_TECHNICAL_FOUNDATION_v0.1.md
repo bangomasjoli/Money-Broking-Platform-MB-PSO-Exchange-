@@ -535,3 +535,43 @@ the full record. This acceptance covers only the header + hero — not a
 final color palette, final font, final brand asset, the full public
 website, remaining homepage sections, production API wiring, live
 onboarding, or live product workflows, all of which remain pending.
+
+## 21. Phase 1D — Public Operating Model Section
+
+**IMPLEMENTED, PENDING USER VISUAL REVIEW** —
+`platform/apps/web/components/site/public-operating-model.tsx`
+(`PublicOperatingModel`). One homepage section only ("How AIX Works"),
+below the accepted hero; `PublicHeader`/`PublicHero` were consumed, not
+redesigned. Full geometry, copy, regulatory-terminology validation, and
+status detail recorded in `UI-02` §22 rather than duplicated here.
+
+**No new dependency, package, or shadcn component was added.** Only the
+already-installed `lucide-react` icons (`ClipboardList`, `ShieldCheck`,
+`Wallet`, `ArrowLeftRight`, `BadgeCheck`, `FileText` — verified to exist
+in the installed version before use) are used; `Separator`/`Badge`/
+`Tooltip` were considered per this turn's shadcn policy and judged
+unnecessary. `platform/package-lock.json` is unchanged.
+
+**Root page** (`app/page.tsx`) adds `PublicOperatingModel` below
+`PublicHero`; no further homepage section was added.
+
+**Quality gates, all independently run and passing on the final code:**
+`typecheck:web` 0 errors, `lint:web` 0 issues, `build:web` succeeded (both
+routes statically prerendered). **No backend regression required:**
+`package-lock.json` unchanged, no `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` file
+touched.
+
+**No screenshot was captured** — no browser-automation/screenshot tool
+was available, and installing one solely for this purpose remained out of
+scope. Verification performed instead: rendered-HTML structural review
+(exactly one of the three responsive `<ol>` variants visible per
+viewport, correct heading nesting, all decorative icons `aria-hidden`,
+step copy byte-verified against the intended wording) and compiled-CSS
+byte-level confirmation of every governed value (`pt-16`/`md:pt-20`/
+`lg:pt-24`, `pb-20`/`md:pb-24`/`lg:pb-28`, `max-w-[720px]`,
+`text-[32px]`/`md:text-[36px]`/`lg:text-[40px]`, `lg:gap-6`, `size-10`,
+`size-5`) — not a claim of equivalent confidence to an actual rendered
+screenshot. The desktop 6-column row's fit at exactly 1024–1100px is
+flagged as a specific open question for the user's visual review (`UI-02`
+§22). **VISUAL ACCEPTANCE: PENDING USER REVIEW.**

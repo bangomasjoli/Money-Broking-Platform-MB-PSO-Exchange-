@@ -771,3 +771,122 @@ final AIX font, a final AIX brand asset/logo, the full public website,
 remaining homepage sections, production API wiring, live onboarding, or
 live product workflows — all remain pending. The accepted `PublicHeader`
 (§10.8) is unaffected — this section covers the hero only.
+
+---
+
+## 22. Phase 1D — Public Operating Model Section (Geometry & Implementation Status)
+
+**IMPLEMENTED, PENDING USER VISUAL REVIEW** —
+`platform/apps/web/components/site/public-operating-model.tsx`
+(`PublicOperatingModel`), the third real AIX visual component. One
+homepage section only ("How AIX Works"), below the accepted hero;
+`PublicHeader` and `PublicHero` (§10.8/§21.2, both VISUALLY ACCEPTED) are
+unchanged.
+
+**Regulatory/business truth:** the 6-step sequence (Instruction / Control
+/ Funding / Execution / Settlement / Evidence) was checked against
+`docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md`
+(`execution_model = agency_back_to_back`; `feature_derivatives`/
+`feature_margin_trading`/`feature_staking`/`feature_yield_product` all
+`disabled`; principal dealing/market making/internal matching/public
+exchange trading explicitly blocked) and
+`docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md` ("pre-funded
+hold", "LP settlement payment", "Settlement sequence must not create AIX
+principal exposure", "reconciliation break", "audit log") before wording
+was finalized — every step uses terminology already governed in those
+documents. "DvP" is deliberately **not** used as visible copy: the
+masters use it only inside an internal control-sequence phrase ("DvP/
+safeguarded sequence checks"), not as a universally-applicable
+settlement-method claim, so "controlled settlement and reconciliation
+sequence" is used instead. The section carries its own explicit
+non-live-status label — see below — rather than presenting the sequence
+as a live transaction feed.
+
+**Section spacing:** top `pt-16`/`md:pt-20`/`lg:pt-24` = 64/80/96px;
+bottom `pb-20`/`md:pb-24`/`lg:pb-28` = 80/96/112px. Deliberately less than
+doubling the hero's own bottom padding (64/80/96px) — combined visual gap
+between hero and this section is generous without being excessive dead
+space.
+
+**Container:** `max-w-[1280px]`, same gutters as the hero (16px mobile /
+32px tablet (`md:`) / 48px desktop (`lg:`)) — no new, unrelated container
+width introduced, per this turn's explicit instruction.
+
+**Intro block:** `max-w-[720px]`, centered — reuses §7's existing
+`marketing-reading` width tier (680–760px) rather than inventing a new
+cap. The section heading has no separate narrower cap; it inherits the
+720px intro-block width.
+
+**Section heading:** 32px / 36px (`md:`) / 40px (`lg:`) — a **new,
+documented sub-role** ("Section heading," marketing, non-hero), not one
+of §6's existing roles: Display (40–64px) is reserved for the hero;
+authenticated Page title (24–28px) and Section title (18–20px) are the
+wrong context (both are authenticated-platform roles). 40px desktop is
+deliberately the *floor* of the Display range, and every breakpoint steps
+down further from there, so this heading visibly reads as smaller than
+the hero's own 40/48/56px sequence — "should not compete with the hero
+headline" was a hard requirement, verified by the numbers, not assumed.
+Flagged here for the eventual full type-role table finalization rather
+than silently added as an unrecorded one-off.
+
+**Desktop process row (`lg:`, 1024px+):** single horizontal row,
+`grid-cols-6`, `gap-6` (24px). Each step: a thin 1px (`bg-border`)
+connector line running through a 40px (`size-10`, reusing §4's existing
+Default control-height token as a circle diameter) circular marker
+containing a 20px (`size-5`, reusing §14's existing "standalone action
+icon at Default control height" tier) neutral (foreground-colored, not
+accent) Lucide icon; the connector is omitted before step 1 and after
+step 6. Title 14px semibold, description 12px, both below the marker.
+
+**Tablet (768–1023px):** 2-row × 3-column grid (`grid-cols-3`), `gap-x-8`
+(32px) / `gap-y-10` (40px), no connector line — a line crossing a wrapped
+2-row grid reads as broken, not measured, so it was omitted rather than
+forced; the visible "01"–"06" numbers and the native `<ol>` order already
+carry the sequence without it.
+
+**Mobile (<768px):** single vertical column, `space-y-8` (32px) between
+steps, with a thin vertical connector (1px, `bg-border`) positioned behind
+the 40px circle markers — the brief's suggested "switch to a vertical
+connector."
+
+**Open measurement flag:** the desktop 6-column row was sized against a
+1024px viewport (928px available content width ÷ 6 columns ≈ 141px per
+column before the 24px gaps) — verified against the actual compiled CSS
+column width, but **not** verified in a real browser viewport, since no
+screenshot/browser-automation tool was available and installing one
+solely for this purpose remained out of scope. This is the same category
+of risk the Phase 1B header breakpoint turned out to have; it was **not**
+unilaterally pushed to a safer/later breakpoint based on unverified
+reasoning — flagged here for specific attention during the user's visual
+review at 1024–1100px.
+
+**Accessibility:** native `<ol>`/`<li>` (a screen reader announces "item N
+of 6" from list semantics regardless of the visual "01"–"06" labels or
+connector styling, both of which are presentational only). Exactly one of
+the three responsive `<ol>` variants is visible at any given viewport
+(the other two are `display:none`, removed from the accessibility tree —
+no duplicate announcement). All icons `aria-hidden`; each step's own
+title/description text carries the meaning.
+
+**Color:** no new tokens added. Circle markers reuse the existing
+`--marketing-surface` token and `border-border`; icons are neutral
+(`text-foreground`), not accent-colored, per this turn's "prefer neutral
+hierarchy first, accent sparingly" instruction.
+
+**shadcn:** no new shadcn component added — `Separator`/`Badge`/`Tooltip`
+were all considered and judged unnecessary (the connector is a single
+`h-px bg-border` div, cheaper and more controllable for the flex-1
+line-segment pattern than `Separator`; the non-live-status disclosure is
+plain text, not a badge chip; no interactive hover content exists to
+warrant `Tooltip`).
+
+**Anti-AI-look review performed:** no card wrapper around any step (a
+numbered process rail, not a feature-card grid), no badges/chips, no
+gradient/glow on the connector or icons, no excessive shadow anywhere in
+the component, exactly one purposeful icon per step (not decorative
+filler).
+
+**Not accepted/changed by this turn:** final AIX font (still pending),
+final AIX color palette (still pending), final AIX brand asset (still
+pending), the accepted header/hero (unchanged except as consumed).
+**VISUAL ACCEPTANCE: PENDING USER REVIEW** — not self-declared.

@@ -71,6 +71,25 @@ product workflows — all remain pending. See
 [`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §21–§21.2
 and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
 §20 for the full implementation record.
+**UI Phase 1D — Public Operating Model Section: IMPLEMENTED, PENDING USER
+VISUAL REVIEW.** The third real AIX visual component
+(`platform/apps/web/components/site/public-operating-model.tsx`,
+`PublicOperatingModel`) adds one homepage section ("How AIX Works") below
+the accepted hero — no feature grid, pricing, testimonials, partners,
+footer, FAQ, or portal/dashboard content. The 6-step sequence
+(Instruction/Control/Funding/Execution/Settlement/Evidence) was checked
+against `docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md` and
+`docs/01_masters/04_Role_And_Permission_Matrix_v1.2.md` before wording was
+finalized — agency/back-to-back execution, pre-funded controls, and
+external counterparties only, no principal dealing/market making/
+derivatives/margin/staking/lending/yield implied, and the section carries
+its own explicit "Operating model / platform design" non-live-status
+label. **No new package, no new shadcn component, no final color/font/
+brand-asset approval.** See
+[`AIX_UI_MEASUREMENT_SPEC_v0.1.md`](AIX_UI_MEASUREMENT_SPEC_v0.1.md) §22
+and [`AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md`](AIX_UI_FRONTEND_TECHNICAL_FOUNDATION_v0.1.md)
+§21 for the full implementation record, including an open measurement
+flag on the desktop 6-column row's fit at exactly 1024–1100px.
 
 ## Contents
 

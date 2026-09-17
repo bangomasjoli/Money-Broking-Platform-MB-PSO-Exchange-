@@ -2301,3 +2301,54 @@ The temporary typographic "AIX" wordmark remains approved only for the current p
 **Backend/program state — unchanged by this turn, preserved exactly:** module status is not changed by this closure; Turn M-B remains paused unless a separately governed document says otherwise; `FND-FIND-001` remains HIGH/OPEN unless separately closed by later governed work; M1–M8 remain governed separately; production public exposure remains governed separately. Public-homepage visual acceptance is a UI-governance closure only — it is not conflated with, and does not advance, backend readiness or go-live acceptance.
 
 **Next UI phase: Authenticated Platform Design.** Not implemented, not started, not scoped in this turn — this record only closes the public marketing homepage.
+
+---
+
+## UI Phase 2B — Authenticated Shell Geometry (implemented)
+
+Every value below was verified by fetching the compiled Tailwind CSS chunk
+from a real running `next dev` server and reading the actual generated
+declaration for each utility class — not assumed from the class name alone.
+`--spacing` (the Tailwind v4 root unit) confirmed `.25rem` (4px), unchanged
+from every other geometry record in this document.
+
+| Property | Class | Compiled value | Confirmed px |
+|---|---|---|---|
+| Desktop sidebar width | `xl:w-60` | `calc(var(--spacing) * 60)` | **240px** |
+| Persistent-sidebar breakpoint | `xl:` | `@media (min-width: 80rem)` | **1280px** |
+| Nav row height | `h-10` | `calc(var(--spacing) * 10)` | **40px** |
+| Nav icon size | `size-5` | `calc(var(--spacing) * 5)` (both axes) | **20px** |
+| Icon-to-label gap | `gap-3` | `calc(var(--spacing) * 3)` | **12px** |
+| Active-nav left accent border | `border-l-2` | `border-left-width: 2px` | **2px** |
+| Top-bar height | `h-14` | `calc(var(--spacing) * 14)` | **56px** |
+| Sidebar brand-block height | `h-14` (same class, sidebar header) | `calc(var(--spacing) * 14)` | **56px** — deliberately matches the top bar's own height so the two align horizontally |
+| Sidebar nav vertical padding ("group spacing," §14's provisional value applied) | `py-6` | `calc(var(--spacing) * 6)` | **24px** |
+| Main content / top-bar horizontal padding, mobile | `px-4` | `calc(var(--spacing) * 4)` | **16px** |
+| Main content / top-bar horizontal padding, tablet | `sm:px-6` | `calc(var(--spacing) * 6)` | **24px** |
+| Main content / top-bar horizontal padding, desktop | `xl:px-8` | `calc(var(--spacing) * 8)` | **32px** |
+| Main content vertical padding | `py-6` | `calc(var(--spacing) * 6)` | **24px** |
+| Mobile Sheet width | `w-3/4` capped `sm:max-w-sm` (existing shadcn `Sheet` default, unmodified) | — | **75% of viewport width below `sm:`, capped at 384px from `sm:` (640px) up** |
+| Mobile menu trigger touch target | `size-10` | `calc(var(--spacing) * 10)` (both axes) | **40px** — reused verbatim from the public site's own `public-header.tsx` mobile trigger, not a new value |
+
+**Content padding matches exactly between the top bar and the main content
+area at every breakpoint** (`px-4 sm:px-6 xl:px-8` on both) — this is
+deliberate, so the workspace's left/right gutters read as one continuous
+vertical line rather than the top bar and content drifting out of alignment.
+
+**No max-width constraint on the main content area** — confirmed by source
+inspection: `AuthenticatedShell`'s `<main>` carries only padding utilities,
+no `max-w-*` class, per this turn's explicit "fluid workspace... not a
+narrow centered marketing container" instruction. This is a deliberate
+departure from the public site's own centered/capped containers (e.g.
+`PublicFooter`'s `max-w-[1280px]`) — the two surfaces are governed
+separately per `UI-01` §3, not by a shared container rule.
+
+**Active-nav indication is not color-only**, per this turn's explicit
+requirement: the active row combines a background tint (`bg-muted`), a
+font-weight change (`font-medium`), and a `2px` left border
+(`border-foreground`, vs. `border-transparent` on every inactive row,
+including inert ones, so no layout shift occurs when a row becomes active).
+
+Full component architecture, route structure, and the Server/Client
+prop-serialization defect found and fixed while building this geometry are
+recorded in `UI-04` §34, not duplicated here.

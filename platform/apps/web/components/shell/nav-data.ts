@@ -1,0 +1,77 @@
+import type { NavIconName } from "@/components/shell/nav-icons";
+
+/**
+ * Shared authenticated-shell surface/navigation data — UI Phase 2B.
+ *
+ * Single source of truth consumed by both `AuthenticatedSidebar` (desktop) and
+ * `AuthenticatedMobileNav` (Sheet drawer) so the two never carry hand-duplicated nav lists
+ * (`UI-04` §13's "shared shell mechanics, surface-specific navigation data" requirement).
+ *
+ * Every label below is taken verbatim from `UI-04`'s own approved A/B-classified initial IA
+ * (§6/§8/§9) — not renamed for layout convenience. C-classified future pages (Portfolio,
+ * Deposits, Withdrawals, OTC/RFQ, MB Spot Broking Terminal, Open Requests, Transactions,
+ * Deposit/Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation, Exceptions/Breaks,
+ * Reporting, Incidents/Exceptions) are intentionally absent — they must not appear as live
+ * primary nav per this turn's brief.
+ *
+ * `href` is present ONLY for the one item per surface whose page actually exists this turn
+ * (`Overview` / `Operational Overview` / `Compliance Overview` — each surface's own root
+ * placeholder index page, per this turn's explicit "shell-level placeholder/index pages only"
+ * scope). Every other item is real, approved IA (A/B-classified per `UI-04`) but has no page
+ * yet — rendering it as a live link would either 404 or misrepresent an unimplemented page as
+ * live, both explicitly prohibited this turn. `NavList` renders `href`-less items as inert,
+ * muted, non-interactive rows instead of hiding them — the surface's approved structure stays
+ * visible (this is NOT a C-classified item being suppressed), while nothing false is clickable.
+ *
+ * `icon` is a string `NavIconName`, not a component reference — this module is imported by
+ * Server Component route layouts, and a function value cannot cross into the client-rendered
+ * shell subtree as a prop (see `nav-icons.tsx`'s own doc comment for the full reasoning).
+ */
+
+export interface NavItem {
+  label: string;
+  /** Present only when this item's destination page exists this turn. */
+  href?: string;
+  icon: NavIconName;
+}
+
+export type Surface = "client" | "ops" | "admin";
+
+export const SURFACES: Record<Surface, { label: string; rootHref: string }> = {
+  client: { label: "Client Portal", rootHref: "/app" },
+  ops: { label: "Operations", rootHref: "/ops" },
+  admin: { label: "Admin / Compliance", rootHref: "/admin" },
+};
+
+/** `UI-04` §6 — Client Portal initial A/B-classified IA. */
+export const CLIENT_NAV: NavItem[] = [
+  { label: "Overview", href: "/app", icon: "home" },
+  { label: "Wallet & Payout Destinations", icon: "wallet" },
+  { label: "Profile / Organisation", icon: "building-2" },
+  { label: "KYC / KYB Compliance Status", icon: "shield-check" },
+];
+
+/** `UI-04` §8 — Staff/Operations Portal B-classified IA. */
+export const OPS_NAV: NavItem[] = [
+  { label: "Operational Overview", href: "/ops", icon: "layout-grid" },
+  { label: "Client Requests", icon: "inbox" },
+  { label: "Wallet Destination Review", icon: "wallet" },
+  { label: "Maker-Checker Queue", icon: "list-checks" },
+  { label: "Audit / Activity", icon: "history" },
+];
+
+/** `UI-04` §9 — Admin/Compliance Portal B-classified IA. */
+export const ADMIN_NAV: NavItem[] = [
+  { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
+  { label: "Client Risk / KYC-KYB", icon: "shield-alert" },
+  { label: "AML / Transaction Monitoring", icon: "activity" },
+  { label: "EDD / Review", icon: "search-check" },
+  { label: "Approval Queue", icon: "list-checks" },
+  { label: "Users / Roles / Permissions", icon: "users" },
+  { label: "Feature Flags / Configuration", icon: "sliders-horizontal" },
+  { label: "Audit / Sensitive Access", icon: "history" },
+];
+
+export function getActiveLabel(navItems: NavItem[], pathname: string): string | undefined {
+  return navItems.find((item) => item.href === pathname)?.label;
+}

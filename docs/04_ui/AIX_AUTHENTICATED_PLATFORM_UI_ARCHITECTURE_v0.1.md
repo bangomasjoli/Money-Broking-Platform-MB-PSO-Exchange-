@@ -958,3 +958,157 @@ instruction.
   stands unchanged.
 - Final AIX font, palette, and brand asset remain **PENDING DESIGN
   APPROVAL** — unaffected by this document.
+
+---
+
+## 34. UI Phase 2B — Authenticated Shell Implementation Evidence
+
+**Status: IMPLEMENTED.** This section records what was actually built against
+§§4/12–19/24/26 above — the architecture this document specified is now real
+code, not only a plan. Full measured geometry lives in `UI-02`'s own new
+authenticated-shell section (cross-referenced below); this section records
+route structure, component architecture, and implementation decisions.
+
+### 34.1 Actual route structure
+
+Exactly the three prefixes §12 proposed, each its own Next.js route group
+with its own `layout.tsx`:
+
+```
+platform/apps/web/app/app/layout.tsx    → /app    (Client Portal)
+platform/apps/web/app/app/page.tsx      → /app    (placeholder index)
+platform/apps/web/app/ops/layout.tsx    → /ops    (Staff/Operations Portal)
+platform/apps/web/app/ops/page.tsx      → /ops    (placeholder index)
+platform/apps/web/app/admin/layout.tsx  → /admin  (Admin/Compliance Portal)
+platform/apps/web/app/admin/page.tsx    → /admin  (placeholder index)
+```
+
+No sub-routes exist under any of the three — every approved nav item other
+than each surface's own root (§34.4) has no destination page this turn, by
+design (see §34.4's rendering decision).
+
+### 34.2 Shared shell component architecture
+
+```
+components/shell/
+  nav-data.ts               — surface metadata + typed NavItem[] per surface (CLIENT_NAV/OPS_NAV/ADMIN_NAV)
+  nav-icons.tsx              — string-keyed icon resolution (see §34.3 for why this is separate)
+  nav-list.tsx                — one shared nav-row renderer, used by both desktop and mobile nav
+  authenticated-sidebar.tsx  — desktop persistent sidebar (≥1280px)
+  authenticated-mobile-nav.tsx — Sheet-based drawer nav (<1280px)
+  authenticated-topbar.tsx  — full-width top bar
+  authenticated-shell.tsx   — composition root (topbar + sidebar + main), used by all 3 layouts
+```
+
+Named `Authenticated*`, matching the existing `Public*` naming convention
+already established by the public-site components (`PublicHeader`,
+`PublicHero`, etc.) — not a blind adoption of the brief's suggested names,
+but a deliberate match to a convention already present in this exact
+codebase before this turn started.
+
+### 34.3 A real defect found and fixed: Server/Client prop-serialization boundary
+
+The first implementation stored each `NavItem`'s `icon` as a direct Lucide
+icon **component reference** (a function). `next build` failed prerendering
+every one of `/app`, `/ops`, `/admin` with: *"Functions cannot be passed
+directly to Client Components unless you explicitly expose it by marking it
+with 'use server'."* Root cause: `nav-data.ts` is imported by each route's
+`layout.tsx` (a Server Component — it exports `metadata`, which is only
+valid in a Server Component), and that data is passed as props into
+`AuthenticatedTopbar`/`AuthenticatedSidebar`/`AuthenticatedMobileNav`, all
+marked `"use client"`. React Server Components cannot serialize a function
+value across that boundary. **Fixed** by splitting icon *identity* from icon
+*resolution*: `NavItem.icon` is now a string `NavIconName` (e.g. `"wallet"`,
+`"home"`), and a new `nav-icons.tsx` module maps each name to its actual
+Lucide component — imported and resolved only inside `nav-list.tsx`, which
+always renders within the already-client-marked shell subtree, so the
+function reference itself never crosses the Server→Client boundary. Verified
+by a full `next build` afterward: `/app`, `/ops`, `/admin` all statically
+prerender successfully (see §34.9).
+
+### 34.4 Approved-but-unbuilt nav items: rendering decision
+
+Every surface's approved nav list (§6/§8/§9) contains more items than this
+turn built pages for — only each surface's own root/index item has a real
+destination. Two options were considered and rejected before the
+implemented one: (a) link every item to a not-yet-existing sub-route (would
+404 — explicitly prohibited, and inconsistent with the public site's own
+established "never route to something that 404s" precedent,
+`public-header.tsx`'s own doc comment); (b) hide every item without a page
+(would look identical to a `C`-classified suppressed item, losing the
+distinction this document's own A/B/C framework exists to preserve).
+**Implemented instead:** items without a page render as non-interactive,
+muted rows (not a link, not a button, not focusable) with a visually-hidden
+"— not yet available" note appended to the accessible name, so the
+surface's full approved structure stays visible (proving the shell's
+navigation model against the real IA) while nothing false is clickable and
+nothing is silently hidden. This is a `NavList`-level rendering rule, not a
+new document; recorded here as implementation evidence of §5's
+classification discipline actually holding at the component level.
+
+### 34.5 Client/organisation context — implemented as a static block, not a selector
+
+Per §11's "Prefer simpler presentation for this turn," a selector was not
+built. The Client Portal top bar (`/app` only) shows a plain, non-interactive
+`<div>` (no `onClick`, no `role="button"`, not in the tab order) labeled
+"Organisation context" / "Demo placeholder" — never a fabricated client
+name. `aria-label` on the wrapper spells out explicitly that it is a demo
+placeholder, not real client data, so the honesty constraint is legible to
+assistive technology too, not only sighted users.
+
+### 34.6 Account affordance — implemented as a disabled button
+
+Per the brief's "no fake personal data" instruction: a `disabled` `Button`
+with a generic `User` icon and the literal label "Account" — no name, email,
+photo, role, or company identity invented. `disabled` was chosen deliberately
+over a plain no-op enabled button so its non-functional state is
+unambiguous and it does not create an empty tab stop.
+
+### 34.7 Responsive model — implemented simplification, not a UI-04 contradiction
+
+Per the brief's explicit permission: the 1024–1279px intermediate
+"compact/collapsible" state §24 named as a conceptual option was **not**
+built. Implemented instead: `≥1280px` (`xl:`) persistent 240px sidebar;
+`<1280px` sidebar fully hidden, top-bar menu trigger opens the `Sheet`
+drawer. This is recorded here as Phase 2B's own deliberate implementation
+decision — §24's table is unchanged and still names the fuller conceptual
+model as a future option, not superseded.
+
+### 34.8 Shared nav-data strategy
+
+Both `AuthenticatedSidebar` and `AuthenticatedMobileNav` render the same
+`NavItem[]` (from `nav-data.ts`) through the same `NavList` component — no
+hand-duplicated nav markup or data anywhere. `NavList`'s `variant` prop
+(`"desktop" | "mobile"`) controls only whether real links are wrapped in
+`SheetClose asChild` (so a mobile tap both navigates and closes the drawer)
+— identical row geometry, labels, icons, and active-state logic either way.
+
+### 34.9 Quality gates (all independently run, this turn)
+
+`typecheck:web` (`next typegen && tsc --noEmit`) — 0 errors.
+`lint:web` (`eslint`) — 0 issues.
+`build:web` (`next build`) — succeeded after the §34.3 fix; all 6 routes
+(`/`, `/_not-found`, `/admin`, `/app`, `/ops`) statically prerendered.
+
+### 34.10 Verification method and its limit
+
+No screenshot/browser visual tool is available this turn (none installed
+solely for this purpose, consistent with every prior UI phase in this
+project). Verification performed: a real `next dev` server was started, all
+four routes (`/`, `/app`, `/ops`, `/admin`) confirmed `HTTP 200`; rendered
+HTML for each authenticated route was fetched and inspected directly —
+every approved nav label present verbatim (including the ampersand in
+"Wallet & Payout Destinations," confirmed correctly HTML-entity-escaped,
+not corrupted), zero `C`-classified labels present on any surface, exactly
+one real nav link (the root) and the correct count of inert rows per
+surface (3/4/7 for Client/Ops/Admin respectively, matching each surface's
+total item count minus one), the mobile `Sheet`'s content confirmed absent
+from the initial server-rendered HTML (Radix unmounts closed dialogs by
+default — expected, not a defect), and the compiled CSS chunk was fetched
+and inspected byte-for-byte to confirm every geometry value compiles to its
+intended pixel figure (§34.9's sibling record, full table in `UI-02`'s new
+authenticated-shell geometry section). **This is source/rendered-HTML/
+compiled-CSS verification, not a claim of visual acceptance** — no browser
+rendered these breakpoints for actual pixel/visual review this turn; that
+review remains the user's own, exactly as every prior UI phase in this
+project has required before a "visually accepted" claim could be made.

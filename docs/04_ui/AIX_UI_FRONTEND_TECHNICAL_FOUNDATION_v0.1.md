@@ -1133,3 +1133,76 @@ exposure are unaffected and separately governed. Backend/program state
 (module status, Turn M-B, `FND-FIND-001`, M1–M8, production exposure)
 is unchanged by this closure. Full record: `UI-02` §28.17. **Next UI
 phase: Authenticated Platform Design — not implemented this turn.**
+
+## 37. Phase 2B — Authenticated Platform Shell (implementation)
+
+**Frontend implementation, shell only — no product page.** Adds 13 new
+files under `platform/apps/web/` (7 shared shell modules + 3 route groups
+× `layout.tsx`/`page.tsx`), no files modified, no package or lockfile
+change:
+
+```
+components/shell/nav-data.ts
+components/shell/nav-icons.tsx
+components/shell/nav-list.tsx
+components/shell/authenticated-sidebar.tsx
+components/shell/authenticated-mobile-nav.tsx
+components/shell/authenticated-topbar.tsx
+components/shell/authenticated-shell.tsx
+app/app/layout.tsx
+app/app/page.tsx
+app/ops/layout.tsx
+app/ops/page.tsx
+app/admin/layout.tsx
+app/admin/page.tsx
+```
+
+**shadcn/dependency impact: none.** `Sheet` and `Button` — both already
+installed since UI Phase 1B — are reused unmodified; no new shadcn
+primitive was added (`Separator`/`DropdownMenu`/`Tooltip`, all named as
+"likely candidates" in this turn's brief, were each evaluated and judged
+not yet necessary: dividers reuse the existing plain
+`border-t`/`border-b border-border` utility pattern `PublicFooter` already
+established rather than installing `Separator`; no real dropdown menu
+exists yet, so `DropdownMenu` was not installed; no icon-only control
+lacks a text label, so `Tooltip` was not installed). `platform/
+package-lock.json` unchanged — confirmed via diff.
+
+**A real build-time defect found and fixed:** the first implementation
+stored `NavItem.icon` as a direct Lucide icon component reference. `next
+build` failed prerendering `/app`, `/ops`, and `/admin` with "Functions
+cannot be passed directly to Client Components" — a genuine React Server
+Components boundary violation (`nav-data.ts` is imported by each route's
+Server Component `layout.tsx`, which passes it as props into the
+`"use client"`-marked shell components; a function value cannot serialize
+across that boundary). Fixed by storing a string `NavIconName` in the
+shared data and resolving it to the actual component only inside
+`nav-list.tsx` (already within the client-marked subtree) via a new
+`nav-icons.tsx` lookup module. Full reasoning: `UI-04` §34.3.
+
+**Quality gates, all independently re-run after the fix:**
+`typecheck:web` (`next typegen && tsc --noEmit`) — 0 errors. `lint:web`
+(`eslint`) — 0 issues. `build:web` (`next build`) — succeeded; `next
+build`'s own route table confirms all 6 routes (`/`, `/_not-found`,
+`/admin`, `/app`, `/ops`) statically prerendered
+(`○ (Static) prerendered as static content`).
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**` change;
+zero package/lockfile change.
+
+**No API call, no fetch, no server action, no cookie/session parsing, no
+auth middleware, no mock authentication, no permission evaluation** —
+confirmed via source inspection of every new file; every route is reachable
+without authentication (expected and explicitly authorized this turn — real
+auth integration is separately governed, later work).
+
+**Public homepage: unaffected.** `app/page.tsx`, `app/layout.tsx`,
+`app/globals.css`, and every `components/site/*` file are byte-identical to
+baseline — confirmed via `git diff --name-only`, none appear in the diff.
+
+Full route structure, component architecture, geometry rationale, and the
+verification method's limits (no screenshot tool — source/rendered-HTML/
+compiled-CSS inspection only, not a visual-acceptance claim) are recorded
+in `UI-04` §34 and `UI-02`'s new "UI Phase 2B — Authenticated Shell
+Geometry" section, not duplicated here.

@@ -462,6 +462,29 @@ component was implemented this turn** — `platform/apps/web/**` is
 unchanged. Final AIX font, palette, and brand asset remain **PENDING DESIGN
 APPROVAL**.
 
+**AUTHENTICATED PLATFORM: UI PHASE 2B — SHELL IMPLEMENTED / NO PRODUCT
+PAGE.** The authenticated shell architecture from `UI-04` §13 is now real
+code: `AuthenticatedShell`/`AuthenticatedSidebar`/`AuthenticatedTopbar`/
+`AuthenticatedMobileNav` (`platform/apps/web/components/shell/`) power
+three distinct route groups — `/app` (Client Portal), `/ops` (Staff/
+Operations Portal), `/admin` (Admin/Compliance Portal) — each with its own
+layout and its own approved nav data (`UI-04` §6/§8/§9), not one shared
+navigation tree. Desktop persistent sidebar (240px) from `1280px` and up;
+`Sheet`-drawer navigation below that. Only each surface's own root
+placeholder page exists (`Overview`/`Operational Overview`/`Compliance
+Overview`) — every other approved nav item renders as a clearly inert,
+non-interactive row (not a live link, not hidden) since its page is not
+built yet; no `C`-classified item appears in any primary nav. No
+authentication, session, API call, or authorization logic exists — every
+route is reachable without login, as explicitly authorized for this
+shell-only turn. `typecheck:web`/`lint:web`/`build:web` all pass; all 6
+routes statically prerender. Full geometry, route structure, and a real
+Server/Client prop-serialization defect found and fixed while building it:
+`UI-04` §34, `UI-02`'s new "UI Phase 2B — Authenticated Shell Geometry"
+section, `UI-03` §37. **No screenshot tool was available — verification
+was source/rendered-HTML/compiled-CSS only, not a visual-acceptance
+claim.** Public homepage unaffected.
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)

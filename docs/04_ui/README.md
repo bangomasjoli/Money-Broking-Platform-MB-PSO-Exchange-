@@ -436,6 +436,32 @@ UI-governance closure. See
 §28.17 for the full final acceptance record. **The next UI phase is
 Authenticated Platform Design — not implemented in this turn.**
 
+**PUBLIC HOMEPAGE: VISUALLY ACCEPTED / GOVERNED / CLOSED** (unchanged by
+everything below — restated for clarity, not reopened).
+
+**AUTHENTICATED PLATFORM: UI PHASE 2A — DESIGN ARCHITECTURE.** A new
+controlled document, [`AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md`](AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md)
+(`UI-04`, DRAFT / CONTROLLED ARCHITECTURE), establishes — **design
+governance and information architecture only, no implementation** — the
+three authenticated surfaces (Client Portal, Staff/Operations Portal,
+Admin/Compliance Portal), their route/shell/navigation/density models, and
+an A/B/C page-classification register checked directly against actual
+backend route evidence rather than assumption: **only two backend services
+expose any browser-callable route today** — `iam` (`/auth/*`, login/session/
+MFA only) and `wlt1`'s independently-accepted 6-route public client
+contract (wallet/payout destination registration and proof-of-control).
+Every other service (`aml1`, `cfg1`, `clt1`, `iam2`, `kyc1`, `sec1`) is
+internal-only. Consequently the Client Portal has exactly one `A`-classified
+page (Wallet & Payout Destinations); **no page in the Staff/Operations or
+Admin/Compliance Portal is classified `A`** — every capability there is real
+and governed but reachable only via internal service-to-service calls
+today. Full classification tables, shadcn adoption map (no bulk install),
+AIX-wrapper classifications (none created), and implementation sequence are
+in `UI-04`. **No authenticated page, route, sidebar, dashboard, or shadcn
+component was implemented this turn** — `platform/apps/web/**` is
+unchanged. Final AIX font, palette, and brand asset remain **PENDING DESIGN
+APPROVAL**.
+
 ## Contents
 
 - [`AIX_UI_DESIGN_FOUNDATION_v0.1.md`](AIX_UI_DESIGN_FOUNDATION_v0.1.md)
@@ -464,6 +490,15 @@ Authenticated Platform Design — not implemented in this turn.**
   [`REF-UI-001`](references/REF-UI-001_phantom-floating-pill.png) is
   registered; see [`references/README.md`](references/README.md) for the
   registration rule.
+- [`AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md`](AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md)
+  (`UI-04`, DRAFT / CONTROLLED ARCHITECTURE) — authenticated-platform
+  information architecture: Client/Staff-Operations/Admin-Compliance
+  portal boundaries, route/shell/sidebar/top-bar models, page-header/
+  density/table/form/status/maker-checker/audit principles, responsive
+  shell model, public-vs-authenticated token model, shadcn adoption map,
+  AIX-wrapper classifications, and an A/B/C page-classification register
+  checked directly against actual backend route evidence. Architecture/
+  governance only — no authenticated page, route, or component exists yet.
 
 ## Companion Project Skill
 

@@ -21,7 +21,11 @@ change independently of this skill and must stay Git-tracked in one place.
    value the spec already states. If an even later, more specific UI
    governance document exists (a navigation-architecture doc, a page
    acceptance record), read that too — these documents are a starting
-   point, not necessarily the latest word on every subject.
+   point, not necessarily the latest word on every subject. **For any
+   Client/Staff-Operations/Admin-Compliance authenticated-platform work
+   specifically, also read `docs/04_ui/AIX_AUTHENTICATED_PLATFORM_UI_ARCHITECTURE_v0.1.md`
+   (`UI-04`) first** — it governs portal boundaries, route/shell/navigation
+   models, and the A/B/C page-classification discipline for that surface.
 2. **Inspect the actual component/page you are about to change** — its
    current markup, its current styles, its current props/variants — before
    editing it. Do not redesign from memory or assumption.

@@ -1406,3 +1406,45 @@ accepted.
 change; zero package/lockfile change. **Public homepage: unaffected** —
 confirmed via `git diff --name-only`, no public-site file appears in the
 diff.
+
+## 42. Phase 2G — Client Profile / Organisation (third product page, visual QA deferred)
+
+**Frontend implementation — the second `B`-classified client page.**
+Adds `app/app/profile/page.tsx` and 5 new modules
+(`components/profile/{profile-data.ts, organisation-summary.tsx,
+authorised-representatives.tsx, profile-status.tsx}` plus the new shared
+`components/client/client-demo-data.ts`); modifies `components/shell/
+nav-data.ts` (one `href` added) and `components/overview/overview-data.ts`
+(refactored to import shared client state instead of declaring its own
+copy — zero consuming-component changes required, verified this turn).
+
+**shadcn/dependency impact: none.** No new component installed; every
+element composes from primitives already present (plain HTML `dl`/`dt`/
+`dd`, `Link`). Zero `package.json`/`package-lock.json` change.
+
+**Cross-page data consistency, verified by construction:**
+`components/client/client-demo-data.ts` is the single source for client
+lifecycle/KYC/eligibility state — both `UI Phase 2F`'s Overview page and
+this turn's Profile page import from it directly, so a future edit to
+one cannot silently desynchronize the other (same pattern `UI Phase 2F`
+itself established for `DEMO_DESTINATIONS`, now extended one level
+further up the fixture hierarchy).
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues (no new defect introduced this turn). `build:web`
+— succeeded; 8 routes now statically prerendered (up from 7),
+`/app/profile` added.
+
+**Verification method and visual-QA status:** a real `next dev` server,
+rendered-HTML inspection, and compiled-CSS inspection were performed
+(full record: `UI-04` §42's own subsections, `UI-02`'s new "UI Phase 2G"
+section) — no rendered screenshot/browser review was performed,
+consistent with `UI Phase 2E`/`2F`'s own program-decision posture.
+Recorded as **IMPLEMENTED / VISUAL QA DEFERRED**, not falsely claimed as
+accepted.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**`
+change; zero package/lockfile change. **Public homepage: unaffected** —
+confirmed via `git diff --name-only`, no public-site file appears in the
+diff.

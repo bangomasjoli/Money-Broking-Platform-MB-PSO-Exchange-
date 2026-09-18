@@ -50,11 +50,15 @@ export const SURFACES: Record<Surface, { label: string; rootHref: string }> = {
  * transition from inert to live, since it is the one `A`-classified page with a real backing
  * client-facing route (`GET /wlt1/destinations` et al. — see `UI-04` §37's capability map).
  * Label preserved exactly — not renamed to "Wallets"/"Address Book"/anything shorter.
+ *
+ * `UI Phase 2G`: "Profile / Organisation" gains a real `href` (`/app/profile`) — `B`-classified
+ * (real `CLT-01` fields, no public projection route), same posture as `UI Phase 2F`'s Overview.
+ * Label preserved exactly.
  */
 export const CLIENT_NAV: NavItem[] = [
   { label: "Overview", href: "/app", icon: "home" },
   { label: "Wallet & Payout Destinations", href: "/app/wallet-destinations", icon: "wallet" },
-  { label: "Profile / Organisation", icon: "building-2" },
+  { label: "Profile / Organisation", href: "/app/profile", icon: "building-2" },
   { label: "KYC / KYB Compliance Status", icon: "shield-check" },
 ];
 

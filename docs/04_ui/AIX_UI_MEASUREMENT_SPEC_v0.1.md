@@ -2508,3 +2508,31 @@ unmodified.
 **Visual QA status: DEFERRED, not performed, not falsely claimed** —
 same program decision as `UI Phase 2E`; full rendered review happens in
 the consolidated pass after the authenticated UI build-out completes.
+
+---
+
+## UI Phase 2G — Client Profile / Organisation Geometry (compiled-CSS confirmed, visual QA deferred)
+
+The field-grid geometry this turn introduces, confirmed by fetching the
+compiled Tailwind CSS chunk directly:
+
+| Rule | Compiled value |
+|---|---|
+| Field-grid breakpoint (`lg:grid-cols-2`) | `@media (min-width: 64rem)` (**1024px** — the same `lg:` breakpoint `UI Phase 2E`'s List+Detail split already uses, reused, not reinvented) |
+| Field-grid column template | `grid-template-columns: repeat(2, minmax(0, 1fr))` — two equal-width columns |
+| Field-grid gap (`gap-x-8 gap-y-4`) | column gap **32px**, row gap **16px** |
+| Field label→value gap (`mt-1`) | `margin-top: calc(var(--spacing) * 1)` — **4px** |
+| Inter-section gap (`gap-8`) | **32px** — same value as `UI Phase 2F`'s own inter-section rhythm, reused |
+| List-row divider (Authorised Representatives / Compliance Summary / Profile Completeness) | existing `border-t border-border`, unchanged — **1px** |
+
+**No new radius, shadow, color, or spacing value was introduced** — the
+field-grid pattern composes entirely from already-governed tokens
+(`UI-02` §3's spacing scale) and the exact `lg:` breakpoint `UI Phase
+2E` already established for a different purpose (List+Detail) — reused
+here for a structurally similar "does 1024px have room for two columns"
+question, not re-derived from scratch.
+
+**Visual QA status: DEFERRED, not performed, not falsely claimed** —
+same program decision as `UI Phase 2E`/`2F`; full rendered review
+happens in the consolidated pass after the authenticated UI build-out
+completes.

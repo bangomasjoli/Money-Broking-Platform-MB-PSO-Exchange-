@@ -1,64 +1,36 @@
 import { DEMO_DESTINATIONS, type PublicDestination } from "@/components/wallet-destinations/destination-data";
+import { DEMO_CLIENT_STATE, KYC_CASE_LABELS } from "@/components/client/client-demo-data";
 
 /**
- * Client Overview — data layer. UI Phase 2F.
+ * Client Overview — data layer. UI Phase 2F, refactored in UI Phase 2G to source lifecycle/KYC/
+ * eligibility state from the shared `components/client/client-demo-data.ts` module (extracted
+ * this turn) rather than declaring its own copy — so this page and `UI Phase 2G`'s Profile /
+ * Organisation page can never disagree about client lifecycle, KYC/KYB state, or eligibility.
+ * `ClientLifecycleStatus`/`KycCaseStatus`/`CLIENT_LIFECYCLE_LABELS`/`DEMO_ORGANISATION_STATUS`
+ * (the type this file's own `organisation-status.tsx` still imports by that name) are re-exported
+ * below for backward compatibility — no consuming component needed to change its own imports.
  *
- * `UI Phase 2F`'s own B-classification rule: every value here either (a) reuses `UI Phase 2E`'s
- * real `DEMO_DESTINATIONS` fixture (same contract shape as the real `GET /wlt1/destinations`
- * response — `A`-backed capability, demo data), so this page can never disagree with the Wallet &
- * Payout Destinations page about how many destinations exist or what state they are in — one
- * source of truth, imported directly, not re-declared; or (b) is explicit organisation/KYC demo
- * state using REAL governed terminology verified against backend source this turn — never
- * invented words like "Healthy"/"Verified"/"Excellent"/"Compliant":
- *
- * - Client lifecycle values (`active_limited`/`suspended`/`closed`) — the exact
- *   `CLIENT_PROFILE_REACHABLE_STATUSES` tuple from
- *   `platform/services/clt1/src/lib/client-profiles.ts`.
- * - KYC/KYB case status values (`pending_documents`/`completed`/`remediation`) — the exact
- *   `KYC_CASE_STATUSES` tuple from `platform/services/kyc1/src/lib/kyc-case.ts`.
- * - "Eligibility" — the real derived concept `WLT-01` itself checks before allowing any
- *   destination registration (`platform/services/wlt1/src/lib/clt1-client.ts`'s own
- *   `checkClientStatus`), not an invented UI notion.
- *
- * **No public client-facing projection route exists for ANY of this organisation/KYC state** —
- * verified by re-scanning every backend service's registered routes this turn (confirmed
- * unchanged from `UI Phase 2A`/`2E`'s own findings: only `iam`'s `/auth/*` and `wlt1`'s 6-route
- * public contract are browser-callable; `clt1`/`kyc1`/`aml1`/`cfg1`/`iam2`/`sec1` remain entirely
- * internal). This is exactly why the page stays `B`-classified — the owning modules and their
- * real internal data models exist, but the client-facing read capability this page would need
- * does not yet exist. See `UI-04` §41's capability map and backend-gap record for the full
- * reasoning.
+ * `UI Phase 2F`'s own B-classification rule still holds unchanged: destination-derived data
+ * reuses `UI Phase 2E`'s real `DEMO_DESTINATIONS` fixture (`A`-backed capability, demo data);
+ * organisation/KYC state is explicit demo state using real governed terminology — never invented
+ * words like "Healthy"/"Verified"/"Excellent"/"Compliant." No public client-facing projection
+ * route exists for any of it — re-verified this turn (`UI-04` §41/§42's capability maps).
  */
 
-// ---------------------------------------------------------------------------
-// A. Organisation status — DEMO ONLY (no public projection exists for any of this).
-// ---------------------------------------------------------------------------
-
-export type ClientLifecycleStatus = "active_limited" | "suspended" | "closed";
-export type KycCaseStatus = "pending_documents" | "completed" | "remediation";
-
-export const CLIENT_LIFECYCLE_LABELS: Record<ClientLifecycleStatus, string> = {
-  active_limited: "Active (Limited)",
-  suspended: "Suspended",
-  closed: "Closed",
-};
-
-export const KYC_CASE_LABELS: Record<KycCaseStatus, string> = {
-  pending_documents: "Pending Documents",
-  completed: "Completed",
-  remediation: "Remediation Required",
-};
+export type { ClientLifecycleStatus, KycCaseStatus } from "@/components/client/client-demo-data";
+export { CLIENT_LIFECYCLE_LABELS, KYC_CASE_LABELS } from "@/components/client/client-demo-data";
 
 export interface DemoOrganisationStatus {
-  clientLifecycle: ClientLifecycleStatus;
-  kycCaseStatus: KycCaseStatus;
+  clientLifecycle: typeof DEMO_CLIENT_STATE.clientLifecycle;
+  kycCaseStatus: typeof DEMO_CLIENT_STATE.kycCaseStatus;
   eligible: boolean;
 }
 
+/** Thin, page-shaped view over the shared `DEMO_CLIENT_STATE` — same values, not re-declared. */
 export const DEMO_ORGANISATION_STATUS: DemoOrganisationStatus = {
-  clientLifecycle: "active_limited",
-  kycCaseStatus: "pending_documents",
-  eligible: true,
+  clientLifecycle: DEMO_CLIENT_STATE.clientLifecycle,
+  kycCaseStatus: DEMO_CLIENT_STATE.kycCaseStatus,
+  eligible: DEMO_CLIENT_STATE.eligible,
 };
 
 // ---------------------------------------------------------------------------
@@ -120,8 +92,11 @@ export interface CapabilityStatusItem {
   href?: string;
 }
 
+/** `UI Phase 2G`: "Profile / Organisation" moves from "Interface planned" to "Available" — its
+ * page is now real (`/app/profile`). "KYC / KYB Compliance Status" remains "Interface planned" —
+ * still no page this turn. */
 export const CAPABILITY_STATUS_ITEMS: CapabilityStatusItem[] = [
   { label: "Wallet & Payout Destinations", status: "Available", href: "/app/wallet-destinations" },
-  { label: "Profile / Organisation", status: "Interface planned" },
+  { label: "Profile / Organisation", status: "Available", href: "/app/profile" },
   { label: "KYC / KYB Compliance Status", status: "Interface planned" },
 ];

@@ -2449,3 +2449,246 @@ source/rendered-HTML/compiled-CSS verification only — no browser
 rendered this page for actual pixel/visual review.** Recorded as
 **DEFERRED**, per this turn's own explicit program decision, not a stop
 condition.
+
+---
+
+## 42. UI Phase 2G — Client Profile / Organisation (`B`-classified page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The second `B`-classified
+client page, replacing `UI Phase 2B`'s never-built inert nav item with a
+real page. Same visual-QA posture as `UI Phase 2E`/`2F`.
+
+### 42.1 Field/capability map (verified against actual backend source, not assumed)
+
+Every backend service's registered routes were re-scanned this turn —
+unchanged from `UI Phase 2A`/`2E`/`2F`'s own findings: `clt1` remains
+entirely internal, no public client-facing route exists anywhere in it.
+Every field below was additionally traced to its exact source table/
+schema/enum in `platform/services/clt1/src`:
+
+| UI field/section | Owning module | Current model/route | Client-facing? | Status |
+|---|---|---|---|---|
+| Legal name | `CLT-01` | `clt1.client_profile.legal_name` | No | **PARTIAL/B** |
+| Registration number | `CLT-01` | `clt1.client_profile.registration_number` | No | **PARTIAL/B** |
+| Country of incorporation | `CLT-01` | `clt1.client_profile.country_of_incorporation` | No | **PARTIAL/B** |
+| Entity type | `CLT-01` | `clt1.client_profile.applicant_type` (real enum `individual`/`corporate`/`institutional`, `routes/applications.ts`'s own `APPLICANT_TYPES`) | No | **PARTIAL/B** |
+| Client classification | `CLT-01` | `clt1.client_profile.client_class` (real enum `institutional`/`hnwi`/`professional`/`retail`/`unknown`, same file's `CLIENT_CLASSES`) | No | **PARTIAL/B** |
+| Client lifecycle | `CLT-01` | `clt1.client_profile.status` (real reachable-state enum, `lib/client-profiles.ts`) | No | **PARTIAL/B** — reused verbatim from `UI Phase 2F` |
+| Authorised representatives (director/signatory/controller) | `CLT-01` | `clt1.authorised_party.party_type` (real enum, `lib/authorised-parties.ts`'s `AUTHORISED_PARTY_TYPES` — `signatory`/`director`/`controller`/`ubo`) | No | **PARTIAL/B** — real role vocabulary, no name field exists in the model either |
+| Beneficial ownership (UBO) | `CLT-01` | `clt1.authorised_party` where `party_type='ubo'`, plus `ownership_percentage` column | No | **PARTIAL/B, minimal summary only** — percentage and identity detail deliberately withheld (sensitive) |
+| Platform access users (`client_admin`/`client_maker`/`client_approver`/`viewer`) | `CLT-01` | `clt1.authorised_user.role` (real enum, `lib/authorised-users.ts`) | No | **OMITTED from this page** — an IAM/account-access concern, not organisation profile (explicit boundary, this turn's own instruction) |
+| Registered address | — | **No address field or table found anywhere in `CLT-01`'s actual schema** — searched directly this turn (`address`/`registered_office` across every `clt1` source file); zero matches | No | **OMITTED** — no field concept exists in the model at all, not merely "no public projection" |
+| Primary contact (name/phone/position) | — | Only `clt1.client_application.applicant_email` (optional) exists, and only on the pre-approval `client_application` row — never copied into the persisted `client_profile` at approval (verified: the `INSERT INTO clt1.client_profile` in `routes/decisions.ts` does not include it) | No | **OMITTED** — presenting an application-time email as an ongoing "primary contact person" would misrepresent its real scope; no name/phone/position field exists anywhere |
+| KYC/KYB status | `KYC-01` | real internal case-status enum (`UI Phase 2F`'s own finding) | No | **PARTIAL/B** — reused verbatim from `UI Phase 2F` |
+| Profile editing | — | No client-facing update route exists (`CLT-01` entirely internal) | No | **Read-only only** — no Edit button; one explanatory note instead |
+
+**Two full candidate sections (Registered Address, Primary Contact) were
+evaluated and OMITTED, not built as demo-only** — the key distinction
+from `UI Phase 2F`'s "demo-only" sections: those had real governed
+values with no public *projection*; these have no field *concept* at
+all (Registered Address) or a field so scoped-mismatched to the page's
+own subject that showing it would misrepresent reality (Primary
+Contact). Recorded as a deliberate, evidenced omission, not an
+oversight — per this turn's own "do not build fields just because they
+are common in onboarding systems" instruction.
+
+### 42.2 Route and navigation change
+
+New route: `platform/apps/web/app/app/profile/page.tsx` → `/app/profile`
+— chosen over `/app/organisation` to match `UI Phase 2E`'s own
+established precedent (anchoring the route on the governed compound
+nav label's first word: "Wallet & Payout Destinations" →
+`/app/wallet-destinations`), not a fresh content-based judgment call.
+`components/shell/nav-data.ts`'s `CLIENT_NAV` entry for "Profile /
+Organisation" gained a real `href` — the second nav item to transition
+from inert to live (after "Wallet & Payout Destinations," `UI Phase
+2E`). Label preserved verbatim. No other nav item changed —
+"KYC / KYB Compliance Status" remains the only inert Client nav item.
+`UI Phase 2F`'s own `CAPABILITY_STATUS_ITEMS` (Overview's "Platform
+Access" section) was updated in the same spirit: "Profile /
+Organisation" now reads "Available" with a real link, matching reality.
+
+### 42.3 Page architecture and shared client-demo-state extraction
+
+```
+app/app/profile/page.tsx
+components/profile/
+  profile-data.ts                    — authorised-party/UBO/completeness demo data
+  organisation-summary.tsx            — OrganisationDetails + ClientClassification
+  authorised-representatives.tsx      — AuthorisedRepresentatives (+ UBO summary line)
+  profile-status.tsx                  — ComplianceSummary + ProfileCompleteness
+components/client/
+  client-demo-data.ts                 — NEW shared module (extracted this turn)
+```
+
+Per this turn's own "Overview and Profile must agree… consider
+extracting a small client-demo-data.ts" instruction:
+`components/client/client-demo-data.ts` now holds the single shared
+source for `ClientLifecycleStatus`/`KycCaseStatus`/their label maps and
+`DEMO_CLIENT_STATE` (extended this turn with organisation-identity/
+classification fields). `UI Phase 2F`'s own `components/overview/
+overview-data.ts` was refactored to import from it — `organisation-
+status.tsx` (Phase 2F's component) needed **zero changes**, since
+`overview-data.ts` re-exports the same names it always has (verified by
+inspecting its own imports before and after the refactor). `UI Phase
+2E`'s `DEMO_DESTINATIONS` was deliberately NOT moved into this shared
+module — it is WLT-specific fixture data already correctly scoped to
+`components/wallet-destinations/`, per this turn's own "do not move
+page-specific WLT fixtures unless beneficial" guidance.
+
+### 42.4 Page header, demo disclosure, and closing note
+
+Title "Profile / Organisation," description "Review the organisation
+information associated with your AIX client profile." — no marketing
+language. `DemoDisclosure` (the shared component `UI Phase 2F`
+extracted): *"Interface preview — organisation profile data is
+demonstrative until the required client-facing profile projection is
+implemented"* — same structural treatment as `UI Phase 2F`'s own
+disclosure, wording specific to this page's own scope. A separate,
+smaller closing note — *"Profile updates are not yet available in this
+interface"* — sits at the page's own end, distinct from the demo
+disclosure (a different concern: interaction capability, not data
+provenance) — not folded into `DemoDisclosure` itself, and not built as
+a second shared component for a single use site.
+
+### 42.5 Sections implemented
+
+- **Organisation Details** — Legal name, Registration number, Country of
+  incorporation, Entity type. 2-column `dl` field grid at `lg:` (1024px)
+  and up, single column below.
+- **Client Classification & Lifecycle** — Client classification, Client
+  lifecycle. Same field-grid pattern, separate section per the brief's
+  own IA (distinct concept from static identity fields).
+- **Authorised Representatives** — 2 demo rows (Director, Authorised
+  Signatory — real `AUTHORISED_PARTY_TYPES` vocabulary, `ubo` excluded)
+  plus one "Beneficial ownership: On file" summary line. **No
+  representative name shown anywhere** — the real `authorised_party`
+  table has no name field either, so this is more accurate to the real
+  model, not less complete.
+- **Compliance Summary** — one plain, non-interactive row ("KYC / KYB
+  status → Pending Documents," reusing `UI Phase 2F`'s exact value) — no
+  link (the dedicated KYC/KYB page does not exist yet), no case-
+  management detail.
+- **Profile Completeness** — three discrete states ("Organisation
+  details → On file," "Authorised representatives → On file,"
+  "Compliance information → Pending Documents," the last reusing the
+  same KYC value again, not a second paraphrase) — **no percentage, no
+  progress ring**, per this turn's explicit prohibition.
+
+### 42.6 Editing model
+
+**Read-only.** No client-facing profile-update route exists anywhere in
+`CLT-01`'s registered routes (confirmed this turn). No Edit button
+anywhere on the page — a single closing note (§42.4) explains this
+plainly instead of shipping an inert or fake-functional button. Future
+edit pattern (documented, not built): *Edit section → review changes →
+submit update request → approval/review state* — matching `CLT-01`'s
+own real request/apply maker-checker pattern already used for every
+other mutation in that module (e.g. `authorised_party` add/update/
+remove all follow a `.../request` → `.../apply` shape), so a future
+implementation would extend an existing pattern, not invent a new one.
+
+### 42.7 UBO / sensitive-data treatment
+
+Beneficial ownership is represented ONLY as a single boolean-shaped
+summary line ("On file" / "Not provided") — **no ownership percentage,
+no party count, no identity/PII of any kind**, even though the real
+`authorised_party` row carries an `ownership_percentage` column. No
+passport/identity-document numbers, no bank details, no wallet
+addresses, no internal compliance evidence anywhere on this page.
+
+### 42.8 KYC/AML and IAM/account boundaries
+
+**No internal compliance data leaks:** no risk rating, AML score, EDD
+notes, STR reference, transaction-monitoring alert, or analyst comment
+appears anywhere — none of that is client-facing in the governed model,
+and none was found or referenced. **No IAM/account-security scope:** no
+password, MFA, session, or login-history content anywhere — `clt1.
+authorised_user` (the platform-ACCESS-role model) is deliberately not
+shown on this page at all (§42.1), preserving the IAM/CLT boundary this
+turn's own instruction draws explicitly.
+
+### 42.9 Responsive behavior — structural reasoning (not rendered)
+
+- **≥1280px / 1024–1279px:** `lg:grid-cols-2` field grids active in
+  Organisation Details and Client Classification & Lifecycle — every
+  field label ("Legal name," "Registration number," "Country of
+  incorporation," "Entity type," "Client classification," "Client
+  lifecycle") verified short enough to stay readable at both widths.
+  Authorised Representatives/Compliance Summary/Profile Completeness
+  remain single-column list patterns at every width (list rows, not
+  field grids — a grid does not suit list content).
+- **768–1023px:** field grids collapse to single column (chosen over
+  "selective 2-column," this turn's own permitted simpler fallback).
+- **430px:** single column throughout; content order top-to-bottom is
+  exactly PageHeader → DemoDisclosure → Organisation Details → Client
+  Classification & Lifecycle → Authorised Representatives → Compliance
+  Summary → Profile Completeness → closing note — matching this turn's
+  own required order (adjusted only by omitting the two sections that
+  were never implemented, §42.1).
+
+No horizontal overflow risk — no table, no fixed-width element wider
+than its container exists on this page.
+
+### 42.10 Loading/error readiness
+
+No `fetch` exists on this page — no loading or error state was built.
+Documented for the future integration turn: identical to `UI Phase 2F`'s
+own documented treatment (`UI-04` §41.9) — a `Skeleton` matching each
+section's own shape, and the same restrained error/permission-denied
+pattern already governed elsewhere; no new state model required.
+
+### 42.11 Status-wrapper (`AixStatusBadge`) — not applicable this turn
+
+This page uses no `Badge` at all — every value is plain text (legal
+name, dates, role labels, "On file"), since none of it is a short,
+discrete status token in the sense `UI-04` §21 reserves `Badge` for.
+The existing promotion question (`UI Phase 2F` §41.13) is therefore
+unaffected by this page — no new call site was added.
+
+### 42.12 Accessibility
+
+One semantic `<h1>` ("Profile / Organisation"). Five `<h2>` sections,
+each `aria-labelledby`'d to its own heading. Semantic `dl`/`dt`/`dd`
+used for every field-grid and status row. Status is never color-only
+(plain text throughout — trivially satisfied, since no color-coded
+element exists on this page at all). No fake disabled form fields for
+read-only data — every field is plain text, never a disabled `<input>`
+(this turn's own explicit instruction). No inaccessible clickable
+`<div>` anywhere — the page has no interactive element beyond the
+shell's own nav (the Compliance Summary/Profile Completeness/
+Authorised Representatives rows are all deliberately non-interactive).
+Mobile reading order matches DOM order (no `tabIndex` overrides used
+anywhere on this page). The demo disclosure and closing note are both
+plain readable text, no `aria-hidden` wrapping either.
+
+### 42.13 Backend projection gaps (for a future integration turn — not built this turn)
+
+Derived directly from §42.1's capability map:
+
+1. **Client organisation-profile projection** — a public, client-scoped
+   read exposing `client_profile`'s identity/classification/lifecycle
+   fields (legal name, registration number, country of incorporation,
+   applicant type, client class, status) — already identified as gap
+   #1 in `UI Phase 2F`'s own record (`UI-04` §41.10); this turn adds no
+   new organisation-identity gap beyond confirming its exact field
+   shape.
+2. **Authorised-representative projection** — a public, client-scoped
+   read exposing `authorised_party` rows (role type only — `ownership_
+   percentage` and any other sensitive column would need its own
+   separate, explicit governance decision before ever appearing in a
+   public projection, not assumed here).
+3. **Beneficial-ownership summary projection** — narrower than #2: a
+   boolean/count-only projection would suffice for this page's own
+   minimal-summary treatment; a full detail projection is explicitly
+   NOT requested here, consistent with §42.7's own restraint.
+4. **Profile-update request endpoint** — a client-facing mutation
+   following `CLT-01`'s own existing request/apply maker-checker shape
+   (§42.6), not yet designed in any governed document; this turn only
+   notes that the pattern to extend already exists internally.
+
+No registered-address or distinct primary-contact-person gap is listed
+— neither has a field concept in the governed model to build a gap
+statement against (§42.1); if either becomes a real future requirement,
+it would need new model design, not merely new API exposure of an
+existing field.

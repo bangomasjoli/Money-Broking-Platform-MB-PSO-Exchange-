@@ -593,11 +593,38 @@ claim.** Public homepage unaffected.
   `DestinationStatusBadge` already eliminates the repetition a wrapper
   would target). Full record: `UI-04` §41, `UI-02`'s new "UI Phase 2F"
   section, `UI-03` §41.
+- **Phase 2G:** Profile / Organisation (`/app/profile`) — **IMPLEMENTED
+  / VISUAL QA DEFERRED.** The third real client page, `B`-classified:
+  `CLT-01` genuinely owns every field shown (real `client_profile`
+  columns — legal name, registration number, country of incorporation,
+  entity type; real `client_class`/lifecycle enums, reused verbatim from
+  `UI Phase 2F`; real `authorised_party` role vocabulary — `signatory`/
+  `director`/`controller`, `ubo` handled only as a minimal "On file"
+  summary, never a percentage or identity detail), verified against
+  backend source this turn, but no public client-facing projection route
+  exists for any of it. **Two full candidate sections were evaluated and
+  OMITTED, not built as demo-only:** Registered Address (no address
+  field or table exists anywhere in `CLT-01`'s actual schema — zero
+  evidence, not merely "no public projection") and Primary Contact (only
+  a bare, optional `applicant_email` exists, and only on the
+  pre-approval application record, never persisted to the client
+  profile). No representative name is shown anywhere — the real model
+  has no name field either. Read-only throughout: no client-facing
+  update route exists, so no Edit button anywhere — one small closing
+  note states this plainly. Extracted a new shared
+  `components/client/client-demo-data.ts` (client lifecycle/KYC/
+  eligibility/organisation-identity state) that both this page and `UI
+  Phase 2F`'s Overview now import — the two pages can never disagree.
+  2-column field grids at `lg:` (1024px) and up, single column below.
+  `typecheck:web`/`lint:web`/`build:web` all pass; verified via
+  rendered-HTML and compiled-CSS inspection, **not** rendered/screenshot
+  review, which remains part of the deferred consolidated pass. Full
+  record: `UI-04` §42, `UI-02`'s new "UI Phase 2G" section, `UI-03` §42.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
-  (`A`-classified) and Client Overview (`B`-classified) are the first
-  two real authenticated client product pages — Profile, KYC, and every
-  Ops/Admin page remain unimplemented. No API/auth integration exists on
-  either page.
+  (`A`-classified), Client Overview, and Profile / Organisation (both
+  `B`-classified) are the first three real authenticated client product
+  pages — KYC/KYB Compliance Status and every Ops/Admin page remain
+  unimplemented. No API/auth integration exists on any of them.
 
 ## Contents
 

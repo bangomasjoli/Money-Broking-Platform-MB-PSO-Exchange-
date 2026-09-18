@@ -1309,3 +1309,54 @@ homepage: unaffected** — `app/page.tsx`, `app/layout.tsx`,
 `app/globals.css`, and every `components/site/*` file are byte-identical
 to baseline, confirmed via `git diff --name-only` (none appear in the
 diff).
+
+## 40. Phase 2E — Wallet & Payout Destinations (first product page, visual QA deferred)
+
+**Frontend implementation — first real `A`-classified client page.** Adds
+`app/app/wallet-destinations/page.tsx` and 6 new modules under
+`components/wallet-destinations/`; modifies `components/shell/nav-data.ts`
+(one `href` added) and `components/shell/page-header.tsx` (one optional
+`action` prop added, backward-compatible — the three existing placeholder
+pages pass no new prop and render unchanged).
+
+**shadcn additions:** `Dialog`, `Input`, `Label`, `Select` (`npx
+shadcn@4.21.0 add dialog input label select`) — **zero
+`package.json`/`package-lock.json` change**, confirmed via diff; all four
+compose entirely from the `radix-ui` dependency already installed since
+`UI Phase 1A`. `button.tsx` was offered for overwrite by the same command
+and skipped (identical content). Full field-to-governed-schema mapping:
+`UI-04` §37.7/§37.15.
+
+**No API/auth integration** — confirmed via source inspection of every
+new/changed file: no `fetch`, no server action, no cookie/session
+parsing, no auth middleware, no membership-switching logic. Demo fixture
+data (`DEMO_DESTINATIONS`) is static and local; the Add Destination
+dialog's "Review Destination" step never submits anything.
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues (one real defect found and fixed during
+implementation, not left in: the first `useIsLgUp` viewport hook called
+`setState` synchronously inside a `useEffect` body, which the project's
+own `react-hooks/set-state-in-effect` ESLint rule correctly flagged as a
+cascading-render risk — rewritten using `useSyncExternalStore`, the
+React-recommended pattern for subscribing to external browser state like
+`matchMedia`, which needs no effect-body `setState` at all). `build:web`
+— succeeded; 7 routes now statically prerendered (`/`, `/_not-found`,
+`/admin`, `/app`, `/app/wallet-destinations`, `/ops`), up from 6.
+
+**Verification method and visual-QA status:** a real `next dev` server,
+rendered-HTML inspection, and compiled-CSS inspection were performed
+(full record: `UI-04` §37.11, `UI-02`'s new "UI Phase 2E" section) — but
+**no rendered screenshot/browser review was performed.** Unlike `UI
+Phase 2D` §39 (where this same absence produced an explicit non-
+acceptance stop), this turn's own program instruction treats deferred
+visual QA as the expected, correct outcome for every UI build-out turn
+until the authenticated platform is feature-complete — recorded as
+**IMPLEMENTED / VISUAL QA DEFERRED**, not falsely claimed as accepted.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**`
+change; zero package/lockfile change. **Public homepage: unaffected** —
+`app/page.tsx`, `app/layout.tsx`, `app/globals.css`, and every
+`components/site/*` file are byte-identical to baseline, confirmed via
+`git diff --name-only`.

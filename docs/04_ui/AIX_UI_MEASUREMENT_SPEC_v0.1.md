@@ -2442,3 +2442,37 @@ result. All prior geometry in this document (§ "UI Phase 2B —
 Authenticated Shell Geometry") remains structurally unchanged — Phase 2D
 did not alter sidebar width, row height, icon size, or top-bar height,
 only the tokens/colors/spacing layered onto that unchanged structure.
+
+---
+
+## UI Phase 2E — Wallet & Payout Destinations Geometry (compiled-CSS confirmed, visual QA deferred)
+
+The List + Detail split geometry this turn introduces, confirmed by
+fetching the compiled Tailwind CSS chunk directly:
+
+| Rule | Compiled value |
+|---|---|
+| List+Detail split breakpoint | `.lg\:grid` etc. wrapped in `@media (min-width: 64rem)` — **1024px** |
+| Split column template (`lg:grid-cols-[1fr_360px]`) | `grid-template-columns: 1fr 360px` — table flexible, detail panel fixed **360px** |
+| Detail-panel leading padding (`lg:pl-6`) | `padding-left: calc(var(--spacing) * 6)` — **24px** |
+| Table row height | `h-10` — **40px** (`COMPACT` tier, `UI-04` §35.14/§18) |
+| Table header height | unchanged existing `TableHead` default — **40px** |
+| Row divider | unchanged existing `Table` primitive default — **1px**, `border-b`, no zebra striping |
+| Mobile detail Sheet width | existing shadcn default, unmodified — `w-3/4` capped `sm:max-w-sm` (384px) |
+
+**Structural viewport arithmetic** (1440/1280/1024/768/430) — reasoned
+explicitly, not rendered — is recorded in full in `UI-04` §37.10, not
+duplicated here; this table records only the compiled-CSS-confirmed
+values those calculations depend on.
+
+**No new radius, shadow, or border-color value was introduced.** The
+detail panel's `border-l` uses the existing `--border` token (`UI-02`
+§5's Standard-tier discipline, unchanged); `Badge`'s `outline` variant
+and rows' `rounded-md` are both pre-existing, unmodified defaults.
+
+**Visual QA status: DEFERRED, not performed, not falsely claimed.** Per
+this turn's explicit program decision, this is not treated as a stop
+condition (contrast the "UI Phase 2D" section above, where the same
+absence of rendered review produced an explicit non-acceptance record) —
+full rendered visual review of this page happens in the consolidated
+pass after the authenticated UI build-out completes.

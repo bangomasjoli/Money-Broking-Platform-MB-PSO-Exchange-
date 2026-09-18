@@ -43,10 +43,17 @@ export const SURFACES: Record<Surface, { label: string; rootHref: string }> = {
   admin: { label: "Admin / Compliance", rootHref: "/admin" },
 };
 
-/** `UI-04` §6 — Client Portal initial A/B-classified IA. */
+/**
+ * `UI-04` §6 — Client Portal initial A/B-classified IA.
+ *
+ * `UI Phase 2E`: "Wallet & Payout Destinations" gains a real `href` — the first nav item to
+ * transition from inert to live, since it is the one `A`-classified page with a real backing
+ * client-facing route (`GET /wlt1/destinations` et al. — see `UI-04` §37's capability map).
+ * Label preserved exactly — not renamed to "Wallets"/"Address Book"/anything shorter.
+ */
 export const CLIENT_NAV: NavItem[] = [
   { label: "Overview", href: "/app", icon: "home" },
-  { label: "Wallet & Payout Destinations", icon: "wallet" },
+  { label: "Wallet & Payout Destinations", href: "/app/wallet-destinations", icon: "wallet" },
   { label: "Profile / Organisation", icon: "building-2" },
   { label: "KYC / KYB Compliance Status", icon: "shield-check" },
 ];

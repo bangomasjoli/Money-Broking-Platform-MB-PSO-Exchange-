@@ -1852,3 +1852,328 @@ Recorded honestly, since no rendered check was possible:
 None of these is a code defect — each is a genuine visual judgment that
 requires eyes on a rendered page, which is exactly what this turn's own
 gate exists to require before claiming acceptance.
+
+---
+
+## 37. UI Phase 2E — Wallet & Payout Destinations (first `A`-classified client page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The first real authenticated
+client product page. Per this turn's explicit program decision, rendered
+screenshot QA is **deferred, not blocked** — this is a different posture
+than `UI Phase 2D` §36 (which stopped short of claiming acceptance because
+no tooling was available and none was authorized to install): this turn's
+brief explicitly instructs *"do NOT stop this turn because browser/
+screenshot tooling is unavailable… do NOT claim visual acceptance… full
+visual QA will occur after the authenticated UI build-out."* Accordingly
+this section records structural/source/compiled-CSS verification (§37.11)
+and explicit **DEFERRED** status, not a stop condition.
+
+### 37.1 WLT-01 capability map (verified against actual backend source, not assumed)
+
+Every row below was confirmed by reading the actual route/DTO source in
+`platform/services/wlt1/src/routes/public/**` and
+`platform/services/wlt1/src/lib/public/**` this turn — none assumed from
+the Phase 2A capability summary alone.
+
+| UI element | Governed backend capability | Route / evidence | UI status this turn |
+|---|---|---|---|
+| Destination list/table | List client's own destinations | `GET /wlt1/destinations` (`routes/public/destinations.ts`) | **A** — real route exists; **not called this turn** (UI-first, demo fixtures shown instead, §37.4) |
+| Destination detail | Single destination read | `GET /wlt1/destinations/:destination_id` | **A** — real route exists; not called this turn |
+| Add Destination — Wallet | Register a digital-asset wallet destination | `POST /wlt1/wallet-destinations` (`RegisterWalletDestinationBody`) | **A** — real route exists; form fields mirror the exact schema (§37.7), not called this turn |
+| Add Destination — Bank Payout | Register a fiat payout destination (APAC) | `POST /wlt1/payout-destinations` (`RegisterFiatPayoutDestinationBody`) | **A** — real route exists; form fields mirror the exact schema (§37.7), not called this turn |
+| Proof-of-Control (wallet ownership verification) | Challenge + cryptographic-signature verify | `POST .../proof-of-control/challenges`, `POST .../proof-of-control/verify` | **A route exists, but NOT represented in this UI.** Requires a live external-wallet signature (MetaMask/TronLink-class), genuinely out of scope for a UI-first, no-wallet-integration turn — faking it would be actively misleading, worse than omitting it. Recorded as an explicit scope boundary (§37.6), not silently dropped. |
+| Current Proof-of-Control status | — | **No public GET exists for it.** Verified by re-reading every registered public route — confirmed absent. | Not shown anywhere — would misrepresent an unsupported read as operational. |
+| First-use status | — | Not present anywhere in the public contract (grepped `first_use`/`first-use` across every public route/lib file — zero matches) | Not shown — no client-visible field exists. |
+| Limits / velocity / concentration | — | Not present in the public contract (the only `limit`/rate-limit matches found are the list-pagination `limit` querystring param and `FND-01` abuse-protection rate-limiting — confirmed by reading the matched lines directly, not by the grep hit count alone) | Not shown — no client-visible field exists. |
+| Maker-checker detail (approver, queue, SoD) | Internal only | Not present in the public contract — the only externally-visible signal is the coarse `status` enum itself | Represented ONLY via the mapped `status` label (§37.8) — no approver/queue/internal-role UI anywhere. |
+| Balance / ledger / custody / settlement figures | Not owned by WLT-01 | N/A — confirmed absent from both `PublicWalletDestination` and `PublicFiatPayoutDestination` | Not shown anywhere on this page (§37.13). |
+
+### 37.2 Route and navigation change
+
+New route: `platform/apps/web/app/app/wallet-destinations/page.tsx` →
+`/app/wallet-destinations`. `components/shell/nav-data.ts`'s
+`CLIENT_NAV` entry for "Wallet & Payout Destinations" gained a real
+`href` (was inert since `UI Phase 2B`) — the first nav item across all
+three surfaces to transition from inert to live. Label preserved
+verbatim, not shortened. No other Client/Ops/Admin nav item changed —
+Profile/Organisation and KYC/KYB Compliance Status remain inert (no page
+exists for either yet).
+
+### 37.3 Page architecture
+
+```
+app/app/wallet-destinations/page.tsx        — route (Server Component)
+components/wallet-destinations/
+  destination-data.ts                        — types (mirror dto.ts exactly) + governed
+                                                 label/status maps + demo fixtures
+  destination-status.tsx                      — shared status Badge (table) / status line (detail)
+  destination-table.tsx                       — the list/table (primary region)
+  destination-detail.tsx                      — the detail content (shared: desktop panel + mobile Sheet)
+  wallet-destinations-workspace.tsx           — "use client" composition root: selection state +
+                                                 responsive List+Detail transformation
+  add-destination-dialog.tsx                  — Add Destination Dialog (form → review, no submit)
+```
+
+No `AixDataTable`/`AixStatusBadge`/`AixApprovalPanel`/`AixAuditTrail`
+wrapper created — per this turn's explicit instruction and `UI-04` §27's
+own "POTENTIALLY JUSTIFIED... requires at least two real call sites"
+rule, one page does not yet justify promoting any of them. Narrowly
+named page components (`DestinationTable`, `DestinationDetail`) were used
+instead, matching the brief's own suggested pattern.
+
+### 37.4 Demo-data disclosure and fixture scope
+
+No `fetch`, server action, or API call anywhere on this route — confirmed
+by source inspection of every new file. `DEMO_DESTINATIONS`
+(`destination-data.ts`) is a static, local, 5-row fixture array. An
+explicit, visible-but-subordinate disclosure sits directly beneath the
+page header: *"Interface preview — demo data. No live client records are
+shown; backend integration is separate, later work."* (small `text-xs`,
+`Info` icon, not a full-page disabled treatment — matching "must not make
+the whole page look disabled"). All values are obviously fictitious:
+addresses/account numbers use the exact real masking format
+(`prefix••••••••suffix` for wallets — verified against
+`safe-response.ts`'s own `maskAddress`; `••••suffix` for accounts —
+verified against `account-identifier.ts`'s own `maskAccountIdentifier`)
+but with fabricated digits; bank identifiers (`DEMOMYK1`, `DEMOSGS1`) are
+deliberately non-BIC-shaped placeholders, not real or real-looking SWIFT
+codes; no real people, companies, or bank accounts anywhere.
+
+### 37.5 Destination categories represented
+
+Exactly the two the governed contract supports — `wallet` and
+`fiat_payout` (verified via `ALLOWED_DESTINATION_TYPES` in
+`routes/public/destinations.ts`) — displayed as "Wallet" and "Bank
+Payout." No third category invented.
+
+### 37.6 Sensitive data and Proof-of-Control treatment
+
+Every sensitive value shown is the **server-masked** value the public
+contract itself returns (`address_masked`, `account_identifier_masked`)
+— never a raw address/account number, and **no "Reveal" control exists
+anywhere on this page**, per this turn's explicit instruction that
+Sensitive Read governance existing elsewhere does not automatically grant
+a client-facing reveal capability, and none was found to support one
+here. Proof-of-Control is not represented at all (§37.1) — both because
+no public read capability exists for its current status, and because the
+interactive challenge/sign/verify flow requires a live external wallet
+signature this UI-first turn does not integrate.
+
+### 37.7 Add Destination — form fields and source contract
+
+Every field in `add-destination-dialog.tsx` traces to the exact governed
+request schema, verified this turn:
+
+**Wallet** (`RegisterWalletDestinationBody`): `chain`+`network` (one
+combined Select, restricted to the two backend-registered pairs —
+`ethereum/mainnet`, `tron/mainnet`, per `lib/address/index.ts`'s own
+registry — no third chain offered), `address` (required text),
+`memo_tag` (optional text), `wallet_type` (`hosted`/`unhosted`/`unknown`),
+`beneficiary_relationship` (`self`/`related_party`/`third_party`).
+
+**Fiat** (`RegisterFiatPayoutDestinationBody`): `bank_country`
+(`MY`/`SG`/`HK`/`ID` — the frozen v1 APAC registry,
+`lib/fiat/country-profiles.ts`), `currency`/`rail` (derived read-only
+text the instant a country is chosen — never an independent Select,
+since the schema requires them to exactly match the country's frozen
+profile; offering them separately would let a user construct a
+combination the backend would reject), `beneficiary_type`
+(`individual`/`corporate`), `account_identifier` (required text),
+`bank_identifier` (required text, BIC), `branch_identifier` (required
+only when `branchRequired` — true for Hong Kong only, per the frozen
+registry's own `branchRequired` flag; hidden entirely for the other three
+countries, not shown-but-optional). `account_identifier_type`
+("local_account") and `bank_identifier_type` ("bic") are fixed literals
+in the schema, not user choices — not rendered as fields.
+
+**No API integration** — the dialog progresses `form` → `review`, never
+`form` → `success`, since nothing is ever submitted. The review step's
+own copy states explicitly: *"Interface preview — demo data. This does
+not submit a real registration request; backend integration is separate,
+later work."* Final action reads "Review Destination" (disabled until
+required fields are filled); the review step's own closing action reads
+"Close," never "Confirm" or anything implying a completed transaction.
+`Idempotency-Key` (a real required header on both governed routes) is
+deliberately not generated or exposed as a field — a wire-protocol
+concern for the future integration turn, not something a user enters.
+
+### 37.8 Status-state mapping
+
+The exact `ALLOWED_STATUSES` tuple from `routes/public/destinations.ts`,
+mapped to human-readable labels — no invented state, no invented word
+like "Verified"/"Trusted"/"Safe"/"Approved by AIX":
+
+| Governed backend status | UI label | Semantic category (`UI-04` §21) |
+|---|---|---|
+| `draft` | Draft | neutral |
+| `pending_screening` | Screening in Progress | pending |
+| `pending_review` | Pending Review | pending |
+| `approved_pending_cooling` | Approved — Cooling-Off | pending |
+| `active` | Active | active/success |
+| `revoked` | Revoked | blocked/restricted |
+
+Presented via one shared `DestinationStatusBadge`/`DestinationStatusLine`
+pair (`destination-status.tsx`) — never color-only: every status carries
+a distinct Lucide icon (`Circle`/`Hourglass`/`CheckCircle2`/`Ban`) plus
+its exact label text; `Badge` uses the `outline` variant uniformly (no
+per-status fill color, since no final status palette is approved,
+`UI-02` §17). `Badge` is used in the table (short, scannable, per `UI-04`
+§21's own rule); a plain icon+text line is used in the detail panel
+(narrative/single-record context — `Badge` there would re-introduce
+"excessive pill elements," `UI-01` §4).
+
+### 37.9 Table / list geometry and detail-panel contents
+
+Columns: **Destination** (masked address/account — the primary
+identifier), **Type**, **Network / Country**, **Status**, **Registered**.
+Deliberately NOT the brief's own "likely" 7-column list — "Approval /
+Control State" was dropped (redundant: the contract has exactly one
+`status` field, not a separate approval sub-state — a second column would
+fabricate a distinction that does not exist server-side) and "Last
+Updated" was renamed to "Registered" and bound to `created_at_utc` (the
+only timestamp the contract returns — there is no `updated_at` to show,
+confirmed by reading `dto.ts` directly). No separate "Actions" column —
+the whole row is the single interactive unit (select → view detail),
+avoiding a redundant column for one action already available via row
+click. `COMPACT` density (40px rows, `UI-04` §35.14's mapping for
+"standard lists"), hairline `border-b` dividers (the shared `Table`
+primitive's own default, unchanged), no zebra striping, no giant card
+wrapper (the table sits in a borderless `WORKSPACE PANEL`, `UI-04`
+§35.17 — confirmed no wrapping `border`/`rounded-*` class anywhere around
+`DestinationTable`).
+
+Detail panel (`DestinationDetail`, shared verbatim between the desktop
+panel and the mobile Sheet): primary identifier + type + status line,
+then a `<dl>` of type-specific governed fields (wallet: network,
+wallet type, relationship, memo/tag presence; fiat: country, currency,
+bank identifier, branch where applicable, beneficiary type), then
+"Registered." Single leading `border-l border-border` on the desktop
+panel (`DETAIL PANEL`, `UI-04` §35.17) — no full box; the mobile Sheet
+supplies its own `OVERLAY`-tier boundary instead, so `DestinationDetail`
+itself carries no border of its own (reused identically in both
+contexts, not duplicated).
+
+### 37.10 List + Detail responsive transformation — structural viewport review
+
+No rendered screenshot was taken (deferred, §37.11) — the following is
+source-level/arithmetic reasoning, reported as such, not a rendered
+observation:
+
+- **1440px:** shell sidebar (240px, `xl:`) showing; content padding
+  `xl:px-8` (32px each side). Available content width ≈
+  1440 − 240 − 64 = **1136px**. `lg:grid-cols-[1fr_360px]` split active
+  (`lg:` = 1024px, already passed) — table gets the flexible remainder
+  (≈1136 − 360 − 24 gap ≈ **752px**), comfortable for 5 columns.
+- **1280px:** same breakpoint state as 1440px (sidebar + `xl:px-8`
+  active, split active). Available ≈ 1280 − 240 − 64 = **976px**; table
+  ≈ **592px** — still comfortable.
+- **1024px:** shell sidebar NOT showing yet (`xl:` is 1280px — the
+  Sheet-drawer shell breakpoint, independent of this page's own `lg:`
+  split breakpoint); content padding is `sm:px-6` (24px each side, since
+  `xl:px-8` hasn't engaged). Available ≈ 1024 − 48 = **976px** — nearly
+  identical to the 1280px case (no sidebar, but also less total width);
+  split remains safe by the same arithmetic. This is the exact case
+  `UI-04` §35.16 deferred and this page now resolves with real numbers.
+- **768px:** below the page's own `lg:` (1024px) split breakpoint — the
+  split collapses to list-only, full width (content padding `sm:px-6`,
+  available ≈ 768 − 48 = **720px**, comfortable for a single table).
+  Selecting a row opens the `Sheet` (right-side drawer, existing shadcn
+  default width — `w-3/4` capped `sm:max-w-sm`/384px) showing
+  `DestinationDetail`, per "prefer list/table with detail opened in
+  Sheet" for the 768–1023px range.
+- **430px:** shell itself already shows Sheet-drawer navigation (`<1280`,
+  `UI Phase 2B`); this page's own list-only + Sheet-detail treatment
+  (same as 768px) continues — content padding `px-4` (16px each side),
+  available ≈ 430 − 32 = **398px**, workable for the 5-column table via
+  the shared `Table` primitive's own existing horizontal-scroll
+  container (`role="region"`, `tabIndex={0}`, unchanged) rather than
+  forcing a redesigned mobile card list this turn — a real, deliberate
+  choice: the existing scrollable-table mechanism (already governed and
+  accessibility-proven, `UI-QA-002`'s precedent) was judged sufficient
+  for 5 demo rows rather than building a second, parallel mobile-card
+  representation for a page whose full visual QA is explicitly deferred
+  anyway. Flagged as a candidate refinement for the consolidated visual
+  QA pass, not implemented as a gap this turn.
+
+### 37.11 Verification method performed this turn (source/compiled-CSS, not rendered)
+
+A real `next dev` server was started; `/app/wallet-destinations`
+confirmed `HTTP 200`, alongside regression checks on `/app`, `/ops`,
+`/admin` (all still `200`, nav unaffected apart from the one intended
+change). Rendered HTML inspected directly: the governed label appears
+exactly 3 times (nav, top-bar breadcrumb, page `<h1>`), all 5 demo rows
+present with correct masked values, all 5 status labels present, the
+demo-data disclosure present, zero forbidden invented-status words
+(*"Verified"/"Trusted"/"Safe"/"Approved by AIX"*), zero
+Exchange/trading-terminology words, zero label renames. Compiled CSS
+fetched and inspected byte-for-byte: `.lg\:grid-cols-\[1fr_360px\]` →
+`grid-template-columns: 1fr 360px`, `lg:` breakpoint confirmed
+`min-width: 64rem` (1024px exactly), `lg:pl-6` → 24px. Both `<aside>`
+elements (shell sidebar, detail panel) confirmed present with distinct,
+correct responsive classes. Accessibility markup confirmed present:
+`tabIndex={0}` + `aria-selected` on every table row, the shared
+scrollable-table `role="region"` wrapper unchanged. **This is
+source/rendered-HTML/compiled-CSS verification only — no browser
+rendered this page for actual pixel/visual review.** Per this turn's own
+explicit program decision, that is not a stop condition here (contrast
+`UI Phase 2D` §36) — it is recorded as **DEFERRED**, to be performed in
+the consolidated visual QA pass after the authenticated UI build-out
+completes.
+
+### 37.12 Accessibility
+
+Semantic `<h1>` via the shared `PageHeader` (now extended with an
+optional `action` slot, §37.14). Table rows: `tabIndex={0}`,
+`aria-selected`, `onKeyDown` (Enter/Space activates), avoiding a nested
+interactive element inside a table cell for a single-action row. Dialog/
+Sheet accessibility inherited unchanged from the shared shadcn
+primitives (focus trap, `Escape`-to-close, labelled via
+`DialogTitle`/`SheetTitle`). Every form input has an explicit
+`<Label htmlFor>` pairing plus `aria-required="true"` on required
+fields, with a visual `*` marker (`aria-hidden`, since the `aria-required`
+attribute already carries the semantic). Status is never color-only
+(§37.8). No inaccessible clickable `<div>` — the only "row-shaped"
+interactive elements are semantically valid (`<tr tabIndex>` with
+`aria-selected`, a well-established accessible-table-row pattern; the
+Add-Destination category toggle uses real `<button aria-pressed>`
+elements, not styled `<div>`s).
+
+### 37.13 WLT ownership-boundary and Exchange-boundary confirmation
+
+**No balance, ledger, custody, or settlement figure appears anywhere on
+this page** — confirmed by source inspection: neither
+`PublicWalletDestination` nor `PublicFiatPayoutDestination` (nor any
+demo fixture) carries a balance/amount/currency-value field of any kind;
+this page is exclusively about destination eligibility/registration
+state, never account value. **No trading, spot order entry, order book,
+pricing, or Exchange-availability element exists anywhere** — confirmed
+absent from every new file; this page is unrelated to and does not
+reference the future MB Spot Broking Terminal (`UI-04` §35.20) in any
+way.
+
+### 37.14 `PageHeader` extended with an optional action slot
+
+`components/shell/page-header.tsx` gained an optional `action?: ReactNode`
+prop, rendered inline with the title (right-aligned, same row) — `UI-04`
+§17's "at most one primary action" pattern, now implemented for the
+first time. The three existing placeholder pages (`/app`, `/ops`,
+`/admin`) omit it (unchanged, still no action) — only this page passes
+one (`AddDestinationDialog`), justified because the governed contract
+actually supports registration (§37.1), not merely because "pages
+usually have a button."
+
+### 37.15 shadcn additions
+
+`Dialog`, `Input`, `Label`, `Select` added via `npx shadcn@4.21.0 add`
+(the project's established CLI/version) — **zero package.json or
+package-lock.json change**, confirmed via diff; all four compose from
+the `radix-ui` umbrella dependency already installed since `UI Phase 1A`.
+`button.tsx` was offered for overwrite by the same command and
+explicitly skipped (identical content) — the existing customized `Button`
+was not touched. Each new primitive's own default control height (`h-8`,
+32px) was left unedited in its source file, matching this project's
+established precedent (`Button`'s own internal default is likewise never
+edited — every usage overrides explicitly) — every usage in
+`add-destination-dialog.tsx` overrides to `h-10` (40px, `UI-02` §4's
+governed platform-wide default control height), not left at the
+shadcn default.

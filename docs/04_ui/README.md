@@ -528,16 +528,47 @@ claim.** Public homepage unaffected.
   acceptance, **`AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded**
   anywhere in this document or `UI-04`/`UI-02`/`UI-03`. Full record:
   `UI-04` §36, `UI-02`'s new "UI Phase 2D" section, `UI-03` §39.
-- **Shell visual acceptance: PENDING — BLOCKED ON RENDERED REVIEW.** The
-  shell is now styled and technically verified (types/lint/build/source-
-  and-CSS inspection all pass), but has not been reviewed in an actual
-  browser by anyone — this session has no tooling for it. The user's own
-  rendered check remains required before any "visually accepted" claim,
-  exactly as every prior visual-acceptance record in this project has
-  required.
-- **First real page: NOT YET IMPLEMENTED.** No product page, API call, or
-  authentication logic exists — only the shell's own visual treatment
-  changed this turn.
+- **Phase 2D status, reclassified (UI Phase 2E program decision):**
+  **IMPLEMENTED / VISUAL QA DEFERRED.** The user has explicitly chosen to
+  complete the authenticated UI build-out first, then run one
+  consolidated full visual QA pass across every page, rather than
+  blocking each individual build turn on rendered screenshot review that
+  no tooling in this environment can perform. This does not change any
+  fact Phase 2D itself recorded (§ above) — the shell is still styled and
+  technically verified but has not been reviewed in an actual browser by
+  anyone — only the *ongoing status label* changes, from "blocked" to
+  "deferred by deliberate program decision." Screenshot QA is no longer
+  treated as a per-page blocker in this or subsequent UI build turns.
+- **Phase 2E:** the first real authenticated client product page —
+  **Wallet & Payout Destinations** (`/app/wallet-destinations`) —
+  **IMPLEMENTED / VISUAL QA DEFERRED.** The governed Client-nav item
+  (previously inert since `UI Phase 2B`) is now a real link. A List +
+  Detail workspace (`UI-04` §35.16's pattern, applied for the first time):
+  a `COMPACT`-density destination table (masked address/account, type,
+  network/country, status, registered date — columns derived from the
+  actual governed WLT-01 public contract, verified against backend
+  source this turn, not assumed) beside a detail panel at `≥1024px`,
+  collapsing to a `Sheet` below that. Every field shown traces to the
+  real `GET /wlt1/destinations` response shape; every Add Destination
+  form field traces to the real `POST /wlt1/wallet-destinations`/
+  `POST /wlt1/payout-destinations` request schemas — none invented. No
+  first-use, limits/velocity/concentration, maker-checker internals,
+  Proof-of-Control status, or balance/ledger data is shown, because none
+  of those exists in the public contract (verified, not assumed) — the
+  status column/badge is the one governed approval signal that does
+  exist, mapped to plain-language labels, never color-only. Demo data
+  only, explicitly disclosed ("Interface preview — demo data"); no
+  `fetch`/API/auth logic anywhere. `Dialog`/`Input`/`Label`/`Select`
+  added via shadcn (zero package/lockfile impact). `typecheck:web`/
+  `lint:web`/`build:web` all pass; verified via rendered-HTML and
+  compiled-CSS inspection plus explicit structural-viewport reasoning at
+  1440/1280/1024/768/430 (`UI-04` §37.10) — **not** rendered/screenshot
+  review, which remains part of the deferred consolidated pass. Full
+  record: `UI-04` §37, `UI-02`'s new "UI Phase 2E" section, `UI-03` §40.
+- **First real page: IMPLEMENTED.** Wallet & Payout Destinations is the
+  first real authenticated client product page — no other product page
+  (Overview, Profile, KYC, any Ops/Admin page) exists yet. No API/auth
+  integration exists on it.
 
 ## Contents
 

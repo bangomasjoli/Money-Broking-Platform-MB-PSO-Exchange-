@@ -2562,3 +2562,30 @@ was verified, not assumed.
 same program decision as every prior client-page phase; full rendered
 review happens in the consolidated pass after the authenticated UI
 build-out completes.
+
+---
+
+## UI Phase 2I — Staff/Operations Overview Geometry (compiled-CSS confirmed, visual QA deferred)
+
+The one new geometry value this turn introduces (`DENSE`-tier queue
+rows), confirmed by fetching the compiled Tailwind CSS chunk directly;
+every other rule reuses values already governed by a prior phase:
+
+| Rule | Compiled value |
+|---|---|
+| Operational-queue row height (`h-8`) | `height: calc(var(--spacing) * 8)` — **32px** (`DENSE` tier, `UI-04` §18/§35.14's "audit/reconciliation/high-volume operations" mapping — the first page to actually use this tier; every Client page used `COMFORTABLE`/48px or `COMPACT`/40px) |
+| Split breakpoint (`xl:grid-cols-[1fr_320px]`) | **1280px** — identical to `UI Phase 2F`'s Overview split, reused |
+| Secondary-column leading padding (`xl:pl-8`) | **32px** — reused |
+| Inter-section gap (`gap-8`) | **32px** — reused |
+| Queue sub-group heading→list gap (`mt-2`) | **8px** |
+| Inter-queue-group gap (`gap-6`) | **24px** |
+
+**No new radius, shadow, or color value was introduced.** The `h-8`
+row height is the only genuinely new value this page contributes to
+the platform's own governed geometry — every other rule was already
+compiled and verified by a prior client-page phase.
+
+**Visual QA status: DEFERRED, not performed, not falsely claimed** —
+same program decision as every prior phase; full rendered review
+happens in the consolidated pass after the authenticated UI build-out
+completes.

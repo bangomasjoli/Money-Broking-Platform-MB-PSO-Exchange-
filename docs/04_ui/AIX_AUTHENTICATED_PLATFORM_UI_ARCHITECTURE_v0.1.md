@@ -2943,3 +2943,249 @@ No Source-of-Funds/Source-of-Wealth or Business-Activity gap is listed
 — neither has a field concept in the governed model to build a gap
 statement against (§43.1), same category as `UI Phase 2G`'s own
 Registered-Address non-gap.
+
+---
+
+## 44. UI Phase 2I — Staff/Operations Overview (`B`-classified Ops page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The first real page on
+the Staff/Operations surface, replacing `UI Phase 2B`'s placeholder.
+Same visual-QA posture as every client-page phase.
+
+### 44.1 Capability map (verified against actual backend source, not assumed)
+
+Every backend service's registered routes were re-scanned this turn —
+unchanged from every prior UI phase's own findings, now independently
+re-confirmed for the Ops surface specifically: `clt1`, `wlt1` (its
+internal routes — the public 6-route contract is Client-only and not
+relevant here), `iam2`, and `sec1` are ALL `requireInternal`-guarded.
+**No route in any of the four is callable from a staff browser session
+today.** Every concept below was traced to its exact source:
+
+| Overview element | Owning module | Current internal route/model | Staff-facing (browser)? | Status |
+|---|---|---|---|---|
+| Client Requests | `CLT-01` | `/internal/clt1/applications` (list), `.../start-review`, `.../hold`, `.../reject`, `.../approve/{request,apply}` — real `client_application.status` enum (`routes/applications.ts`/`decisions.ts`: `draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`) | No | **PARTIAL/B** |
+| Wallet Destination Review | `WLT-01` | `/internal/wlt1/wallet-destinations`, `/internal/wlt1/destinations/:id/approve/{request,apply}`, `/internal/wlt1/stuck-screenings`, `/internal/wlt1/rescreening-runs` — real `wlt1.destination.status` enum, same as `UI Phase 2E`'s own; internal "safe staff" response (`lib/safe-response.ts`'s `safeWalletDestinationResponse`) masks the address IDENTICALLY to the public client response, verified this turn — staff do NOT get an unmasked view | No | **PARTIAL/B** |
+| Maker-Checker Queue | `IAM-02` | `/iam2/approvals/request`, `/iam2/approvals/:id/{approve,reject}` — real `iam2.approval_request.status` enum (`routes/approvals.ts`: `pending`/`approved`/`rejected`/`expired`/`blocked`, the last set by an `iam2.sod_check` blocking a self-approval attempt) | No | **PARTIAL/B** |
+| Recent Staff Activity (evidence) | `SEC-01` | `/internal/sec1/audit-events/{read,search}` — a real, confirmed-SAFE (already tier-redacted) field subset exists (`lib/read-redaction.ts`'s own `RedactableAuditEventRow`: `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc`, deliberately excluding hash-chain/integrity fields and raw payload at the SELECT level, not merely at response time) | No | **PARTIAL/B, minimal safe-field summary only** |
+| Workflow Availability | N/A — presentation of `UI-04` §8's own nav IA | `components/shell/nav-data.ts`'s `OPS_NAV` | N/A (UI-internal) | Shown as-is — the 4 other `B`-classified Ops nav items, all "Interface planned" |
+| Deposit/Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation, Exceptions/Breaks | `DEP-01`/`WDR-01`/`TRD-01`/`LED-01`/`REC-01` | Not started at all (unchanged from `UI Phase 2A`'s own findings) | No | **OMITTED** — `C`-classified, module does not exist |
+| Revenue / trading volume / settlement totals / fees / PnL | `LED-01` | Not started; no financial figure found in any of `CLT-01`/`WLT-01`/`IAM-02`/`SEC-01` either | No | **OMITTED** |
+
+**This is the first UI phase to independently confirm the Staff/Ops
+boundary finding `UI-04` §8 already predicted at the architecture
+stage** — every single capability a staff browser might need is
+internal-only, with zero exceptions, across all four modules inspected.
+
+### 44.2 Route and page architecture
+
+No new route — `/ops` already existed (`UI Phase 2B`); this turn
+replaces its placeholder content. No nav change — `components/shell/
+nav-data.ts`'s `OPS_NAV` is unmodified; "Operational Overview" already
+had a real `href` since `UI Phase 2B`, and this turn's own explicit
+instruction is to leave the other four Ops nav rows inert, which they
+remain.
+
+```
+app/ops/page.tsx
+components/ops/
+  ops-data.ts               — CLT/WLT/IAM-02/SEC-01 state maps + demo fixtures + rollup derivation
+  work-attention.tsx         — WorkRequiringAttention (rollup)
+  operational-queues.tsx     — OperationalQueues (3 sub-queues)
+  workflow-availability.tsx  — WorkflowAvailability + RecentActivity
+```
+
+### 44.3 Page header and demo disclosure
+
+Title "Operational Overview," description "Review current operational
+work queues, governed review items, and staff workflows requiring
+attention." — no marketing language. `DemoDisclosure` (the shared
+component, reused a fourth time): *"Interface preview — operational
+summary data is demonstrative until the required staff aggregation
+routes are implemented"* — same structural treatment, wording
+consistent in style with every Client page's own disclosure.
+
+### 44.4 Sections implemented
+
+- **Work Requiring Attention** — a glanceable ROLLUP (count per queue),
+  deliberately not a second copy of the itemised records shown in
+  Operational Queues below it; counts derived directly from the same
+  demo fixtures, so the two can never disagree. No KPI cards, no
+  fabricated percentage/SLA countdown/severity level.
+- **Operational Queues** — three real, governed queue concepts only
+  (Client Requests / Wallet Destination Review / Maker-Checker Queue),
+  each its own `<h3>` sub-group under the section's own `<h2>`
+  (preserving logical heading hierarchy, this turn's own explicit
+  requirement). `DENSE` row tier (32px, `h-8`) throughout, per this
+  turn's "Ops should be denser than Client" direction and `UI-04`
+  §35.14's own "high-volume operations" mapping. Hairline dividers, no
+  zebra striping, state text never color-only (plain text, no `Badge`,
+  no colored dot).
+- **Workflow Availability** — the 4 OTHER `B`-classified Ops nav items
+  (Operational Overview itself is omitted — linking to the page you are
+  already on is pointless), all "Interface planned," none a real link —
+  `UI Phase 2B`'s inert-nav convention preserved, not activated early.
+- **Recent Staff Activity** — 2 demo evidence rows, safe-field subset
+  only (§44.1). No drill-down, no sensitive detail, no actor identity.
+
+**"System / Control Notes" (candidate section E) was evaluated and
+OMITTED** — no operationally necessary static governance note was
+identified that isn't already covered elsewhere in this project's own
+governance documents; adding one here would be clutter, per this
+turn's own default preference.
+
+### 44.5 Internal → Ops-facing status mappings
+
+Three separate mapping tables, one per module, since each has a
+genuinely distinct real enum — never one generic "Pending" collapsing
+different governed semantics:
+
+**`CLT-01` (`client_application.status`)**
+
+| Internal state | Ops label |
+|---|---|
+| `draft` | Draft |
+| `submitted` | Submitted — Awaiting Review |
+| `under_review` | Under Review |
+| `held` | On Hold |
+| `approved` | Approved |
+| `rejected` | Rejected |
+| `cancelled` | Cancelled |
+
+**`WLT-01` (`wlt1.destination.status`) — reuses `UI Phase 2E`'s own
+client-facing labels directly, a deliberate choice, not an oversight**
+(documented rationale, §44.1: the internal safe-staff response masks
+identically to the public client response, so the underlying fact and
+its correct phrasing are identical; Ops additionally shows the owning
+client reference, which the client's own page correctly omits as
+redundant for a client viewing their own destination).
+
+**`IAM-02` (`iam2.approval_request.status`)**
+
+| Internal state | Ops label |
+|---|---|
+| `pending` | Pending Approval |
+| `approved` | Approved |
+| `rejected` | Rejected |
+| `expired` | Expired |
+| `blocked` | Blocked — Segregation of Duties |
+
+### 44.6 Maker-Checker boundary
+
+Each Maker-Checker Queue row shows only the action/subject/status — no
+actor identity, no approve/reject control, no implication that the
+same person could approve their own request. The two demo rows
+deliberately reference the same two demo records already used in
+Client Requests/Wallet Destination Review (`Wallet Destination
+DEMO-WLT-002`, `Client Application DEMO-001`) — architecturally
+accurate, not coincidental: both `WLT-01`'s destination-approval flow
+and `CLT-01`'s application-approval flow route through this exact
+IAM-02 request/apply mechanism in the real system. No approve/reject
+action exists anywhere on this page — that belongs to the future
+dedicated Maker-Checker Queue page, explicitly not built this turn.
+
+### 44.7 Sensitive-read / audit boundary
+
+No audit detail drawer, no raw payload, no hash-chain/integrity field,
+no actor identity (even a demo-shaped one) anywhere on this page — the
+Recent Staff Activity section shows only the 6 confirmed-safe fields
+(§44.1). Full audit detail is explicitly deferred to the future
+dedicated Audit / Activity page.
+
+### 44.8 Demo fixture scope
+
+6 operational-queue records (2 per queue: Client Requests, Wallet
+Destination Review, Maker-Checker Queue) plus 2 Recent Staff Activity
+evidence rows — obviously fictitious references (`Client Application
+DEMO-001`/`DEMO-002`, `Wallet Destination DEMO-WLT-001`/`DEMO-002`,
+`Approval Request DEMO-APR-001`/`DEMO-002`), no real IDs from the
+repository, no real staff names anywhere.
+
+### 44.9 C-classified and Exchange/financial boundaries confirmed
+
+**No `C`-classified Ops capability appears anywhere, in any form** —
+no disabled card, no teaser row, no "coming soon" mention for Deposit/
+Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation, or
+Exceptions/Breaks; confirmed absent by source inspection of every new
+file. **No trading terminal, order book, market data, Exchange
+operation, or price chart anywhere.** **No balance, settlement amount,
+trading volume, fee total, revenue, or PnL figure anywhere** — none
+exists in any of the four modules inspected this turn (§44.1),
+confirmed absent, not merely unused.
+
+### 44.10 Layout and responsive behavior — structural reasoning (not rendered)
+
+Asymmetric `xl:grid-cols-[1fr_320px]` layout at `≥1280px` (primary:
+Work Requiring Attention + Operational Queues; secondary: Workflow
+Availability + Recent Staff Activity) — the same split breakpoint and
+"split only where the shell's own sidebar also engages" rationale every
+client-page phase already established, reused rather than re-derived.
+Below `xl:`: single column, stacked — order: PageHeader →
+DemoDisclosure → Work Requiring Attention → Operational Queues →
+Workflow Availability → Recent Staff Activity (optional safe evidence
+summary), matching this turn's own required mobile priority order
+exactly. No table is used anywhere on this page (the operational
+queues are plain lists, not a `Table` primitive), so no
+horizontal-scroll/overflow question applies — a deliberate choice given
+each queue's own row content (a reference plus one status label) never
+needs more columns than a list comfortably provides at any width
+tested in this reasoning pass.
+
+### 44.11 Accessibility
+
+One semantic `<h1>` ("Operational Overview"). Two heading tiers used
+correctly: `<h2>` per top-level section, `<h3>` per queue sub-group
+within Operational Queues — preserving logical hierarchy rather than
+three unlabelled lists under one heading. Status never color-only
+(plain text throughout, no colored dot or badge fill anywhere on this
+page). No clickable non-semantic `<div>` — every row is plain, non-
+interactive `<li>`/`<span>` content; the only interactive elements on
+the page are the shell's own nav (unchanged). No focusable dead control
+of any kind. Timestamps in Recent Staff Activity use a consistent,
+locale-aware format (`formatOccurredAt`, shared with no other page —
+first use of a date+time format on this platform, distinct from the
+date-only `formatRegisteredDate` `UI Phase 2E` established, since audit
+evidence timestamps are meaningfully time-of-day-relevant in a way
+"date registered" is not). Mobile reading order matches DOM order (no
+`tabIndex` overrides anywhere on this page).
+
+### 44.12 Shared components — none created cross-page this turn
+
+`OpsQueueSummary`/`AttentionQueue`/`WorkflowAvailability`-as-a-generic-
+wrapper were all considered and NOT created as reusable abstractions —
+this is the FIRST Ops page; no second page yet exists to prove genuine
+repetition (`UI-01` §2.1 rule 9's own "measurable consistency across
+multiple call sites" bar is not met by one page). The three within-page
+components built (`WorkRequiringAttention`, `OperationalQueues`,
+`WorkflowAvailability`/`RecentActivity`) are narrow, page-specific, and
+named by role — consistent with every prior phase's own restraint.
+
+### 44.13 Backend projection gaps (for a future integration turn — not built this turn)
+
+Derived directly from §44.1's capability map:
+
+1. **Cross-module staff work-aggregation projection** — a genuinely new
+   capability: no single existing route aggregates across `CLT-01`/
+   `WLT-01`/`IAM-02` today; Work Requiring Attention's own rollup would
+   need either a dedicated aggregate route or client-side composition
+   of gaps #2–#4 below.
+2. **CLT-01 staff-facing pending-application-summary projection** — a
+   staff-scoped (not client-scoped) read exposing `client_application`
+   rows in `submitted`/`under_review`/`held` state.
+3. **WLT-01 staff-facing review-queue projection** — a staff-scoped read
+   exposing destinations in `pending_screening`/`pending_review` state,
+   reusing the existing internal `safeWalletDestinationResponse` shape
+   (already correctly masked — no new masking design needed, only new
+   staff-session-authenticated exposure).
+4. **IAM-02 staff-facing maker-checker-queue projection** — a staff-
+   scoped read exposing `approval_request` rows in `pending` state
+   (action/resource/status only, per §44.6's own no-actor-identity
+   restraint carried into the gap statement itself).
+5. **SEC-01 staff-facing safe-activity-summary projection** — the data
+   SHAPE already exists and is already safe (`lib/read-redaction.ts`);
+   the gap is exposing it through a staff-session-authenticated route,
+   not redesigning what "safe" means.
+
+No system-health/control-notes projection gap is listed — that
+candidate section was omitted by design (§44.4), not because a gap
+exists to fill later.

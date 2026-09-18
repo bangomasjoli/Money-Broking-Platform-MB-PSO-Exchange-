@@ -1501,3 +1501,49 @@ VISUAL QA DEFERRED**, not falsely claimed as accepted.
 change; zero package/lockfile change. **Public homepage: unaffected** —
 confirmed via `git diff --name-only`, no public-site file appears in the
 diff.
+
+## 44. Phase 2I — Staff/Operations Overview (first Ops page, visual QA deferred)
+
+**Frontend implementation — the first real Staff/Operations page,**
+replacing `UI Phase 2B`'s placeholder `app/ops/page.tsx`. Adds 4 new
+modules under `components/ops/`; no other file changed — unlike every
+prior client-page phase, this turn required no shared-module refactor
+(`components/ops/ops-data.ts` imports `STATUS_LABELS` from `UI Phase
+2E`'s `wallet-destinations/destination-data.ts` directly, a read-only
+reuse, not a moved/shared-state extraction).
+
+**shadcn/dependency impact: none.** No new component installed; every
+element composes from plain HTML (`dl`/`dt`/`dd`, `ul`/`li`,
+`h2`/`h3`). Zero `package.json`/`package-lock.json` change.
+
+**Cross-module reuse, verified by construction:** `WLT_STATUS_LABELS`
+in `ops-data.ts` is a direct re-export of `UI Phase 2E`'s own
+`STATUS_LABELS` — the same governed wallet-destination status wording
+is used for both the Client-facing Wallet & Payout Destinations page
+and this Ops page's Wallet Destination Review section, so the two can
+never disagree, and no second WLT status-label map exists anywhere in
+the codebase to drift out of sync.
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues (no new defect introduced this turn). `build:web`
+— succeeded; still 9 routes statically prerendered (`/ops`'s own
+content changed, route count did not).
+
+**Verification method and visual-QA status:** a real `next dev` server,
+rendered-HTML inspection, and compiled-CSS inspection were performed
+(full record: `UI-04` §44's own subsections, `UI-02`'s new "UI Phase
+2I" section) — no rendered screenshot/browser review was performed,
+consistent with every prior UI-build phase's own program-decision
+posture. Regression-confirmed: all four other Client routes
+(`/app`, `/app/wallet-destinations`, `/app/profile`, `/app/compliance-
+status`) and `/admin` remain `HTTP 200`, unaffected; the Ops shell's
+own sidebar still correctly shows exactly 4 inert nav rows (Client
+Requests/Wallet Destination Review/Maker-Checker Queue/Audit-Activity),
+none activated early. Recorded as **IMPLEMENTED / VISUAL QA DEFERRED**,
+not falsely claimed as accepted.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**`
+change; zero package/lockfile change. **Public homepage: unaffected** —
+confirmed via `git diff --name-only`, no public-site file appears in
+the diff.

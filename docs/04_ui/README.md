@@ -653,12 +653,48 @@ claim.** Public homepage unaffected.
   pass; verified via rendered-HTML and compiled-CSS inspection, **not**
   rendered/screenshot review. Full record: `UI-04` §43, `UI-02`'s new
   "UI Phase 2H" section, `UI-03` §43.
+- **Phase 2I:** Staff/Operations Overview (`/ops`) — **IMPLEMENTED /
+  VISUAL QA DEFERRED.** The first real Staff/Operations page,
+  `B`-classified: `CLT-01`/`WLT-01`/`IAM-02`/`SEC-01` all genuinely own
+  real, governed workflow/state models (real `client_application.status`,
+  real `wlt1.destination.status`, real `iam2.approval_request.status`,
+  a confirmed-safe already-tier-redacted `SEC-01` audit-event field
+  subset), but every route in all four is `requireInternal`-guarded —
+  re-confirmed by re-scanning every registered route this turn — **the
+  first UI phase to independently confirm the Staff/Ops boundary `UI-04`
+  §8 predicted at the architecture stage, with zero exceptions across
+  four modules.** No generic admin dashboard, command center, or
+  financial-performance screen — no KPI cards, no revenue/volume/PnL/
+  settlement-total figure anywhere (none exists in any governed module).
+  Four sections: a glanceable Work Requiring Attention rollup (counts
+  only, not a duplicate record list); Operational Queues (the 3 real
+  `B`-classified queues — Client Requests / Wallet Destination Review /
+  Maker-Checker Queue — each its own governed status vocabulary,
+  `DENSE`-tier 32px rows, the first use of that density tier on this
+  platform); Workflow Availability (the 4 other Ops nav items, still
+  "Interface planned," none activated early); and a minimal Recent
+  Staff Activity evidence list (safe fields only — no actor identity,
+  no raw payload). No `C`-classified Ops capability (Deposit/
+  Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation,
+  Exceptions/Breaks) appears anywhere in any form. Maker-Checker rows
+  never imply self-approval — action/subject/status only, no actor
+  identity, no approve/reject control (deferred to a future dedicated
+  page). Wallet Destination Review deliberately REUSES `UI Phase 2E`'s
+  own client-facing status labels directly (verified: the internal
+  "safe staff" response masks addresses identically to the public
+  client response, so the underlying fact and correct phrasing are
+  identical). `typecheck:web`/`lint:web`/`build:web` all pass; verified
+  via rendered-HTML and compiled-CSS inspection, **not** rendered/
+  screenshot review. Full record: `UI-04` §44, `UI-02`'s new "UI Phase
+  2I" section, `UI-03` §44.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
-  authenticated client product pages — every Client Portal nav item now
-  has one. Every Ops/Admin page remains unimplemented. No API/auth
-  integration exists on any of them.
+  authenticated Client Portal product pages — every Client Portal nav
+  item now has one. Operational Overview (`B`-classified) is the first
+  real Staff/Operations page — every other Ops nav item and every Admin
+  page remains unimplemented. No API/auth integration exists on any of
+  them.
 
 ## Contents
 

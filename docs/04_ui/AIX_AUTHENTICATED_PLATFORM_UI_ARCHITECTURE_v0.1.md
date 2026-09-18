@@ -2177,3 +2177,275 @@ edited — every usage overrides explicitly) — every usage in
 `add-destination-dialog.tsx` overrides to `h-10` (40px, `UI-02` §4's
 governed platform-wide default control height), not left at the
 shadcn default.
+
+---
+
+## 41. UI Phase 2F — Client Overview (`B`-classified page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** `UI Phase 2B`'s placeholder
+Overview page is now the real Client Overview — still `B`-classified,
+per §6/§7's original classification, reconfirmed rather than assumed
+(§41.1). Same posture as `UI Phase 2E`: visual QA deferred by explicit
+program decision, not a stop condition.
+
+### 41.1 Why this page stays `B`-classified — capability map (verified against actual backend source, not assumed)
+
+Every backend service's registered routes were re-scanned this turn
+(`platform/services/{aml1,cfg1,clt1,fnd,iam,iam2,kyc1,sec1,wlt1}/src`) —
+unchanged from `UI Phase 2A`/`2E`'s own findings: only `iam`'s `/auth/*`
+and `wlt1`'s 6-route public contract are browser-callable; `clt1`,
+`kyc1`, `aml1`, `cfg1`, `iam2`, `sec1` remain entirely internal.
+
+| Overview UI element | Owned by module | Current backend route/contract | Client-facing? | Status |
+|---|---|---|---|---|
+| Client lifecycle status | `CLT-01` | `clt1.client_profile.status` — real column, real internal route `GET /internal/clt1/clients/:client_id/status`; real reachable-state enum `CLIENT_PROFILE_REACHABLE_STATUSES` (`active_limited`/`suspended`/`closed`, `lib/client-profiles.ts`) | No | **PARTIAL/B** — real module + real internal data model, no public projection |
+| KYC/KYB case status | `KYC-01` | Real internal case model; real state enum `KYC_CASE_STATUSES` (`pending_documents`/`completed`/`remediation`, `lib/kyc-case.ts`), plus outcome states `pass`/`fail`/`remediation_required` (`lib/outcome-override.ts`) | No | **PARTIAL/B** — same reasoning |
+| Eligibility | `CLT-01` (derived) | The exact concept `WLT-01` itself checks before allowing registration (`lib/clt1-client.ts`'s `checkClientStatus`) — a real derived boolean, not an invented UI notion | No (only consumed server-to-server by `WLT-01`) | **PARTIAL/B** |
+| Wallet & Payout Destinations list/summary | `WLT-01` | `GET /wlt1/destinations` — the exact route `UI Phase 2E` already verified | **Yes** | **A-BACKED** (shown via the same demo fixture `UI Phase 2E` uses, not called this turn) |
+| Attention items — destination-derived | `WLT-01` | Same `GET /wlt1/destinations`, filtered to non-terminal statuses | **Yes** | **A-BACKED** |
+| Attention items — organisation-level (KYC) | `KYC-01` | Same as the KYC row above | No | **DEMO-ONLY** (uses the same governed terminology, not a live read) |
+| Recent client activity | `SEC-01` (conceptually) | `SEC-01`'s audit-event routes are entirely internal (`/internal/sec1/audit-events/*`) — no client-facing activity feed exists anywhere | No | **OMITTED** — no aggregate feed exists to demo against; faking timestamps was explicitly prohibited this turn |
+| Platform capability/access status | N/A — presentation of `UI-04` §6's own nav IA | `components/shell/nav-data.ts`'s `CLIENT_NAV` | N/A (UI-internal) | Shown as-is — exactly the 3 real Client Portal nav items, no `C`-classified item |
+
+**No live client-facing aggregation route exists for organisation
+status, KYC/KYB status, or a combined "overview" projection of any
+kind** — this is the precise, verified reason the page remains
+`B`-classified rather than being promoted to `A`.
+
+### 41.2 Information architecture — validated against §41.1, not assumed
+
+Of the brief's 5 candidate sections (Organisation Status / Attention
+Items / Destination Summary / Capability Status / Recent Activity), 4
+were implemented and 1 was omitted:
+
+- **A. Organisation Status** — implemented, **demo-only** (labelled
+  "Demo — no live projection yet" directly in the section itself, not
+  only in the page-level disclosure).
+- **B. Items Requiring Attention** — implemented, **mixed provenance**:
+  destination-derived rows are `A`-backed (real contract shape); the one
+  organisation-level row is demo-only. Each row's own nature is legible
+  from context (destination rows link to the real Wallet page;
+  organisation row does not).
+- **C. Wallet & Payout Destinations Summary** — implemented,
+  **A-backed**, reusing `UI Phase 2E`'s own `DEMO_DESTINATIONS` fixture
+  directly (§41.4).
+- **D. Platform Access / Capability Status** — implemented, showing
+  exactly the 3 real `CLIENT_NAV` items, no `C`-classified item.
+- **E. Recent Client Activity — OMITTED.** No client-facing activity/
+  audit feed exists anywhere in the backend (§41.1's table) — this
+  turn's own instruction is explicit that an absent aggregate feed must
+  be omitted, not faked with invented timestamps/events. Recorded as a
+  deliberate omission, not an oversight.
+
+### 41.3 Layout and panel model
+
+Asymmetric two-column at `≥1280px` (`xl:grid-cols-[1fr_320px]`):
+primary column (Organisation Status → Attention Items → Destination
+Summary, `gap-8`/32px between sections) beside a secondary column
+(Platform Access) with a single leading `border-l` (`DETAIL/EVIDENCE
+PANEL` treatment, `UI-04` §35.17) — not a full box. Below `xl:`: single
+column, stacked in the exact same order. **Split breakpoint chosen at
+`xl:` (1280px), not `lg:` (1024px, `UI Phase 2E`'s own List+Detail
+breakpoint)** — a deliberate, explicit choice: this is the platform's
+first purely-editorial asymmetric layout with no prior precedent to
+reuse, so the split engages only where the shell's own sidebar also
+engages, letting the 1024–1279px range simply stack (this turn's own
+explicitly-permitted fallback) rather than requiring new arithmetic to
+justify a split there.
+
+No `OverviewCard`/`StatCard`/`MetricCard` created — each section is a
+plain `<section>` with a `Section title` heading (`text-lg
+font-semibold`), not a rounded card. Organisation Status and Destination
+Summary use `WORKSPACE PANEL` treatment (borderless); Attention Items
+uses a subtle `bg-muted/40` per-row background (`ACTION PANEL`-adjacent,
+`UI-04` §35.17 — one of the few places that distinction visually
+matters, since these rows represent "needs action" content); Platform
+Access uses the same single-leading-border `DETAIL/EVIDENCE PANEL`
+treatment as `UI Phase 2E`'s own detail panel.
+
+### 41.4 Cross-page fixture consistency
+
+`components/overview/overview-data.ts` imports `DEMO_DESTINATIONS`
+directly from `components/wallet-destinations/destination-data.ts` — no
+second fixture array. Both the Destination Summary section's counts and
+the destination-derived Attention Items rows are computed from that same
+imported array, so the Overview can never disagree with the Wallet &
+Payout Destinations page about how many destinations exist or what
+state they are in. Status presentation reuses the same shared
+`DestinationStatusBadge` component both pages already share.
+
+### 41.5 Organisation-status and attention-item terminology
+
+No invented word — every label traces to real governed backend source,
+verified this turn (full citations in §41.1's table):
+
+| Concept | Governed values | UI labels used |
+|---|---|---|
+| Client lifecycle | `active_limited` / `suspended` / `closed` | Active (Limited) / Suspended / Closed |
+| KYC/KYB case status | `pending_documents` / `completed` / `remediation` | Pending Documents / Completed / Remediation Required |
+| Eligibility | derived boolean | Eligible / Not Eligible |
+
+No "Healthy"/"Verified"/"Excellent"/"Compliant," no circular progress
+chart, no "completion percentage," no invented risk/AML/compliance
+score — all explicitly avoided per this turn's own prohibition.
+
+### 41.6 Financial-data and Exchange-boundary confirmation
+
+**No balance, available-funds, settled-funds, portfolio-valuation,
+fiat-wallet-amount, or crypto-wallet-amount figure appears anywhere on
+this page** — confirmed by source inspection of every new file; the
+Destination Summary's only numeric value is a plain count of the same 5
+demo fixture rows the Wallet page itself shows (transparently the same
+data, not a fabricated metric). **No KPI cards, fake AUM, fake PnL, fake
+percentage change, fake trading volume, fake market/price chart, "Welcome
+back," or fake recent deposits/withdrawals** — none present, confirmed
+by source inspection. **No Exchange/Spot Exchange/Trading/Markets/Order
+Book/Market Data element anywhere** — confirmed absent; the MB Spot
+Broking Terminal (`C`-classified) is not referenced in any form.
+
+### 41.7 Profile/KYC and C-classified handling
+
+Profile/Organisation and KYC/KYB Compliance Status appear ONLY as plain,
+non-interactive rows in Platform Access, reading "Interface planned" —
+**no route was created for either this turn**, and neither renders as a
+clickable link (would be a fake link to a nonexistent page). No
+`C`-classified capability (Portfolio, Deposits, Withdrawals, OTC/RFQ, MB
+Spot Broking Terminal, Open Requests, Transactions) appears anywhere on
+the page in any form — the safest default (omit entirely) was taken, per
+this turn's own explicit instruction, rather than listing them as
+"unavailable" (which would itself read as a teaser of future features).
+
+### 41.8 Responsive behavior — structural reasoning (not rendered)
+
+- **1440px / 1280px:** `xl:` engaged — asymmetric split active, shell
+  sidebar showing (`xl:`, same breakpoint). Available content width
+  arithmetic matches `UI Phase 2E`'s own §37.10 figures (≈1136px/976px)
+  — comfortable for a 1fr/320px split.
+- **1024–1279px:** below this page's own `xl:` split breakpoint — single
+  column, stacked (deliberate choice, §41.3), avoiding the need to prove
+  a split-column fit in this range at all.
+- **768–1023px:** single column, stacked — same as 1024–1279px.
+- **430px:** single column; content order top-to-bottom is exactly
+  Overview title → demo disclosure → Organisation Status → Attention
+  Items → Destination Summary → Platform Access, matching the brief's
+  own required mobile order precisely. No dashboard-card stacking —
+  every section is a plain, compact block with `gap-8` (32px) between
+  sections, not a repeating card pattern.
+
+No horizontal overflow risk — no fixed-width element wider than its
+container exists on this page (unlike `UI Phase 2E`'s table, which has
+its own governed horizontal-scroll mechanism; this page has no table).
+
+### 41.9 Empty state, loading, and error readiness
+
+Attention Items' empty state ("No items requiring attention.") is
+implemented and reachable (not merely documented) — if
+`DEMO_ATTENTION_ITEMS` were ever empty, this exact state renders,
+calmly, not as an error. Destination Summary's empty-destinations
+handling is inherited unchanged from `WalletDestinationsWorkspace`'s own
+`EmptyDestinationsState` (not duplicated) whenever that component is
+reused; this page's own compact summary would show "0 governed
+destinations" text, consistent with the same zero-state language.
+**No loading or error state was built** — no `fetch` exists on this
+page to load or fail. Documented for the future integration turn: once
+a real aggregation route exists, loading would replace each section's
+content with a `Skeleton` matching its own shape (`UI-04` §28's already-
+governed model), and error/permission-denied would replace a section's
+content with the same restrained pattern already governed there — no
+new state model is required, the existing one already covers this case.
+
+### 41.10 Backend projection gaps (for a future integration turn — not built this turn)
+
+Derived directly from §41.1's capability map, not invented:
+
+1. **Client organisation-summary projection** — a public, client-scoped
+   read exposing `client_profile.status` (lifecycle) and derived
+   eligibility — `CLT-01` owns the data; no public route exists.
+2. **KYC/KYB status projection** — a public, client-scoped read exposing
+   the case-level status (and/or outcome) — `KYC-01` owns the data; no
+   public route exists.
+3. **Attention/action-items aggregation** — either a dedicated aggregate
+   route, or client-side composition once (1) and (2) above exist
+   alongside the already-public `GET /wlt1/destinations` (which alone
+   already covers the destination-derived attention rows this page
+   currently demos).
+4. **Client-facing activity/audit projection** — `SEC-01`'s audit
+   capability is real but entirely internal; a scoped, safe client
+   projection would be required before a Recent Activity section could
+   be built at all (deliberately not attempted this turn, §41.2).
+
+### 41.11 Accessibility
+
+One semantic `<h1>` ("Overview," via the shared `PageHeader`), one
+`<h2>` per section (`Organisation Status` / `Items Requiring Attention` /
+`Wallet & Payout Destinations` / `Platform Access`), each
+`aria-labelledby`'d to its own section. Status is never color-only
+(Organisation Status/Attention Items use plain text; Destination
+Summary reuses `DestinationStatusBadge`, already icon+text per `UI Phase
+2E` §37.8). Every link has a meaningful accessible name (destination
+attention rows: full title text; "View Wallet & Payout Destinations":
+full label, not "Click here"). Inert future items (Profile/KYC in
+Platform Access) render as plain `<span>` text, never a focusable
+element with no real destination. No clickable non-semantic `<div>`
+anywhere — the one interactive attention-row pattern uses a real
+`<Link>`; the non-interactive organisation row uses a plain `<div>` with
+no click handler, `tabIndex`, or interactive role. Keyboard order follows
+visual/DOM order throughout (no `tabIndex` overrides used anywhere on
+this page).
+
+### 41.12 Shared component extraction — `DemoDisclosure`
+
+`components/shell/demo-disclosure.tsx` — the demo-data disclosure
+treatment (small `Info` icon, `text-xs` muted, `mb-6` spacing) extracted
+from `UI Phase 2E`'s inline implementation into one shared component,
+now used by both `/app` and `/app/wallet-destinations` — genuinely
+repeated, byte-identical structural behavior (icon + spacing + role),
+parameterized only by its page-specific message text via `children`.
+`UI Phase 2E`'s own page was updated to consume it too (removing the
+now-redundant inline JSX there), so no duplicate disclosure
+implementation exists anywhere.
+
+### 41.13 Status-wrapper (`AixStatusBadge`) promotion — still not promoted
+
+Reassessed per this turn's own explicit instruction. Three real call
+sites now exist for the existing `Badge`-based status pattern (`UI
+Phase 2E`'s table, its detail panel, and this page's Destination
+Summary) — all via the SAME shared `DestinationStatusBadge`/
+`DestinationStatusLine` pair, not three independent implementations.
+**Repetition:** genuine, but already fully addressed by that one shared
+component — there is no remaining duplication for a domain wrapper to
+eliminate. **Semantic value:** the icon/label/category mapping is
+already centralized in `destination-data.ts` and
+`destination-status.tsx`. **Why direct composition remains sufficient:**
+promoting to `AixStatusBadge` would only rename the existing shared
+component, not add real value — `UI-01` §2.1 rule 8 explicitly prohibits
+exactly that ("do not create thin wrappers merely to rename"). Default
+expectation (not promoted) upheld — the repetition that exists is
+already correctly centralized, not scattered.
+
+### 41.14 shadcn / dependency impact
+
+**None.** No new shadcn component installed this turn; every element on
+this page composes from primitives already present (`Badge`, `Link`,
+plain HTML). Zero `package.json`/`package-lock.json` change.
+
+### 41.15 Verification method performed (source/compiled-CSS, not rendered)
+
+A real `next dev` server confirmed all of `/`, `/app`, `/app/wallet-
+destinations`, `/ops`, `/admin` at `HTTP 200` (regression-clean).
+Rendered HTML inspected directly: exactly one `<h1>` ("Overview"), the
+four expected `<h2>` headings in order, the demo disclosure text
+present, all three Organisation Status values present, the KYC
+attention item and destination-derived attention items present, the
+Destination Summary's view-link and count summary present, exactly the
+expected 1 "Available" / 2 "Interface planned" capability rows (the
+apparent "4" raw substring count includes Next.js's own duplicate RSC
+hydration-payload serialization of the same text, verified by inspecting
+the surrounding context directly — not a rendering defect), and zero
+forbidden dashboard/balance/Exchange words anywhere. Compiled CSS
+fetched and inspected byte-for-byte: `.xl\:grid-cols-\[1fr_320px\]` →
+`grid-template-columns: 1fr 320px`, `.xl\:pl-8` → 32px. **This is
+source/rendered-HTML/compiled-CSS verification only — no browser
+rendered this page for actual pixel/visual review.** Recorded as
+**DEFERRED**, per this turn's own explicit program decision, not a stop
+condition.

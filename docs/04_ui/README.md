@@ -565,10 +565,39 @@ claim.** Public homepage unaffected.
   1440/1280/1024/768/430 (`UI-04` §37.10) — **not** rendered/screenshot
   review, which remains part of the deferred consolidated pass. Full
   record: `UI-04` §37, `UI-02`'s new "UI Phase 2E" section, `UI-03` §40.
-- **First real page: IMPLEMENTED.** Wallet & Payout Destinations is the
-  first real authenticated client product page — no other product page
-  (Overview, Profile, KYC, any Ops/Admin page) exists yet. No API/auth
-  integration exists on it.
+- **Phase 2F:** Client Overview (`/app`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** The second real client page, `B`-classified: `CLT-01`
+  (client lifecycle) and `KYC-01` (case/outcome status) genuinely own
+  this state internally — real reachable-state enums verified against
+  backend source this turn (`active_limited`/`suspended`/`closed`;
+  `pending_documents`/`completed`/`remediation`) — but neither exposes a
+  public client-facing projection route (re-confirmed by re-scanning
+  every backend service's routes this turn). Four operational sections,
+  not a KPI dashboard: demo-labelled Organisation Status; mixed-
+  provenance Attention Items (destination-derived rows are `A`-backed,
+  the one KYC row is demo-only); a Wallet & Payout Destinations summary
+  reusing `UI Phase 2E`'s own `DEMO_DESTINATIONS` fixture directly (one
+  source of truth — the two pages can never disagree on destination
+  counts); Platform Access showing exactly the 3 real Client Portal nav
+  items, no `C`-classified capability. Recent Client Activity was
+  evaluated and **omitted** — no client-facing activity/audit feed
+  exists anywhere in the backend. No balance/AUM/PnL/portfolio/market-
+  chart/"Welcome back" — none present, confirmed by source inspection.
+  Asymmetric `xl:grid-cols-[1fr_320px]` layout at `≥1280px`, stacked
+  below that. `typecheck:web`/`lint:web`/`build:web` all pass; verified
+  via rendered-HTML and compiled-CSS inspection, **not** rendered/
+  screenshot review, which remains part of the deferred consolidated
+  pass. A shared `DemoDisclosure` component was extracted (now used by
+  both `/app` and `/app/wallet-destinations`); `AixStatusBadge`
+  promotion was reassessed and still not promoted (the existing shared
+  `DestinationStatusBadge` already eliminates the repetition a wrapper
+  would target). Full record: `UI-04` §41, `UI-02`'s new "UI Phase 2F"
+  section, `UI-03` §41.
+- **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
+  (`A`-classified) and Client Overview (`B`-classified) are the first
+  two real authenticated client product pages — Profile, KYC, and every
+  Ops/Admin page remain unimplemented. No API/auth integration exists on
+  either page.
 
 ## Contents
 

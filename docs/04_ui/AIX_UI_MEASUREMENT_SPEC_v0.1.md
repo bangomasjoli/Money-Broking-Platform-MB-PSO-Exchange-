@@ -2476,3 +2476,35 @@ condition (contrast the "UI Phase 2D" section above, where the same
 absence of rendered review produced an explicit non-acceptance record) —
 full rendered visual review of this page happens in the consolidated
 pass after the authenticated UI build-out completes.
+
+---
+
+## UI Phase 2F — Client Overview Geometry (compiled-CSS confirmed, visual QA deferred)
+
+The asymmetric layout geometry this turn introduces, confirmed by
+fetching the compiled Tailwind CSS chunk directly:
+
+| Rule | Compiled value |
+|---|---|
+| Overview split breakpoint | `xl:` — **1280px** (same breakpoint as the shell's own persistent-sidebar engagement, `UI Phase 2B`) |
+| Split column template (`xl:grid-cols-[1fr_320px]`) | `grid-template-columns: 1fr 320px` — primary column flexible, secondary column fixed **320px** |
+| Secondary-column leading padding (`xl:pl-8`) | `padding-left: calc(var(--spacing) * 8)` — **32px** |
+| Inter-section gap, primary column (`gap-8`) | `gap: calc(var(--spacing) * 8)` — **32px** |
+| Attention-item row background | existing `--muted` token at `/40` opacity (`bg-muted/40`) — no new color |
+
+**Secondary-column width (320px) is deliberately narrower than `UI Phase
+2E`'s detail panel (360px)** — Platform Access's content (3 short rows)
+is lighter than a full destination detail, and using a visibly different
+fixed width from the Wallet page's own detail panel avoids implying the
+two secondary columns are the same kind of panel when they are not
+(`WORKSPACE`/status-summary content here vs. a genuine record `DETAIL
+PANEL` there).
+
+**No new radius, shadow, or border-color value was introduced** — the
+secondary column's `border-l` uses the existing `--border` token
+(unchanged); `Badge`'s `outline` variant (reused from `UI Phase 2E`) is
+unmodified.
+
+**Visual QA status: DEFERRED, not performed, not falsely claimed** —
+same program decision as `UI Phase 2E`; full rendered review happens in
+the consolidated pass after the authenticated UI build-out completes.

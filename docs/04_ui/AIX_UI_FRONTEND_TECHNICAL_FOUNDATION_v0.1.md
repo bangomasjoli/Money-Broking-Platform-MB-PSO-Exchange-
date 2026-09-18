@@ -1360,3 +1360,49 @@ change; zero package/lockfile change. **Public homepage: unaffected** —
 `app/page.tsx`, `app/layout.tsx`, `app/globals.css`, and every
 `components/site/*` file are byte-identical to baseline, confirmed via
 `git diff --name-only`.
+
+## 41. Phase 2F — Client Overview (second product page, visual QA deferred)
+
+**Frontend implementation — the first `B`-classified client page.**
+Replaces `UI Phase 2B`'s placeholder `app/app/page.tsx` with the real
+Client Overview. Adds 5 new modules under `components/overview/` and 1
+new shared module `components/shell/demo-disclosure.tsx` (extracted from
+`UI Phase 2E`'s inline implementation — that page's own `page.tsx` was
+updated to consume it too, removing the duplicate inline JSX there, so
+the file count for this turn is 6 new + 2 modified, not 7 new).
+
+**shadcn/dependency impact: none.** No new component installed; every
+element composes from primitives already present (`Badge`, `Link`, plain
+HTML). Zero `package.json`/`package-lock.json` change.
+
+**No structural shell geometry changed** — this turn only replaces page
+content within the already-existing, already-styled shell
+(`AuthenticatedShell`/`AuthenticatedSidebar`/`AuthenticatedTopbar`,
+unchanged since `UI Phase 2D`).
+
+**Cross-page data consistency, verified by construction, not merely by
+inspection:** `components/overview/overview-data.ts` imports
+`DEMO_DESTINATIONS` from `components/wallet-destinations/
+destination-data.ts` directly — there is no second fixture array for
+this page to drift out of sync with; both pages read the same in-memory
+array, so a future edit to one cannot silently desynchronize the other.
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues (no new defect introduced this turn). `build:web`
+— succeeded; still 7 routes statically prerendered (`/app` remains a
+static route — its content changed, its route count did not).
+
+**Verification method and visual-QA status:** a real `next dev` server,
+rendered-HTML inspection, and compiled-CSS inspection were performed
+(full record: `UI-04` §41.15, `UI-02`'s new "UI Phase 2F" section) — no
+rendered screenshot/browser review was performed, consistent with `UI
+Phase 2E`'s own program-decision posture (contrast `UI Phase 2D` §39,
+where the same absence produced an explicit non-acceptance stop).
+Recorded as **IMPLEMENTED / VISUAL QA DEFERRED**, not falsely claimed as
+accepted.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**`
+change; zero package/lockfile change. **Public homepage: unaffected** —
+confirmed via `git diff --name-only`, no public-site file appears in the
+diff.

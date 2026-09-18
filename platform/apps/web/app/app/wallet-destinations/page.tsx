@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { DemoDisclosure } from "@/components/shell/demo-disclosure";
 import { PageHeader } from "@/components/shell/page-header";
 import { AddDestinationDialog } from "@/components/wallet-destinations/add-destination-dialog";
 import { WalletDestinationsWorkspace } from "@/components/wallet-destinations/wallet-destinations-workspace";
@@ -31,11 +31,10 @@ export default function WalletDestinationsPage() {
         action={<AddDestinationDialog />}
       />
 
-      <p role="note" className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Info className="size-3.5" aria-hidden="true" />
+      <DemoDisclosure>
         Interface preview — demo data. No live client records are shown; backend integration is
         separate, later work.
-      </p>
+      </DemoDisclosure>
 
       <WalletDestinationsWorkspace />
     </div>

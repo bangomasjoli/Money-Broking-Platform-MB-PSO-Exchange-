@@ -48,6 +48,10 @@ export interface AttentionItem {
   kind: "destination" | "organisation";
   /** Present only for `kind: "destination"` items — links to the real destination-management page. */
   destinationId?: string;
+  /** Present only for `kind: "organisation"` items, since `UI Phase 2H` — links to the real
+   * `/app/compliance-status` page (did not exist before that turn, so this item was previously
+   * non-interactive). */
+  href?: string;
 }
 
 export function deriveAttentionItems(destinations: PublicDestination[]): AttentionItem[] {
@@ -71,6 +75,7 @@ export function deriveAttentionItems(destinations: PublicDestination[]): Attenti
     title: "KYC / KYB documents outstanding",
     reason: KYC_CASE_LABELS[DEMO_ORGANISATION_STATUS.kycCaseStatus],
     kind: "organisation",
+    href: "/app/compliance-status",
   };
 
   return [...destinationItems, organisationItem];
@@ -92,11 +97,11 @@ export interface CapabilityStatusItem {
   href?: string;
 }
 
-/** `UI Phase 2G`: "Profile / Organisation" moves from "Interface planned" to "Available" — its
- * page is now real (`/app/profile`). "KYC / KYB Compliance Status" remains "Interface planned" —
- * still no page this turn. */
+/** `UI Phase 2G` moved "Profile / Organisation" to "Available" (`/app/profile`). `UI Phase 2H`
+ * moves "KYC / KYB Compliance Status" to "Available" (`/app/compliance-status`) — every Client
+ * Portal nav item now has a real page. */
 export const CAPABILITY_STATUS_ITEMS: CapabilityStatusItem[] = [
   { label: "Wallet & Payout Destinations", status: "Available", href: "/app/wallet-destinations" },
   { label: "Profile / Organisation", status: "Available", href: "/app/profile" },
-  { label: "KYC / KYB Compliance Status", status: "Interface planned" },
+  { label: "KYC / KYB Compliance Status", status: "Available", href: "/app/compliance-status" },
 ];

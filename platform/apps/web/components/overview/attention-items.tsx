@@ -9,11 +9,13 @@ import { DEMO_ATTENTION_ITEMS } from "@/components/overview/overview-data";
  *
  * Mixed provenance, per row: `destination`-kind items derive from the real `DEMO_DESTINATIONS`
  * fixture (same contract shape as `GET /wlt1/destinations` — `A`-backed) and link to the real
- * `/app/wallet-destinations` route; the one `organisation`-kind item is demo-only (no public KYC
- * projection exists) and renders as plain text, never a link to a nonexistent Profile/KYC page
- * ("inert future actions must be clearly non-live or omitted" — omitted here, not faked). No
- * invented urgency color — every row is plain text/icon-free, differentiated only by its own
- * `reason` text.
+ * `/app/wallet-destinations` route. The one `organisation`-kind item is demo-only (no public KYC
+ * projection exists) — it linked nowhere through `UI Phase 2F`/`2G` (no KYC page existed yet, so
+ * "inert future actions must be clearly non-live or omitted" meant plain text, not a fake link);
+ * since `UI Phase 2H` built the real `/app/compliance-status` page, this item now links there too
+ * — a row links whenever `item.href` is present, never hand-branched by `kind`, so a future item
+ * with a real destination follows the same rule automatically. No invented urgency color — every
+ * row is plain text/icon-free, differentiated only by its own `reason` text.
  *
  * Empty state (0 items) is a valid, calmly-presented state, not an error — handled explicitly
  * below rather than assumed unreachable.
@@ -31,24 +33,27 @@ export function AttentionItems() {
         <p className="mt-4 text-sm text-muted-foreground">No items requiring attention.</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
-          {items.map((item) => (
-            <li key={item.id} className="rounded-md bg-muted/40 px-3 py-2.5">
-              {item.kind === "destination" ? (
-                <Link
-                  href="/app/wallet-destinations"
-                  className="flex flex-col gap-0.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
-                >
-                  <span className="text-sm font-medium text-foreground">{item.title}</span>
-                  <span className="text-xs text-muted-foreground">{item.reason}</span>
-                </Link>
-              ) : (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium text-foreground">{item.title}</span>
-                  <span className="text-xs text-muted-foreground">{item.reason}</span>
-                </div>
-              )}
-            </li>
-          ))}
+          {items.map((item) => {
+            const href = item.kind === "destination" ? "/app/wallet-destinations" : item.href;
+            return (
+              <li key={item.id} className="rounded-md bg-muted/40 px-3 py-2.5">
+                {href ? (
+                  <Link
+                    href={href}
+                    className="flex flex-col gap-0.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+                  >
+                    <span className="text-sm font-medium text-foreground">{item.title}</span>
+                    <span className="text-xs text-muted-foreground">{item.reason}</span>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-foreground">{item.title}</span>
+                    <span className="text-xs text-muted-foreground">{item.reason}</span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

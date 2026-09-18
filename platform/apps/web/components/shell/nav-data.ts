@@ -54,12 +54,16 @@ export const SURFACES: Record<Surface, { label: string; rootHref: string }> = {
  * `UI Phase 2G`: "Profile / Organisation" gains a real `href` (`/app/profile`) — `B`-classified
  * (real `CLT-01` fields, no public projection route), same posture as `UI Phase 2F`'s Overview.
  * Label preserved exactly.
+ *
+ * `UI Phase 2H`: "KYC / KYB Compliance Status" gains a real `href` (`/app/compliance-status`) —
+ * `B`-classified (real `KYC-01` case/checklist model, no public projection route). Every Client
+ * Portal nav item is now live — no inert item remains on this surface. Label preserved exactly.
  */
 export const CLIENT_NAV: NavItem[] = [
   { label: "Overview", href: "/app", icon: "home" },
   { label: "Wallet & Payout Destinations", href: "/app/wallet-destinations", icon: "wallet" },
   { label: "Profile / Organisation", href: "/app/profile", icon: "building-2" },
-  { label: "KYC / KYB Compliance Status", icon: "shield-check" },
+  { label: "KYC / KYB Compliance Status", href: "/app/compliance-status", icon: "shield-check" },
 ];
 
 /** `UI-04` §8 — Staff/Operations Portal B-classified IA. */

@@ -2536,3 +2536,29 @@ question, not re-derived from scratch.
 same program decision as `UI Phase 2E`/`2F`; full rendered review
 happens in the consolidated pass after the authenticated UI build-out
 completes.
+
+---
+
+## UI Phase 2H — Client Compliance Status Geometry (compiled-CSS confirmed, visual QA deferred)
+
+No new geometry — this page reuses `UI Phase 2F`'s own asymmetric split
+values exactly, confirmed by fetching the compiled Tailwind CSS chunk
+directly (the same chunk, since Tailwind v4 deduplicates identical
+utility rules platform-wide):
+
+| Rule | Compiled value |
+|---|---|
+| Split breakpoint (`xl:grid-cols-[1fr_320px]`) | **1280px** (`min-width: 80rem`) — identical to `UI Phase 2F`'s own Overview split |
+| Split column template | `grid-template-columns: 1fr 320px` — same secondary-column width as Overview's own Platform Access column |
+| Secondary-column leading padding (`xl:pl-8`) | **32px** |
+| Outstanding-item row background (`bg-muted/40`) | existing `--muted` token, no new color — same value `UI Phase 2F`'s Attention Items rows already use |
+
+**Zero new radius/shadow/color/spacing/breakpoint value was introduced
+by this turn** — every rule this page uses was already governed and
+compiled by a prior phase; this section exists to record that the reuse
+was verified, not assumed.
+
+**Visual QA status: DEFERRED, not performed, not falsely claimed** —
+same program decision as every prior client-page phase; full rendered
+review happens in the consolidated pass after the authenticated UI
+build-out completes.

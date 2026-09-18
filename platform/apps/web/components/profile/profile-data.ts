@@ -46,8 +46,10 @@ export const DEMO_AUTHORISED_PARTIES: DemoAuthorisedParty[] = [
   { id: "demo-party-2", partyType: "signatory" },
 ];
 
-/** Minimal boolean summary only — no ownership percentage, no party count, no identity detail. */
-export const UBO_ON_FILE = true;
+/** Re-exported from the shared `client-demo-data.ts` (moved there in `UI Phase 2H` so the
+ * Compliance Status page's Verification Areas section can share the identical fact) — not
+ * re-declared here, so this page's own imports did not need to change. */
+export { UBO_ON_FILE } from "@/components/client/client-demo-data";
 
 export interface ProfileCompletenessItem {
   label: string;

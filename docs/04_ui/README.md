@@ -620,11 +620,45 @@ claim.** Public homepage unaffected.
   rendered-HTML and compiled-CSS inspection, **not** rendered/screenshot
   review, which remains part of the deferred consolidated pass. Full
   record: `UI-04` §42, `UI-02`'s new "UI Phase 2G" section, `UI-03` §42.
+- **Phase 2H:** KYC / KYB Compliance Status (`/app/compliance-status`)
+  — **IMPLEMENTED / VISUAL QA DEFERRED.** The fourth real client page,
+  `B`-classified, and the last of the original 4 Client Portal nav
+  items to go live — every Client Portal nav item now links to a real
+  page. `KYC-01` genuinely owns every concept shown: real
+  `kyc_case.status` (reused verbatim from Overview/Profile), real
+  `CHECKLIST_ITEM_STATUSES` (`missing`/`received`/`verified`/
+  `rejected`/`expired`) driving the Outstanding Information section (2
+  demo items, real document types, no invented deadlines/analyst
+  names/case IDs), and a broad Verification Areas rollup (Organisation
+  Identity / Authorised Representatives / Beneficial Ownership — the
+  last now sharing `UI Phase 2G`'s own `UBO_ON_FILE`, moved into the
+  shared `client-demo-data.ts` this turn). **A documented internal→
+  client mapping explains exactly which of `KYC-01`'s three status
+  concepts is client-facing:** `kyc_case.status` (shown) vs.
+  `cdd_outcome.outcome_status`/`outcome_reason` (an internal decision-
+  record detail, deliberately not shown — the case status already
+  reflects its practical consequence). No risk rating, AML score,
+  sanctions/PEP/STR, EDD wording, source-of-funds/wealth, business
+  activity, or internal case-management detail (owner/reviewer/
+  analyst/notes/queue) appears anywhere — all evaluated and omitted
+  with evidence, not by assumption. No file-upload control of any kind
+  exists (no client-facing upload route was found anywhere) — one
+  explanatory note instead. No timeline/progress bar — the governed
+  model has no stable sequential pipeline, only 3 coarse case states
+  where "remediation" is a return transition, not a forward step.
+  Reasserted the `AixStatusBadge` promotion question a third time and
+  again declined — three real pages now show status three genuinely
+  different, already-correctly-matched ways, not evidence of
+  error-prone duplication. `typecheck:web`/`lint:web`/`build:web` all
+  pass; verified via rendered-HTML and compiled-CSS inspection, **not**
+  rendered/screenshot review. Full record: `UI-04` §43, `UI-02`'s new
+  "UI Phase 2H" section, `UI-03` §43.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
-  (`A`-classified), Client Overview, and Profile / Organisation (both
-  `B`-classified) are the first three real authenticated client product
-  pages — KYC/KYB Compliance Status and every Ops/Admin page remain
-  unimplemented. No API/auth integration exists on any of them.
+  (`A`-classified), Client Overview, Profile / Organisation, and KYC /
+  KYB Compliance Status (all three `B`-classified) are the four real
+  authenticated client product pages — every Client Portal nav item now
+  has one. Every Ops/Admin page remains unimplemented. No API/auth
+  integration exists on any of them.
 
 ## Contents
 

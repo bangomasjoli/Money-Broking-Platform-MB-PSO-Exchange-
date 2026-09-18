@@ -1448,3 +1448,56 @@ accepted.
 change; zero package/lockfile change. **Public homepage: unaffected** —
 confirmed via `git diff --name-only`, no public-site file appears in the
 diff.
+
+## 43. Phase 2H — Client KYC / KYB Compliance Status (fourth product page, visual QA deferred)
+
+**Frontend implementation — the third `B`-classified client page, and
+the last of the four original Client Portal nav items to go live.**
+Adds `app/app/compliance-status/page.tsx` and 4 new modules under
+`components/compliance/`; modifies `components/shell/nav-data.ts` (one
+`href` added), `components/client/client-demo-data.ts` (`UBO_ON_FILE`
+added — moved from `UI Phase 2G`'s own `profile-data.ts`),
+`components/profile/profile-data.ts` (re-exports `UBO_ON_FILE` instead
+of declaring it — zero consuming-component change required),
+`components/profile/profile-status.tsx` (Compliance Summary row now
+links to the new real page), and `components/overview/overview-data.ts`
++ `components/overview/attention-items.tsx` (KYC/KYB capability status
+and the organisation-kind attention item now link to the new real page
+— the exact same "route now exists" update `UI Phase 2G` already made
+for Profile).
+
+**shadcn/dependency impact: none.** No new component installed; every
+element composes from primitives already present (plain HTML `dl`/
+`dt`/`dd`, `Link`). Zero `package.json`/`package-lock.json` change.
+
+**Cross-page data consistency, verified by construction:** `UBO_ON_FILE`
+now lives in the same shared `components/client/client-demo-data.ts`
+module as `DEMO_CLIENT_STATE` — this page's Verification Areas and `UI
+Phase 2G`'s Authorised Representatives section import the identical
+value, so beneficial-ownership state can never disagree between the two
+pages either, extending the same pattern `UI Phase 2G` established for
+lifecycle/KYC/eligibility.
+
+**Quality gates, all independently run:** `typecheck:web` — 0 errors.
+`lint:web` — 0 issues (no new defect introduced this turn). `build:web`
+— succeeded; 9 routes now statically prerendered (up from 8),
+`/app/compliance-status` added.
+
+**Verification method and visual-QA status:** a real `next dev` server,
+rendered-HTML inspection, and compiled-CSS inspection were performed
+(full record: `UI-04` §43's own subsections, `UI-02`'s new "UI Phase
+2H" section) — no rendered screenshot/browser review was performed,
+consistent with every prior client-page phase's own program-decision
+posture. Cross-page consistency independently verified: all of `/app`,
+`/app/profile`, `/app/compliance-status` confirmed to render "Pending
+Documents" identically; zero remaining `aria-disabled="true"` inert nav
+rows anywhere on the Client Portal surface (confirmed via rendered-HTML
+inspection of `/app/compliance-status`'s own nav markup — all four
+`CLIENT_NAV` items are now live links). Recorded as **IMPLEMENTED /
+VISUAL QA DEFERRED**, not falsely claimed as accepted.
+
+**Backend regression:** not required — zero `platform/services/**`,
+`platform/packages/**`, `platform/edge/**`, or `platform/infra/**`
+change; zero package/lockfile change. **Public homepage: unaffected** —
+confirmed via `git diff --name-only`, no public-site file appears in the
+diff.

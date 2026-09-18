@@ -93,3 +93,14 @@ export const DEMO_CLIENT_STATE: DemoClientState = {
   kycCaseStatus: "pending_documents",
   eligible: true,
 };
+
+/**
+ * Beneficial-ownership (UBO) demo summary — minimal boolean only, no ownership percentage, party
+ * count, or identity detail (real `clt1.authorised_party` rows with `party_type='ubo'` carry an
+ * `ownership_percentage` column, deliberately never surfaced here). Originally declared in `UI
+ * Phase 2G`'s `components/profile/profile-data.ts`; moved here in `UI Phase 2H` since the
+ * Compliance Status page's own Verification Areas section now needs the identical fact — both
+ * pages import this one value, so they can never disagree about whether UBO information is on
+ * file.
+ */
+export const UBO_ON_FILE = true;

@@ -1,14 +1,18 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { DEMO_CLIENT_STATE, KYC_CASE_LABELS } from "@/components/client/client-demo-data";
 import { PROFILE_COMPLETENESS_ITEMS } from "@/components/profile/profile-data";
 
 /**
- * Compliance Summary + Profile Completeness — UI Phase 2G, `WORKSPACE PANEL`. Plain,
- * non-interactive status only — this turn's own explicit instruction: the dedicated KYC/KYB
- * Compliance Status page is not implemented yet, so this section shows a concise summary and
- * **does not link anywhere** (no link to a nonexistent route) and does not duplicate
- * case-management detail (no analyst notes, no checklist, no evidence list — all of that is
- * internal-only `KYC-01` case detail, out of scope for a general profile page).
+ * Compliance Summary + Profile Completeness — UI Phase 2G, `WORKSPACE PANEL`. Concise summary
+ * only — does not duplicate case-management detail (no analyst notes, no checklist, no evidence
+ * list — all of that is internal-only `KYC-01` case detail, out of scope for a general profile
+ * page).
+ *
+ * `UI Phase 2H`: the KYC/KYB status value now links to the real `/app/compliance-status` page
+ * (built that turn) — `UI Phase 2G`'s original "does not link anywhere" note no longer applies,
+ * since the route it was avoiding now genuinely exists; the underlying "no fake link" principle
+ * is unchanged, only the fact about what is real has moved.
  *
  * Profile Completeness shows discrete section states only — **no fabricated percentage, no
  * progress ring** (this turn's explicit prohibition) — each state sourced from real data already
@@ -24,7 +28,14 @@ export function ComplianceSummary() {
       </h2>
 
       <dl className="mt-4">
-        <Row label="KYC / KYB status">{KYC_CASE_LABELS[DEMO_CLIENT_STATE.kycCaseStatus]}</Row>
+        <Row label="KYC / KYB status">
+          <Link
+            href="/app/compliance-status"
+            className="font-medium text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {KYC_CASE_LABELS[DEMO_CLIENT_STATE.kycCaseStatus]}
+          </Link>
+        </Row>
       </dl>
     </section>
   );

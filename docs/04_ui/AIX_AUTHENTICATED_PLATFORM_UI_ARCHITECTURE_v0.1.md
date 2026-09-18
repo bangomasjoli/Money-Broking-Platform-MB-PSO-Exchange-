@@ -2692,3 +2692,254 @@ No registered-address or distinct primary-contact-person gap is listed
 statement against (§42.1); if either becomes a real future requirement,
 it would need new model design, not merely new API exposure of an
 existing field.
+
+---
+
+## 43. UI Phase 2H — Client KYC / KYB Compliance Status (`B`-classified page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The third `B`-classified
+client page. With this turn, every Client Portal nav item now has a
+real page — the nav's own inert-row treatment (`NavList`, `UI Phase
+2B`/`2D`) has no remaining live use case on this surface, though the
+mechanism itself is unchanged and still governs Staff/Ops and Admin/
+Compliance nav (both still partly inert).
+
+### 43.1 Capability/status map (verified against actual backend source, not assumed)
+
+Every backend service's registered routes were re-scanned this turn —
+unchanged from every prior UI phase's own findings: `kyc1` remains
+entirely internal, no public client-facing route exists anywhere in it.
+Every concept below was traced to its exact source in
+`platform/services/kyc1/src`:
+
+| UI element | Owning module | Current model/route | Client-facing? | Status |
+|---|---|---|---|---|
+| Current KYC/KYB status | `KYC-01` | `kyc1.kyc_case.status` — real enum `pending_documents`/`completed`/`remediation` (`lib/kyc-case.ts`'s `KYC_CASE_STATUSES`) | No | **PARTIAL/B** — reused verbatim from `UI Phase 2F`/`2G` |
+| Outstanding document items | `KYC-01` | `kyc1.checklist_item.status` — real enum `missing`/`received`/`verified`/`rejected`/`expired` (same file's `CHECKLIST_ITEM_STATUSES`); document types from `DEFAULT_CHECKLIST_BY_CASE_TYPE` | No | **PARTIAL/B** |
+| Verification areas (rollup) | `KYC-01` | Derived from the real `KYC_CASE_TYPES` concept (`individual`/`entity`/`authorised_party`) and each type's own default checklist | No | **PARTIAL/B, broad rollup only** — not a literal 1:1 case-per-party projection |
+| Beneficial ownership (rollup) | `CLT-01` | `clt1.authorised_party` where `party_type='ubo'` — reused verbatim from `UI Phase 2G`'s `UBO_ON_FILE` (moved to the shared `client-demo-data.ts` this turn, §43.3) | No | **PARTIAL/B, minimal summary only** |
+| Engine-level outcome (`pass`/`fail`/`remediation_required`) and `outcome_reason` | `KYC-01` | `kyc1.cdd_outcome.outcome_status`/`.outcome_reason` (`lib/outcome-override.ts`'s `OVERRIDE_TARGET_OUTCOME_STATUSES`; `routes/outcome.ts`) | No | **OMITTED from this page** — an internal decision-record detail; `kyc_case.status` already reflects its practical consequence for the client (§43.2's full mapping rationale) |
+| Document-submission/upload | `KYC-01` | No route found anywhere in the registered route set | No | **OMITTED** — no upload UI built; one explanatory note instead |
+| Outcome delivery mechanism | `KYC-01` → `CLT-01` | `kyc1.outcome_publication` (`lib/outcome-publication.ts`) — delivers the aggregate outcome SERVICE-TO-SERVICE into `CLT-01` only (`status` there tracks delivery lifecycle: `pending`/`succeeded`/`failed`/`superseded` — its own header comment states "no CLT-01 client exists yet" as of Phase 2A of that module) | No | **Confirms no client delivery path exists at all** — not merely unexposed, structurally internal-to-internal |
+| Risk rating / AML score / sanctions / PEP / STR | `AML-01`/`KYC-01` | Internal only; no client-facing field found anywhere | No | **OMITTED** — this turn's explicit default, independently confirmed by absence in the actual model |
+| Source of Funds / Source of Wealth | — | **No field, case type, or document type found anywhere in `KYC-01`'s actual schema** — searched directly this turn | No | **OMITTED** — no field concept exists at all, same category as `UI Phase 2G`'s Registered Address omission |
+| Business Activity | — | Same as above — zero evidence anywhere | No | **OMITTED** |
+| Internal case-management detail (owner/reviewer/analyst/notes/queue/SoD role) | `KYC-01` | Not modeled in any client-facing form anywhere | No | **OMITTED** |
+
+### 43.2 Internal → client-facing status mapping (the "which status, not which other status" question)
+
+`KYC-01`'s model carries THREE distinct status concepts, verified this
+turn — this section documents which one is client-facing and why the
+other two are not, rather than silently collapsing them:
+
+| Internal state | Client-facing label | Visible? | Rationale |
+|---|---|---|---|
+| `kyc_case.status = pending_documents` | Pending Documents | Yes | Primary "Current Status" — the case-level state is the coarsest, most stable, most genuinely client-relevant signal. |
+| `kyc_case.status = completed` | Completed | Yes | Primary "Current Status." |
+| `kyc_case.status = remediation` | Remediation Required | Yes | Primary "Current Status." |
+| `cdd_outcome.outcome_status` (`pass`/`fail`/`remediation_required`) | — | **No** | An internal decision-ENGINE record tied to one specific computation event, not the durable case state; `kyc_case.status` is set FROM this value (`routes/outcome.ts`'s own `UPDATE kyc1.kyc_case SET status = $2, current_outcome_status = $3...`) but already carries its practical meaning for the client — showing both would either duplicate or (worse) desynchronize if a case is later remediated. |
+| `cdd_outcome.outcome_reason` | — | **No** | Free-form internal reasoning text; not governed for client display. |
+| `checklist_item.status` (`missing`/`received`/`verified`/`rejected`/`expired`) | Not Yet Submitted / Received — Under Review / Verified / Resubmission Required / Resubmission Required (Expired) | Yes, per-item | The per-document granularity IS genuinely client-relevant — this is what "Outstanding Information" is built from (§43.5). |
+
+### 43.3 Route, navigation change, and shared-state extension
+
+New route: `platform/apps/web/app/app/compliance-status/page.tsx` →
+`/app/compliance-status` — this turn's own default suggestion, taken as
+given rather than `/app/kyc`: the governed nav label ("KYC / KYB
+Compliance Status") covers both KYC and KYB, and `UI Phase 2E`/`2G`'s
+own "anchor on the label's first word" precedent does not transfer
+cleanly here ("kyc" alone reads narrower than this page's actual
+scope). `components/shell/nav-data.ts`'s `CLIENT_NAV` entry gained a
+real `href` — the fourth and final Client Portal nav item to go live.
+Label preserved verbatim.
+
+`components/client/client-demo-data.ts` (extracted `UI Phase 2G`)
+gained `UBO_ON_FILE`, moved from `UI Phase 2G`'s own `profile-data.ts`
+— both this page's Verification Areas section and `UI Phase 2G`'s own
+Authorised Representatives section now import the same value, so
+beneficial-ownership state can never disagree between the two pages
+either. `profile-data.ts` re-exports the same name — zero change
+required to `UI Phase 2G`'s own consuming component.
+
+`UI Phase 2F`'s Overview page received two small, well-scoped updates
+reflecting this turn's new reality (not scope creep — the exact same
+"the route now exists" logic already applied when `UI Phase 2G` moved
+"Profile / Organisation" from "Interface planned" to "Available"):
+`CAPABILITY_STATUS_ITEMS`'s KYC/KYB row now reads "Available" with a
+real link; the organisation-kind `AttentionItem` now carries a real
+`href` to `/app/compliance-status` (previously non-interactive, since
+no page existed to link to). `UI Phase 2G`'s own Compliance Summary
+row was similarly updated to link to the new real page — its original
+"does not link anywhere" note is now historical, not current design
+intent; the underlying no-fake-link principle is unchanged, only the
+fact about what is real has moved.
+
+### 43.4 Page architecture
+
+```
+app/app/compliance-status/page.tsx
+components/compliance/
+  compliance-data.ts          — checklist/document-type/verification-area demo data
+  current-status.tsx           — CurrentStatus
+  outstanding-information.tsx  — OutstandingInformation
+  verification-summary.tsx     — VerificationAreas + NextSteps
+```
+
+### 43.5 Sections implemented
+
+- **Current Status** — one prominent status line, reusing
+  `DEMO_CLIENT_STATE.kycCaseStatus` directly. **No timeline/progress
+  stepper** — evaluated and omitted: the governed model has exactly 3
+  coarse case states, not a stable sequential pipeline found anywhere
+  in the actual source (`remediation` is a RETURN transition, not a
+  forward step — representing these three states as a linear progress
+  bar would misrepresent the real state machine). No percentage, no
+  progress ring.
+- **Outstanding Information** — 2 demo items (Certificate of
+  Incorporation: "Received — Under Review"; Authorised Representative
+  Evidence: "Not Yet Submitted — action needed"), both real governed
+  document types and checklist states, `ACTION PANEL`-adjacent
+  treatment (same `bg-muted/40` pattern `UI Phase 2F`'s Attention Items
+  already established). One explanatory note at the section's own end
+  — *"Document upload will be available when the client document-
+  submission service is integrated"* — since no upload route exists
+  anywhere; no `<input type="file">`, no drag-and-drop, no upload
+  button, confirmed absent by source inspection. Empty state ("No
+  additional information is currently required.") implemented and
+  reachable, not merely documented.
+- **Verification Areas** — 3 broad rollup rows (Organisation Identity,
+  Authorised Representatives, Beneficial Ownership), each "On file" /
+  "Under Review" / "Pending Information" — never an internal
+  verification method, provider score, screening hit, analyst note, or
+  risk rating.
+- **Next Steps** — one real link (`/app/profile`) plus a plain-text
+  pointer to the Outstanding Information section already on the same
+  page — no fake link to a document-submission page that does not
+  exist.
+
+**"Compliance Information On File" (candidate section E) was evaluated
+and folded into Verification Areas rather than built separately** — a
+third summary table repeating the same 3–4 facts already shown in
+Current Status and Verification Areas would be redundant, and this
+turn's own instruction explicitly cautions against recreating Profile's
+own content on this page.
+
+### 43.6 Sensitive/internal boundaries confirmed
+
+**Beneficial ownership:** minimal "On file"/"Pending Information" rollup
+only — no ownership percentage, party count, or identity detail,
+confirmed absent by source inspection (same restraint as `UI Phase
+2G`). **Source of Funds/Source of Wealth, Business Activity:** omitted
+entirely — no field concept exists in the governed model (§43.1).
+**EDD:** not referenced anywhere — no client-facing EDD wording
+("Enhanced Due Diligence triggered," "High-risk client," "EDD case
+open") appears; the generic "action needed" wording already used for
+outstanding items is the only client-facing signal this page ever
+shows for anything resembling additional review. **AML/screening:** no
+sanctions match, PEP score, adverse media, transaction-monitoring
+alert, screening-provider output, or STR status anywhere. **Risk
+rating:** no score, no "Low/Medium/High Risk," no numeric rating, no
+color-coded risk indicator anywhere — confirmed by source inspection.
+**No case-management leakage:** no case owner, reviewer, analyst,
+internal note, internal reason code, queue name, maker-checker role, or
+internal audit-trail timestamp appears anywhere.
+
+### 43.7 Rejected/failed and unknown-state readiness (not demoed, but mapped)
+
+`remediation` (the client-facing "Remediation Required" case state) and
+`rejected`/`expired` (checklist-item states, both mapped to
+"Resubmission Required" variants, §43.2) are fully mapped in code —
+this turn's own demo fixtures do not exercise the case-level
+`remediation` state (the demo case sits at `pending_documents`,
+matching the shared cross-page state), avoiding unnecessary alarming
+demo data per this turn's own guidance, while the mapping itself
+remains complete and ready. No "unknown status" fallback was needed in
+code — `Record<ChecklistItemStatus, string>` and
+`Record<KycCaseStatus, string>` (TypeScript-enforced exhaustive maps)
+make an unmapped value a compile-time error, not a runtime "undefined"
+render — a stronger safety property than a documented fallback string
+would provide, satisfying "fail visually safe" structurally rather than
+by convention.
+
+### 43.8 Layout, panel model, and responsive behavior — structural reasoning (not rendered)
+
+Asymmetric `xl:grid-cols-[1fr_320px]` layout at `≥1280px` (primary:
+Current Status + Outstanding Information; secondary: Verification Areas
++ Next Steps) — the same split breakpoint and "split only where the
+shell's own sidebar also engages" rationale `UI Phase 2F`'s Overview
+page already established, reused rather than re-derived. Below `xl:`:
+single column, stacked — order: PageHeader → DemoDisclosure → Current
+Status → Outstanding Information → Verification Areas → Next Steps,
+matching this turn's own required mobile order exactly (no section was
+reordered or omitted from that sequence — every candidate section that
+survived §43.1's evaluation appears in it). No horizontal overflow risk
+— no table, no fixed-width element wider than its container exists on
+this page.
+
+### 43.9 Status-wrapper (`AixStatusBadge`) — reassessed a third time, still not promoted
+
+This page uses no `Badge` at all (same as `UI Phase 2G` — every status
+here is plain text: the large Current Status line, the Outstanding
+Information rows' state text, the Verification Areas rollup values).
+Reassessed per this turn's own explicit instruction with three real
+client pages now built: the promotion bar (semantics repeat across
+multiple domains; accessibility treatment repeats; direct composition
+becoming error-prone) is not met — status presentation across the three
+pages built so far takes three genuinely different shapes (a `Badge` in
+Wallet & Payout Destinations' table, a plain status line in Overview/
+Profile/this page), each already correctly matched to its own context
+per `UI-04` §21's own guidance (`Badge` for scannable table cells,
+plain text for narrative/summary contexts) — not evidence of
+error-prone duplication, evidence of the existing rule being applied
+correctly and consistently. Default (not promoted) upheld again.
+
+### 43.10 Accessibility
+
+One semantic `<h1>` ("KYC / KYB Compliance Status"). Four `<h2>`
+sections, each `aria-labelledby`'d to its own heading. Status never
+color-only (plain text/icon-free throughout — no colored dot, no
+colored badge fill anywhere on this page). Outstanding-item state is
+readable in text on every row ("Received — Under Review," "Not Yet
+Submitted — action needed"), never conveyed by color or icon alone. No
+fake clickable `<div>` anywhere. No focusable dead upload control — no
+upload control of any kind exists (confirmed by source inspection, not
+merely "disabled"). Every link has a meaningful accessible name
+("Review your organisation profile," never "Click here" or a bare
+icon). Mobile reading order matches DOM order (no `tabIndex` overrides
+used anywhere on this page).
+
+### 43.11 Backend projection/action gaps (for a future integration turn — not built this turn)
+
+Derived directly from §43.1's capability map, verified by inspection,
+not assumed:
+
+1. **Client-facing KYC/KYB status projection** — a public, client-
+   scoped read exposing `kyc_case.status` (and, per §43.2's own
+   reasoning, deliberately NOT `cdd_outcome.outcome_status`/
+   `outcome_reason`).
+2. **Client-facing outstanding-information projection** — a public,
+   client-scoped read exposing `checklist_item` rows (document type +
+   status only — no internal verification-method or provider-score
+   column, consistent with §43.6's restraint).
+3. **Client document-submission/upload endpoint** — does not exist in
+   any form today; a genuinely new capability, not merely new exposure
+   of an existing internal route (no internal upload route was found
+   either — document evidence appears to enter `KYC-01` through a
+   different, unexplored intake path this turn did not need to trace
+   further, since no client-facing exposure is being designed against
+   it yet).
+4. **Client-facing verification-area summary projection** — either a
+   dedicated aggregate route, or client-side composition once gap #2
+   above exists alongside the real `KYC_CASE_TYPES`/checklist
+   structure (this page's own rollup logic, §43.1, already demonstrates
+   what that composition would look like).
+5. **Client-facing decision/outcome projection** — explicitly NOT
+   requested as a literal `cdd_outcome` exposure (§43.2); if a future
+   turn decides the client should see more decision detail than the
+   coarse case status already provides, that is a new governance
+   decision, not assumed here.
+
+No Source-of-Funds/Source-of-Wealth or Business-Activity gap is listed
+— neither has a field concept in the governed model to build a gap
+statement against (§43.1), same category as `UI Phase 2G`'s own
+Registered-Address non-gap.

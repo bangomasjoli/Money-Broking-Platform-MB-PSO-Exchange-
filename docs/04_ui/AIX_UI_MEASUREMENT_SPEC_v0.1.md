@@ -2712,3 +2712,32 @@ from 1280px): the primary column is content − 320px − 32px ≈ **623px @1280
 **783px @1440**; below `xl:` the page is a single column at the full content width
 (≈ 976px @1024, 720px @768, ≈ 398px @430). No table and no horizontal scroll
 exists anywhere on the page. No shadcn primitive is used.
+
+## UI Phase 2O — Client Risk / KYC-KYB Geometry
+
+Values used by `/admin/client-risk-kyc-kyb` (`UI-04` §50). The workspace **reuses `UI
+Phase 2J`'s Client Requests values exactly**; the only new measurement is the column
+budget. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | Reuse — the persistent panel at `lg:` |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px), 320px | Reuse; single leading `border-l` |
+| Table row | `h-10` = **40px** `COMPACT` | Reuse; the tier `UI-04` §35.14 names for standard lists |
+| Selected-row marker | `border-l-2` on the first cell | Reuse |
+| Filter control | `h-10` (40px) trigger, `w-64` (256px, `max-w-full`) | Reuse |
+| Filter row → list | `mb-4` = 16px | Reuse |
+| Mobile record | `py-3` = 12px, `gap-1` = 4px, hairline `border-t`, four lines | Reuse of the Ops mobile list |
+| Detail sections | `gap-6` = 24px between; rows `gap-3` = 12px | Reuse |
+| Organisation cell | `max-w-36` = 144px, `truncate` | New — was `max-w-52` (208px) in Client Requests; narrowed so four base columns fit |
+
+**Column budget** (content width ~976px at 1024px, ~975px at 1280px; the persistent
+split leaves the list ~623px at both). Estimated cell widths *including* 16px padding:
+reference ~108 + organisation ≤160 + KYC/KYB ~160 + checklist ~152 = **~580px**, leaving
+~43px. Lifecycle (~120px) is shown from a container width of **48rem (768px)** and Client
+Class (~110px) from **56rem (896px)** — so the persistent split shows the four base columns
+only, and a full-width list at 768–1023px shows up to six. The `@3xl`/`@4xl` rules are
+confirmed in the compiled CSS. **The ~580px total is an estimate of glyph widths, not a
+measurement** — it is the tightest fit on the page and the first thing visual QA should
+check (an over-full row would wrap and break the 40px tier). No shadcn primitive was
+added or changed.

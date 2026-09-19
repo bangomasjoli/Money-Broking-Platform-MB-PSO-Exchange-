@@ -848,6 +848,32 @@ claim.** Public homepage unaffected.
   `typecheck:web`/`lint:web`/`build:web` all pass (13 static pages); verified via
   rendered-HTML inspection — nothing was rendered. Full record: `UI-04` §49,
   `UI-02`'s new "UI Phase 2N" section, `UI-03` §50.
+- **Phase 2O:** Admin / Client Risk / KYC-KYB (`/admin/client-risk-kyc-kyb`) —
+  **IMPLEMENTED / VISUAL QA DEFERRED.** The **second real Admin page**; a List +
+  Detail workspace, `B`-classified, over a four-client demo dataset (no cross-client
+  read exists in the backend; `DEMO-CLI-001` is built from the same shared modules
+  the Client Portal renders and was checked against `/app`, `/app/profile`,
+  `/app/compliance-status` and `/admin`). **The finding that shapes the page:
+  KYC-01 maps both `pass` and `fail` to case status `completed`**, so "Completed"
+  does not mean "passed" — the KYC / KYB cell carries the outcome ("Completed ·
+  Pass" / "Completed · Fail") and its icon follows the pair, never a check for a
+  failure. Every fixture is a reachable KYC-01 state, audited against the outcome
+  engine (checklist `expired` has no writer and is never used; `retail`/`unknown`
+  clients are blocked by CFG-01 and absent). **No risk rating** — the governed
+  value exists but no route returns it; the detail says so ("Not available in this
+  preview") rather than inventing one or leaving a silent gap under a page titled
+  "Risk". No screening, EDD or override content (none has a safe projection or
+  model); beneficial ownership is a coarse boolean; no timestamps, evidence
+  references or PII. **Read-only — no action control.** One filter (KYC / KYB
+  status), no search. Also recorded: `legal_name` is returned by **no** CLT-01
+  route, so the Organisation column is demo-only. **Three deliberate changes to
+  Phase 2N's `/admin`** so it cannot contradict this page: its KYC/KYB row now
+  derives from this dataset (unchanged output), a Remediation Required row is
+  added, and Review Areas links the now-built area. **No shadcn primitive added
+  or changed.** `typecheck:web`/`lint:web`/`build:web` all pass (14 static pages);
+  verified via rendered-HTML inspection and a scratch server-side render —
+  nothing was rendered. Full record: `UI-04` §50, `UI-02`'s new "UI Phase 2O"
+  section, `UI-03` §51.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -855,8 +881,8 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**. Compliance Overview is the first real Admin page; the
-  seven other Admin areas remain unimplemented. No API/auth integration exists on any of
+  Ops set is complete**. Compliance Overview and Client Risk / KYC-KYB are the two real Admin pages;
+  the six other Admin areas remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

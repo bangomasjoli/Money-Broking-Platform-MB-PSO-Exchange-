@@ -1946,3 +1946,63 @@ all consistent. No interaction exists to verify.
 `/ops/audit-activity` all return 200. Backend regression not required — zero
 `platform/services/**`, `packages/**`, `edge/**`, `infra/**` change (IAM-02 and
 SEC-01 untouched). Public homepage unaffected.
+
+## 51. Phase 2O — Admin / Client Risk / KYC-KYB (second Admin page, visual QA deferred)
+
+`/admin/client-risk-kyc-kyb` (`UI-04` §50): a List + Detail workspace of client-level
+KYC/KYB, CDD and lifecycle state. `B`-classified; a four-client demo dataset (no cross-client
+read exists in the backend); no fetch, server action, auth, permission check or mutation.
+Read-only — no review, override, escalation or rating action.
+
+**Files created (6):** `app/admin/client-risk-kyc-kyb/page.tsx`;
+`components/admin/{client-risk-data.ts, client-risk-status.tsx, client-risk-table.tsx,
+client-risk-detail.tsx, client-risk-workspace.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (the "Client Risk / KYC-KYB" row gains
+`href`; the six other Admin rows stay inert); `app/admin/layout.tsx` (comment and metadata);
+and — **three deliberate changes to Phase 2N's `/admin`**, each recorded at `UI-04` §49.15/
+§50.8: `components/admin/admin-compliance-data.ts` (the KYC/KYB attention row now derives from
+this dataset with unchanged output, a Remediation Required row is added, and
+`CHECKLIST_STAFF_LABELS`/the case-type labels now come from `client-risk-data.ts`) and
+`components/admin/review-areas.tsx` (the built area is a link marked "Interface preview").
+**No Ops or Client page was modified.**
+
+**Client/server boundary:** the page is a Server Component; `ClientRiskWorkspace` and
+`ClientRiskTable` are Client Components (`"use client"`) holding only local UI state —
+`statusFilter`, `selectedRef`, `mobileDetailOpen`. `ClientRiskDetail` and `KycStateLine` are
+plain components with no state, rendered on either side of that boundary. The workspace
+reuses `useIsLgUp` (`useSyncExternalStore`).
+
+**Data:** `DEMO-CLI-001` is built from `client-demo-data`, `compliance-data` and
+`client-request-data` — never re-declared — so it cannot disagree with the Client Portal or
+the Compliance Overview. Every fixture is a reachable KYC-01 state, audited against
+`outcome-engine.ts` (`UI-04` §50.2–§50.3). `pass` **and** `fail` both give `completed`, so the
+KYC / KYB cell carries the outcome for a completed case and its icon follows the pair.
+
+**shadcn impact: none.** Existing `Table`, `Select`, `Sheet`, `Button`, `Label` used
+unchanged; the REVIEW LATER primitives were not touched; the official MCP was not needed. **No
+package or lockfile change.**
+
+**Lint finding:** choosing the status icon through a helper function tripped
+`react-hooks/static-components` ("component created during render"). Fixed with a
+module-level `Record<StateKey, icon>` lookup — the pattern the Ops status lines already use.
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all pass;
+**14** static pages generated (13 + the new route).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server + `curl` +
+rendered-HTML inspection, and a scratch server-side render (deleted afterwards) for branches
+the four fixtures do not reach. Confirmed: one `<h1>`; one labelled table, five rows, the four
+clients' cells; the default detail; the active nav item; zero interactive elements in the
+detail; label-in-name for all four row buttons; the `completed`+`fail`, `completed`+null,
+all-verified and beneficial-ownership-pending branches; compiled CSS carries the `@3xl`/`@4xl`
+container rules and the selected-row marker. `DEMO-CLI-001`'s class, lifecycle, KYC/KYB
+status, checklist, case type, CDD outcome and beneficial ownership were checked
+programmatically against `/app`, `/app/profile`, `/app/compliance-status` and `/admin`.
+The Compliance Overview's pre-existing pending row renders byte-identically to Phase 2N. **No
+interaction was exercised** — filtering, selection and the Sheet are reasoned from source.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests`, `/ops/wallet-destination-review`,
+`/ops/maker-checker-queue`, `/ops/audit-activity` and `/admin` all return 200. Backend
+regression not required — zero `platform/services/**`, `packages/**`, `edge/**`, `infra/**`
+change. Public homepage unaffected.

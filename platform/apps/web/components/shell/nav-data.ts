@@ -101,10 +101,15 @@ export const OPS_NAV: NavItem[] = [
  * since `UI Phase 2B`, so no nav change is needed. Every other row stays inert and must not gain an
  * `href` until its page exists: visible navigation is not a permission grant, and hidden navigation is
  * not a security control (`UI-04` §10). `C`-classified Reporting and Incidents / Exceptions are absent.
+ *
+ * `UI Phase 2O`: "Client Risk / KYC-KYB" gains a real `href` (`/admin/client-risk-kyc-kyb` — the label's
+ * slug, the convention the Ops routes set) — `B`-classified (real `KYC-01`/`CLT-01` case, outcome and
+ * lifecycle models, every route `requireInternal`-guarded, no cross-client read). The six remaining
+ * rows stay inert. Label preserved exactly.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
-  { label: "Client Risk / KYC-KYB", icon: "shield-alert" },
+  { label: "Client Risk / KYC-KYB", href: "/admin/client-risk-kyc-kyb", icon: "shield-alert" },
   { label: "AML / Transaction Monitoring", icon: "activity" },
   { label: "EDD / Review", icon: "search-check" },
   { label: "Approval Queue", icon: "list-checks" },

@@ -1,5 +1,16 @@
+import {
+  CHECKLIST_STAFF_LABELS,
+  CLIENT_RISK_KYC_KYB_HREF,
+  DEMO_CLIENT_COMPLIANCE,
+  KYC_CASE_TYPE_LABELS,
+  kycCaseTypeForApplicant,
+} from "@/components/admin/client-risk-data";
 import { CLIENT_LIFECYCLE_LABELS, DEMO_CLIENT_STATE, KYC_CASE_LABELS, UBO_ON_FILE } from "@/components/client/client-demo-data";
-import { DEMO_CHECKLIST_ITEMS, type ChecklistItemStatus } from "@/components/compliance/compliance-data";
+import {
+  DEMO_CHECKLIST_ITEMS,
+  outstandingChecklistItems,
+  type ChecklistItemStatus,
+} from "@/components/compliance/compliance-data";
 import {
   APPROVAL_STATUS_LABELS,
   APPROVAL_TYPES,
@@ -16,10 +27,12 @@ import { DEMO_APPROVED_CLIENT_REF } from "@/components/ops/client-request-data";
  * status below is computed from the shared sources the other surfaces already render, so this page
  * cannot contradict them:
  *
- * - KYC/KYB and the client summary ← `client/client-demo-data.ts` + `compliance/compliance-data.ts`
- *   (the Client Portal's own Phase 2F–2H state: `kyc_case.status = pending_documents`, lifecycle
- *   `active_limited`, a checklist of one `received` and one `missing` document, beneficial-ownership
- *   information on file);
+ * - the client summary ← `client/client-demo-data.ts` + `compliance/compliance-data.ts` (the Client
+ *   Portal's own Phase 2F–2H state: `kyc_case.status = pending_documents`, lifecycle `active_limited`, a
+ *   checklist of one `received` and one `missing` document, beneficial-ownership information on file);
+ * - KYC/KYB attention ← `admin/client-risk-data.ts` (UI Phase 2O), the Client Risk / KYC-KYB page's
+ *   dataset, whose `DEMO-CLI-001` record is built from those same Client Portal modules — so the counts
+ *   here and the rows on that page are one source, not two;
  * - pending approvals ← `ops/approval-request-data.ts` (the Maker-Checker Queue's requests);
  * - sensitive access ← `ops/audit-activity-data.ts` (the Audit / Activity events).
  *
@@ -70,16 +83,6 @@ export interface AttentionRow {
   meaning: string;
 }
 
-/** Governed `checklist_item.status` words for staff. The Client Portal uses client-instruction
- * wording ("Not Yet Submitted"); a compliance user reads the enum's own terms. */
-const CHECKLIST_STAFF_LABELS: Record<ChecklistItemStatus, string> = {
-  missing: "Missing",
-  received: "Received",
-  verified: "Verified",
-  rejected: "Rejected",
-  expired: "Expired",
-};
-
 function checklistCount(status: ChecklistItemStatus): number {
   return DEMO_CHECKLIST_ITEMS.filter((item) => item.status === status).length;
 }
@@ -87,18 +90,36 @@ function checklistCount(status: ChecklistItemStatus): number {
 export function buildAttentionRows(): AttentionRow[] {
   const rows: AttentionRow[] = [];
 
-  // KYC / KYB — `kyc_case.status = pending_documents` for the demo client.
-  const pendingCases = DEMO_CLIENT_STATE.kycCaseStatus === "pending_documents" ? 1 : 0;
-  const missing = checklistCount("missing");
-  const received = checklistCount("received");
+  // KYC / KYB — derived from the Client Risk / KYC-KYB dataset, one row per attention-worthy governed
+  // `kyc_case.status`. For the original single demo client this yields exactly the row Phase 2N first
+  // rendered (1 case, 1 missing, 1 received).
+  const pendingCases = DEMO_CLIENT_COMPLIANCE.filter((client) => client.caseStatus === "pending_documents");
+  const pendingItems = pendingCases.flatMap((client) => client.checklist);
+  const missing = pendingItems.filter((item) => item.status === "missing").length;
+  const received = pendingItems.filter((item) => item.status === "received").length;
   rows.push({
     id: "kyc-kyb",
     area: "KYC / KYB",
     owner: "KYC-01",
     status: KYC_CASE_LABELS.pending_documents,
-    count: plural(pendingCases, "case"),
+    count: plural(pendingCases.length, "case"),
     meaning: `${plural(missing, "checklist item")} ${missing === 1 ? "is" : "are"} ${CHECKLIST_STAFF_LABELS.missing.toLowerCase()}; ${received} ${received === 1 ? "has" : "have"} been ${CHECKLIST_STAFF_LABELS.received.toLowerCase()} and ${received === 1 ? "is" : "are"} awaiting verification.`,
   });
+
+  // A remediation case is more urgent than one still awaiting documents, so the Overview must not
+  // under-report it while the Client Risk / KYC-KYB page (one click away) lists it. Only when present.
+  const remediationCases = DEMO_CLIENT_COMPLIANCE.filter((client) => client.caseStatus === "remediation");
+  if (remediationCases.length > 0) {
+    const unverified = remediationCases.flatMap((client) => outstandingChecklistItems(client.checklist)).length;
+    rows.push({
+      id: "kyc-kyb-remediation",
+      area: "KYC / KYB",
+      owner: "KYC-01",
+      status: KYC_CASE_LABELS.remediation,
+      count: plural(remediationCases.length, "case"),
+      meaning: `Required evidence is incomplete; ${plural(unverified, "checklist item")} ${unverified === 1 ? "is" : "are"} not yet verified.`,
+    });
+  }
 
   // Independent approvals — `iam2.approval_request.status = pending`, from the Maker-Checker fixtures.
   const pending = DEMO_APPROVAL_REQUESTS_ALL.filter(isAwaitingChecker);
@@ -166,7 +187,7 @@ export function buildClientComplianceRows(): ClientComplianceRow[] {
   return [
     { label: "Client", value: DEMO_APPROVED_CLIENT_REF },
     { label: "Lifecycle", value: CLIENT_LIFECYCLE_LABELS[DEMO_CLIENT_STATE.clientLifecycle] },
-    { label: "Case type", value: DEMO_CLIENT_STATE.applicantType === "individual" ? "Individual (KYC)" : "Entity (KYB)" },
+    { label: "Case type", value: KYC_CASE_TYPE_LABELS[kycCaseTypeForApplicant(DEMO_CLIENT_STATE.applicantType)] },
     { label: "KYC / KYB status", value: KYC_CASE_LABELS[DEMO_CLIENT_STATE.kycCaseStatus] },
     // `kyc_case.current_outcome_status` stays null until `compute-outcome` runs, which is what moves a
     // case out of `pending_documents`.
@@ -231,10 +252,12 @@ export interface ReviewArea {
   /** Exact governed label — identical to `ADMIN_NAV`. */
   label: string;
   owner: string;
+  /** Present only once the area's page exists (`UI Phase 2O` is the first) — otherwise "planned". */
+  href?: string;
 }
 
 export const REVIEW_AREAS: ReviewArea[] = [
-  { label: "Client Risk / KYC-KYB", owner: "KYC-01" },
+  { label: "Client Risk / KYC-KYB", owner: "KYC-01", href: CLIENT_RISK_KYC_KYB_HREF },
   { label: "AML / Transaction Monitoring", owner: "AML-01" },
   { label: "EDD / Review", owner: "KYC-01" },
   { label: "Approval Queue", owner: "IAM-02" },

@@ -334,7 +334,7 @@ Same rule as §8: **no page below is `A`**.
 | Candidate (brief) | Decision | Class | Backing evidence |
 |---|---|---|---|
 | Compliance Overview | Kept | **B** | No unified aggregation route; would compose KYC-01/AML-01 sources below. |
-| Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** |
+| Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** **UI Phase 2O, §50: implemented at `/admin/client-risk-kyc-kyb`; adds `GET .../cases/:id/checklist`, and `completed` covers both `pass` and `fail`.** |
 | AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** |
 | EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** |
 | Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8. |
@@ -4660,7 +4660,7 @@ real route. The map separates the two.
 |---|---|---|---|---|
 | KYC/KYB case state | `kyc1.kyc_case.status` — `pending_documents`/`completed`/`remediation`; `GET /internal/kyc1/cases` (**requires `application_id` or `client_id`**, ≤200, "never a global unbounded dump"), `GET .../cases/:id` | Safe — the case projection carries **no PII** | Vocabulary real; the count is demo | **PARTIAL/B** |
 | Checklist counts | `kyc1.checklist_item.status` — `missing`/`received`/`verified`/`rejected`/`expired`; `GET .../cases/:id/checklist` (evidence ref/hash excluded from the routine projection) | Safe | Vocabulary real; counts demo | **PARTIAL/B** |
-| CDD outcome computed? | `kyc_case.current_outcome_status` (`pending`/`pass`/`fail`/`remediation_required`; null until `compute-outcome`) | Safe (coarse) | Real concept; value demo | **PARTIAL/B** |
+| CDD outcome computed? | `kyc_case.current_outcome_status` (`pending`/`pass`/`fail`/`remediation_required`; null until `compute-outcome`) — **correction, `UI Phase 2O` §50.2: `pending` is never persisted, and `pass`/`fail` both give case status `completed`** | Safe (coarse) | Real concept; value demo | **PARTIAL/B** |
 | Client lifecycle | `clt1.client_profile.status` — `active_limited`/`suspended`/`closed` | Safe | Vocabulary real; value = Client Portal's demo | **PARTIAL/B** |
 | Beneficial-ownership completion | KYC/CLT authorised-party (`ubo`) data | Safe only as a boolean | Client Portal's boolean | **PARTIAL/B** |
 | Independent approvals | `iam2.approval_request.status = pending` — **no list route exists** | Safe (no payload) | Vocabulary real; count = Maker-Checker fixtures | **PARTIAL/B** |
@@ -4878,3 +4878,321 @@ No score or KPI card; no AML, EDD or risk content; no link to an Ops page or an
 unbuilt Admin route; no approval authority implied; no change to IAM-02, SEC-01
 or any backend service, the public homepage, any Ops page's behaviour, packages
 or lockfile.
+
+> **Amended by `UI Phase 2O` (§50.8) — three deliberate changes to `/admin`,
+> nothing else.** (1) Compliance Attention's KYC/KYB pending-documents row is now
+> derived from the Client Risk / KYC-KYB dataset instead of the single shared
+> client — its output is unchanged (1 case, 1 missing, 1 received). (2) A second
+> KYC/KYB row, **Remediation Required**, appears because that dataset holds one such
+> case. (3) Review Areas' "Client Risk / KYC-KYB" is now a link marked "Interface
+> preview" (the other six stay "Interface planned"), since the page it described as
+> planned now exists. §49.3's "four attention rows" therefore reads five, and
+> §49.15's "no link to an unbuilt Admin route" still holds — the one link targets a
+> built one.
+
+## 50. UI Phase 2O — Admin / Client Risk / KYC-KYB (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The second real page on the Admin /
+Compliance surface, at `/admin/client-risk-kyc-kyb` (the nav label's slug — the
+convention every Ops route set). A **List + Detail workspace** of client-level
+KYC/KYB, CDD and lifecycle state. Same visual-QA posture as every phase since
+`UI Phase 2E`. Baseline `7da5ede`, as the brief stated.
+
+### 50.1 Capability map (verified against source, not assumed)
+
+Every route below is `requireInternal`-guarded, and **no cross-client read
+exists**: KYC-01's `GET /internal/kyc1/cases` needs `application_id` or
+`client_id` (≤200 rows), and CLT-01 has no client list. So the records are a small
+demo set; the vocabularies are real. "Demo-only" means no route could populate the
+field today.
+
+| Field | Source model / route | Safe admin visibility | Real vs demo | Status |
+|---|---|---|---|---|
+| Client reference | `clt1.client_profile.client_id`; `GET /internal/clt1/clients/:id/status` | Safe | Identifier real; value demo | **PARTIAL/B** |
+| Organisation name | `clt1.client_profile.legal_name` — **stored, never returned by any CLT-01 route** (approved PII discipline; the client-status route and `safeApplicationResponse` both exclude it) | Excluded by design | **Demo-only** (same call and disclosure as `UI Phase 2J`) | **DEMO-ONLY** |
+| Client class | `client_profile.client_class` (`institutional`/`hnwi`/`professional`; `retail`/`unknown` blocked by CFG-01 `onboarding.retail_default`); returned by the client-status route | Safe | Vocabulary real; value demo | **PARTIAL/B** |
+| Client lifecycle | `client_profile.status` — `active_limited`/`suspended`/`closed`, each written by a maker-checker route (`suspend`/`reactivate`/`close`, IAM-02 decision token); client-status route | Safe | Vocabulary real; value demo | **PARTIAL/B** |
+| KYC/KYB case type | `kyc_case.case_type` — `individual`/`entity`/`authorised_party`; CLT-01's `corporate`/`institutional` applicant types both collapse to `entity` | Safe | Vocabulary real | **PARTIAL/B** |
+| KYC/KYB case status | `kyc_case.status` — `pending_documents`/`completed`/`remediation`; `GET .../cases/:id`, `GET .../cases?` (scoped) | Safe (no PII in the projection) | Vocabulary real; values demo | **PARTIAL/B** |
+| CDD outcome | `kyc_case.current_outcome_status` — `pass`/`fail`/`remediation_required`, `null` until `compute-outcome`; returned by the case projection and `GET .../cases/:id/outcome` | Safe (status only; `outcome_reason` and evidence ids not shown) | Vocabulary real; values demo | **PARTIAL/B** |
+| Checklist summary and outstanding items | `document_checklist_item.status` — `missing`/`received`/`verified`/`rejected`/`expired`; `GET .../cases/:id/checklist` (evidence ref and hash **excluded** from the routine projection) | Safe (type + state only) | Vocabulary real; counts demo | **PARTIAL/B** |
+| Beneficial-ownership summary | `clt1.authorised_party` with `party_type='ubo'` | Safe only as a coarse boolean | No projection returns even the boolean; the Client Portal's boolean is reused | **PARTIAL/B** |
+| Risk rating (value) | `cdd_outcome.risk_rating` — `low`/`medium`/`high`/`prohibited` | **Not projected — no read route returns it** | Real concept, no read | **OMITTED** (the page says so; §50.5) |
+| CLT-01 rollup statuses (`aml_sanctions_status`, `pep_adverse_media_status`, `risk_rating_status`, `cdd_outcome_status`) | `safeApplicationResponse` and `GET .../outcome-status` (IAM-02 `clt1.cdd_outcome.read`) — per application; **`hit`** is a possible sanctions value | Coarse, but application-scoped | Real; for an approved client fixed `pass` by the approval gate | **OMITTED** (no fixture: it would assert screening outcomes the demo does not own) |
+| AML / screening summary | AML-01: screening requests keyed by `screening_request_id`; matches per request; risk signals need `subject_type` + `subject_ref` | **No client-level summary projection** | Real concepts, none safe to aggregate | **OMITTED** |
+| EDD state | **No EDD model in code**; `manual_review`/`edd`/`closed`/`stale` case states are excluded from KYC-01's CHECK (reconfirmed, migration 042) | — | — | **OMITTED** |
+| Review / override | `kyc1.outcome.override` — maker-checker, `POST .../outcome-override/request` and `/apply` only; **no GET exists**, so override history and state are unreadable | — | — | **OMITTED** (no control, no indicator) |
+| Case timestamps | `created_at_utc`/`updated_at_utc` — safe and present in the case projection | Safe | Real | **OMITTED by decision** (§50.6) |
+| Authorised-party cases | one client may hold an `entity` case plus an `authorised_party` case per party | Safe | Real | **OMITTED** — the detail says so |
+| Scores, totals, percentages, charts | none in any governed model | — | — | **OMITTED** |
+
+### 50.2 What the source showed that earlier turns had not recorded
+
+These change how the page must read; each is a fact about source, not a proposal.
+
+- **`completed` does not mean "passed".** `caseStatusForOutcome` maps `pass` **and
+  `fail`** to `completed` and only `remediation_required` to `remediation`; the pass/fail
+  lives on `current_outcome_status`. A UI that renders `completed` as a success would show
+  a failed case as one. So the KYC / KYB cell carries the outcome for a completed case
+  ("Completed · Pass" / "Completed · Fail"), and the icon follows the pair — a check only
+  for `pass`, a cross for `fail`. `UI Phase 2N`'s "CDD outcome computed?" row is corrected
+  in place (§49.1).
+- **`pending` is never persisted.** The outcome engine always resolves to `pass`/`fail`/
+  `remediation_required` in the same call; `null` is the only "not computed" value.
+- **The outcome is fully derivable from the checklist** (`lib/outcome-engine.ts`): `pass`
+  needs every required item `verified` (plus a passing entity verification result); `fail`
+  follows any required item `rejected`/`expired` (or a failed entity/identity result);
+  anything else computed is `remediation_required`. Used to audit the fixtures (§50.3).
+- **Checklist `expired` has no writer in any route** — only `missing` (creation), `received`
+  (evidence added) and `verified`/`rejected` (a verification result). Like IAM-02's
+  `cancelled`, it exists in the CHECK and is never written, so no fixture uses it.
+- **`DEMO-CLI-001`'s combination — an approved, `active_limited` client whose entity case
+  is `pending_documents` — is reachable, but only via the correction path** (KYC-01's own
+  D4: open a new case for the same anchor; `POST /internal/kyc1/handoffs` does not check
+  the application's status). An application cannot be approved until all four CLT-01 rollups
+  read `pass`, so a pending case on an approved client is necessarily a corrective or later
+  case. This is the shared fixture `UI Phase 2F`–`2H` established and this turn was told to
+  reuse; it is recorded, not changed.
+- **KYC-01's read routes carry no permission check.** `GET .../cases`, `.../cases/:id`,
+  `.../checklist` and `.../outcome` are `requireInternal` only — the internal service token,
+  no IAM-02 baseline permission, no notion of an Admin role. (CLT-01's `outcome-status`
+  does require `clt1.cdd_outcome.read`; which role holds it was not verified this turn.)
+- **One client can hold several KYC cases** (an `entity`/`individual` primary plus an
+  `authorised_party` case per party); `lib/authoritative-outcome.ts` aggregates them
+  worst-wins per application. A one-row-per-client list can therefore only ever show one
+  representative case.
+- **`safeApplicationResponse` does return the four CLT-01 rollup statuses** — a refinement of
+  the wording "no read projection returns risk rating": the **value** is unreadable, but its
+  **status** (`risk_rating_status`) is. `UI Phase 2J` and this page both leave them out.
+
+### 50.3 Demo dataset — four clients, every state a reachable one
+
+Small by instruction (3–5). `DEMO-CLI-001` is **not re-declared**: its record is built from
+`client-demo-data`, `compliance-data` and `client-request-data`, the same modules the Client
+Portal, Profile, Compliance Status and Compliance Overview render. The other three are
+fictitious and use only the same governed enums. A scratch script audited each record
+against the §50.2 rules (all four reachable) and was deleted.
+
+| Client | Class | Lifecycle | Case | Outcome | Checklist | Why reachable |
+|---|---|---|---|---|---|---|
+| `DEMO-CLI-001` | Institutional | Active (Limited) | Entity (KYB), **Pending Documents** | Not yet computed | 1 Missing · 1 Received | Shared fixture; correction path (§50.2) |
+| `DEMO-CLI-002` | Professional | Active (Limited) | Entity (KYB), **Completed** | **Pass** | 2 Verified | Every required item `verified` |
+| `DEMO-CLI-003` | HNWI | Active (Limited) | Entity (KYB), **Remediation Required** | Remediation required | 1 Received · 1 Verified | Computed while incomplete, nothing rejected; a `corporate` applicant still yields `entity` |
+| `DEMO-CLI-004` | Institutional | **Suspended** | Entity (KYB), **Completed** | **Pass** | 2 Verified | Lifecycle is independent of the case (`suspend` is its own maker-checker transition) |
+
+No `retail`/`unknown` client (CFG-01 blocks them), no `expired` item, no `manual_review`/`edd`
+state, no `individual` case (its client would need a person's name). **No fixture shows a
+`fail` outcome** — a deliberate choice, because a `fail` client would need a Compliance
+Overview row of its own (§50.8); the `fail` path is implemented and was verified by a
+scratch render (§50.16). No demo client has a matching Ops application fixture beyond
+`DEMO-004`; the Ops queue is not claimed to be exhaustive and was not modified.
+
+### 50.4 Composition
+
+`/admin/client-risk-kyc-kyb`: `PageHeader` "Client Risk / KYC-KYB" — "Review safe
+client-level KYC/KYB, CDD and compliance-status information across governed AIX
+workflows." (no "monitor risk": no risk is readable); `DemoDisclosure` "Interface preview —
+client compliance records are demonstrative until the required cross-client and admin-safe
+projections are integrated." Then the workspace: a filter row, the list, and the detail.
+
+**List columns** (`COMPACT` 40px, `h-10`): Client (a real `<button>` holding the reference),
+Organisation, **KYC / KYB**, **Checklist**, then **Lifecycle** and **Client Class** as room
+allows. There is **no Risk, Screening, Score, Alert-count or CDD column.** The CDD outcome
+is folded into the KYC / KYB cell for completed cases (§50.2); at the persistent-split width
+a sixth column would not fit, and a CDD column would only ever be visible where it is
+redundant. **Detail sections:** Client Summary; KYC / KYB Case (type, status, CDD outcome,
+checklist); Outstanding Information; Beneficial Ownership; Risk and Screening. The brief's
+"Review Context" is omitted — no safe field remains once timestamps are declined (§50.6).
+No generic "Overview" or "Compliance Score" section.
+
+### 50.5 Risk rating, screening and EDD
+
+A **governed rating exists and no route returns it.** The page shows no rating, derives none
+(from KYC state, client class or screening), and adds no Risk column, filter or icon. The
+brief offered omission or a neutral availability line; the page's title contains the word
+"Risk", so a silent gap would read as an oversight. The detail therefore has a **Risk and
+Screening** section: "Risk rating — Not available in this preview"; "Screening and EDD —
+Not represented in this preview"; and one sentence saying a governed rating exists but no
+read projection exposes it. Wording is "this preview", not "current safe projection": the
+disclosure already carries the projection language, and an Admin reader needs the
+consequence, not the mechanism. The list carries none of it. The page never implies "no
+risk".
+
+### 50.6 KYC/KYB state, checklist, beneficial ownership, timestamps
+
+- **Case status** uses the shared governed labels (`Pending Documents` / `Completed` /
+  `Remediation Required`) — identical to the Compliance Overview's wording. **Outcome**
+  labels: `Pass` / `Fail` / `Remediation required`; `null` reads "Not yet computed". A
+  `completed` case appends its outcome; `remediation` does not (it is only ever
+  `remediation_required`, so repeating it would be noise).
+- **Checklist** is a count by governed status in a fixed order ("1 Missing · 1 Received"),
+  built from staff wording (`Missing`/`Received`/`Verified`/`Rejected`/`Expired`) — the
+  Client Portal's client-instruction wording ("Not Yet Submitted") is not reused. **No
+  percentage, ratio or completion figure.** The Outstanding Information section lists
+  items not `verified` by exact document-type label and state, or "No checklist items are
+  outstanding." It shows no file name, hash, storage path, evidence reference or reviewer
+  note. Document types are the real `entity` defaults.
+- **Beneficial ownership** is the coarse boolean only — "Information on file" /
+  "Information pending" (the Compliance Overview's wording) — never a name, percentage,
+  identity document or address.
+- **Timestamps are declined.** A case's `created_at_utc`/`updated_at_utc` are safe, but no
+  other surface shows them, and inventing a chronology would only add ways to contradict
+  the Client Portal, Ops queue and Audit log.
+
+### 50.7 Filter, search and empty states
+
+**One filter — KYC / KYB status** (the governed `kyc_case.status`): a reviewer needs to
+isolate cases needing attention. Its options are derived from the same label map the list
+renders. **Lifecycle filter considered and left out:** the column only appears when the list
+has room, so the filter would act on something a reader may not see, and four clients give
+it nothing to isolate. **No Risk filter** (no data), **no search** (four records; no
+free-text capability exists in the backend). Empty states: filtered "No client compliance
+records match the current view." with a "Show all clients" button; global "No client
+compliance records are represented in this demo view." Never "No risk", "No compliance
+issues" or "All clients compliant". `Completed` filters to two clients (both `Pass` in this dataset; a `Fail` would also
+appear under it) — it is the governed status, not a result.
+
+### 50.8 Cross-surface consistency and the Compliance Overview amendment
+
+Verified programmatically against the rendered pages for `DEMO-CLI-001`:
+
+| Fact | Client Overview | Profile | Compliance Status | Compliance Overview | This page |
+|---|---|---|---|---|---|
+| Client class | — | Institutional | — | — | Institutional |
+| Lifecycle | Active (Limited) | Active (Limited) | — | Active (Limited) | Active (Limited) |
+| KYC/KYB status | Pending Documents | — | Pending Documents | Pending Documents | Pending Documents |
+| Checklist | — | — | per item (client wording: "Received — Under Review", "Not Yet Submitted") | 1 Missing · 1 Received | 1 Missing · 1 Received |
+| Case type | — | — | — | Entity (KYB) | Entity (KYB) |
+| CDD outcome | — | — | — | Not yet computed | Not yet computed |
+| Beneficial ownership | — | — | On file | Information on file | Information on file |
+
+**`UI Phase 2N` was changed in three places, each because a fact would otherwise have
+contradicted the new page**, and each documented at §49.15: (1) the KYC/KYB pending row is
+now **derived from this dataset** (a single source of truth) — its rendered text is
+byte-identical to before; (2) a **second KYC/KYB row, Remediation Required**, is added,
+because the Overview's "Compliance Attention" must not under-report a case one click away;
+(3) **Review Areas' "Client Risk / KYC-KYB"** was "Interface planned" — now a link marked
+"Interface preview" (`REVIEW_AREAS` gained an optional `href`). The same change moved
+`CHECKLIST_STAFF_LABELS` and the case-type labels into this page's data module so there is
+one definition of each. No other Ops or Client page was touched.
+
+### 50.9 Read-only, and the Admin / Ops authority boundary
+
+**No action control of any kind:** no Approve, Reject, Request documents, Override,
+Escalate, Start EDD or Change rating, and nothing that resembles an outcome being decided.
+Each would be a governed, authority-checked workflow (`kyc1.outcome.override` is
+maker-checker), and **Admin visibility does not imply mutation authority.** The detail
+component contains no `<button>`, `<input>`, `<a>` or `role="button"` (audited by a scratch
+render across all four clients). No Ops action is introduced.
+
+### 50.10 Sensitive-data boundary
+
+Not shown, and not present in any fixture: legal identifiers, addresses, dates of birth,
+passport or identity numbers, document images or files, evidence references or hashes,
+beneficial-owner names or percentages, raw PEP/sanctions matches or AML signals, screening
+payloads, reviewer notes, source-of-funds/wealth material, and CLT-01's per-application
+rollup statuses. The names are obviously fictitious organisations (no person's name). One
+static sentence in the detail states what is not shown.
+
+### 50.11 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width is ~976px at 1024px (no sidebar) and ~975px at 1280px (240px sidebar
+appears), so `lg:` is the split breakpoint — the same figure at both ends, so the brief's
+`≥1280` and `1024–1279` cases resolve identically, as in `UI Phase 2J`.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Persistent split: list (flexible, ~623px) + 320px detail panel, single leading `border-l`. Four base columns fit (~580px: reference ~108 + organisation ≤160 + KYC/KYB ~160 + checklist ~152, each including cell padding); Lifecycle and Client Class do not appear |
+| `1024–1279px` | The same split, same ~623px list |
+| `768–1023px` | List full width (~720–975px); a client opens a `Sheet`. Lifecycle appears at ≥768px of table width, Client Class at ≥896px |
+| `<768px` | Compact separated list (organisation; reference · lifecycle; KYC/KYB state; checklist summary), no rounded cards; a client opens a `Sheet` |
+
+Columns are hidden by **container query** (`@container` on the wrapper, `@3xl`/`@4xl`),
+because the table's width depends on whether the panel is beside it — confirmed present in
+the compiled CSS at 48rem/56rem. `<768px` uses a list, so no horizontal scroll is forced.
+**Not rendered:** the ~580px total is arithmetic over estimated glyph widths; whether the
+four base columns truly fit at ~623px is a visual-QA item, and it is the tightest fit on
+the page (an over-full row would wrap and break the 40px tier).
+
+### 50.12 Accessibility
+
+One `<h1>`; a real `<table>` with a label and column headers; selection is a real
+`<button>` per row (one tab stop, native Enter/Space) whose accessible name begins with the
+visible reference ("DEMO-CLI-001, Example Institutional Holdings Ltd." — label-in-name,
+checked for all four); `aria-current` marks the open client; the filter is a labelled
+`Select`; the "Showing N of M" count is `aria-live="polite"`; status is icon + governed
+text, never colour; the `Sheet` keeps its own title/description; DOM order is filter, list,
+detail. No control is hidden only visually and no PII is hidden visually. **Rendered
+focus/keyboard behaviour was not exercised** (visual QA deferred).
+
+### 50.13 Backend gaps for a live Client Risk / KYC-KYB page
+
+Nothing was assumed; each was found in source. No backend was modified.
+
+1. **A cross-client KYC list.** `GET /internal/kyc1/cases` needs `application_id` or
+   `client_id` and is capped at 200; it has no filter by status, class or lifecycle and no
+   cursor.
+2. **A client list / summary.** CLT-01 has only `GET .../clients/:id/status` (id, status,
+   class, created, three "configured" booleans) — no list.
+3. **An organisation-name projection.** `legal_name` is returned by no route, by approved
+   PII design; the Organisation column needs either a governed projection or to be dropped.
+4. **Aggregated checklist counts.** The checklist is per case (an N+1 read across clients).
+5. **A beneficial-ownership summary.** No route returns even a boolean;
+   `authorised_parties_configured` counts *active authorised parties of any type*, not UBOs.
+6. **A readable risk rating.** `cdd_outcome.risk_rating` is written and never read;
+   `risk_rating_status` is readable per application only.
+7. **A client-level screening summary.** AML-01 has none; matches are per screening request
+   and sensitive-gated.
+8. **An override projection.** No GET exists for `manual_override_request`.
+9. **Role-aware admin read authorization.** KYC-01's reads are service-token only; CLT-01's
+   `outcome-status` needs a permission whose role assignment was not verified.
+10. **A join between client, application and cases** — `kyc_case.client_id` is nullable.
+11. **A representative-case rule** for clients with several cases (party cases), consistent
+    with `authoritative-outcome`'s worst-wins fold.
+
+**Carried open observations (recorded, not fixed):** IAM-02 `approve` checks no approver
+role, `reject` has no maker/SoD check, no approval policy is seeded; no role holds the SEC-01
+read permissions, no relay carries module events into SEC-01, and only four event types are
+registered.
+
+### 50.14 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `ClientRiskWorkspace`, `ClientRiskTable`,
+  `ClientRiskDetail`, `KycStateLine`, and `client-risk-data.ts`.
+- **Reused:** `PageHeader`, `DemoDisclosure`, `useIsLgUp`, the shared demo-data modules
+  (`client-demo-data`, `compliance-data`, `client-request-data`) as data only, and the
+  existing shadcn `Table`, `Select`, `Sheet`, `Button`, `Label`. **No primitive was added,
+  regenerated or modified**; the REVIEW LATER `Select`/`Sheet`/`Table` were used unchanged.
+  The official MCP was not needed. **No package or lockfile change.**
+- `KycStateLine` picks its icon through a module-level lookup table, not a function call
+  during render — the first attempt tripped `react-hooks/static-components`, and the fix
+  mirrors the Ops status lines.
+- **Consolidation candidates recorded for the visual-QA pass, not refactored:** the generic
+  `ListDetailWorkspace` (now six near-identical workspaces), shared `Row`/`Section`
+  helpers, and the status-line pattern (now four).
+
+### 50.15 Boundaries
+
+No `C`-classified Admin element (Reporting, Incidents / Exceptions). No balance, PnL,
+transaction amount, market data, order book or Exchange operation. No unsupported score.
+No mutation, fetch, server action, auth or permission code. The six other Admin areas
+(AML / Transaction Monitoring, EDD / Review, Approval Queue, Users / Roles / Permissions,
+Feature Flags / Configuration, Audit / Sensitive Access) stay inert in `ADMIN_NAV`; this
+page is client-level KYC/KYB/CDD review only and absorbs none of them.
+
+### 50.16 Verification and what this phase did not do
+
+**Verified:** `typecheck:web`, `lint:web` (after one fix, §50.14) and `build:web` pass; 14
+static pages. Dev server + `curl` + rendered-HTML inspection confirmed one `<h1>`, one
+labelled table with five rows, the four clients' cells, the default detail, the active nav
+item and zero controls in the detail. A scratch server-side render (deleted afterwards)
+verified: the reachability audit; every label and icon branch including `completed`+`fail`
+(cross icon, "Completed · Fail"), `completed`+null (neutral, no claim); the all-verified
+"No checklist items are outstanding." line; the pending beneficial-ownership label; label-in-
+name for all four buttons; and zero controls or banned tokens across all four details.
+**Regression:** all other routes return 200.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the
+consolidated visual-QA program); no risk rating, screening, EDD or override content; no
+action control; no fetch, auth or mutation; no change to any backend service, the public
+homepage, any Ops or Client page, packages or lockfile.

@@ -94,7 +94,14 @@ export const OPS_NAV: NavItem[] = [
   { label: "Audit / Activity", href: "/ops/audit-activity", icon: "history" },
 ];
 
-/** `UI-04` §9 — Admin/Compliance Portal B-classified IA. */
+/**
+ * `UI-04` §9 — Admin/Compliance Portal B-classified IA.
+ *
+ * `UI Phase 2N`: "Compliance Overview" (`/admin`) is the only real Admin page — it has had an `href`
+ * since `UI Phase 2B`, so no nav change is needed. Every other row stays inert and must not gain an
+ * `href` until its page exists: visible navigation is not a permission grant, and hidden navigation is
+ * not a security control (`UI-04` §10). `C`-classified Reporting and Incidents / Exceptions are absent.
+ */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
   { label: "Client Risk / KYC-KYB", icon: "shield-alert" },

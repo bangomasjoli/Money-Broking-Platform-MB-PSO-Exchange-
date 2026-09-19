@@ -820,6 +820,34 @@ claim.** Public homepage unaffected.
   of the detail branches — interactions reasoned from source, **not** exercised,
   and nothing rendered. Full record: `UI-04` §48, `UI-02`'s new "UI Phase 2M"
   section, `UI-03` §49.
+- **Phase 2N:** Admin / Compliance Overview (`/admin`) — **IMPLEMENTED /
+  VISUAL QA DEFERRED.** The **first real Admin page**, replacing the shell
+  placeholder; `B`-classified. **The decisive finding: no cross-client
+  aggregation exists in the backend** — KYC-01's case list requires a client or
+  application scope, AML-01's risk-signal list requires a subject, and CLT-01 and
+  IAM-02 have no list at all — so every count is demo aggregation, computed from
+  the *same* shared fixtures the Client Portal, Maker-Checker Queue and Audit /
+  Activity render (checked programmatically against those pages). **Not a
+  dashboard:** no KPI card, score, chart, percentage or trend. Four sections —
+  Compliance Attention, Approval / Control Dependencies, Client Compliance and
+  Review Areas ("Platform Compliance Surfaces" folded into the latter as an
+  owning-module column). **Deliberately absent, each a recorded finding:**
+  **no risk rating** (CLT-01 defines a governed rating but no read projection
+  returns it); **no AML content** (real concepts, no admin-safe projection — the
+  page says "not represented" rather than letting absence read as "all clear",
+  and AML-01's "monitoring" turns out to be periodic *rescreening*, not
+  transaction monitoring); **no EDD** (no model exists). Corrects five route
+  claims in `UI-04` §9 (`POST`-only routes cited as `GET`, an unreachable "EDD"
+  mapping). Approval dependencies list five real approval-gated compliance
+  actions, informational only — the page grants no approval authority and states
+  the control as IAM-02 enforces it (a different user, no SoD conflict — not a
+  role). No link to an Ops page or an unbuilt Admin route; the seven planned Admin
+  areas are plain, non-focusable "Interface planned" text. Status wording is
+  governed or factual, never a judgement. **No shadcn primitive used; all
+  components are Server Components; zero interactive elements in `<main>`.**
+  `typecheck:web`/`lint:web`/`build:web` all pass (13 static pages); verified via
+  rendered-HTML inspection — nothing was rendered. Full record: `UI-04` §49,
+  `UI-02`'s new "UI Phase 2N" section, `UI-03` §50.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -827,7 +855,8 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**; every Admin page remains unimplemented. No API/auth integration exists on any of
+  Ops set is complete**. Compliance Overview is the first real Admin page; the
+  seven other Admin areas remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

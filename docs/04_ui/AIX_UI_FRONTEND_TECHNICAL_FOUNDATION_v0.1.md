@@ -1900,3 +1900,49 @@ jsdom) — reasoned from source, not exercised.
 return 200. Backend regression not required — zero `platform/services/**`,
 `packages/**`, `edge/**`, `infra/**` change (IAM-02 and SEC-01 untouched). Public
 homepage unaffected.
+
+## 50. Phase 2N — Admin / Compliance Overview (first Admin page, visual QA deferred)
+
+`/admin` (`UI-04` §49): the first real Admin / Compliance page, replacing the
+shell placeholder. `B`-classified; demo data only; no fetch, server action, auth,
+permission check or mutation. Informational — no review or approval action.
+
+**Files created (5):** `components/admin/{admin-compliance-data.ts,
+compliance-attention.tsx, control-dependencies.tsx,
+client-compliance-state.tsx, review-areas.tsx}`.
+**Files modified:** `app/admin/page.tsx` (placeholder replaced);
+`app/admin/layout.tsx` (comment and page metadata no longer say "no product page
+implemented"); `components/shell/nav-data.ts` (a comment only — **no nav item
+changed**: Compliance Overview has had its `href` since `UI Phase 2B` and the
+other seven Admin rows stay inert). **No Ops page was modified.**
+
+**shadcn impact: none — no shadcn primitive is used on this page at all**, so no
+REVIEW LATER component was touched and no `Table`, `Select` or `Sheet` appears. The
+official shadcn MCP was not needed. **No package or lockfile change.**
+
+**Client/server boundary:** every component is a Server Component — the page has
+no interactivity, no client state and no `"use client"`. The projection module
+imports the Client and Ops demo-data modules as **data only**.
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all
+pass; **13** static pages generated (unchanged — `/admin` existed).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server +
+`curl` + rendered-HTML inspection. Confirmed: one `<h1>`; the four `<h2>` sections;
+the four attention rows, five dependency rows, seven client-summary rows and seven
+review areas with their values; **zero links, buttons, inputs or selects inside
+`<main>`**; the sidebar's one live Admin link and seven inert rows; no forbidden or
+judgement term (balance, settlement, compliance score, healthy, compliant, all
+clear, a percentage, Low/Medium/High, Reporting, Incidents, Approve, Reject).
+**Cross-surface consistency was checked programmatically against the rendered
+pages** (`UI-04` §49.6): the Client Portal's KYC status, checklist wording,
+beneficial-ownership state and lifecycle; the Maker-Checker Queue's default view
+and the Ops Overview's count; and the Audit / Activity sensitive-access event —
+all consistent. No interaction exists to verify.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests`,
+`/ops/wallet-destination-review`, `/ops/maker-checker-queue` and
+`/ops/audit-activity` all return 200. Backend regression not required — zero
+`platform/services/**`, `packages/**`, `edge/**`, `infra/**` change (IAM-02 and
+SEC-01 untouched). Public homepage unaffected.

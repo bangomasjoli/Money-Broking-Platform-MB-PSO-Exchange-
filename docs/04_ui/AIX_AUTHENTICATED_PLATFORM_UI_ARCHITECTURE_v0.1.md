@@ -334,13 +334,13 @@ Same rule as §8: **no page below is `A`**.
 | Candidate (brief) | Decision | Class | Backing evidence |
 |---|---|---|---|
 | Compliance Overview | Kept | **B** | No unified aggregation route; would compose KYC-01/AML-01 sources below. |
-| Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). |
-| AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). |
-| EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. |
+| Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** |
+| AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** |
+| EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** |
 | Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8. |
-| Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. |
+| Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** |
 | Feature Flags / Configuration | Kept, mapped to `CFG-01` | **B** | `POST /internal/cfg1/features/evaluate`, `/internal/cfg1/feature-changes/request`\|`/apply`, `/internal/cfg1/kill-switches/activate` — real, partial (through Phase 3B). |
-| Audit / Sensitive Access | Kept, mapped to `SEC-01` | **B** | `GET /internal/sec1/audit-events/*`, `/internal/sec1/security-alerts/*` — real, accepted through Phase 5. |
+| Audit / Sensitive Access | Kept, mapped to `SEC-01` | **B** | `GET /internal/sec1/audit-events/*`, `/internal/sec1/security-alerts/*` — real, accepted through Phase 5. **Correction, UI Phase 2N (§49.2, `UI-04` §48.1): these are `POST` (`search`/`read`).** |
 | Reporting | **Removed from initial IA, kept as future item** | **C** | No `RPT-xx` module appears in the 17-module implementation-delivery list; no reporting route exists anywhere. |
 | Incidents / Exceptions | Kept as future item | **C** | `INC-01`, not started. |
 
@@ -4640,3 +4640,241 @@ or date range; no per-row redaction marker; no reveal; no timeline; no actor
 name; no correlation id; no retention period; no `C`-classified or Exchange
 element; no change to IAM-02 or any backend service, the public homepage,
 packages or lockfile.
+
+## 49. UI Phase 2N — Admin / Compliance Overview (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The first real page on the
+Admin / Compliance surface, replacing `UI Phase 2B`'s shell placeholder at
+`/admin`. Same visual-QA posture as every phase since `UI Phase 2E`. Baseline
+`9f56035`, as the brief stated.
+
+### 49.1 Capability map (verified against source, not assumed)
+
+The decisive finding: **no cross-client aggregation exists in the backend.**
+Every compliance module owns real, governed state, but each read is scoped
+narrowly, and every route is `requireInternal`-guarded. So every count on this
+page is **demo aggregation over the shared fixtures**, not a projection of a
+real route. The map separates the two.
+
+| Overview element | Source module / route / model | Safe admin visibility | Real vs demo | Status |
+|---|---|---|---|---|
+| KYC/KYB case state | `kyc1.kyc_case.status` — `pending_documents`/`completed`/`remediation`; `GET /internal/kyc1/cases` (**requires `application_id` or `client_id`**, ≤200, "never a global unbounded dump"), `GET .../cases/:id` | Safe — the case projection carries **no PII** | Vocabulary real; the count is demo | **PARTIAL/B** |
+| Checklist counts | `kyc1.checklist_item.status` — `missing`/`received`/`verified`/`rejected`/`expired`; `GET .../cases/:id/checklist` (evidence ref/hash excluded from the routine projection) | Safe | Vocabulary real; counts demo | **PARTIAL/B** |
+| CDD outcome computed? | `kyc_case.current_outcome_status` (`pending`/`pass`/`fail`/`remediation_required`; null until `compute-outcome`) | Safe (coarse) | Real concept; value demo | **PARTIAL/B** |
+| Client lifecycle | `clt1.client_profile.status` — `active_limited`/`suspended`/`closed` | Safe | Vocabulary real; value = Client Portal's demo | **PARTIAL/B** |
+| Beneficial-ownership completion | KYC/CLT authorised-party (`ubo`) data | Safe only as a boolean | Client Portal's boolean | **PARTIAL/B** |
+| Independent approvals | `iam2.approval_request.status = pending` — **no list route exists** | Safe (no payload) | Vocabulary real; count = Maker-Checker fixtures | **PARTIAL/B** |
+| Approval-gated workflows | 22 `verifyDecisionToken` call sites; 5 compliance-domain actions listed | Safe | Actions real; pending counts demo | **PARTIAL/B** |
+| Sensitive-access activity | SEC-01 event types that record a governed read (`wlt1`/`kyc1`/`aml1` `*_read`); `POST /internal/sec1/audit-events/search` | Safe (coarse) | Concept real; count = Audit fixtures | **PARTIAL/B** |
+| AML screening / matches / risk signals | AML-01: screening requests (`clear`/`potential_match`/`confirmed_hit`/`error`), matches (`sanctions`/`pep`/`adverse_media`), risk signals (`open`/`acknowledged`/`superseded`, severity `low`–`critical`); `GET .../risk-signals` **requires `subject_type` + `subject_ref`** | **No admin-safe projection**; match detail is sensitive-gated | Real concepts, no safe aggregate | **OMITTED** — "Interface planned" |
+| "Transaction monitoring" | AML-01 `monitoring-runs` are **route-triggered periodic rescreening** (`periodic_due`/`list_version_changed`), not transaction monitoring; no transaction module exists | — | — | **OMITTED** |
+| EDD | **No model in code**; KYC-01's `manual_review`/`edd` states are excluded from its CHECK ("no reachable code path") | — | — | **OMITTED** |
+| Client risk rating | CLT-01 `CDD_RISK_RATINGS` (`low`/`medium`/`high`/`prohibited`) stored on `cdd_outcome.risk_rating`; **no read projection returns the value** — `outcome-status` returns only the four rollup STATUSES | Not projected | Real concept, no projection | **OMITTED** |
+| CDD rollup statuses (`aml_sanctions_status` etc.) | `GET .../applications/:id/outcome-status` (IAM-02 `clt1.cdd_outcome.read`), per application | Safe (statuses) | Real, application-scoped | **OMITTED** (no fixtures; would invent AML facts) |
+| Users / roles / permissions | IAM-02 `POST /iam2/users/:user_id/roles` (assign only) | — | — | **Review Area, planned** |
+| Feature flags / configuration | CFG-01 `POST` evaluate / verify-decision / feature-changes / kill-switches | — | — | **Review Area, planned** |
+| Scores, totals, averages, trends, %, charts | none in any governed model | — | — | **OMITTED** |
+
+### 49.2 Corrections to `UI-04` §9
+
+§9's route citations were written at the architecture stage and were checked
+route-by-route this turn. Corrected in place, with pointers here:
+
+| §9 row | What §9 said | What the source shows |
+|---|---|---|
+| Client Risk / KYC-KYB | `GET .../cases`, `/cases/:id`, `/cases/:id/outcome` | Correct — but the list **requires a scope filter** (`application_id` or `client_id`) |
+| AML / Transaction Monitoring | `GET /internal/aml1/monitoring-runs`, `.../risk-signals`, `.../screening-requests` | `monitoring-runs` is **`POST` only** (plus `GET .../:run_id`); `screening-requests` is **`POST` only** (plus `GET .../:id` and `GET .../stuck`); `risk-signals` is subject-scoped; **monitoring is rescreening, not transaction monitoring** |
+| EDD / Review | mapped to KYC-01 outcome-override | **No EDD model exists.** Outcome override is a maker-checker manual override of the CDD outcome — the nearest manual-review flow, not EDD |
+| Users / Roles / Permissions | `GET /iam2/users/:user_id/roles` | **`POST` only** (assign a role); no read |
+| Audit / Sensitive Access | `GET /internal/sec1/audit-events/*` | **`POST`** `search` / `read` (and `POST` for alerts) — `UI-04` §48.1 |
+
+### 49.3 Composition
+
+`/admin` replaces the placeholder — the only Admin page that is real. Four
+sections, no KPI cards:
+
+- **Primary column:** **Compliance Attention**; **Approval / Control
+  Dependencies**.
+- **Secondary column (`xl:`, 320px, single leading `border-l`):** **Client
+  Compliance**; **Review Areas**.
+
+The brief's fourth section, "Platform Compliance Surfaces" (area → UI state →
+control owner), was **folded into Review Areas** as an owning-module column —
+listing the same areas twice added no information. `ADMIN_NAV` is unchanged:
+Compliance Overview had its `href` since `UI Phase 2B`; the other seven rows
+stay inert. Header "Compliance Overview" / "Monitor governed client-
+compliance, approval and control-review areas across the AIX platform."
+`DemoDisclosure`: "Interface preview — compliance summaries are demonstrative
+until the relevant staff-facing projections and integrations are connected."
+
+### 49.4 What is deliberately not on the page
+
+- **No score, KPI card, chart, gauge, heat map, percentage, total, average or
+  trend.** The defaults the brief lists (Total Clients, Approval Rate,
+  Compliance Score, Risk Score, AML Alerts This Month, KYC Completion %,
+  Average Review Time) are all omitted: none is supported by a governed model,
+  and none is honestly derivable from a handful of demo records.
+- **No risk rating.** A governed rating exists but no projection returns it
+  (§49.1); showing "Low/Medium/High" would be invented. The gap is recorded, the
+  value omitted.
+- **No AML or EDD content.** AML-01's concepts are real but have no admin-safe
+  projection, so the page **says so** — an "AML screening and EDD — Not
+  represented in this preview" row — instead of letting missing rows read as
+  "all clear". No open signal, match, sanctions or PEP item is invented.
+- **No sensitive KYC/AML data:** no names, addresses, dates of birth,
+  identity documents, ownership percentages, raw screening results, reviewer
+  notes, source-of-funds material or monitoring transactions.
+
+### 49.5 Attention rules and status language
+
+A row exists only where a **real governed state** meets a **consistent demo
+source**: KYC/KYB (`pending_documents`), independent approvals (`pending`),
+sensitive access (events that record a governed read). Each row states the
+area, its owning module, a state, a count and what the count means. State
+wording is a governed label (`Pending Documents`, `Pending Approval`) or a plain
+factual statement (`Sensitive access recorded`, `Not represented in this
+preview`) — **never a judgement**: no "Healthy", "Safe", "Good" or
+"Compliant". No severity level — no real safe one exists here. Counts are
+understated list metadata beside each area, not tiles.
+
+### 49.6 Demo data reuse and cross-surface consistency
+
+`admin-compliance-data.ts` is a **narrow projection with no fixture of its
+own**. Each figure is computed from a shared source; verified against the
+rendered pages this turn:
+
+| Admin says | Computed from | Checked against |
+|---|---|---|
+| KYC/KYB "Pending Documents", "1 Missing · 1 Received", beneficial ownership "on file" | `client-demo-data.ts` + `compliance-data.ts` | `/app/compliance-status` shows "Pending Documents", "Not Yet Submitted", "Received — Under Review", "On file" |
+| Lifecycle "Active (Limited)" | `client-demo-data.ts` | `/app` |
+| "2 requests" = 1 destination approval + 1 application approval | `approval-request-data.ts` | `/ops/maker-checker-queue` default view lists exactly those two |
+| Approvals agree with the Ops Overview | same | `/ops` "Maker-Checker Queue 2 items" |
+| "1 event (WLT-01)" sensitive access | `audit-activity-data.ts` | `/ops/audit-activity` has exactly one sensitive-destination-read event, WLT-01 |
+
+Where the Client Portal words a checklist item for the client ("Not Yet
+Submitted"), the Admin page uses the governed enum term for a compliance user
+("Missing") — same fact, audience-appropriate wording.
+
+### 49.7 Client compliance and KYC/KYB
+
+The Client Compliance panel summarises the one demo client (`DEMO-CLI-001`, the
+client of approved application `DEMO-004`): lifecycle, case type (Entity (KYB)),
+KYC/KYB status, "CDD outcome: Not yet computed" (a real fact —
+`current_outcome_status` stays null until `compute-outcome`, which is what moves a
+case out of `pending_documents`), checklist counts by governed status, and
+whether beneficial-ownership information is on file. It cannot say "complete"
+where the Client Portal says "Pending Documents", because both read one source.
+
+### 49.8 Approval dependencies and the Admin / Ops authority boundary
+
+Approval / Control Dependencies lists five real approval-gated actions in the
+compliance modules — `clt1.application.approve`,
+`wlt1.destination.approve_apply`, `kyc1.outcome.override`,
+`aml1.match.confirm`/`.dismiss`, `sec1.security_alert.close` — each verified at
+its `verifyDecisionToken` call site. A pending count appears **only** for a
+workflow with requests in the shared Maker-Checker fixtures; the rest read "Not
+represented in this preview", never "0 pending" (not represented ≠ none).
+
+**Informational only.** The section lists no request, links to none, and offers
+no action — it is not a second Maker-Checker Queue, and being on an Admin page
+grants no approval authority (the copy says so). The control is described as
+exactly what IAM-02 enforces on `approve` today — a different user than the
+requester, no segregation-of-duties conflict — **not a role**, because IAM-02
+stores `required_approver_roles` but never reads it (`UI-04` §47.5).
+Admin is not assumed to hold Ops actions; no review or approval control exists on
+the page.
+
+### 49.9 Sensitive access and navigation
+
+Sensitive access is a coarse row ("1 event · Sensitive access recorded · SEC-01")
+grounded in the real event concept from §48.6 — no payload, no actor identity, no
+reveal control. **No link to any Ops page and none to an unbuilt Admin route:**
+the Ops pages are deliberately not a shortcut hub, and Review Areas lists the
+seven planned areas as plain, non-focusable text with their exact governed labels
+("Interface planned"). Visible navigation is not a permission grant, and hidden
+navigation is not a security control (§10) — the panel says the first. `C`-
+classified Reporting and Incidents / Exceptions are absent.
+
+### 49.10 Density, layout and responsive reasoning (structural, not rendered)
+
+Rows are ≥40px (`COMPACT`) with a wrapped second and third line — Attention rows
+are explanatory, not single-line queue rows, so no fixed row height is imposed.
+`≥1280px` (`xl:`): `xl:grid-cols-[1fr_320px]`, `xl:gap-8`, `xl:pl-8` — the same
+values `UI Phase 2I` established, where the secondary column holds real evidence
+(the client summary and the planned-area list), so two columns is justified here
+and not for symmetry. Below `xl:`: one column in the same order — Attention,
+Dependencies, Client Compliance, Review Areas. `1024–1279px` therefore stacks
+(the persistent sidebar and the split engage together at `xl:`, as on every
+prior page); `768–1023px` and `<768px` are single-column lists with no table and
+no horizontal scroll. Content width ≈ viewport − 48px below 1280px and ≈ viewport
+− 305px from 1280px, so the primary column (content − 320px panel − 32px gap) is
+≈ 623px at 1280px and ≈ 783px at 1440px — ample for the right-aligned count beside
+each area. **Visual risks for
+the consolidated pass** (none verifiable without rendering): (1) the Attention
+rows carry three lines of text each — their rhythm against the 24px section gap
+needs a real look; (2) "Not represented in this preview" (~195px) shares a Dependencies row
+with a workflow name of up to ~40 characters, so at 430px (≈398px content) the two
+will wrap rather than fit on one line;
+(3) the seven-item Review Areas list plus the client panel makes the secondary
+column tall.
+
+### 49.11 Accessibility
+
+One `<h1>`; each section is a `<section>` labelled by its own `<h2>`; the
+secondary column is a labelled `<aside>` (complementary landmark). Attention and
+Review Areas are lists; the client summary is a description list (term/value).
+State is text — there is no colour signal at all. **No link, button, input or
+focusable element exists inside `<main>`**, so the inert planned areas cannot be
+a keyboard trap and there is no fake link. Counts carry their noun ("2
+requests", "1 event") so each is meaningful out of context. Empty-state text is
+implemented for every section ("No items are represented in this demo view.") and
+never says "all clear". DOM order matches reading order.
+
+### 49.12 Backend gaps for a live Compliance Overview
+
+Inspected first; not all are missing.
+
+| Need | Exists? | Gap |
+|---|---|---|
+| **Cross-module attention aggregation** | **No** | A route (or composition of the rows below) — nothing aggregates across modules today |
+| **Client compliance summary** | Per-scope reads exist (`GET .../kyc1/cases?client_id=`, CLT reads) | A cross-client summary; KYC's list is deliberately scope-bound |
+| **KYC/KYB status projection** | **Yes**, safe, no PII — but scoped | Counts by `status` across clients; today only per client/application |
+| **AML monitoring summary** | Real concepts; global `GET .../screening-requests/stuck` only | A safe aggregate of screening state, matches and risk signals; today signals need `subject_type` + `subject_ref` |
+| **"Transaction monitoring"** | **Does not exist** — `monitoring-runs` is rescreening; no transaction module | A backend capability, not a projection (`UI-04` §9's label overstates it) |
+| **EDD summary** | **No model** | A backend lifecycle decision first |
+| **Client risk rating** | Stored on `cdd_outcome.risk_rating`; **no read returns it** | A safe projection decision — whether an admin may see the rating |
+| **Approval summary** | **No list route** in IAM-02 (`UI-04` §47.11) | A read route by status; and the approver-role gap (not enforced) affects what "requires an approver" can truthfully say |
+| **Safe sensitive-access summary** | SEC-01 `audit-events/search` exists, cursor-paged | No role holds the read permission; no relay carries module events into SEC-01; sensitive-access is identified only by event-type name (`UI-04` §48.11) |
+| **Role-aware admin projection** | **No** — no session/role model; the actor is a request-body field | Staff-session auth and a projection that varies by role; until then nothing on this page is permission-aware |
+
+The `UI Phase 2L`/`2M` governance observations are recorded here only where they
+bear on this page (approver role not enforced; no role holds the SEC-01 read
+permissions; no relay into SEC-01) — none is fixed here, and IAM-02 and SEC-01
+are unmodified.
+
+### 49.13 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `ComplianceAttention`,
+  `ControlDependencies`, `ClientComplianceState`, `ReviewAreas`, and the
+  projection module. All are Server Components — no interactivity is needed.
+- **Reused:** `PageHeader`, `DemoDisclosure`, and the existing shared demo-data
+  modules (`client-demo-data`, `compliance-data`, `approval-request-data`,
+  `audit-activity-data`, `client-request-data`) — imported from the Client and
+  Ops directories as data only. **No Ops page behaviour changed.**
+- **No shadcn primitive is used at all** (no `Table`, `Select` or `Sheet`), so
+  none of the REVIEW LATER components was touched; the official MCP was not
+  needed. **No dashboard block was copied.**
+
+### 49.14 Boundaries
+
+No `C`-classified Admin element (Reporting, Incidents / Exceptions). No balance,
+PnL, market data, order book, Exchange operation, settlement amount or trading
+volume. No unsupported risk score. No approval or review action, no mutation, no
+fetch, no server action, no auth or permission code.
+
+### 49.15 What this phase explicitly did not do
+
+No score or KPI card; no AML, EDD or risk content; no link to an Ops page or an
+unbuilt Admin route; no approval authority implied; no change to IAM-02, SEC-01
+or any backend service, the public homepage, any Ops page's behaviour, packages
+or lockfile.

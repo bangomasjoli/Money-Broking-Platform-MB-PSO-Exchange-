@@ -2689,3 +2689,26 @@ from 1280px): table region ≈ 783px @1440, ≈ 623px @1280, ≈ 624px @1024, 72
 ("Payout Destination DEMO-PAY-001"), Domain ~70px, Actor ~131px. Time + Event +
 Result ≈ 510px; + Target ≈ 750px. **Open measurement:** whether 4px cell padding
 around a 20px text line really lays out at 32px in the browser.
+
+## UI Phase 2N — Compliance Overview Geometry
+
+Values used by `/admin` (`UI-04` §49). The layout **reuses `UI Phase 2I`'s
+Operational Overview values exactly**; the page introduces no new measurement.
+Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Split layout (`≥1280px`) | `xl:grid-cols-[1fr_320px]`, `xl:gap-8` (32px) | Reuse — the same `xl:` breakpoint as the Overview, where the shell's sidebar also engages |
+| Secondary column | `xl:border-l xl:pl-8` (1px + 32px) | Reuse |
+| Section gap (primary column) | `gap-8` = 32px | Reuse |
+| Secondary sections gap | `mt-8` = 32px | Reuse |
+| Attention / Review Areas / Dependencies row | `py-3` = 12px vertical, hairline `border-t`, no fixed height | Rows are ≥40px (`COMPACT`) with wrapped text lines; `py-2.5` (10px, off the 4px grid) was caught and replaced with `py-3` before commit |
+| Client Compliance rows | `gap-3` = 12px, hairline dividers | Reuse of the Overview's `<dl>` pattern |
+| Section heading | `text-lg` semibold, `mt-4` before content | Reuse |
+| Row text | name `text-sm`, state/owner/meaning `text-xs` | Existing roles |
+
+**Width arithmetic** (content = viewport − 48px below 1280px; viewport − 305px
+from 1280px): the primary column is content − 320px − 32px ≈ **623px @1280**, ≈
+**783px @1440**; below `xl:` the page is a single column at the full content width
+(≈ 976px @1024, 720px @768, ≈ 398px @430). No table and no horizontal scroll
+exists anywhere on the page. No shadcn primitive is used.

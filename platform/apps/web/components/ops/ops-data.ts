@@ -1,3 +1,9 @@
+import {
+  AWAITING_STAFF_ACTION_STATUSES,
+  DEMO_APPROVED_CLIENT_REF,
+  DEMO_CLIENT_REQUESTS,
+  demoRequestReference,
+} from "@/components/ops/client-request-data";
 import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } from "@/components/wallet-destinations/destination-data";
 
 /**
@@ -9,9 +15,9 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
  * UI phase's own findings) — none of it is callable from a staff browser session today, exactly
  * the same boundary that has applied to every client-page turn so far, now confirmed for Ops too:
  *
- * - `ClientApplicationStatus` — the exact status literals found in
- *   `platform/services/clt1/src/routes/applications.ts`/`decisions.ts`
- *   (`draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`).
+ * - Client Requests — the status enum, labels, demo records and "awaiting staff action" set live
+ *   in `client-request-data.ts` since `UI Phase 2J` (a second Ops page now needs them); this file
+ *   imports them so the overview and `/ops/client-requests` can never disagree.
  * - Wallet destination status reuses `UI Phase 2E`'s own `STATUS_LABELS` from
  *   `wallet-destinations/destination-data.ts` DIRECTLY — the same `wlt1.destination.status`
  *   column, the same governed values. Verified this turn that the internal "safe staff" response
@@ -41,43 +47,10 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
  */
 
 // ---------------------------------------------------------------------------
-// A. Client Requests — CLT-01 client_application.status.
+// A. Client Requests — CLT-01 client_application.status. Source of truth: client-request-data.ts.
 // ---------------------------------------------------------------------------
 
-export type ClientApplicationStatus =
-  | "draft"
-  | "submitted"
-  | "under_review"
-  | "held"
-  | "approved"
-  | "rejected"
-  | "cancelled";
-
-export const CLIENT_APPLICATION_STATUS_LABELS: Record<ClientApplicationStatus, string> = {
-  draft: "Draft",
-  submitted: "Submitted — Awaiting Review",
-  under_review: "Under Review",
-  held: "On Hold",
-  approved: "Approved",
-  rejected: "Rejected",
-  cancelled: "Cancelled",
-};
-
-/** Statuses that represent staff work still outstanding — mirrors the real `start-review`/
- * `hold`/`reject`/`approve` transition set actually registered on `routes/applications.ts`. */
-const CLIENT_APPLICATION_OPEN_STATUSES: ClientApplicationStatus[] = ["submitted", "under_review", "held"];
-
-export interface DemoClientRequest {
-  id: string;
-  reference: string;
-  status: ClientApplicationStatus;
-}
-
-/** 2 records — obviously fictitious references, no real application IDs from the repo. */
-export const DEMO_CLIENT_REQUESTS: DemoClientRequest[] = [
-  { id: "demo-app-001", reference: "Client Application DEMO-001", status: "submitted" },
-  { id: "demo-app-002", reference: "Client Application DEMO-002", status: "under_review" },
-];
+export { CLIENT_APPLICATION_STATUS_LABELS, DEMO_CLIENT_REQUESTS } from "@/components/ops/client-request-data";
 
 // ---------------------------------------------------------------------------
 // B. Wallet Destination Review — WLT-01 wlt1.destination.status, reusing client-facing labels.
@@ -98,13 +71,13 @@ export const DEMO_WALLET_REVIEW_ITEMS: DemoWalletReviewItem[] = [
   {
     id: "demo-wlt-001",
     reference: "Wallet Destination DEMO-WLT-001",
-    clientReference: "Client Application DEMO-002",
+    clientReference: `Client ${DEMO_APPROVED_CLIENT_REF}`,
     status: "pending_screening",
   },
   {
     id: "demo-wlt-002",
     reference: "Wallet Destination DEMO-WLT-002",
-    clientReference: "Client Application DEMO-001",
+    clientReference: `Client ${DEMO_APPROVED_CLIENT_REF}`,
     status: "pending_review",
   },
 ];
@@ -133,10 +106,13 @@ export interface DemoApprovalRequest {
   status: MakerCheckerStatus;
 }
 
-/** The two demo items below deliberately reference the SAME two demo records already used above
- * (`Wallet Destination DEMO-WLT-002`, `Client Application DEMO-001`) — architecturally accurate,
- * not coincidental: both `WLT-01`'s destination-approval flow and `CLT-01`'s application-approval
- * flow route through this exact IAM-02 request/apply mechanism in the real system. */
+/** The two demo items reference records that exist elsewhere in the Ops fixtures — and only in
+ * states that make the approval request valid. `wlt1.destination.approve` targets a destination in
+ * `pending_review`; `clt1.application.approve` targets `DEMO-002`, which is `under_review`
+ * (`approve-request` is only allowed from `under_review` — `lib/applications.ts`). `UI Phase 2I`
+ * originally pointed this at `DEMO-001` (still `submitted`), which the real transition table would
+ * refuse; corrected in `UI Phase 2J` (`UI-04` §45.3). Both flows route through this IAM-02
+ * request/apply mechanism in the real system. */
 export const DEMO_APPROVAL_REQUESTS: DemoApprovalRequest[] = [
   {
     id: "demo-apr-001",
@@ -149,7 +125,7 @@ export const DEMO_APPROVAL_REQUESTS: DemoApprovalRequest[] = [
     id: "demo-apr-002",
     reference: "Approval Request DEMO-APR-002",
     action: "clt1.application.approve",
-    subjectReference: "Client Application DEMO-001",
+    subjectReference: demoRequestReference("demo-app-002"),
     status: "pending",
   },
 ];
@@ -167,7 +143,7 @@ export interface AttentionRollupRow {
 export const ATTENTION_ROLLUP: AttentionRollupRow[] = [
   {
     label: "Client Requests",
-    count: DEMO_CLIENT_REQUESTS.filter((r) => CLIENT_APPLICATION_OPEN_STATUSES.includes(r.status)).length,
+    count: DEMO_CLIENT_REQUESTS.filter((r) => AWAITING_STAFF_ACTION_STATUSES.includes(r.status)).length,
   },
   {
     label: "Wallet Destination Review",
@@ -180,16 +156,17 @@ export const ATTENTION_ROLLUP: AttentionRollupRow[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// D. Workflow Availability — the 4 other B-classified Ops nav items (`UI-04` §8), none built yet.
+// D. Workflow Availability — the 4 other B-classified Ops nav items (`UI-04` §8); each gains a real `href` as its page lands.
 // ---------------------------------------------------------------------------
 
 export interface OpsWorkflowAvailabilityItem {
   label: string;
-  status: "Interface planned";
+  status: "Available" | "Interface planned";
+  href?: string;
 }
 
 export const OPS_WORKFLOW_AVAILABILITY: OpsWorkflowAvailabilityItem[] = [
-  { label: "Client Requests", status: "Interface planned" },
+  { label: "Client Requests", status: "Available", href: "/ops/client-requests" },
   { label: "Wallet Destination Review", status: "Interface planned" },
   { label: "Maker-Checker Queue", status: "Interface planned" },
   { label: "Audit / Activity", status: "Interface planned" },

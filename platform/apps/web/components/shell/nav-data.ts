@@ -66,10 +66,16 @@ export const CLIENT_NAV: NavItem[] = [
   { label: "KYC / KYB Compliance Status", href: "/app/compliance-status", icon: "shield-check" },
 ];
 
-/** `UI-04` §8 — Staff/Operations Portal B-classified IA. */
+/**
+ * `UI-04` §8 — Staff/Operations Portal B-classified IA.
+ *
+ * `UI Phase 2J`: "Client Requests" gains a real `href` (`/ops/client-requests`) — `B`-classified
+ * (real `CLT-01` application/decision model, every route `requireInternal`-guarded). The other
+ * three inert rows are unchanged. Label preserved exactly.
+ */
 export const OPS_NAV: NavItem[] = [
   { label: "Operational Overview", href: "/ops", icon: "layout-grid" },
-  { label: "Client Requests", icon: "inbox" },
+  { label: "Client Requests", href: "/ops/client-requests", icon: "inbox" },
   { label: "Wallet Destination Review", icon: "wallet" },
   { label: "Maker-Checker Queue", icon: "list-checks" },
   { label: "Audit / Activity", icon: "history" },

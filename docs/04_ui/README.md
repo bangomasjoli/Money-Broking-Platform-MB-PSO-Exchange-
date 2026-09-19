@@ -687,13 +687,37 @@ claim.** Public homepage unaffected.
   via rendered-HTML and compiled-CSS inspection, **not** rendered/
   screenshot review. Full record: `UI-04` §44, `UI-02`'s new "UI Phase
   2I" section, `UI-03` §44.
+- **Phase 2J:** Staff/Operations Client Requests
+  (`/ops/client-requests`) — **IMPLEMENTED / VISUAL QA DEFERRED.**
+  `B`-classified List + Detail workspace over `CLT-01` application
+  records: a status-filtered queue (`COMPACT` 40px rows, columns limited
+  to fields the model backs) beside a persistent 320px detail panel from
+  `1024px`, a `Sheet` below it, and a compact list below `768px`. Every
+  route reading or acting on these records is `requireInternal`-guarded,
+  and **no list route exists at any layer** — a finding that corrects
+  `UI Phase 2I`'s "(list)" annotation, along with two demo-data errors
+  (an approval request for a still-`submitted` application; wallet
+  destinations "owned" by an application). Those were fixed via a new
+  shared `client-request-data.ts`, so the Overview's "2 items" and the
+  queue can never disagree. `legal_name` is shown as demo-projected — the
+  approved PII decision excludes it from `safeApplicationResponse`, so a
+  live page needs a governance decision (recorded). KYC/AML rollups, PII
+  and reviewer identity are omitted. **No mutation:** actions are natively
+  disabled and mirror only the transitions the backend defines;
+  approval is shown as a maker step ("Request approval") because it is
+  maker-checker, whereas reject/hold are single-step; there is no resume
+  (none exists). `typecheck:web`/`lint:web`/`build:web` all pass (10
+  routes); verified via rendered-HTML and compiled-CSS inspection —
+  interactions were reasoned from source, **not** exercised, and nothing was
+  rendered. Full record: `UI-04` §45, `UI-02`'s new "UI Phase 2J" section,
+  `UI-03` §45.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
   authenticated Client Portal product pages — every Client Portal nav
-  item now has one. Operational Overview (`B`-classified) is the first
-  real Staff/Operations page — every other Ops nav item and every Admin
-  page remains unimplemented. No API/auth integration exists on any of
+  item now has one. Operational Overview and Client Requests (both
+  `B`-classified) are the two real Staff/Operations pages — the other
+  three Ops nav items and every Admin page remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

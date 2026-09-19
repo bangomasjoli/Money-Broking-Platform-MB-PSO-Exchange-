@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,7 @@ import {
 import { DestinationDetail } from "@/components/wallet-destinations/destination-detail";
 import { DestinationTable } from "@/components/wallet-destinations/destination-table";
 import { DEMO_DESTINATIONS, primaryIdentifier } from "@/components/wallet-destinations/destination-data";
+import { useIsLgUp } from "@/lib/use-is-lg-up";
 
 /**
  * Wallet & Payout Destinations — workspace composition root. UI Phase 2E. Holds the one piece of
@@ -28,38 +29,14 @@ import { DEMO_DESTINATIONS, primaryIdentifier } from "@/components/wallet-destin
  * - `<1024px`: `DestinationTable` alone, full width — selecting a row opens a `Sheet` (the same
  *   primitive already used for the shell's own mobile nav) containing the identical
  *   `DestinationDetail` content, per "do not duplicate detail markup." A real `matchMedia` check
- *   (`useIsLgUp`, below) — not a CSS-only trick — gates whether row selection opens the Sheet, so
+ *   (`useIsLgUp`, imported) — not a CSS-only trick — gates whether row selection opens the Sheet, so
  *   selecting a row at `≥1024px` updates only the always-visible persistent panel and never pops
  *   a redundant overlay on top of it.
+ *
+ * `useIsLgUp` lives in `lib/use-is-lg-up.ts` — extracted when `UI Phase 2J`'s Client Requests
+ * workspace became its second caller (behavior unchanged; see that file's own doc comment for why
+ * it is `useSyncExternalStore` and not `useState`+`useEffect`).
  */
-
-const LG_QUERY = "(min-width: 1024px)";
-
-function subscribeToLgQuery(callback: () => void) {
-  const mql = window.matchMedia(LG_QUERY);
-  mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
-}
-
-function getLgSnapshot(): boolean {
-  return window.matchMedia(LG_QUERY).matches;
-}
-
-function getLgServerSnapshot(): boolean {
-  return false;
-}
-
-/**
- * `useSyncExternalStore`, not `useState`+`useEffect` — the React-recommended pattern for reading
- * external browser state (a media query) without an effect-body `setState` call, which the
- * project's `react-hooks/set-state-in-effect` lint rule correctly flags as a cascading-render
- * risk. Server snapshot is `false` (matches this component's `"use client"` SSR pass, where
- * `window` does not exist) — corrected to the real value on the client without an extra render
- * caused by an effect.
- */
-function useIsLgUp(): boolean {
-  return useSyncExternalStore(subscribeToLgQuery, getLgSnapshot, getLgServerSnapshot);
-}
 
 export function WalletDestinationsWorkspace() {
   const isLgUp = useIsLgUp();

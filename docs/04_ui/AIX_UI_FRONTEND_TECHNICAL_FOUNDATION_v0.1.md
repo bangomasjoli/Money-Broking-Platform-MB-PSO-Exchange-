@@ -1547,3 +1547,57 @@ not falsely claimed as accepted.
 change; zero package/lockfile change. **Public homepage: unaffected** —
 confirmed via `git diff --name-only`, no public-site file appears in
 the diff.
+
+## 45. Phase 2J — Staff/Operations Client Requests (second Ops page, visual QA deferred)
+
+`/ops/client-requests` (`UI-04` §45): a List + Detail workspace over
+`CLT-01` application records. `B`-classified; demo data only; no fetch,
+server action, auth or mutation.
+
+**Files created (8):** `app/ops/client-requests/page.tsx`;
+`components/ops/{client-request-data.ts, client-request-status.tsx,
+client-request-table.tsx, client-request-detail.tsx,
+client-requests-workspace.tsx}`; `lib/use-is-lg-up.ts`.
+**Files modified:** `components/shell/nav-data.ts` (Client Requests gains
+`href`); `components/ops/{ops-data.ts, operational-queues.tsx,
+workflow-availability.tsx}` (consume the shared data; link to the new
+page; demo cross-references corrected — `UI-04` §45.3);
+`components/wallet-destinations/wallet-destinations-workspace.tsx`
+(imports the extracted hook; behaviour unchanged).
+
+**shadcn impact: none** — `Sheet`, `Select`, `Label`, `Button`, `Table`
+already installed. **No package or lockfile change.**
+
+**Client/server boundary:** the page is a Server Component; the workspace,
+table and detail are client-bundled (interactive state). Detail timestamps
+use `timeZone: "UTC"` so server and browser render identical text.
+
+**Container queries.** First use on the platform: `@container` on the
+table wrapper with `@3xl:`/`@4xl:` column visibility. Tailwind v4 core —
+no plugin. Confirmed present in the compiled stylesheet
+(`@container (min-width: 48rem)`, `(min-width: 56rem)`).
+
+**`useIsLgUp` extraction.** The `useSyncExternalStore` media-query hook
+moved from Phase 2E's workspace to `lib/use-is-lg-up.ts` when this page
+became its second caller (rationale and the `set-state-in-effect` lint
+constraint are in the file's own comment).
+
+**Quality gates:** `typecheck:web`, `lint:web`, `build:web` all pass;
+**10** static routes (was 9; `/ops/client-requests` added).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev
+server + `curl` + rendered-HTML and compiled-CSS inspection. Confirmed:
+one `<h1>`; table headers/rows/values; the mobile list's 4 items; the
+labelled filter with its SSR-rendered value; one button per row; the
+detail panel's sections and natively-disabled action buttons; the
+Overview's "2 items" agreeing with the queue; the sidebar's two live Ops
+links and three inert rows; the active-route marker. **Not verifiable
+here:** filter/selection/Sheet interaction (no browser or jsdom) — those
+paths are reasoned from source, not exercised. Recorded as
+**IMPLEMENTED / VISUAL QA DEFERRED**.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations` (its workspace was
+touched by the hook extraction), `/app/profile`, `/app/compliance-status`,
+`/ops` and `/admin` all return 200 with unchanged structure. Backend
+regression not required — zero `platform/services/**`, `packages/**`,
+`edge/**`, `infra/**` change. Public homepage unaffected.

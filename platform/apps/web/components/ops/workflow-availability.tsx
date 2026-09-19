@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   DEMO_AUDIT_EVENTS,
@@ -32,7 +33,7 @@ export function WorkflowAvailability() {
 
       <dl className="mt-4 flex flex-col gap-3">
         {OPS_WORKFLOW_AVAILABILITY.map((item) => (
-          <Row key={item.label} label={item.label}>
+          <Row key={item.label} label={item.label} href={item.href}>
             {item.status}
           </Row>
         ))}
@@ -63,10 +64,21 @@ export function RecentActivity() {
   );
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, href, children }: { label: string; href?: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3 first:border-t-0 first:pt-0">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dt className="text-sm text-muted-foreground">
+        {href ? (
+          <Link
+            href={href}
+            className="font-medium text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {label}
+          </Link>
+        ) : (
+          label
+        )}
+      </dt>
       <dd className="text-sm font-medium text-foreground">{children}</dd>
     </div>
   );

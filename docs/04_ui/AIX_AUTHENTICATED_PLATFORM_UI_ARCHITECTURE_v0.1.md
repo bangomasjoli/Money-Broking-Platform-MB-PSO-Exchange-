@@ -2964,7 +2964,7 @@ today.** Every concept below was traced to its exact source:
 
 | Overview element | Owning module | Current internal route/model | Staff-facing (browser)? | Status |
 |---|---|---|---|---|
-| Client Requests | `CLT-01` | `/internal/clt1/applications` (list), `.../start-review`, `.../hold`, `.../reject`, `.../approve/{request,apply}` — real `client_application.status` enum (`routes/applications.ts`/`decisions.ts`: `draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`) | No | **PARTIAL/B** |
+| Client Requests | `CLT-01` | `/internal/clt1/applications` (**correction, UI Phase 2J: that path is `POST` create only — no list route exists at any layer; see §45.1**), `.../start-review`, `.../hold`, `.../reject`, `.../approve/{request,apply}` — real `client_application.status` enum (`routes/applications.ts`/`decisions.ts`: `draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`) | No | **PARTIAL/B** |
 | Wallet Destination Review | `WLT-01` | `/internal/wlt1/wallet-destinations`, `/internal/wlt1/destinations/:id/approve/{request,apply}`, `/internal/wlt1/stuck-screenings`, `/internal/wlt1/rescreening-runs` — real `wlt1.destination.status` enum, same as `UI Phase 2E`'s own; internal "safe staff" response (`lib/safe-response.ts`'s `safeWalletDestinationResponse`) masks the address IDENTICALLY to the public client response, verified this turn — staff do NOT get an unmasked view | No | **PARTIAL/B** |
 | Maker-Checker Queue | `IAM-02` | `/iam2/approvals/request`, `/iam2/approvals/:id/{approve,reject}` — real `iam2.approval_request.status` enum (`routes/approvals.ts`: `pending`/`approved`/`rejected`/`expired`/`blocked`, the last set by an `iam2.sod_check` blocking a self-approval attempt) | No | **PARTIAL/B** |
 | Recent Staff Activity (evidence) | `SEC-01` | `/internal/sec1/audit-events/{read,search}` — a real, confirmed-SAFE (already tier-redacted) field subset exists (`lib/read-redaction.ts`'s own `RedactableAuditEventRow`: `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc`, deliberately excluding hash-chain/integrity fields and raw payload at the SELECT level, not merely at response time) | No | **PARTIAL/B, minimal safe-field summary only** |
@@ -3077,7 +3077,9 @@ actor identity, no approve/reject control, no implication that the
 same person could approve their own request. The two demo rows
 deliberately reference the same two demo records already used in
 Client Requests/Wallet Destination Review (`Wallet Destination
-DEMO-WLT-002`, `Client Application DEMO-001`) — architecturally
+DEMO-WLT-002`, `Client Application DEMO-001` — **correction, UI
+Phase 2J: the application subject is now `DEMO-002`, because `approve-request`
+is only valid from `under_review`; see §45.3**) — architecturally
 accurate, not coincidental: both `WLT-01`'s destination-approval flow
 and `CLT-01`'s application-approval flow route through this exact
 IAM-02 request/apply mechanism in the real system. No approve/reject
@@ -3169,7 +3171,8 @@ Derived directly from §44.1's capability map:
    `WLT-01`/`IAM-02` today; Work Requiring Attention's own rollup would
    need either a dedicated aggregate route or client-side composition
    of gaps #2–#4 below.
-2. **CLT-01 staff-facing pending-application-summary projection** — a
+2. **CLT-01 staff-facing pending-application-summary projection** — (no
+   list route exists at any layer today, §45.1) a
    staff-scoped (not client-scoped) read exposing `client_application`
    rows in `submitted`/`under_review`/`held` state.
 3. **WLT-01 staff-facing review-queue projection** — a staff-scoped read
@@ -3189,3 +3192,343 @@ Derived directly from §44.1's capability map:
 No system-health/control-notes projection gap is listed — that
 candidate section was omitted by design (§44.4), not because a gap
 exists to fill later.
+
+## 45. UI Phase 2J — Staff/Operations Client Requests (`B`-classified Ops page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The second real page on
+the Staff/Operations surface and the first List + Detail workspace on
+it (`UI Phase 2E` built the first anywhere). Same visual-QA posture as
+every phase since `UI Phase 2E`.
+
+### 45.1 Capability map (verified against `platform/services/clt1/src`, not assumed)
+
+Every registered `clt1` route was enumerated this turn. **All are
+`requireInternal`-guarded — none is callable from a staff browser
+session.** Two findings sharpen the picture `UI Phase 2I` recorded:
+
+- **There is no list route.** `GET` routes exist per-application
+  (`/internal/clt1/applications/:application_id` and sub-resources) but
+  nothing enumerates applications. `UI Phase 2I`'s §44.1 annotated
+  `/internal/clt1/applications` as "(list)"; that path is `POST` create
+  only. Corrected in place and in §45.3. A queue page therefore needs a
+  route that does not exist at the internal layer either.
+- **`safeApplicationResponse` excludes `legal_name`,
+  `registration_number`, `country_of_incorporation` and
+  `applicant_email`** (approved Phase 1 PII decision — the function's own
+  header says so). It is the single choke point every route response
+  passes through.
+
+| UI element | CLT-01 model / route | Staff-facing (browser)? | Status |
+|---|---|---|---|
+| Request queue (list) | No list route exists (internal or otherwise) | No | **PARTIAL/B** — model real, no read route |
+| Application reference | `client_application.application_id` (`clt1app_<uuid>`) — in safe response | No | **PARTIAL/B** |
+| Status | `client_application.status` — in safe response | No | **PARTIAL/B** |
+| Client class | `client_class_claimed` (`CLIENT_CLASSES`) + `client_class_status` (always `claimed` today) — in safe response | No | **PARTIAL/B** |
+| Timestamps | `created_at_utc`, `submitted_at_utc`, `under_review_at_utc`, `updated_at_utc`, `held_at_utc`, `approved_at_utc`, `rejected_at_utc`, `cancelled_at_utc` — all in safe response | No | **PARTIAL/B** |
+| Organisation name | `legal_name` column exists; **excluded from the safe response** | No | **DEMO-ONLY as shown** — see §45.10 |
+| Applicant type | `applicant_type` (`APPLICANT_TYPES`) — in safe response | No | **PARTIAL/B** |
+| Authorised-party summary | `GET /internal/clt1/applications/:id/authorised-parties` — `party_type` only shown; `party_reference` excluded by `safeAuthorisedPartyResponse` | No | **PARTIAL/B** (role counts only) |
+| Reviewer assigned | `assigned_reviewer` (a staff user id) — in safe response | No | **PARTIAL/B**, shown as boolean only |
+| Decision reason | `hold_reason` / `rejection_reason` — in safe response, populated from an optional `reason_code` (≤64 chars) | No | **PARTIAL/B** — never given a demo value |
+| Client record / approval reference | `client_id`, `approval_id` — set only by `approve/apply` | No | **PARTIAL/B** (approved rows only) |
+| Start review | `POST .../start-review` — IAM-02 baseline permission `clt1.application.review`, `submitted` → `under_review`, sets `assigned_reviewer` | No | **PARTIAL/B**, disabled placeholder |
+| Hold / Reject | `POST .../hold`, `.../reject` — **single-step**, IAM-02 baseline permission, `under_review` only | No | **PARTIAL/B**, disabled placeholder |
+| Request approval | `POST .../approve/request` (maker) → IAM-02 approval by a different actor → `POST .../approve/apply` | No | **PARTIAL/B**, disabled placeholder (maker step only) |
+| Cancel | `POST .../cancel` — internal-identity guard only, `draft`/`submitted` | No | **PARTIAL/B**, disabled placeholder |
+| Resume / un-hold | **No such transition exists** — `held` appears in no action's allowed-status list | — | **OMITTED** |
+| CDD / AML / PEP / risk-rating rollup | `cdd_outcome_status`, `aml_sanctions_status`, `pep_adverse_media_status`, `risk_rating_status` — in safe response | No | **OMITTED by decision**, §45.6 |
+| Registration no. / country / applicant email | Columns exist; excluded from safe response | No | **OMITTED** |
+| SLA, priority, risk score | No such field in the model | — | **OMITTED** |
+
+### 45.2 Route, navigation and page architecture
+
+New route `/ops/client-requests`. `nav-data.ts`'s `OPS_NAV` "Client
+Requests" gains its `href` (label unchanged); the other three inert rows
+are untouched. The Overview's Workflow Availability row for Client
+Requests now reads "Available" and links, following `UI Phase 2H`'s
+precedent of promoting an Overview reference when its page lands; its
+Client Requests queue group gains a "View all" link.
+
+```
+app/ops/client-requests/page.tsx           — header + disclosure + workspace (Server Component)
+components/ops/
+  client-request-data.ts                   — single source of truth (enum, labels, fixtures, actions map)
+  client-request-status.tsx                — RequestStatusLine (icon + governed label)
+  client-request-table.tsx                 — table (≥768px) / compact list (<768px)
+  client-request-detail.tsx                — detail content (panel + Sheet share it)
+  client-requests-workspace.tsx            — filter, selection, panel/Sheet composition
+lib/use-is-lg-up.ts                        — useIsLgUp, extracted from Phase 2E
+```
+
+Page header: "Client Requests" / "Review client applications and their
+current operational review state." `DemoDisclosure`: "Interface preview —
+client request records are demonstrative until the staff-facing CLT
+projection and action routes are integrated."
+
+### 45.3 Shared data, Phase 2I consistency, and corrections to Phase 2I
+
+`client-request-data.ts` is the one source for the application enum,
+labels, demo records and "awaiting staff action" set; `ops-data.ts` now
+imports it, so `/ops` and `/ops/client-requests` cannot disagree.
+Verified in rendered HTML: the Overview shows **Client Requests — 2
+items**, listing `DEMO-001` (Submitted — Awaiting Review) and `DEMO-002`
+(Under Review); the queue page shows the same two as its first two rows,
+in the same states, with the same labels.
+
+Building the second page exposed three problems in `UI Phase 2I`'s demo
+data and prose, corrected here rather than carried forward:
+
+1. **List route.** §44.1 called `/internal/clt1/applications` a list; it
+   is create-only (§45.1).
+2. **Approval subject.** The demo `clt1.application.approve` request
+   pointed at `DEMO-001`, an application still `submitted`.
+   `approve-request` is only allowed from `under_review`
+   (`lib/applications.ts`), so the real system would refuse it. It now
+   targets `DEMO-002`, which is `under_review`.
+3. **Wallet ownership.** The Wallet Destination Review rows named
+   "Client Application DEMO-00x" as owner. A wallet destination belongs to
+   a `client_id`, and a `client_profile` exists only after approval — an
+   application under review has none. Both rows now reference
+   `Client DEMO-CLI-001`, the client of approved demo application
+   `DEMO-004`.
+
+**"Requires attention" refined.** `UI Phase 2I` counted `held` as open.
+The backend has no resume/un-hold transition (every action's
+allowed-status list omits `held`; the source comment states it), so a held
+application has no staff action to await. "Awaiting staff action" is now
+`submitted` + `under_review` — which leaves the Overview's count and
+listed records exactly as they were (2 items). Revisit if a resume
+transition is ever added.
+
+### 45.4 Demo fixtures
+
+4 obviously fictitious records, one per lifecycle stage a queue reviewer
+meets: `DEMO-001` Example Institutional Holdings Ltd. (`submitted`,
+institutional), `DEMO-002` Demo Capital Partners Ltd. (`under_review`,
+professional), `DEMO-003` Sample Family Office Ltd. (`held`, HNWI),
+`DEMO-004` Illustrative Treasury Services Ltd. (`approved`,
+institutional; client `DEMO-CLI-001`, approval `DEMO-APR-003`). No
+real client name or repository id. Only `institutional`/`hnwi`/
+`professional` are used: `retail` and `unknown` map to CFG-01's
+permanently blocked `onboarding.retail_default` gate
+(`lib/cfg1-client.ts`), so such an application cannot exist beyond
+creation — a demo row for either would depict an impossible state. No
+`rejected`/`cancelled`/`draft` demo row (this turn: "do not overload the
+screen with negative scenarios"); all three are fully supported by the
+mapping and the detail component.
+
+### 45.5 Queue: columns, density, status mapping, filter/search
+
+**Columns** (only fields the model backs): Application, Organisation,
+Client Class, Status, Submitted, Last Updated. No Action column — the
+Application cell holds the selection button, and a second control per row
+would add a redundant tab stop. No SLA/priority/risk column.
+
+**Density:** `COMPACT` 40px (`h-10`) — `UI-04` §35.14 names Client
+Requests in the "standard lists" tier explicitly, and nothing here
+suggests a high-volume queue.
+
+**Status mapping** (`client_application.status` → Ops label), unchanged
+from `UI Phase 2I` §44.5 — one label map for both pages, not two:
+
+| Status | Label | Icon |
+|---|---|---|
+| `draft` | Draft | Circle |
+| `submitted` | Submitted — Awaiting Review | Inbox |
+| `under_review` | Under Review | Search |
+| `held` | On Hold | CirclePause |
+| `approved` | Approved | CircleCheck |
+| `rejected` | Rejected | CircleX |
+| `cancelled` | Cancelled | Ban |
+
+`submitted`, `under_review` and `held` are never collapsed into a generic
+"Pending" — they have different next actions. **Three further statuses
+exist in the DB CHECK constraint** (`duplicate_review`, `pending_kyc`,
+`pending_aml`) but no code path in `services/clt1/src` writes them (search
+verified; the migration header calls them forward-compatibility values).
+They are deliberately not modelled — dead vocabulary. If a later CLT phase
+starts writing them, the enum and label map need extending.
+
+**Client class** (`client_class_claimed`), exact governed vocabulary:
+`institutional` → Institutional, `hnwi` → HNWI, `professional` →
+Professional, `retail` → Retail, `unknown` → Unknown (the label map is
+`UI Phase 2G`'s, reused). Shown as "Claimed by applicant" — `client_class_
+status` never leaves `claimed` today (no verify route exists).
+
+**Filter: implemented.** An operational queue mixes work awaiting action
+with finished history and staff must isolate the former. A labelled
+`Select` ("Status"); options are **derived from the governed label map**
+(All + all 7 statuses), so a status cannot be missing or worded
+differently. A polite live region reports "Showing N of M requests".
+**Search: not added** — no free-text search capability exists in CLT-01,
+and with a handful of records it would be decoration.
+
+### 45.6 Detail panel, KYC/AML boundary, PII
+
+Sections, each only where the model backs it: **Request Summary**
+(created / submitted / last updated), **Organisation** (legal name,
+applicant type, authorised-party role counts), **Classification** (class,
+basis), **Review State** (status, reviewer assigned yes/no, review-started
+timestamp), **Decision** (only for `held`/`approved`/`rejected`/
+`cancelled`), **Review Actions**. Timestamps render in UTC with an
+explicit "UTC" suffix — the source columns are `*_utc`, and pinning the
+zone also prevents a server/browser hydration mismatch.
+
+**Application is kept distinct from client.** Nothing implies a client
+profile exists; only an approved request shows the `client_id` it
+produced.
+
+**KYC/AML boundary — omitted.** The safe response does carry
+`cdd_outcome_status`, `aml_sanctions_status`, `pep_adverse_media_status`
+and `risk_rating_status`, so "safe summary fields" technically exist. They
+are compliance-portal domain (`UI-04` §9 puts Client Risk/KYC-KYB and
+EDD/Review under Admin/Compliance), the brief's default is to omit, and
+`UI Phase 2H` already decided the analogous outcome-level detail is not
+shown outside the compliance surface. Recorded as a decision, not an
+oversight; revisit if Ops is later given a scoped view.
+
+**Sensitive PII — omitted:** registration number, country of
+incorporation, applicant email, party names (`party_reference`), ownership
+percentages, screening statuses, reviewer identity, wallet or bank detail.
+
+### 45.7 Decision data
+
+Real and read-only: `hold_reason`/`rejection_reason`, the corresponding
+`*_at_utc`, `approval_id`, `client_id`. **The reason fields hold a short
+optional `reason_code`, not free-text notes** (`RejectHoldBody`,
+`maxLength: 64`) and have no governed vocabulary — so any demo value would
+be invented. The held fixture therefore has none and renders "Not
+recorded", which is both honest and a true depiction of an optional field.
+
+### 45.8 Actions, review mode and the maker-checker boundary
+
+**No mutation exists on this page.** No fetch, server action, auth or
+permission code. The Review Actions section lists exactly the transitions
+`lib/applications.ts` defines for the current status — `submitted`: Start
+review, Cancel application; `under_review`: Place on hold, Reject,
+Request approval; `draft`: Cancel; all other statuses: "No staff action is
+currently defined." Each is a natively `disabled` `Button` (not focusable),
+under an explicit "staff action routes are not yet integrated" note.
+
+**Maker-checker is preserved, not flattened.** There is no "Approve"
+button. Approval is `approve/request` (maker) → an IAM-02 approval by a
+*different* actor → `approve/apply`; CLT-01 also blocks
+`requested_by === assigned_reviewer`. The maker-side control is labelled
+"Request approval", with a note that approval is a separate step by a
+different authorised approver. **`reject` and `hold` are single-step,
+permission-gated actions — not maker-checker** (`routes/decisions.ts`
+header), and the wording never claims otherwise. The brief's "Resume" has no
+backend counterpart and is not shown.
+
+**Review mode:** the brief allowed a UI-only Review Request
+dialog "if useful". It was assessed and **not built** — a Dialog stacked on
+the persistent panel (or on the Sheet) would duplicate content already
+shown. The detail panel/Sheet is the review surface; opening a request is
+the "Open Review" action.
+
+**Held, rejected, cancelled:** each has its own status icon and label and
+its own Decision rows; `held` is visibly distinct from `under_review`
+(different icon and label) and shows a reason only when one is recorded.
+
+**Audit:** no timeline. The Decision section shows only the state's own
+timestamp; the full trail belongs to the future Audit / Activity page.
+
+### 45.9 C-classified and Exchange boundaries
+
+No Deposit/Withdrawal/Broking-RFQ Operations, Settlement,
+Reconciliation or Exceptions/Breaks element, teaser or mention. No
+trading, order-book, market-data or price element; no balance,
+settlement, fee, volume, revenue or PnL figure — none exists in CLT-01.
+
+### 45.10 Backend gaps for a live Client Requests page
+
+Inspected first; not all are missing.
+
+| Need | Exists? | Gap |
+|---|---|---|
+| Staff-facing **list** projection | **No** — no list route at any layer | New route: enumerate `client_application` by status (paged), through a staff-session-authenticated path |
+| Staff-facing **detail** projection | **Partly** — `GET /internal/clt1/applications/:id` returns `safeApplicationResponse`; `.../authorised-parties` returns role/status rows | Staff-session exposure only; but see next row |
+| **Organisation name** | Column exists; **excluded by the approved PII decision** | A governance decision: expose `legal_name` (and only for corporate/institutional applicants — for `individual` it is a natural person's name) in a staff projection, or identify queue rows by `application_id` alone. The demo assumes the former |
+| **Review actions** (start-review, hold, reject, cancel) | **Yes** — internal routes, IAM-02-gated (cancel: internal-identity only) | Staff-session-authenticated exposure; browser-safe actor binding (bodies carry `reviewer_id`/`actor_id`/`created_by`) |
+| **Decision submission** (approve) | **Yes** — `approve/request` and `approve/apply` | Same exposure; the operator-created IAM-02 approval between the two steps has no UI path |
+| **Maker-checker handoff** | **Yes** — IAM-02 `/iam2/approvals/*` | Staff exposure; CLT-01 cannot learn the approver's identity (documented, accepted limitation), so the UI cannot show "approved by" |
+| Resume from `held` | **No** transition exists | Backend lifecycle decision before any "Resume" UI |
+
+### 45.11 Responsive reasoning (structural, not rendered)
+
+Shell facts: sidebar 240px from `xl:` (1280px); content padding `px-4`
+/`sm:px-6`/`xl:px-8`. Content width ≈ viewport − 48px below 1280px, and ≈
+viewport − 241px − 64px from 1280px.
+
+| Viewport | Content | Layout | Table region | Columns |
+|---|---|---|---|---|
+| **1440** | ≈1135px | Split: queue + 320px panel, gap 32px | ≈783px | Application, Organisation, **Client Class**, Status, Submitted (Last Updated hidden) |
+| **1280** | ≈975px | Split | ≈623px | 4 base columns (~600px estimated) |
+| **1024** | ≈976px | Split (`lg:`) | ≈624px | Same as 1280 |
+| **768** | ≈720px | Queue full width; detail in Sheet | 720px | 4 base columns |
+| **430** | ≈398px | Compact list; detail in Sheet | — | Organisation / reference · class / state / date |
+
+- **1280 vs 1024 are the same numbers by geometry**, not by accident: the
+  sidebar's 241px arrives exactly as the viewport gains 256px. So the
+  brief's `≥1280` persistent-panel requirement and its `1024–1279` "if
+  safe" case resolve identically — the split is as safe in one as the
+  other, and the persistent panel is used from `lg:` (1024).
+- Columns respond to a **container query** on the table region, not the
+  viewport, because the region's width depends on whether the panel is
+  beside it: Client Class shows at ≥48rem (`@3xl`), Last Updated at ≥56rem
+  (`@4xl`). Organisation truncates at `max-w-52` (208px).
+- Below 768px a 6-column table would be horizontal-scroll-only, so the
+  page uses a deliberate list with separators (no card spam); each row is a
+  full-width button (≥44px tall).
+- Below `lg:` the panel is hidden and selection opens a right `Sheet`;
+  `useIsLgUp` (a real `matchMedia` subscription) prevents the Sheet opening
+  over an already-visible panel.
+
+**Visual risks carried into the consolidated pass** (none verifiable
+without rendering): (1) the 4-column fit at ~623px rests on estimated text
+widths (≈4% slack); (2) `max-width` + `truncate` on a `<td>` under auto
+table layout — widely supported, worth one glance; (3) first use of
+container queries on the platform; (4) on first paint the panel already
+shows the first request but the row highlight appears only after
+hydration (the `matchMedia` snapshot is `false` on the server, the same
+behaviour as `UI Phase 2E`); (5) the `border-l-2` selected-row marker
+(§35.15) is implemented here for the first time.
+
+### 45.12 Accessibility
+
+One `<h1>`. Detail: `<h2>` organisation (panel) or the Sheet's own
+`SheetTitle`, `<h3>` per section. The table is a real `<table>` with an
+accessible name; each row has exactly one tab stop — a real `<button>` in
+the Application cell (`aria-current` marks the open request; its
+accessible name "Open Client Application DEMO-001" contains the visible
+text). The row's `onClick` is a mouse-only hit-area convenience; it adds no
+role or tab stop and the button has no `onClick` of its own, so keyboard
+and mouse paths do not double-fire. The filter has a real `<label>`; the
+count is an `aria-live="polite"` region. Status is icon + text, never
+colour alone. No fake mutation is focusable — every action button is
+natively `disabled`, and the reason is stated in adjacent text. `Sheet` is
+Radix (focus trap, Escape, focus return). Empty states: filter yielding
+nothing → "No client requests match the current view." with a "Show all
+requests" button; a genuinely empty queue → "No client requests are
+currently awaiting review." (reachable in code, not rendered today).
+Loading/error states are not built — nothing is fetched.
+
+### 45.13 Shared-module decisions
+
+- **`client-request-data.ts` — created:** two Ops pages now show the same
+  records (the brief's suggested shared fixture).
+- **`lib/use-is-lg-up.ts` — extracted** from `UI Phase 2E`, whose
+  workspace now imports it: a second caller made ~20 lines of
+  lint-sensitive code a genuine duplicate. Behaviour unchanged.
+- **Not extracted:** the label/value `Row` and section helpers. They now
+  recur in five files, but as slightly different variants (`text-sm` vs
+  `text-xs` labels, `<dl>` vs `<li>`); unifying them is a visual-consistency
+  change best made during the consolidated QA pass, not slipped into a
+  feature turn.
+
+### 45.14 What this phase explicitly did not do
+
+No API/auth/permission code; no mutation; no audit timeline; no
+search; no separate review dialog; no C-classified or Exchange element; no
+KYC/AML detail; no change to the public homepage, backend, packages or
+lockfile.

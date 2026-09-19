@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { AWAITING_STAFF_ACTION_STATUSES, requestReference } from "@/components/ops/client-request-data";
 import {
   CLIENT_APPLICATION_STATUS_LABELS,
   DEMO_APPROVAL_REQUESTS,
@@ -34,11 +36,22 @@ export function OperationalQueues() {
       </h2>
 
       <div className="mt-4 flex flex-col gap-6">
-        <QueueGroup title="Client Requests">
+        <QueueGroup
+          title="Client Requests"
+          action={
+            <Link
+              href="/ops/client-requests"
+              aria-label="View all client requests"
+              className="text-xs text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              View all
+            </Link>
+          }
+        >
           <ul className="flex flex-col">
-            {DEMO_CLIENT_REQUESTS.map((item) => (
+            {DEMO_CLIENT_REQUESTS.filter((item) => AWAITING_STAFF_ACTION_STATUSES.includes(item.status)).map((item) => (
               <li key={item.id} className="flex h-8 items-center justify-between gap-4 border-t border-border first:border-t-0">
-                <span className="truncate text-sm text-foreground">{item.reference}</span>
+                <span className="truncate text-sm text-foreground">{requestReference(item)}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {CLIENT_APPLICATION_STATUS_LABELS[item.status]}
                 </span>
@@ -79,10 +92,13 @@ export function OperationalQueues() {
   );
 }
 
-function QueueGroup({ title, children }: { title: string; children: ReactNode }) {
+function QueueGroup({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        {action}
+      </div>
       <div className="mt-2">{children}</div>
     </div>
   );

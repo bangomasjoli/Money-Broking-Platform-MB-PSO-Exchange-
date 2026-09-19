@@ -2589,3 +2589,26 @@ compiled and verified by a prior client-page phase.
 same program decision as every prior phase; full rendered review
 happens in the consolidated pass after the authenticated UI build-out
 completes.
+
+## UI Phase 2J — Client Requests Geometry
+
+Values used by `/ops/client-requests` (`UI-04` §45). Reasoned by
+arithmetic; **not rendered** — visual QA is deferred.
+
+| Element | Value | Note |
+|---|---|---|
+| Table row height | `h-10` = **40px** | `COMPACT` tier (`UI-04` §35.14) — reuse, no new value |
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | 320px panel = the Overview's existing value; narrower than Phase 2E's 360px because this table has more columns |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px) | Same `DETAIL PANEL` treatment as every prior page |
+| Selected-row marker | `border-l-2` = **2px**, `border-foreground` on the first cell (transparent otherwise, so no layout shift) | First implementation of `UI-04` §35.15's selected-row pattern |
+| Organisation cell | `max-w-52` = **208px**, truncated | New value |
+| Filter trigger | `h-10` (40px) × `w-64` (256px) | Control height = the 40px token; width is a new value |
+| Status icon (table/list) | `size-3.5` = 14px | Existing size |
+| Status icon (detail) | `size-4` = 16px | Existing size |
+| Container-query breakpoints | Client Class at `@3xl` = **48rem (768px)**; Last Updated at `@4xl` = **56rem (896px)** | **First container-query use on the platform** (Tailwind v4 core, no plugin) |
+| Compact list row (`<768px`) | `py-3` (12px) top/bottom, three text lines | ≥44px touch target |
+| Sheet (`<1024px`) | Existing `SheetContent` (`w-3/4`, `sm:max-w-sm`) | Unchanged |
+
+**Width arithmetic** (content = viewport − 48px below 1280px; viewport −
+241px − 64px from 1280px): table region ≈ 783px @1440, ≈ 623px @1280,
+≈ 624px @1024, 720px @768. The 4 base columns are estimated at ~600px.

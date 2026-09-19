@@ -335,7 +335,7 @@ Same rule as §8: **no page below is `A`**.
 |---|---|---|---|
 | Compliance Overview | Kept | **B** | No unified aggregation route; would compose KYC-01/AML-01 sources below. |
 | Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** **UI Phase 2O, §50: implemented at `/admin/client-risk-kyc-kyb`; adds `GET .../cases/:id/checklist`, and `completed` covers both `pass` and `fail`.** |
-| AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** |
+| AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** **UI Phase 2P, §51: implemented at `/admin/aml-transaction-monitoring`; transaction monitoring itself is not implemented anywhere in the backend (§51.2).** |
 | EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** |
 | Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8. |
 | Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** |
@@ -4666,7 +4666,7 @@ real route. The map separates the two.
 | Independent approvals | `iam2.approval_request.status = pending` — **no list route exists** | Safe (no payload) | Vocabulary real; count = Maker-Checker fixtures | **PARTIAL/B** |
 | Approval-gated workflows | 22 `verifyDecisionToken` call sites; 5 compliance-domain actions listed | Safe | Actions real; pending counts demo | **PARTIAL/B** |
 | Sensitive-access activity | SEC-01 event types that record a governed read (`wlt1`/`kyc1`/`aml1` `*_read`); `POST /internal/sec1/audit-events/search` | Safe (coarse) | Concept real; count = Audit fixtures | **PARTIAL/B** |
-| AML screening / matches / risk signals | AML-01: screening requests (`clear`/`potential_match`/`confirmed_hit`/`error`), matches (`sanctions`/`pep`/`adverse_media`), risk signals (`open`/`acknowledged`/`superseded`, severity `low`–`critical`); `GET .../risk-signals` **requires `subject_type` + `subject_ref`** | **No admin-safe projection**; match detail is sensitive-gated | Real concepts, no safe aggregate | **OMITTED** — "Interface planned" |
+| AML screening / matches / risk signals | AML-01: screening requests (`clear`/`potential_match`/`confirmed_hit`/`error`), matches (`sanctions`/`pep`/`adverse_media`), risk signals (`open`/`acknowledged`/`superseded`, severity `low`–`critical`); `GET .../risk-signals` **requires `subject_type` + `subject_ref`** | **No admin-safe projection**; match detail is sensitive-gated — **refined, `UI Phase 2P` §51.3: PII-free projections DO exist per subject (screening, match inventory, risk signals, run summary); what is missing is any cross-subject aggregate, and the one cross-subject read is the stuck-request list. Also: the parenthesised values are `screening_result.overall_status` — request status is `requested`/`completed`/`failed`, and `confirmed_hit`/`error` are never written to a result** | Real concepts, no safe aggregate | **OMITTED** — "Interface planned" — **now an interface preview, `UI Phase 2P`** |
 | "Transaction monitoring" | AML-01 `monitoring-runs` are **route-triggered periodic rescreening** (`periodic_due`/`list_version_changed`), not transaction monitoring; no transaction module exists | — | — | **OMITTED** |
 | EDD | **No model in code**; KYC-01's `manual_review`/`edd` states are excluded from its CHECK ("no reachable code path") | — | — | **OMITTED** |
 | Client risk rating | CLT-01 `CDD_RISK_RATINGS` (`low`/`medium`/`high`/`prohibited`) stored on `cdd_outcome.risk_rating`; **no read projection returns the value** — `outcome-status` returns only the four rollup STATUSES | Not projected | Real concept, no projection | **OMITTED** |
@@ -4889,6 +4889,17 @@ or lockfile.
 > planned now exists. §49.3's "four attention rows" therefore reads five, and
 > §49.15's "no link to an unbuilt Admin route" still holds — the one link targets a
 > built one.
+
+> **Amended by `UI Phase 2P` (§51.9) — the Compliance Overview changed in three
+> places, nothing else.** (1) The single row "AML screening and EDD — Not represented
+> in this preview" is split: **AML screening** now reads "Interface preview" with a
+> count derived from the AML page's own dataset ("4 subjects", one shared definition of
+> "needs attention"), and its meaning states that transaction monitoring is not
+> implemented; **Enhanced due diligence (EDD)** keeps "Not represented in this
+> preview". (2) Review Areas' "AML / Transaction Monitoring" is now a link marked
+> "Interface preview". (3) §49.3's "four attention rows" therefore reads six (the two
+> KYC/KYB rows from `UI Phase 2O`, plus AML and EDD). The Overview still claims no live
+> AML integration, and no count was added that does not derive from the shared dataset.
 
 ## 50. UI Phase 2O — Admin / Client Risk / KYC-KYB (`B`-classified Admin page)
 
@@ -5195,4 +5206,351 @@ name for all four buttons; and zero controls or banned tokens across all four de
 **Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the
 consolidated visual-QA program); no risk rating, screening, EDD or override content; no
 action control; no fetch, auth or mutation; no change to any backend service, the public
+homepage, any Ops or Client page, packages or lockfile.
+
+## 51. UI Phase 2P — Admin / AML / Transaction Monitoring (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The third real Admin / Compliance
+page, at `/admin/aml-transaction-monitoring` (the nav label's slug — the
+convention every Ops and Admin route set). Baseline `305bb88`, as the brief
+stated. **The page keeps its governed title, but its subject is AML screening;
+transaction monitoring does not exist in the current backend, and the page says
+so.**
+
+### 51.1 Capability-boundary table (mandatory; verified in source before any code)
+
+Every AML-01 route is `requireInternal`-guarded. "Safe projection" means an
+explicit PII-free response shape exists; it does **not** mean a browser can call it.
+
+| Capability | Real AML-01 implementation? | Route / model | Safe admin projection? | UI treatment |
+|---|---|---|---|---|
+| **AML screening** (subject-level) | **Yes** | `aml1.screening_request` (`requested`/`completed`/`failed`), `screening_result`, `screening_match`; `POST /internal/aml1/screening-requests`, `GET .../screening-requests/:id` (service token only — **no IAM-02 permission**) | Yes, **per subject**: `subject_type`, `subject_ref`, `provenance`, `status`, and `result{overall_status, matched_categories, screened_at_utc}` — never a name, score, list source or match detail | Subject list + detail |
+| **Rescreening** | **Yes** | `POST .../screening-requests/:id/rescreen` (IAM-02 `aml1.rescreen.request`); `trigger_reason` ∈ `manual`/`periodic_due`/`list_version_changed`. A rescreen never mutates the original (append-only) | Partly — `trigger_reason` and `rescreen_of_request_id` appear **only** in the stuck projection, **not** in the screening read | Not shown per subject (not readable); described in the boundary section |
+| **"Monitoring" — periodic / list-change** | **Yes, as route-triggered batch rescreening only** | `aml1.monitoring_run`; `POST /internal/aml1/monitoring-runs` (IAM-02 `aml1.monitoring.run`), `GET .../monitoring-runs/:run_id` — **no list**. Migration 039: *"no external scheduler, no cron, no queue scheduler; a run exists only because `POST` was called"* | Run summary is PII-free (status, trigger, candidates/rescreens/failures, times) | Translated as **rescreening runs**; no run fixtures (§51.5) |
+| **Risk signals** | **Yes — emit-only** | `aml1.risk_signal`; `GET /risk-signals` (IAM-02 `aml1.risk_signal.read`; **`subject_type` and `subject_ref` mandatory**, ≤200); `POST .../acknowledge`. AML-01 never freezes, blocks or debits anything (migration 039 D4) | Yes, per subject: type, subject refs, evidence pointers, `severity`, `status`, timestamps | Signals column + detail |
+| **Screening exceptions / stuck** | **Yes** | `GET .../screening-requests/stuck` (IAM-02 `aml1.screening.stuck_read`) — **the only cross-subject read in AML-01**, bounded to 200, no subject scope; `POST .../:id/recover` (`aml1.screening.stuck_recover`, single-step, **not** maker-checker); `failed` status has no list route | Yes: ids, refs, status, `trigger_reason`, `age_seconds`, `recoverable` | State shown; **no recover control** |
+| **PEP / sanctions / adverse media** | **Yes, as a closed match `category` vocabulary** | `screening_match.category` ∈ `sanctions`/`pep`/`adverse_media`; `match_status` ∈ `potential_match`/`confirmed_hit`/`dismissed`; inventory `GET .../screening-requests/:id/matches` (`aml1.screening.read`) returns category + status + `reviewed_at_utc` only. Names, score, `list_source`, `match_detail`: **only** `GET .../matches/:id/sensitive-detail` (`aml1.screening.sensitive_read`, audit-before-return) | Coarse: yes. Detail: sensitive tier | Category and status labels only |
+| **Match disposition** | **Yes** | confirm/dismiss, terminal, maker-checker (`aml1.match.confirm`/`.dismiss`), strict SoD (requester ≠ original screener) | Status only | Match status shown; no control |
+| **Pre-use AML decision gate** | **Yes — but not monitoring** | `POST /internal/aml1/pre-transaction/screen`: service token only, **evidence-based** (never a live call), `requested_action` = `destination_use` only, `authorised_party` subjects only, decision `allow`/`review`/`deny` with 11 reason codes. Called by **WLT-01** before a payout destination is used | No admin projection | Boundary text only |
+| **Transaction monitoring** | **NO** | Nothing. Migration 033: *"no wallet/address/transaction subject type"*; migration 039: `transaction_triggered` rescreening *"DELIBERATELY excluded — deferred"* | — | **Stated as not implemented** |
+| **Transaction alerts** | **NO** | No alert model, no rule, no alert table anywhere in `platform/` | — | Not shown |
+| **AML cases** | **NO** | No case model (masters: **CMP-13**) | — | Not shown |
+| **STR / regulatory filing** | **NO** | No workflow (masters: **CMP-14**, `RPT-09`) | — | **Not shown** — no filing action, state or wording |
+| **EDD** | **NO** | No model; KYC-01's `manual_review`/`edd` are excluded from its CHECK | — | Not shown; the future EDD / Review page is not absorbed |
+| **Risk rating** | **Not AML-01** | CLT-01 `cdd_outcome.risk_rating`; **no read projection returns it** (§49.1, §50.5). AML `severity` is a *signal* severity | — | Not shown; kept distinct (§51.7) |
+
+### 51.2 Transaction-monitoring decision
+
+**TRANSACTION MONITORING: NOT IMPLEMENTED IN CURRENT BACKEND.** Established from
+four independent sources, not from absence of a search hit:
+
+1. **No service.** `platform/services/` holds `aml1`, `cfg1`, `clt1`, `fnd`, `iam`,
+   `iam2`, `kyc1`, `sec1`, `wlt1` — no ledger, transaction, deposit, withdrawal or
+   trading service, and no transaction-monitoring module.
+2. **AML-01 excludes it by design.** Its schema has no transaction subject
+   (`subject_type` ∈ `client_application`/`authorised_party`), and its rescreen
+   trigger set omits `transaction_triggered`, deferred *"to a phase after
+   KYC-01/WLT-DEP-WDR-TRD/case-management exist"*.
+3. **The masters require it as separate modules that do not exist.** **CMP-21
+   Transaction Monitoring & Alert Engine** ("rules engine for velocity, structuring,
+   threshold breaches, abnormal behaviour, alerts and escalation"; depends on Ledger,
+   Transactions and AML Case), **CMP-13 AML Case Management**, **CMP-14 STR /
+   Regulatory Filing Workflow**.
+4. **The nearest neighbours are not it.** AML-01's "monitoring run" re-screens
+   *subjects against lists*; its pre-use gate consults *already-persisted screening
+   evidence* before a destination is used. WLT-01's per-transaction / daily / rolling
+   "velocity" limits are a **pre-use limit control** owned by WLT-01, and its own
+   header says a successful consume *"records AUTHORIZED INTENT, never settled/executed
+   value … never reads a balance, writes a ledger"*. None of the three analyses
+   transaction events, and WLT-01's carries amounts, which this phase excludes.
+
+**"Monitoring" is translated, never relabelled.** In the UI, AML-01's monitoring
+runs are *rescreening runs*; "monitoring" appears only in the governed page title and
+in the sentence that says the capability does not exist. Even "periodic" is
+qualified: **no scheduler exists** (defaults: a 90-day due window and a 900-second
+stuck threshold are configuration, not UI facts).
+
+**Implementing real transaction monitoring is a backend / compliance-architecture
+task, not a UI enhancement.** It needs a transaction source (ledger), a rules engine,
+an alert model and an AML case model before any interface could honestly exist. No
+frontend placeholder implies otherwise.
+
+### 51.3 The exact models
+
+- **`screening_request.status`**: `requested` → `completed` | `failed`. The lifecycle
+  is synchronous in two transactions (TX1 writes `requested`, the provider call runs
+  outside any transaction, TX2 completes), so `requested` is transient — unless the
+  process dies, when it becomes **stuck**. `failed` has **no `screening_result` row**.
+- **`screening_result.overall_status`** has four CHECK values but **only `clear` and
+  `potential_match` are ever written**: `confirmed_hit` and `error` are unreachable, and
+  no code updates a result (it is an immutable record of what the automated screen said).
+- **The effective outcome is derived from match statuses** (`clt1-outcome-mapping.ts`
+  `deriveEffectiveStatus`): no matches → `clear`; any `confirmed_hit` → `confirmed_hit`;
+  else any `potential_match` → `potential_match`; else (all dismissed) →
+  `clear_after_review`. `dismissed` is a *match* status, never a result status.
+- **`risk_signal`**: `signal_type` ∈ `confirmed_hit` / `potential_match_unresolved` /
+  `rescreen_overdue`; `severity` ∈ `low`/`medium`/`high`/`critical`; `status` ∈ `open` /
+  `acknowledged` / `superseded` (**`superseded` is never written**). Emission is
+  narrower than the enum suggests: `potential_match_unresolved` **only on rescreen
+  completion** (severity `high` for `sanctions`, else `medium`); `confirmed_hit`
+  **only on a confirm disposition** (severity `critical`); `rescreen_overdue`
+  (severity `medium`) for `periodic_due` candidates **and for stuck subjects** — so the
+  one signal type covers both "overdue" and "stalled" and cannot tell them apart alone.
+  **An original screening never emits a signal.** Acknowledging records that a human has
+  *seen* a signal; it does not confirm or dismiss the underlying match.
+- **`provenance`** ∈ `declared_identity` / `kyc_verified_identity`; only
+  `declared_identity` is writable — AML-01 screens what the applicant *declared*.
+- **The only screening provider is `stub-v1`**, a deterministic stub. The registry
+  contains no other; no live watchlist vendor is integrated.
+
+### 51.4 Composition
+
+`/admin/aml-transaction-monitoring`. Header **"AML / Transaction Monitoring"** — "Review
+governed AML screening and risk-signal information, with current transaction-monitoring
+capability boundaries clearly identified." (no "monitor transactions"). `DemoDisclosure`:
+"Interface preview — AML screening and risk-signal records are demonstrative until the
+required Admin-safe projections are integrated. Transaction monitoring is not represented;
+it is not implemented in the current backend." Then, in order:
+
+1. **AML Attention** — five rows counted from the dataset (below). The last is the page's
+   terminology rule made visible: *Transaction monitoring — Not implemented in the current
+   backend*, in the same list as what is implemented, so its absence cannot read as "no
+   transaction alerts". Plain text, not an error style, no `—` count claimed as zero.
+2. **Subject Screening** — the List + Detail workspace (§35.16).
+3. **Transaction Monitoring** — a restrained boundary section: the status line, one
+   paragraph, and a plain list of what AML-01 does today with each limit (§51.2).
+
+**List columns** (`COMPACT` 40px, `h-10`): **Subject** (a real `<button>` holding the
+reference), **Type**, **Screening** (governed status + the "Stalled" exception),
+**Outcome** (derived, in words), **Signals** (counts by status), and **Last Screening** when
+there is room. **No Transaction, Alert, Amount, Risk Score, STR or Organisation column** —
+the first four do not exist, and AML-01's safe reads return no name (subjects are
+applications and authorised parties under an opaque `subject_ref`). **Detail sections:**
+Subject Summary; Screening; Matches (only when any exist); Risk Signals. No Review Context
+section (nothing safe remains), and **no transaction section in the detail** — the boundary is
+stated once, in its own section, rather than under every subject.
+
+### 51.5 Demo dataset — five subjects, every state a reachable one
+
+Small by instruction (3–5). **Subjects are applications and authorised parties, never
+clients** — AML-01 has *"no local means to bind"* an application to a `client_id`, so no
+client reference or organisation name appears. `DEMO-004` is the application behind the shared
+demo client `DEMO-CLI-001` (`client-request-data.ts`); it is `clear`, so it cannot contradict
+the Client Portal or `UI Phase 2O`. A scratch script audited each record against the §51.3
+rules (all five reachable) and was deleted.
+
+| Subject | Type (parent) | Screening | Outcome | Signals | Why reachable |
+|---|---|---|---|---|---|
+| `DEMO-004` | Application | Completed, 04 Sep | **Clear** | None | Screened while `under_review` (CLT-01 requires it) and before its 10 Sep approval |
+| `DEMO-002` | Application | Completed, 15 Sep | **Potential match** (one PEP) | None | An **original** screening never emits a signal; `DEMO-002` has been under review since 14 Sep |
+| `DEMO-PTY-001` | Authorised party (`DEMO-004`) | Completed, 16 Sep | **Potential match** (one adverse-media) | **1 open** — potential match unresolved, `medium` | Signals come only from rescreening; `medium` because it is not sanctions |
+| `DEMO-PTY-002` | Authorised party (`DEMO-002`) | **Requested · Stalled**, 3 h 50 min | No result | None | `requested` past the 900 s stuck threshold; no monitoring run ⇒ no `rescreen_overdue` yet |
+| `DEMO-PTY-003` | Authorised party (`DEMO-002`) | **Failed**, 15 Sep | No result | None | A failed screen writes no result row; monitoring never retries it |
+
+**No fixture shows a `confirmed_hit`, an `acknowledged` signal, a `rescreen_overdue`
+signal or a sanctions match** — each would carry consequences for the other surfaces (an
+application with a confirmed hit cannot be approved), so those branches were verified by a
+scratch render instead (§51.16), the same approach `UI Phase 2O` took for a `fail` outcome.
+**There are no monitoring-run fixtures**: a real run rescreens every eligible subject, so its
+candidates / rescreens / failures counters would have to reconcile with subjects a
+five-row demo cannot show, and an unreconcilable number is worse than none.
+
+### 51.6 Attention, status and outcome language
+
+A row exists only for a state AML-01 defines: **Screening requires review** (effective
+outcome `potential_match` — 2 subjects), **Screening stalled** (`requested` past the stuck
+threshold — 1), **Screening failed** (1), **Risk signals** (`open` — 1), and the boundary
+row. Wording is a governed label or a plain fact — never "Clear", "Safe", "Compliant" or
+"All clear" as a judgement about the page or the subject. The screening cell uses the
+enum's own words (`Requested`/`Completed`/`Failed`); **`Completed` says only that the
+screening finished**, so — the same trap `completed` set in `UI Phase 2O` — its icon is a
+neutral circle and the **Outcome is its own column, in words**: a completed screening can
+have found a potential match, and a check mark beside it would be a false signal. `Clear`
+is AML-01's own `clear` status and describes one screening at one time (the detail states the
+last-screened timestamp); it is not a statement about the subject. A subject with no result
+reads "No result", never blank and never implied clear.
+
+### 51.7 Risk rating, sensitive categories, STR and EDD
+
+- **Risk signal ≠ CDD risk rating.** A signal's `severity` (`low`/`medium`/`high`/`critical`)
+  is AML-01's field, set when it raises the signal; CLT-01's `low|medium|high|prohibited`
+  rating is a different thing that no read projection returns (§49.1, §50.5). The words
+  overlap, so the Risk Signals section says plainly — "Severity belongs to the signal … It is
+  not a client risk rating" — labels the value "Signal severity", and no client-level risk
+  column, filter or icon exists. One is never derived from the other, and an AML state is
+  not converted into a rating.
+- **PEP / sanctions / adverse media** are a real closed `category` vocabulary, and
+  `matched_categories` is the only match-derived value the screening read exposes, so the
+  page shows the coarse category and match status ("PEP — Potential match") and nothing else:
+  no matched name, no score or "confidence", no list source, no narrative. Those are
+  sensitive-tier (`aml1.screening.sensitive_read`, audit-before-return) and never appear.
+- **Adverse media** exists in the same vocabulary, so it is shown as a category.
+- **STR / regulatory filing:** *STR workflow not represented by the current AML-01
+  implementation* (masters CMP-14, `RPT-09`; no service). **No filing action, state or
+  wording appears in the UI** — the boundary section says only that "regulatory reporting
+  workflows are not represented", without inventing one.
+- **EDD:** no model exists; not shown, and the future EDD / Review page is not absorbed. The
+  Compliance Overview keeps "Not represented in this preview" for it.
+- **AML cases and alert investigation:** likewise absent (CMP-13) and named only as "not
+  represented".
+
+### 51.8 Filter, search and empty states
+
+**One filter — Screening status** (the governed `screening_request.status`): each of its three
+values has a demo subject (`Requested`: 1, `Completed`: 3, `Failed`: 1), and it isolates
+exceptions from finished screenings. Options derive from the same label map the list renders.
+**A Risk-signal status filter was considered and left out**: the demo holds one signal,
+`superseded` is never written, and a filter of mostly empty options would suggest signals are
+absent rather than sparse. **No search** (five records, and the backend has no free-text
+capability). No transaction, alert or risk-rating filter. Empty states: filtered "No AML
+records match the current view." with a "Show all subjects" button; global "No AML screening
+records are represented in this demo view." Never "No AML risk", "No suspicious activity" or
+"All clear" (checked against the rendered corpus).
+
+### 51.9 Cross-surface consistency and the Compliance Overview amendment
+
+Verified programmatically against the rendered pages: `DEMO-004` is *Approved* and
+`DEMO-002` *Under Review* on `/ops/client-requests`, matching the AML page's timeline; the
+Overview's "4 subjects" equals the AML page's own count of subjects needing attention (they
+share one definition, `subjectsNeedingAttention`); `/admin/client-risk-kyc-kyb` is unchanged
+and its `<main>` contains no transaction wording. **The Overview's "Approval / Control
+Dependencies" row "Screening match confirmation or dismissal" (`aml1.match.confirm`/`.dismiss`)
+still reads "Not represented in this preview"** — verified in the rendered page, and correct, because the two potential matches here have no approval request in the
+Maker-Checker fixtures, and "not represented" is deliberately not "0 pending".
+
+**`UI Phase 2N`'s Overview changed in three places** (pointer at §49.15): the "AML screening
+and EDD" row is split into **AML screening — Interface preview** (count derived from this
+page's dataset; states that transaction monitoring is not implemented) and **EDD — Not
+represented**; and Review Areas links this page. It claims no live integration and adds no
+count that is not derived. No Ops or Client page was touched.
+
+### 51.10 Read-only, and the Admin / Ops authority boundary
+
+**No action control, and no local state transition.** No Clear, Resolve, Acknowledge,
+Escalate, Retry, Recover, Confirm, Dismiss, Start EDD or File control exists — even though
+recover and acknowledge routes do exist internally (recovery is a separate permission, single
+step and not maker-checker; match disposition is maker-checker with strict SoD). The stalled
+subject states that recovery is "a separate, permission-gated operation and is not available in
+this preview". Admin visibility does not imply mutation authority. Audited by scratch render:
+**zero** interactive elements in any detail (all five fixtures plus five synthetic branch
+records), the attention list or the boundary section.
+
+### 51.11 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width is ~976px at 1024px (no sidebar) and ~975px at 1280px (240px sidebar appears), so
+`lg:` is the split breakpoint — the same figure at both ends, so the brief's `≥1280` and
+`1024–1279` cases resolve identically, as in `UI Phase 2J` and `2O`.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Attention full width; workspace as a persistent split — list (~623px) + 320px detail panel, single leading `border-l`. Five base columns fit (~570px including cell padding: reference ~108 + type ~128 + screening ~154 + outcome ~110 + signals ~71); Last Screening does not appear |
+| `1024–1279px` | The same split, same ~623px list |
+| `768–1023px` | List full width (~720–975px); a subject opens a `Sheet`. Last Screening appears at ≥768px of table width |
+| `<768px` | Compact separated list (reference; type; screening state; outcome and signals), no rounded cards; a subject opens a `Sheet` |
+
+Columns hide by **container query** (`@container`, `@3xl`), confirmed present in the compiled
+CSS at 48rem. `<768px` uses a list, so no horizontal scroll is forced. **Not rendered:** the
+~570px total is an estimate of glyph widths; it is the tightest fit on the page and the first
+visual-QA check. The attention list and boundary section are single-column at every width
+(`max-w-prose`), so the only width-sensitive element is the table.
+
+### 51.12 Accessibility
+
+One `<h1>`; four `<h2>` (AML Attention, Subject Screening, the desktop detail's subject, and
+Transaction Monitoring) with `<h3>` sections inside the detail; a real `<table>` with a label
+and column headers; selection is a real `<button>` per row (one tab stop, native Enter/Space)
+whose accessible name begins with the visible reference ("DEMO-PTY-001, Authorised party" —
+label-in-name, checked for all five); `aria-current` marks the open subject; the filter is a
+labelled `Select`; the "Showing N of M" count is `aria-live="polite"`; status is icon + governed
+text, never colour; **the transaction-monitoring limitation is conveyed in text in three
+places** (the disclosure, the last Attention row, the boundary section); the `Sheet` keeps its
+own title/description; DOM order is attention, filter, list, detail, boundary. No fake action
+control. **Rendered focus/keyboard behaviour was not exercised** (visual QA deferred).
+
+### 51.13 Backend gaps
+
+Nothing is marked missing without source confirmation. No backend was modified.
+
+**For a live Admin AML workspace:**
+
+1. **A cross-subject AML list.** Every read is subject-scoped except the stuck list:
+   `GET /risk-signals` needs `subject_type` + `subject_ref`; screening is by `screening_request_id`;
+   the match inventory is per request; a monitoring run is by `run_id` (no list).
+2. **A cross-subject risk-signal read** (all open signals, filterable by type/status/severity).
+3. **A screening summary / history projection** — the safe screening read carries no
+   `trigger_reason`, no `rescreen_of_request_id` (both appear only in the stuck projection), and
+   there is no history route across a subject's requests.
+4. **A `failed`-request read** — `failed` has no list route.
+5. **A run list / summary** — `GET /monitoring-runs/:run_id` only.
+6. **A signal-resolution projection** — `acknowledged_by` is stored and never returned;
+   `superseded` is never written.
+7. **An `overdue` vs `stalled` distinction** — `rescreen_overdue` covers both.
+8. **A client ↔ application ↔ party join** — AML-01 cannot bind an application to a client, so
+   an Admin client view needs CLT-01 to supply it.
+9. **Role-aware Admin AML reads** — the screening routes are service-token only (no IAM-02
+   permission); the rest need `aml1.risk_signal.read` / `.screening.read` / `.screening.stuck_read`
+   / `.monitoring.run` / `.provider.read`, whose **role assignments were not verified**.
+10. **Pagination / filter exposure** — lists are fixed at 200 with no cursor.
+11. **A live screening provider** — only `stub-v1` is registered.
+
+**For transaction monitoring — a backend / compliance-architecture task, not a UI-only
+enhancement.** None of the following exists, and no frontend placeholder implies otherwise:
+a **transaction source** (ledger / deposit / withdrawal / trading services — none exist); a
+**transaction-monitoring engine** and **rules** (velocity, structuring, threshold, unusual size,
+high-risk jurisdiction, wallet exposure, rapid in-out, pattern anomaly — masters **CMP-21**,
+`CMP-SRS-006`); an **alert model** (linked to client and transaction, with severity, status, a
+required closure reason and audit — `CMP-SRS-006`); **transaction-to-client correlation**; an
+**AML case model** (**CMP-13**); an **STR / regulatory filing workflow** (**CMP-14**, `RPT-09`);
+**EDD** integration; and AML-01's own deferred `transaction_triggered` rescreen trigger.
+
+**Carried open observations (recorded, not fixed):** IAM-02 `approve` checks no approver role,
+`reject` has no maker/SoD check, no approval policy is seeded; no role holds the SEC-01 read
+permissions and no relay carries module events into SEC-01.
+
+### 51.14 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `AmlWorkspace`, `AmlSubjectTable`,
+  `AmlSubjectDetail`, `ScreeningStateLine`, `AmlAttention`, `AmlCapabilityBoundary`, and
+  `aml-monitoring-data.ts`. Only the workspace and table are Client Components (local UI state
+  only); the status line and detail carry no directive but are imported into that client subtree,
+  and the attention list and boundary section render on the server only.
+- **Reused:** `PageHeader`, `DemoDisclosure`, `useIsLgUp`, the UTC-pinned date formatters from
+  `client-request-data.ts`, and the existing shadcn `Table`, `Select`, `Sheet`, `Button`,
+  `Label`. **No primitive was added, regenerated or modified**; the REVIEW LATER `Select`/
+  `Sheet`/`Table` were used unchanged. The official MCP was not needed. **No package or
+  lockfile change.**
+- **Consolidation candidates recorded for the visual-QA pass, not refactored:** the generic
+  `ListDetailWorkspace` (now seven near-identical workspaces), shared `Row`/`Section` helpers,
+  and the status-line pattern (now five).
+
+### 51.15 Boundaries
+
+No `C`-classified Admin element (Reporting, Incidents / Exceptions). No balance, PnL, order
+book, market data, trade monitoring, settlement amount, deposit/withdrawal stream, wallet
+address or transaction hash. No fetch, server action, auth or permission code and no
+mutation. The five other Admin areas (EDD / Review, Approval Queue, Users / Roles /
+Permissions, Feature Flags / Configuration, Audit / Sensitive Access) stay inert in
+`ADMIN_NAV`; this page absorbs none of them. WLT-01's velocity limits (per-transaction, daily,
+rolling, first-use) are a pre-use limit control on authorised intent that carries amounts; they
+are neither AML monitoring nor shown here.
+
+### 51.16 Verification and what this phase did not do
+
+**Verified:** `typecheck:web`, `lint:web` (warning-free) and `build:web` pass; **15** static
+pages (14 + the new route). Dev server + `curl` + rendered-HTML inspection confirmed one `<h1>`,
+the four `<h2>`, five attention rows, one labelled table with five rows and the exact cells
+above, the default detail, the active nav item, and zero controls in the detail and boundary. A
+scratch server-side render (deleted afterwards) verified: the reachability audit; the outcome
+derivation for every branch (confirmed hit; dismissed-only ⇒ "Cleared after review"; mixed
+confirmed + potential ⇒ confirmed; mixed dismissed + potential ⇒ potential); neutral icons for
+`clear`, `potential_match` and `confirmed_hit` alike; the `acknowledged` signal with its
+timestamp; a `high` sanctions signal; two signals on one subject; the stalled, failed and
+in-flight-but-not-stalled details; label-in-name for all five buttons; the per-status filter
+counts; empty-dataset attention rows that avoid "no risk" / "all clear"; **and zero banned
+tokens** (STR, SAR, suspicious, structuring, velocity, confidence, any amount or percentage)
+across every rendered surface. **Regression:** all other routes return 200.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the
+consolidated visual-QA program); no transaction, alert, case, STR, EDD or risk-rating content;
+no action control; no fetch, auth or mutation; no change to any backend service, the public
 homepage, any Ops or Client page, packages or lockfile.

@@ -106,11 +106,17 @@ export const OPS_NAV: NavItem[] = [
  * slug, the convention the Ops routes set) — `B`-classified (real `KYC-01`/`CLT-01` case, outcome and
  * lifecycle models, every route `requireInternal`-guarded, no cross-client read). The six remaining
  * rows stay inert. Label preserved exactly.
+ *
+ * `UI Phase 2P`: "AML / Transaction Monitoring" gains a real `href` (`/admin/aml-transaction-monitoring` —
+ * the label's slug) — `B`-classified (real `AML-01` screening, match, risk-signal and rescreening-run
+ * models, every route `requireInternal`-guarded, no cross-subject read). **The label is governed and kept,
+ * but the capability behind it is AML screening: transaction monitoring is NOT implemented in the current
+ * backend** (`UI-04` §51.2), and the page says so. The five remaining rows stay inert.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
   { label: "Client Risk / KYC-KYB", href: "/admin/client-risk-kyc-kyb", icon: "shield-alert" },
-  { label: "AML / Transaction Monitoring", icon: "activity" },
+  { label: "AML / Transaction Monitoring", href: "/admin/aml-transaction-monitoring", icon: "activity" },
   { label: "EDD / Review", icon: "search-check" },
   { label: "Approval Queue", icon: "list-checks" },
   { label: "Users / Roles / Permissions", icon: "users" },

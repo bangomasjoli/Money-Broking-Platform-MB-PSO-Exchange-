@@ -2006,3 +2006,65 @@ interaction was exercised** — filtering, selection and the Sheet are reasoned 
 `/ops/maker-checker-queue`, `/ops/audit-activity` and `/admin` all return 200. Backend
 regression not required — zero `platform/services/**`, `packages/**`, `edge/**`, `infra/**`
 change. Public homepage unaffected.
+
+## 52. Phase 2P — Admin / AML / Transaction Monitoring (third Admin page, visual QA deferred)
+
+`/admin/aml-transaction-monitoring` (`UI-04` §51): AML screening and risk-signal information,
+with the transaction-monitoring boundary stated. `B`-classified; a five-subject demo dataset (no
+cross-subject read exists in the backend beyond the stuck-request list); no fetch, server action,
+auth, permission check, mutation or local state transition. Read-only. **Transaction monitoring
+is not implemented in the current backend** (`UI-04` §51.2) and the page never implies otherwise.
+
+**Files created (8):** `app/admin/aml-transaction-monitoring/page.tsx`;
+`components/admin/{aml-monitoring-data.ts, aml-status.tsx, aml-subject-table.tsx,
+aml-subject-detail.tsx, aml-workspace.tsx, aml-attention.tsx, aml-capability-boundary.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (the "AML / Transaction Monitoring" row gains
+`href`; the five other Admin rows stay inert); `app/admin/layout.tsx` (comment and metadata);
+and — **the Compliance Overview amendment** recorded at `UI-04` §49.15/§51.9 —
+`components/admin/admin-compliance-data.ts` (the "AML screening and EDD" row is split into AML
+screening, derived from this dataset, and EDD; Review Areas' AML entry gains `href`).
+`review-areas.tsx` needed no change — it already renders any area with an `href` as a link. **No
+Ops or Client page was modified.**
+
+**Client/server boundary:** the page is a Server Component; `AmlWorkspace` and `AmlSubjectTable`
+are the only Client Components (`"use client"`), holding only local UI state — `statusFilter`,
+`selectedRef`, `mobileDetailOpen`. `ScreeningStateLine`, `AmlSubjectDetail`, `AmlAttention` and
+`AmlCapabilityBoundary` carry no directive and are stateless: the first two are imported into
+the client subtree (so they ship to the browser), the last two render on the server only. The
+workspace reuses `useIsLgUp`.
+
+**Data:** subjects are `client_application` and `authorised_party` — never clients — because
+AML-01 cannot bind an application to a client and its safe reads return no name. The demo
+mirrors AML-01's own rules: an original screening emits no signal, `overall_status` is only
+`clear`/`potential_match`, and the outcome shown is **derived from match statuses** (a copy of
+`deriveEffectiveStatus`). The Overview and the page share one definition of "needs attention"
+(`subjectsNeedingAttention`) so their counts cannot drift. **No monitoring-run fixtures** — a
+real run rescreens every eligible subject and its counters could not be reconciled with a
+five-row demo.
+
+**shadcn impact: none.** Existing `Table`, `Select`, `Sheet`, `Button`, `Label` used unchanged;
+the REVIEW LATER primitives were not touched; the official MCP was not needed. **No package or
+lockfile change.**
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all pass; **15**
+static pages generated (14 + the new route). No lint finding this phase — the status icon was
+built from a module-level lookup table from the start, applying `UI Phase 2O`'s `react-hooks/
+static-components` fix.
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server + `curl` +
+rendered-HTML inspection, and a scratch server-side render (deleted afterwards) for branches the
+five fixtures do not reach. Confirmed: one `<h1>` and four `<h2>`; the five attention rows; one
+labelled table, five rows and their cells; the default detail; the active nav item; zero
+interactive elements in the detail, attention list and boundary section; the amended Overview
+rows and Review Areas links; the Overview's "4 subjects" equal to the AML page's own count; the
+Ops fixtures' `DEMO-004` (approved) and `DEMO-002` (under review) agreeing with the AML
+timeline; `UI Phase 2O`'s page unchanged; the outcome derivation for every branch; neutral icons
+regardless of outcome; and **zero banned tokens** (STR, SAR, suspicious, structuring, velocity,
+confidence, any amount or percentage) across every rendered surface. **No interaction was
+exercised** — filtering, selection and the Sheet are reasoned from source.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests`, `/ops/wallet-destination-review`,
+`/ops/maker-checker-queue`, `/ops/audit-activity`, `/admin` and `/admin/client-risk-kyc-kyb` all
+return 200. Backend regression not required — zero `platform/services/**`, `packages/**`,
+`edge/**`, `infra/**` change. Public homepage unaffected.

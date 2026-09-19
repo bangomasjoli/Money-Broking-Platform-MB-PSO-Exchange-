@@ -874,6 +874,31 @@ claim.** Public homepage unaffected.
   verified via rendered-HTML inspection and a scratch server-side render —
   nothing was rendered. Full record: `UI-04` §50, `UI-02`'s new "UI Phase 2O"
   section, `UI-03` §51.
+- **Phase 2P:** Admin / AML / Transaction Monitoring
+  (`/admin/aml-transaction-monitoring`) — **IMPLEMENTED / VISUAL QA DEFERRED.** The
+  **third real Admin page**, `B`-classified: AML screening and risk-signal information over a
+  five-subject demo dataset. **The decisive finding: TRANSACTION MONITORING IS NOT
+  IMPLEMENTED IN THE CURRENT BACKEND** — no ledger or transaction service exists, AML-01's
+  schema has no transaction subject and defers `transaction_triggered` rescreening, and the
+  platform masters define transaction monitoring (CMP-21), AML cases (CMP-13) and STR filing
+  (CMP-14) as separate modules that do not exist. AML-01's "monitoring run" is a
+  **route-triggered batch that rescreens subjects against lists** (no scheduler), so the page
+  keeps its governed title but presents that capability as *rescreening* and states the
+  boundary in three places rather than hiding it; even AML-01's pre-use decision gate and
+  WLT-01's velocity limits were checked and are not monitoring. **Subjects are applications and
+  authorised parties, never clients** (AML-01 cannot bind an application to a client), so no
+  client or organisation name appears. The outcome is **derived from match statuses** and shown
+  in its own column with a neutral icon — a completed screening says nothing about what it
+  found. **A risk signal is not a CDD risk rating**: signal severity is AML-01's own field,
+  labelled as such, and the unreadable CLT-01 rating is never shown or derived. Only the coarse
+  match category and status appear (no name, score, list source or vendor); the only screening
+  provider is a deterministic stub. No STR, EDD, case, alert, amount or transaction content, and
+  **no action control or local state transition**. One filter (screening status). The
+  Compliance Overview was amended so it cannot contradict this page (AML screening now an
+  interface preview with a derived count; EDD still "not represented"). **No shadcn primitive
+  added or changed.** `typecheck:web`/`lint:web`/`build:web` all pass (15 static pages);
+  verified via rendered-HTML inspection and a scratch server-side render — nothing was rendered.
+  Full record: `UI-04` §51, `UI-02`'s new "UI Phase 2P" section, `UI-03` §52.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -881,8 +906,8 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**. Compliance Overview and Client Risk / KYC-KYB are the two real Admin pages;
-  the six other Admin areas remain unimplemented. No API/auth integration exists on any of
+  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB and AML / Transaction Monitoring are
+  the three real Admin pages; the five other Admin areas remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

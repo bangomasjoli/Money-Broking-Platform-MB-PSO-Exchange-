@@ -2741,3 +2741,36 @@ confirmed in the compiled CSS. **The ~580px total is an estimate of glyph widths
 measurement** — it is the tightest fit on the page and the first thing visual QA should
 check (an over-full row would wrap and break the 40px tier). No shadcn primitive was
 added or changed.
+
+## UI Phase 2P — AML / Transaction Monitoring Geometry
+
+Values used by `/admin/aml-transaction-monitoring` (`UI-04` §51). The workspace **reuses `UI
+Phase 2J`/`2O`'s List + Detail values exactly**, and the two full-width sections reuse `UI Phase
+2N`'s attention-row and section values; the only new measurement is the column budget. Reasoned by
+arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | Reuse — the persistent panel at `lg:` |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px), 320px | Reuse; single leading `border-l` |
+| Table row | `h-10` = **40px** `COMPACT` | Reuse |
+| Selected-row marker | `border-l-2` on the first cell | Reuse |
+| Filter control | `h-10` (40px) trigger, `w-64` (256px, `max-w-full`) | Reuse |
+| Filter row → list | `mb-4` = 16px | Reuse |
+| Mobile record | `py-3` = 12px, `gap-1` = 4px, hairline `border-t`, four lines | Reuse |
+| Detail sections | `gap-6` = 24px between; rows `gap-3` = 12px | Reuse |
+| Page sections (attention / workspace / boundary) | `gap-8` = 32px; boundary `border-t` + `pt-8` (1px + 32px) | Reuse of the Overview's section gap |
+| Section heading → workspace | `mb-4` = 16px | New use of an existing step |
+| Attention row | `py-3` = 12px vertical, hairline `border-t`, no fixed height | Reuse of `UI Phase 2N`; rows are ≥40px with wrapped lines |
+| Prose measure | `max-w-prose` on attention meaning, boundary paragraphs and list | Keeps long explanatory lines readable; the only measure on the page that is not a grid value |
+| Boundary list | `gap-3` = 12px, hairline `border-t` per term | Reuse of the `<dl>` pattern |
+
+**Column budget** (content width ~976px at 1024px, ~975px at 1280px; the persistent split leaves
+the list ~623px at both). Estimated cell widths *including* 16px padding: reference ~108 + type
+~128 + screening ~154 + outcome ~110 + signals ~71 = **~570px**, leaving ~53px. Last Screening
+(~90px) is shown from a container width of **48rem (768px)**, so the persistent split shows the
+five base columns only and a full-width list at 768–1023px shows six. The `@3xl` rule is confirmed
+in the compiled CSS. **The ~570px total is an estimate of glyph widths, not a measurement** — the
+widest cell is "Requested · Stalled" with its icon — it is the tightest fit on the page and the
+first thing visual QA should check (an over-full row would wrap and break the 40px tier). No shadcn
+primitive was added or changed.

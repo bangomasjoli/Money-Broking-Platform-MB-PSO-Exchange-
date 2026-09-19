@@ -1,3 +1,4 @@
+import { AML_MONITORING_HREF, subjectsNeedingAttention } from "@/components/admin/aml-monitoring-data";
 import {
   CHECKLIST_STAFF_LABELS,
   CLIENT_RISK_KYC_KYB_HREF,
@@ -154,15 +155,31 @@ export function buildAttentionRows(): AttentionRow[] {
         : `A governed read of restricted data was recorded (${modules.join(", ")}). The value that was read is never shown.`,
   });
 
-  // AML / EDD — real concepts, no admin-safe projection: stated, never implied to be clear.
+  // AML screening — the AML / Transaction Monitoring page now exists as an interface preview, so this
+  // row no longer says "not represented". The count comes from that page's own dataset and definition of
+  // "needs attention" (`subjectsNeedingAttention`), so the two cannot drift. It claims no live
+  // integration, and the meaning states that transaction monitoring does not exist rather than letting
+  // silence read as "no alerts".
+  const amlAttention = subjectsNeedingAttention();
   rows.push({
-    id: "aml-edd",
-    area: "AML screening and EDD",
-    owner: "AML-01 / KYC-01",
+    id: "aml-screening",
+    area: "AML screening",
+    owner: "AML-01",
+    status: "Interface preview",
+    count: plural(amlAttention.length, "subject"),
+    meaning:
+      "Potential matches awaiting review, stalled or failed screenings and open risk signals are shown in the AML / Transaction Monitoring preview. Transaction monitoring is not implemented in the current backend.",
+  });
+
+  // EDD — still no model in code (KYC-01's `manual_review`/`edd` states are excluded from its CHECK), so it
+  // stays "not represented": stated, never implied to be clear.
+  rows.push({
+    id: "edd",
+    area: "Enhanced due diligence (EDD)",
+    owner: "KYC-01",
     status: "Not represented in this preview",
     count: "—",
-    meaning:
-      "No admin-safe projection exists yet, so nothing is implied about current screening, alerts or enhanced due diligence.",
+    meaning: "No EDD model exists yet, so nothing is implied about enhanced due diligence.",
   });
 
   return rows;
@@ -252,13 +269,13 @@ export interface ReviewArea {
   /** Exact governed label — identical to `ADMIN_NAV`. */
   label: string;
   owner: string;
-  /** Present only once the area's page exists (`UI Phase 2O` is the first) — otherwise "planned". */
+  /** Present only once the area's page exists (`UI Phase 2O` was the first, `2P` the second) — otherwise "planned". */
   href?: string;
 }
 
 export const REVIEW_AREAS: ReviewArea[] = [
   { label: "Client Risk / KYC-KYB", owner: "KYC-01", href: CLIENT_RISK_KYC_KYB_HREF },
-  { label: "AML / Transaction Monitoring", owner: "AML-01" },
+  { label: "AML / Transaction Monitoring", owner: "AML-01", href: AML_MONITORING_HREF },
   { label: "EDD / Review", owner: "KYC-01" },
   { label: "Approval Queue", owner: "IAM-02" },
   { label: "Users / Roles / Permissions", owner: "IAM-02 / IAM-01" },

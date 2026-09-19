@@ -760,14 +760,44 @@ claim.** Public homepage unaffected.
   interactions were reasoned from source, **not** exercised, and nothing was
   rendered. Full record: `UI-04` §46, `UI-02`'s new "UI Phase 2K" section,
   `UI-03` §47.
+- **Phase 2L:** Staff/Operations Maker-Checker Queue
+  (`/ops/maker-checker-queue`) — **IMPLEMENTED / VISUAL QA DEFERRED.**
+  `B`-classified List + Detail workspace over `IAM-02` approval requests.
+  Findings from the source: **no list/get/search route exists**, the acting
+  user is a request-body field (no session), **no approval policy is seeded**
+  (every request takes the defaults — 1 approval, no step-up, 24 h), and
+  `required_approver_roles` is stored but **never read** — the approve route
+  checks no role, only "not the maker", "no SoD conflict" and step-up when a
+  policy demands it. `reject` performs **none** of those independence checks,
+  and the page says so beside the controls rather than implying a symmetry that
+  does not exist. Five statuses are modelled (`cancelled` is in the DB CHECK
+  but written by no code); `expired` is written lazily and `blocked` means a
+  role/permission SoD *conflict* — not self-approval, which leaves the request
+  `pending` (an earlier doc claim, corrected). Only real `(action, resource)`
+  pairs are used — four of the 22 `verifyDecisionToken` call sites across
+  seven modules. One shared data module feeds this page, the Overview, Wallet
+  Destination Review and Client Requests, so they can no longer contradict each
+  other (the two originating pages now say "Approval requested" instead of
+  re-offering the action). Corrects a `UI Phase 2I`/`2K` error: WLT's action is
+  `wlt1.destination.approve_apply`, not `wlt1.destination.approve`. Requester
+  identity is an opaque id, so only a "(demo)" role label is shown; the deciding
+  user and any required-approver role are omitted. **Default view is Pending**
+  (history one filter away). Route follows the label-slug convention; density
+  resolves a `UI-04` §18/§35.14 conflict toward `COMPACT`. Actions are natively
+  disabled and nothing mutates, not even local fixture state.
+  `typecheck:web`/`lint:web`/`build:web` all pass (12 static pages); verified via
+  rendered-HTML and compiled-CSS inspection plus a server-side render of every
+  status — interactions were reasoned from source, **not** exercised, and
+  nothing was rendered. Full record: `UI-04` §47, `UI-02`'s new "UI Phase 2L"
+  section, `UI-03` §48.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
   authenticated Client Portal product pages — every Client Portal nav
-  item now has one. Operational Overview, Client Requests and Wallet
-  Destination Review (all `B`-classified) are the three real
-  Staff/Operations pages — Maker-Checker Queue, Audit / Activity and every
-  Admin page remain unimplemented. No API/auth integration exists on any of
+  item now has one. Operational Overview, Client Requests, Wallet
+  Destination Review and Maker-Checker Queue (all `B`-classified) are the
+  four real Staff/Operations pages — only Audit / Activity and every Admin
+  page remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

@@ -2966,7 +2966,7 @@ today.** Every concept below was traced to its exact source:
 |---|---|---|---|---|
 | Client Requests | `CLT-01` | `/internal/clt1/applications` (**correction, UI Phase 2J: that path is `POST` create only — no list route exists at any layer; see §45.1**), `.../start-review`, `.../hold`, `.../reject`, `.../approve/{request,apply}` — real `client_application.status` enum (`routes/applications.ts`/`decisions.ts`: `draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`) | No | **PARTIAL/B** |
 | Wallet Destination Review | `WLT-01` | `/internal/wlt1/wallet-destinations` (**correction, UI Phase 2K: `POST` registration, not a list — no list route exists; see §46.1**), `/internal/wlt1/destinations/:id/approve/{request,apply}`, `/internal/wlt1/stuck-screenings`, `/internal/wlt1/rescreening-runs` — real `wlt1.destination.status` enum, same as `UI Phase 2E`'s own; internal "safe staff" response (`lib/safe-response.ts`'s `safeWalletDestinationResponse`) masks the address IDENTICALLY to the public client response, verified this turn — staff do NOT get an unmasked view | No | **PARTIAL/B** |
-| Maker-Checker Queue | `IAM-02` | `/iam2/approvals/request`, `/iam2/approvals/:id/{approve,reject}` — real `iam2.approval_request.status` enum (`routes/approvals.ts`: `pending`/`approved`/`rejected`/`expired`/`blocked`, the last set by an `iam2.sod_check` blocking a self-approval attempt) | No | **PARTIAL/B** |
+| Maker-Checker Queue | `IAM-02` | `/iam2/approvals/request`, `/iam2/approvals/:id/{approve,reject}` — real `iam2.approval_request.status` enum (`routes/approvals.ts`: `pending`/`approved`/`rejected`/`expired`/`blocked`, the last set by an `iam2.sod_check` blocking a self-approval attempt — **correction, UI Phase 2L: `blocked` is set by a role/permission SoD *conflict*; a self-approval attempt leaves the request `pending`, and no list route exists — see §47.1/§47.4**) | No | **PARTIAL/B** |
 | Recent Staff Activity (evidence) | `SEC-01` | `/internal/sec1/audit-events/{read,search}` — a real, confirmed-SAFE (already tier-redacted) field subset exists (`lib/read-redaction.ts`'s own `RedactableAuditEventRow`: `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc`, deliberately excluding hash-chain/integrity fields and raw payload at the SELECT level, not merely at response time) | No | **PARTIAL/B, minimal safe-field summary only** |
 | Workflow Availability | N/A — presentation of `UI-04` §8's own nav IA | `components/shell/nav-data.ts`'s `OPS_NAV` | N/A (UI-internal) | Shown as-is — the 4 other `B`-classified Ops nav items, all "Interface planned" |
 | Deposit/Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation, Exceptions/Breaks | `DEP-01`/`WDR-01`/`TRD-01`/`LED-01`/`REC-01` | Not started at all (unchanged from `UI Phase 2A`'s own findings) | No | **OMITTED** — `C`-classified, module does not exist |
@@ -3658,7 +3658,7 @@ forward:
    (`DEMO-WLT-001`/`002`) are superseded; references now follow creation
    order, and a payout uses `Payout Destination DEMO-PAY-00n` (the Overview
    previously called every destination a "Wallet Destination").
-3. **Approval subject.** The demo `wlt1.destination.approve` request now
+3. **Approval subject.** The demo `wlt1.destination.approve` request (**not a real action — WLT's is `wlt1.destination.approve_apply`; corrected in UI Phase 2L, §47.7**) now
    targets `DEMO-PAY-001`, a `pending_review` destination whose approval
    gates are all met — a request that could actually be raised.
 4. **Cross-portal organisation.** `UI Phase 2J` named the *submitted*
@@ -3926,3 +3926,376 @@ No API/auth/permission code; no mutation; no reveal; no timeline; no
 search; no separate review dialog; no reject; no cooling countdown; no
 first-use/limit display; no C-classified or Exchange element; no change to
 the public homepage, backend, packages or lockfile.
+
+## 47. UI Phase 2L — Staff/Operations Maker-Checker Queue (`B`-classified Ops page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The fourth real page on the
+Staff/Operations surface and its third List + Detail workspace. Same
+visual-QA posture as every phase since `UI Phase 2E`. Baseline `62066fd`,
+as the brief stated.
+
+### 47.1 Capability map (verified against `platform/services/iam2/src`, not assumed)
+
+**Auth surface.** `IAM-02`'s three approval routes are guarded by its own
+internal-service-token guard; the file header states "IAM-02 has no user-
+session surface of its own this stage", so the acting user travels as a
+request-body field (`maker_user_id` / `approver_user_id`). Nothing is
+callable from a staff browser session. Three findings shape the page:
+
+- **There is no list, get or search route.** `routes/approvals.ts`
+  registers exactly `POST /iam2/approvals/request`, `POST .../:id/approve`
+  and `POST .../:id/reject`. A queue page needs a read route that does not
+  exist at any layer.
+- **No approval policy is seeded, and the approver is never role-checked.**
+  `approval_policy` rows appear in no migration or seed, so every request
+  takes the route defaults (1 approval, no step-up, 24-hour expiry).
+  `required_approver_roles` and `threshold_type` exist on the table but no
+  code reads them, and `approve` performs no permission check on the
+  approver — only "not the maker", "no segregation-of-duties conflict", and
+  step-up when a policy demands it.
+- **`IAM-02` records approvals; the originating module applies them.** On
+  final approval it mints a single-use decision token (12-minute TTL) that
+  the consumer redeems via `execute-verify`. "Approved" is therefore not
+  "applied".
+
+| UI element / action | IAM-02 route / model | Staff-visible (browser)? | Kind | Status |
+|---|---|---|---|---|
+| Queue (list) | none | — | read | **PARTIAL/B** — model real, no read route |
+| Request detail | none (`approval_request` row) | No | read | **PARTIAL/B** |
+| Action, resource, subject (`entity_id`), client (`client_id`) | `approval_request` columns | No | read | **PARTIAL/B** |
+| Status | `approval_request.status` — 5 writable values (§47.4) | No | read | **PARTIAL/B** |
+| Created / expires / completed | `created_at_utc`, `expires_at_utc`, `completed_at_utc` | No | read | **PARTIAL/B** |
+| Approvals n of m | `approved_count`, `required_count` | No | read | **PARTIAL/B** |
+| Requester | `maker_user_id` — an **opaque** IAM user id; no name held | No | read | **DEMO-ONLY as shown** (a generic role label marked "(demo)") |
+| Decision reason | `approval_decision.decision_reason`, optional, ≤512 chars | No | read | **PARTIAL/B** — never given an invented value |
+| Deciding user | `approval_decision.approver_user_id` — opaque | No | read | **OMITTED** |
+| Approval policy / step-up | `approval_policy` — none seeded; default applies | No | read | **PARTIAL/B** (default shown) |
+| Required approver role | `required_approver_roles` — stored, never read or enforced | — | read | **OMITTED** (§47.5) |
+| Subject label ("Payout Destination DEMO-PAY-001") | none — `IAM-02` stores only `entity_id` | — | read | **DEMO-ONLY** (cross-module label projection) |
+| Effect once applied | not in `IAM-02` — the consumer's own behaviour | — | read | **DEMO-ONLY**, from each module's source |
+| Approve Request | `POST /iam2/approvals/:id/approve` | No | mutation | **PARTIAL/B**, disabled placeholder |
+| Reject Request | `POST /iam2/approvals/:id/reject` | No | mutation | **PARTIAL/B**, disabled placeholder |
+| Raise a request (maker step) | `POST /iam2/approvals/request` | No | mutation | **Not on this page** — done from the originating workflow |
+| Payload, payload hash, decision token | `approval_request` / token store | — | read | **OMITTED** (sensitive) |
+| SoD matched-rule ids | `sod_check.matched_rules` | — | read | **OMITTED** |
+| Current-user eligibility | no session, no projection | — | read | **OMITTED** — stated in text only |
+| Amount, priority, risk | none in the model | — | — | **OMITTED** |
+| `cancelled` status | in the DB CHECK, **written by no code** | — | — | **OMITTED** |
+
+### 47.2 Real request types represented
+
+Each is the exact `(action, resource)` a consumer passes to
+`verifyDecisionToken` (verified at the call sites; **22 call sites across 7
+modules exist**). No invented type. Four are represented; the mapping is
+data-driven, so another is one entry.
+
+| Action | Resource | Module | Entity bound | Client bound | Originating page |
+|---|---|---|---|---|---|
+| `wlt1.destination.approve_apply` | `destination` | WLT-01 | destination id | Yes | `/ops/wallet-destination-review` |
+| `clt1.application.approve` | `application` | CLT-01 | application id | **No** (an application is not yet a client) | `/ops/client-requests` |
+| `clt1.client_mandate.update` | `client_mandate` | CLT-01 | mandate id | Yes | none yet — no link |
+| `wlt1.evidence_export.apply` | `evidence_export` | WLT-01 | export id | Yes | none yet — no link |
+
+Real but **not** represented, to keep scope: CLT authorised-party
+add/update/remove/activate, related-party add/update/remove, authorised-user
+add/remove, duplicate-candidate create/update/confirm/dismiss and mandate
+create; KYC-01 `kyc1.outcome.override`; SEC-01 `sec1.security_alert.close`;
+AML-01 screening-match decisions. CFG-01 uses its own decision-token library
+rather than `IAM-02`'s. KYC/AML/SEC subjects were left out deliberately —
+their subjects are compliance-portal domain.
+
+### 47.3 Route and navigation
+
+**`/ops/maker-checker-queue`.** The brief named `/ops/maker-checker` as the
+default "unless the established convention clearly supports another".
+The convention is unambiguous: `Client Requests` → `/ops/client-requests`,
+`Wallet Destination Review` → `/ops/wallet-destination-review` — the slug of
+the governed nav label. `Maker-Checker Queue` therefore maps to
+`maker-checker-queue`; `/ops/maker-checker` would break a deterministic
+mapping, and the next page (`Audit / Activity` → `/ops/audit-activity`)
+inherits it. `OPS_NAV` "Maker-Checker Queue" gains its `href` (label
+unchanged); only "Audit / Activity" remains inert. The Overview's Workflow
+Availability row now reads "Available" and links, and its queue group gains
+"View all".
+
+```
+app/ops/maker-checker-queue/page.tsx        — header + disclosure + workspace (Server Component)
+components/ops/
+  approval-request-data.ts                  — shared: statuses, types, policy default, fixtures
+  approval-request-status.tsx               — ApprovalStatusLine (icon + governed label)
+  approval-request-table.tsx                — table (≥768px) / compact list (<768px)
+  approval-request-detail.tsx               — detail (panel + Sheet share it)
+  approval-requests-workspace.tsx           — filter, selection, panel/Sheet composition
+```
+
+Header "Maker-Checker Queue" / "Review approval requests that require
+independent authorization under AIX maker-checker controls." `DemoDisclosure`:
+"Interface preview — approval requests are demonstrative until the staff-
+facing IAM-02 queue and decision routes are integrated."
+
+### 47.4 Status mapping and what each really means
+
+| `approval_request.status` | Ops label | How it arises (from code) |
+|---|---|---|
+| `pending` | Pending Approval | Created by `request`; `approved_count < required_count` |
+| `approved` | Approved | `approved_count ≥ required_count`; `completed_at_utc` set; token minted if a payload hash exists |
+| `rejected` | Rejected | **One** reject by any approver on a pending, unexpired request; `completed_at_utc` set |
+| `expired` | Expired | Written **lazily** — only when an approve/reject is attempted after `expires_at_utc`; no sweeper, so a past-expiry request can still read `pending` |
+| `blocked` | Blocked — Segregation of Duties | An approve attempt found a role/permission SoD **conflict**; the request itself becomes terminal |
+
+Labels are `UI Phase 2I`'s (single source, now moved into
+`approval-request-data.ts`). `cancelled` (in the DB CHECK, written by no
+code) is not modelled. **`blocked` is not `rejected`, and is not the
+self-approval refusal** — approver === maker returns
+`IAM2_SELF_APPROVAL_BLOCKED` and leaves the request `pending`. `UI Phase 2I`'s
+§44.1 said `blocked` was set "by an `iam2.sod_check` blocking a self-approval
+attempt"; that was wrong and is corrected in place. **Awaiting a checker =
+`pending` only.** Approved, rejected, expired and blocked are terminal: every
+further decision returns `IAM2_APPROVAL_ALREADY_DECIDED`.
+
+### 47.5 Maker-checker and segregation of duties
+
+What `IAM-02` actually enforces, by decision:
+
+| Rule | `approve` | `reject` |
+|---|---|---|
+| Request must be `pending` and unexpired | Yes | Yes |
+| Approver ≠ maker (`IAM2_SELF_APPROVAL_BLOCKED`, audited) | **Yes** | **No** |
+| No SoD conflict between maker and approver grants → else request `blocked` | **Yes** | **No** |
+| Step-up assertion when the policy requires it | Yes | No |
+| One decision per approver | Yes | Yes |
+| Approver holds a role / permission | **No** | **No** |
+
+The panel states independence in text beside the controls — "Approve Request
+must come from a different user than the requester, with no segregation-of-
+duties conflict between them. The requester cannot approve their own
+request. **Reject Request is not subject to that check.**" — because the
+asymmetry is real and hiding it would imply a control that does not exist.
+The brief's warning not to infer identical SoD rules across workflows is
+honoured the other way too: `IAM-02`'s rules are uniform across request
+types; per-workflow differences come only from optional policy rows, and
+none exist.
+
+**Deviation from `UI-04` §22, recorded.** §22 asks the UI to show the
+"required approver role". `IAM-02` stores `required_approver_roles` but never
+reads it, and `approve` checks no role — so a role would be a control that is
+not enforced. The panel shows the enforced rule instead. **Observation for
+governance** (not a UI matter): under the current code any user id that is
+not the maker and has no SoD conflict may approve; approver authorisation is
+not enforced. The only seeded SoD rule is the meta-rule (`iam2.sod.manage` vs
+`iam2.role.assign_user` / `iam2.permission.assign_role`), so `blocked` is
+reachable only for makers/approvers holding those permissions — the demo row
+is a reachable-in-principle illustration, not a common case.
+
+### 47.6 Detail panel, evidence and omissions
+
+Sections, each only where backed: **Request Summary** (action, created,
+expires), **Originating Workflow** (module, workflow — a link only where a
+real page exists — subject, client), **Requested By**, **Approval
+Requirement** (n of m, default policy, step-up, expiry window, and the
+independence text), **Decision State** (status, its meaning, and the effect
+once applied), **Decision History** (an ordered, request-specific list:
+Requested → Approved/Rejected, or Expired; plus the reason), **Checker
+Action**. This satisfies §22: initiator always shown; status is a real one;
+the rejection reason row is always shown for a decided request ("No reason
+recorded" — never invented, never hidden); the effective state is stated
+("the destination moves to Approved — Cooling-Off"); and "pending" says it is
+waiting on someone else.
+
+- **Requester identity.** `maker_user_id` is an opaque id; no name exists.
+  The fixtures show "Operations Maker (demo)" / "Compliance Maker (demo)",
+  and the panel says the label is demonstrative. No personal name anywhere.
+- **Deciding user** is not shown — opaque, and no display projection exists.
+- **Blocked** shows no reason: only matched-rule ids are stored, and they
+  are omitted. **Expired** shows its expiry time, no countdown.
+- **History is only what `IAM-02` stores** — `approval_request` and
+  `approval_decision`. No SEC-01 audit record is duplicated; a blocked
+  request has no timestamp of its own, so none is shown.
+- **Never shown:** payload, payload hash, decision token, SoD rule ids,
+  any WLT/CLT sensitive value (only the originating pages' own reference
+  labels), any KYC/AML/SEC internals, any financial figure.
+
+### 47.7 Demo fixtures and cross-page consistency
+
+6 obviously fictitious requests, one per status except `rejected` (fully
+supported by the mapping and detail, no fixture — the brief asks for 4–6 and
+not to overload negatives): `DEMO-APR-001` (pending, WLT payout
+`DEMO-PAY-001`), `-002` (pending, CLT application `DEMO-002`), `-003`
+(approved, CLT application `DEMO-004`), `-004` (approved, WLT payout
+`DEMO-PAY-002`), `-005` (expired, evidence export), `-006` (blocked, mandate
+update). A slice of the queue, not the register. All use the default policy.
+
+**One source of truth** — `approval-request-data.ts` — feeds this page, the
+Overview, Wallet Destination Review and Client Requests, and its subject
+labels come from those pages' own data modules. Consequences, all verified in
+rendered output:
+
+- The Overview's "Maker-Checker Queue — 2 items" and this page's default view
+  are the same two requests; the count is unchanged from `UI Phase 2I`.
+- **Wallet Destination Review and Client Requests no longer contradict the
+  queue.** `DEMO-PAY-001` and `DEMO-002` used to offer "Request approval"
+  while this queue shows a request already pending for each. Their detail
+  panels now say "Approval requested — Approval Request DEMO-APR-00n is
+  awaiting an independent approver" with a link, and drop the redundant
+  action. Records with no pending request (`DEMO-001`, `DEMO-WLT-004`) are
+  unchanged. This is a UI-level projection: WLT-01 and CLT-01 do not record
+  which approval is pending, so a live version needs a cross-module lookup
+  (§47.11).
+- `DEMO-APR-003` is the approval `client-request-data.ts` already recorded for
+  approved application `DEMO-004`; `DEMO-APR-004` is the approval behind payout
+  `DEMO-PAY-002`'s cooling-off status.
+
+**Correction to `UI Phase 2I`/`2K`.** Both showed the WLT action as
+`wlt1.destination.approve`. That is not a real action: WLT verifies
+`wlt1.destination.approve_apply` (`routes/destination-approval.ts`; the
+preflight is `approve_request`). Fixed in the Overview and in this page; the
+CLT string `clt1.application.approve` was already correct.
+
+### 47.8 Actions, reason and the mutation boundary
+
+**No mutation exists on this page** — no fetch, server action, auth or
+permission code, and no local fake success: the fixtures are read-only and
+nothing ever changes a request's status. Only a `pending` request offers
+actions: **Approve Request** and **Reject Request** — the routes' own verbs,
+as the brief specified — each a natively `disabled` `Button` (not focusable),
+under a "decision routes are not yet integrated" note. Terminal requests show
+"no checker action is available", plus "a new request must be raised from the
+originating workflow" for expired and blocked.
+
+**Rejection reason.** Not required: `decision_reason` is optional, ≤512
+characters, on both `approve` and `reject`. The panel says so in text; no
+form field is built (a disabled input would add a control that does nothing,
+and a multi-line field would need a `Textarea` primitive that is not
+installed). **Eligibility** of the current user cannot be evaluated — there
+is no session — so the panel says exactly that and that a requester cannot
+approve their own request.
+
+### 47.9 Density decision
+
+`UI-04` §18 lists Maker-Checker Queue under `COMPACT` (40px); §35.14 lists it
+under `DENSE` (32px) — while §35.14 also puts the admin "Approval Queue",
+described as the same capability, under `COMPACT`. The two sections disagree.
+Resolved toward **`COMPACT` 40px**: this is a decision surface with few rows,
+it matches the other Ops queues, and 32px would shrink the row button's target.
+Recorded as a governance inconsistency; to be revisited in the consolidated
+visual QA.
+
+### 47.10 Filter, default view, empty states
+
+A labelled `Select` ("Status"), options **derived from the governed status
+enum** (All + 5), with a polite "Showing N of M requests" region. **Default
+view: Pending** — the page is a queue, its job is what a checker must act on,
+and the Overview's count is exactly that set, so the two stay coherent. History
+is not hidden: every terminal state and "All requests" are one selection away.
+(The other Ops queues default to "All" because their records mix work and
+context; here terminal requests are pure history.) **No search** — `IAM-02`
+has none. Empty states: Pending filter → "No approval requests currently
+require checker action."; another filter → "No approval requests match the
+current view."; an empty register → "No maker-checker requests are
+available." — none says controls are satisfied.
+
+### 47.11 Backend gaps for a live page
+
+Inspected first; not all are missing.
+
+| Need | Exists? | Gap |
+|---|---|---|
+| Staff **list** projection | **No** — no list/get/search route | A paged, status-filterable read route through a staff-session path |
+| **Detail** projection | Table exists; no route | Same, including `approval_decision` history |
+| **Actor display-name** | **No** — `maker_user_id`/`approver_user_id` are opaque | A projection through IAM-01 (user directory) — IAM-02 holds no names |
+| **Checker eligibility** for the current user | **No** | A projection combining identity, maker ≠ approver and SoD conflict, so the UI can enable/disable honestly |
+| **Decision endpoint exposure** | **Yes** — `approve`/`reject` exist | Staff-session auth; the actor is currently a body field (`approver_user_id`), which a browser must not be trusted to supply |
+| **Rejection-reason contract** | Optional `decision_reason` ≤512 | Decide whether reject should require one |
+| **Originating-workflow context** | **No** — `entity_id`/`client_id` only | A cross-module subject-label projection so the UI can show "Payout Destination …" |
+| **"Which approval is pending" for a subject** | **No** — WLT/CLT do not record it | A lookup by `(action, resource, entity_id)`, needed by the originating pages |
+| **Approver authorisation** | **Not enforced** | Governance decision: `required_approver_roles` is stored and unread |
+| **Approval policy rows** | **None seeded** | Every request uses the default; policy content is undecided |
+| **Lazy expiry** | By design | A projection should expose `expires_at_utc`, or the queue reads `pending` past expiry |
+| **`reject` independence** | No maker/SoD check | Governance decision: intended (withdrawal) or a gap |
+| **Blocked detail** | `sod_check` stores matched rules | Decide whether staff may see them |
+| **`cancelled` status** | In the DB CHECK, unwritten | No cancel/withdraw route exists |
+
+### 47.12 Responsive reasoning (structural, not rendered)
+
+Shell facts as `UI-04` §46.13 (content ≈ viewport − 48px below 1280px, ≈ viewport
+− 305px from 1280px).
+
+| Viewport | Layout | Table region | Columns |
+|---|---|---|---|
+| **1440** | Split: queue + 320px panel, 32px gap | ≈783px | Request, Subject, Status (~680px) |
+| **1280** | Split | ≈623px | Request, Status (~440px) |
+| **1024** | Split (`lg:`) | ≈624px | Same as 1280 |
+| **768** | Queue full width; detail in Sheet | 720px | Request, Subject, Status |
+| **430** | Compact list; detail in Sheet | — | Type / date · subject · module / status |
+
+Columns respond to a **container query**: Subject at `≥44rem` (704px — an
+arbitrary value, chosen because Subject fits at 720px and 783px but not at
+623px, and no standard step falls between 672 and 768px), Created at `≥56rem`
+(viewport ≈1553px in the split), Expires at `≥64rem` (≈1681px). At 1280/1024
+the split still leaves Request + Status only; the Subject is then in the
+panel. `≥1280` and `1024–1279` resolve identically (the sidebar's 241px arrives
+as the viewport gains 256px), so the persistent panel is used from `lg:`. Below
+`lg:` selection opens a right `Sheet` via `useIsLgUp`.
+
+**Visual risks for the consolidated pass** (none verifiable without
+rendering): (1) the widest status, "Blocked — Segregation of Duties", drives
+the Status column to ~270px; (2) Subject fits at 704px with ~25px of slack on
+estimated widths; (3) at 623px the queue shows only Request and Status — the
+subject lives in the panel; (4) the row highlight appears only after
+hydration; (5) the detail panel has eight sections and is the longest yet, so
+its scroll behaviour in a 320px column and in the Sheet needs a real look.
+
+### 47.13 Accessibility
+
+One `<h1>`. The panel is `<h2>` (request type) with `<h3>` sections; in the
+Sheet, `SheetTitle` carries the type. A real `<table>` with an accessible
+name; one tab stop per row — a native `<button>` whose accessible name begins
+with the visible label ("Destination approval, open Approval Request
+DEMO-APR-001"), `aria-current` marking the open request; the row `onClick` is a
+mouse-only convenience and the button has no `onClick` of its own. A real
+`<label>` for the filter and an `aria-live="polite"` count. Status is icon +
+text, never colour alone; `blocked` has its own icon so it cannot be read as
+`rejected`. **No fake decision control is focusable** — both buttons are
+natively `disabled`, with the reason in adjacent text, and the independent-
+checker requirement is communicated in text, not by a control's absence. The
+decision history is an ordered list. Loading/error states are not built —
+nothing is fetched.
+
+### 47.14 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `ApprovalRequestTable`,
+  `ApprovalRequestDetail`, `ApprovalRequestsWorkspace`, `ApprovalStatusLine`.
+- **`AixApprovalPanel` (`UI-04` §27, "potentially justified") is still not
+  created.** §27 said to wait until the first real approval screen proves the
+  shape. This is that screen, but it is the only full maker-checker
+  presentation — the originating pages show a single line and a link — so
+  there is no repetition to consolidate. Revisit if a second full approval
+  presentation (e.g. the Admin "Approval Queue") is built.
+- **Status presentation:** three status-line components now exist
+  (`RequestStatusLine`, `DestinationStatusLine`, `ApprovalStatusLine`) — each
+  over a different governed enum with its own icon set, so a generic wrapper
+  would not remove real repeated logic; not created (the Overview's queue
+  rows show plain text and need no component). The
+  generic `ListDetailWorkspace` (now the **fourth** filter/panel/Sheet
+  workspace) and the `Row`/`Section` helpers stay recorded consolidation
+  candidates for the visual-QA pass.
+- **shadcn:** no component added, updated or regenerated. `Table`, `Button`,
+  `Sheet`, `Select` and `Label` sufficed; the REVIEW LATER primitives
+  (`select`, `sheet`, `table`) were used, not modified. The official MCP was
+  not needed (policy stopped at "reuse an installed primitive").
+
+### 47.15 Boundaries
+
+No `C`-classified Ops element. No trading, order-book, pricing or market-data
+element. No amount, fee, balance, settlement or PnL figure — `IAM-02` has no
+amount concept. No SEC-01 audit record duplicated. WLT and CLT subjects appear
+only as the originating pages' own reference labels: no destination value, no
+reveal, no KYC/AML detail. Confirmed by source inspection and a forbidden-term
+scan of the rendered page.
+
+### 47.16 What this phase explicitly did not do
+
+No API/auth/permission code; no mutation and no local fake success; no
+search; no reason field; no reveal; no audit timeline; no approver identity;
+no required-role claim; no C-classified or Exchange element; no change to the
+public homepage, backend, packages or lockfile.

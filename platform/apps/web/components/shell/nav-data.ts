@@ -76,12 +76,17 @@ export const CLIENT_NAV: NavItem[] = [
  * `UI Phase 2K`: "Wallet Destination Review" gains a real `href` (`/ops/wallet-destination-review`) —
  * `B`-classified (real `WLT-01` destination lifecycle, every internal route `requireInternal`-
  * guarded). "Maker-Checker Queue" and "Audit / Activity" remain inert. Label preserved exactly.
+ *
+ * `UI Phase 2L`: "Maker-Checker Queue" gains a real `href` (`/ops/maker-checker-queue` — the route is
+ * the label's slug, the convention `client-requests`/`wallet-destination-review` already set) —
+ * `B`-classified (real `IAM-02` approval model, every route `requireInternal`-guarded). Only
+ * "Audit / Activity" remains inert. Label preserved exactly.
  */
 export const OPS_NAV: NavItem[] = [
   { label: "Operational Overview", href: "/ops", icon: "layout-grid" },
   { label: "Client Requests", href: "/ops/client-requests", icon: "inbox" },
   { label: "Wallet Destination Review", href: "/ops/wallet-destination-review", icon: "wallet" },
-  { label: "Maker-Checker Queue", icon: "list-checks" },
+  { label: "Maker-Checker Queue", href: "/ops/maker-checker-queue", icon: "list-checks" },
   { label: "Audit / Activity", icon: "history" },
 ];
 

@@ -2636,3 +2636,28 @@ container-query breakpoint. Reasoned by arithmetic; **not rendered**.
 @1024, 720px @768. Estimated column widths: Destination ~155px, Network /
 Rail ~146px, Status ~200px (3 base columns ≈ 500px); Registered +~102px
 (≈ 600px), Type +~96px (≈ 700px), Client +~102px (≈ 800px).
+
+## UI Phase 2L — Maker-Checker Queue Geometry
+
+Values used by `/ops/maker-checker-queue` (`UI-04` §47). The layout **reuses
+`UI Phase 2J`/`2K`'s values**; the only new numbers are container-query
+breakpoints and a wider filter. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Table row height | `h-10` = **40px** | `COMPACT` tier. `UI-04` §18 says `COMPACT`, §35.14 says `DENSE` for this page — resolved to `COMPACT` (`UI-04` §47.9) |
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` | Reuse |
+| Detail panel | `lg:border-l lg:pl-8` | Reuse |
+| Selected-row marker | `border-l-2` = **2px** | Reuse |
+| Filter trigger | `h-10` × `w-72` (40 × **288px**) | Wider than the other Ops filters (`w-64`) so "Blocked — Segregation of Duties" is not clipped |
+| Status icon | `size-4` = 16px (table/detail), `size-3.5` = 14px (mobile list) | Existing sizes |
+| Container-query breakpoints | Subject at `@[44rem]` = **704px** (*new, arbitrary*); Created at `@4xl` = 56rem (896px); Expires at `@5xl` = **64rem (1024px)** (*new*) | 704px sits between `@2xl` (672) and `@3xl` (768): Subject needs ~680px, so it must show at 720 and 783px but not at 623px |
+| Compact list row (`<768px`) | `py-3` (12px), three text lines | ≥44px touch target |
+| Sheet (`<1024px`) | Existing `SheetContent` | Unchanged |
+
+**Width arithmetic** (content = viewport − 48px below 1280px; viewport − 305px
+from 1280px): table region ≈ 783px @1440, ≈ 623px @1280, ≈ 624px @1024, 720px @768.
+Estimated column widths: Request ~168px ("Destination approval"), Status
+~158–270px (the widest, "Blocked — Segregation of Duties", drives the
+column), Subject ~239px, Created / Expires ~102px each. Request + Status
+≈ 440px; + Subject ≈ 680px.

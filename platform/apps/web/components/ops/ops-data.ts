@@ -1,11 +1,17 @@
 import {
+  APPROVAL_STATUS_LABELS,
+  APPROVAL_TYPES,
+  DEMO_APPROVAL_REQUESTS_ALL,
+  approvalReference,
+  isAwaitingChecker,
+  type ApprovalStatus,
+} from "@/components/ops/approval-request-data";
+import {
   AWAITING_STAFF_ACTION_STATUSES,
   DEMO_CLIENT_REQUESTS,
-  demoRequestReference,
 } from "@/components/ops/client-request-data";
 import {
   DEMO_REVIEW_RECORDS,
-  demoDestinationReference,
   destinationReference,
   isAwaitingStaffAction,
   recordId,
@@ -30,9 +36,11 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
  *   `wlt1.destination.status` column and its correct phrasing are identical for staff and client.
  *   The overview lists only destinations awaiting staff action (`pending_review`, and a stuck
  *   `pending_screening`), not every non-active one.
- * - `MakerCheckerStatus` — the exact status literals from `platform/services/iam2/src/routes/
- *   approvals.ts` (`pending`/`approved`/`rejected`/`expired`/`blocked` — the last set when an
- *   `iam2.sod_check` blocks a self-approval attempt).
+ * - Maker-Checker Queue — the demo requests, status labels and "awaiting a checker" rule live in
+ *   `approval-request-data.ts` since `UI Phase 2L`. The Overview lists only `pending` requests.
+ *   Note `blocked` is set by a role/permission segregation-of-duties CONFLICT found while an approver
+ *   tries to approve — NOT by a self-approval attempt (that leaves the request `pending`); this file
+ *   said otherwise before `UI Phase 2L` corrected it.
  * - Audit/Activity fields — the exact SAFE (already tier-redacted) field set from
  *   `platform/services/sec1/src/lib/read-redaction.ts`'s own `RedactableAuditEventRow` —
  *   `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc` only. Hash-chain/
@@ -79,52 +87,34 @@ export const DEMO_WALLET_REVIEW_ITEMS: DemoWalletReviewItem[] = DEMO_REVIEW_RECO
 );
 
 // ---------------------------------------------------------------------------
-// C. Maker-Checker Queue — IAM-02 iam2.approval_request.status.
+// C. Maker-Checker Queue — IAM-02 iam2.approval_request.status. Source of truth:
+//    approval-request-data.ts; the Overview lists only requests AWAITING A CHECKER (`pending`).
 // ---------------------------------------------------------------------------
 
-export type MakerCheckerStatus = "pending" | "approved" | "rejected" | "expired" | "blocked";
-
-export const MAKER_CHECKER_STATUS_LABELS: Record<MakerCheckerStatus, string> = {
-  pending: "Pending Approval",
-  approved: "Approved",
-  rejected: "Rejected",
-  expired: "Expired",
-  blocked: "Blocked — Segregation of Duties",
-};
+export type MakerCheckerStatus = ApprovalStatus;
+export const MAKER_CHECKER_STATUS_LABELS = APPROVAL_STATUS_LABELS;
 
 export interface DemoApprovalRequest {
   id: string;
   reference: string;
-  /** The real governed action/resource shape (`iam2.approval_request.action`/`.resource`) — a
-   * namespaced action string, never a fabricated approver or initiator name. */
+  /** The real governed action (`iam2.approval_request.action`), verbatim — never a fabricated
+   * approver or initiator name. Corrected in `UI Phase 2L`: `UI Phase 2I`/`2K` showed
+   * `wlt1.destination.approve`, which is not a real action; WLT verifies
+   * `wlt1.destination.approve_apply` (`routes/destination-approval.ts`). */
   action: string;
   subjectReference: string;
   status: MakerCheckerStatus;
 }
 
-/** The two demo items reference records that exist elsewhere in the Ops fixtures — and only in
- * states that make the approval request valid. `wlt1.destination.approve` targets a destination in
- * `pending_review`; `clt1.application.approve` targets `DEMO-002`, which is `under_review`
- * (`approve-request` is only allowed from `under_review` — `lib/applications.ts`). `UI Phase 2I`
- * originally pointed this at `DEMO-001` (still `submitted`), which the real transition table would
- * refuse; corrected in `UI Phase 2J` (`UI-04` §45.3). Both flows route through this IAM-02
- * request/apply mechanism in the real system. */
-export const DEMO_APPROVAL_REQUESTS: DemoApprovalRequest[] = [
-  {
-    id: "demo-apr-001",
-    reference: "Approval Request DEMO-APR-001",
-    action: "wlt1.destination.approve",
-    subjectReference: demoDestinationReference("demo-dest-003"),
-    status: "pending",
-  },
-  {
-    id: "demo-apr-002",
-    reference: "Approval Request DEMO-APR-002",
-    action: "clt1.application.approve",
-    subjectReference: demoRequestReference("demo-app-002"),
-    status: "pending",
-  },
-];
+export const DEMO_APPROVAL_REQUESTS: DemoApprovalRequest[] = DEMO_APPROVAL_REQUESTS_ALL.filter(isAwaitingChecker).map(
+  (request) => ({
+    id: request.id,
+    reference: approvalReference(request),
+    action: APPROVAL_TYPES[request.action].action,
+    subjectReference: request.subjectLabel,
+    status: request.status,
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Work Requiring Attention — a rollup COUNT over the three queues above, not a duplicate record
@@ -147,7 +137,7 @@ export const ATTENTION_ROLLUP: AttentionRollupRow[] = [
   },
   {
     label: "Maker-Checker Queue",
-    count: DEMO_APPROVAL_REQUESTS.filter((r) => r.status === "pending").length,
+    count: DEMO_APPROVAL_REQUESTS.length,
   },
 ];
 
@@ -164,7 +154,7 @@ export interface OpsWorkflowAvailabilityItem {
 export const OPS_WORKFLOW_AVAILABILITY: OpsWorkflowAvailabilityItem[] = [
   { label: "Client Requests", status: "Available", href: "/ops/client-requests" },
   { label: "Wallet Destination Review", status: "Available", href: "/ops/wallet-destination-review" },
-  { label: "Maker-Checker Queue", status: "Interface planned" },
+  { label: "Maker-Checker Queue", status: "Available", href: "/ops/maker-checker-queue" },
   { label: "Audit / Activity", status: "Interface planned" },
 ];
 

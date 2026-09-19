@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { MAKER_CHECKER_QUEUE_HREF, approvalReference, pendingApprovalFor } from "@/components/ops/approval-request-data";
 import { RequestStatusLine } from "@/components/ops/client-request-status";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +51,12 @@ export function ClientRequestDetail({
   request: DemoClientRequest;
   showHeading?: boolean;
 }) {
-  const actions = NEXT_ACTIONS_BY_STATUS[request.status];
+  // A request already awaiting a checker means "Request approval" has been done — offering it again
+  // would contradict the Maker-Checker Queue, which shows that request as pending.
+  const pendingApproval = pendingApprovalFor("application", request.id);
+  const actions = NEXT_ACTIONS_BY_STATUS[request.status].filter(
+    (action) => !(pendingApproval && action === "request_approval"),
+  );
   const hasDecision =
     request.status === "held" ||
     request.status === "approved" ||
@@ -129,10 +136,23 @@ export function ClientRequestDetail({
 
       <section aria-label="Review Actions">
         <h3 className="text-sm font-semibold text-foreground">Review Actions</h3>
-        {actions.length === 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">
-            No staff action is currently defined for this status.
+        {pendingApproval && (
+          <p className="mt-3 text-xs text-foreground">
+            Approval requested — {approvalReference(pendingApproval)} is awaiting an independent approver.{" "}
+            <Link
+              href={MAKER_CHECKER_QUEUE_HREF}
+              className="font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              View in Maker-Checker Queue
+            </Link>
           </p>
+        )}
+        {actions.length === 0 ? (
+          pendingApproval ? null : (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No staff action is currently defined for this status.
+            </p>
+          )
         ) : (
           <>
             <p className="mt-3 text-xs text-muted-foreground">

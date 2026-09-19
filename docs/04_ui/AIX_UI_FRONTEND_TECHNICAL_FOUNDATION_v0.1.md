@@ -1795,3 +1795,56 @@ jsdom) — reasoned from source, not exercised.
 return 200 with unchanged structure. Backend regression not required — zero
 `platform/services/**`, `packages/**`, `edge/**`, `infra/**` change. Public
 homepage unaffected.
+
+## 48. Phase 2L — Staff/Operations Maker-Checker Queue (fourth Ops page, visual QA deferred)
+
+`/ops/maker-checker-queue` (`UI-04` §47): a List + Detail workspace over
+`IAM-02` approval requests. `B`-classified; demo data only; no fetch, server
+action, auth, permission check or mutation — and no local fake success.
+
+**Files created (6):** `app/ops/maker-checker-queue/page.tsx`;
+`components/ops/{approval-request-data.ts, approval-request-status.tsx,
+approval-request-table.tsx, approval-request-detail.tsx,
+approval-requests-workspace.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (Maker-Checker Queue gains
+`href`); `components/ops/{ops-data.ts, operational-queues.tsx}` (Overview
+derives its Maker-Checker rows from the shared data, links to the page, and no
+longer shows the non-existent action `wlt1.destination.approve`);
+`components/ops/{client-request-detail.tsx, destination-review-detail.tsx}`
+(each states "Approval requested" and drops the redundant "Request approval"
+when the shared data has a pending request for that subject).
+
+**shadcn impact: none** — `Table`, `Button`, `Sheet`, `Select`, `Label`
+already installed; the REVIEW LATER primitives (`select`, `sheet`, `table`)
+were used but not modified. No `Textarea` was needed (the optional decision
+reason is described in text). The official shadcn MCP was not needed.
+**No package or lockfile change.**
+
+**Client/server boundary:** the page is a Server Component; the workspace,
+table and detail are client-bundled. Timestamps use the UTC-pinned formatters.
+Container queries are reused; `@[44rem]` is a new arbitrary breakpoint (Tailwind
+v4 core), confirmed in the compiled stylesheet alongside `56rem` and `64rem`.
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free after removing two
+leftover imports) and `build:web` all pass; **12** static pages generated
+(was 11).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev
+server + `curl` + rendered-HTML and compiled-CSS inspection, **plus a
+server-side render of the detail component for every approval status and for
+the two originating pages** (a scratch `tsx` script in a git-ignored directory,
+removed afterward). Confirmed: one `<h1>`; the Pending default (2 of 6 rows);
+each status's note, history and disabled-only actions; no button on any
+terminal request; the Overview's "2 items" equal to the queue's pending rows;
+the sidebar's four live Ops links and one inert row; `DEMO-002` and
+`DEMO-PAY-001` showing "Approval requested" with the redundant action removed
+while `DEMO-001` and `DEMO-WLT-004` are unchanged; no forbidden term
+(balance, settlement, trading, fee…) in the page text. **Not verifiable
+here:** filter/selection/Sheet interaction (no browser or jsdom) — reasoned
+from source, not exercised.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests`,
+`/ops/wallet-destination-review` and `/admin` all return 200. Backend
+regression not required — zero `platform/services/**`, `packages/**`, `edge/**`,
+`infra/**` change. Public homepage unaffected.

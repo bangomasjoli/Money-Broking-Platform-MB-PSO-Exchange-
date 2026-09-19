@@ -95,6 +95,49 @@ change independently of this skill and must stay Git-tracked in one place.
     states, color contrast, and ARIA where shadcn primitives don't already
     handle it.
 
+## shadcn MCP policy
+
+The official shadcn MCP is configured in `.mcp.json` (`UI-03` §46). It is a
+search/inspection aid, not an authority: **it does not override
+`UI-01`/`UI-02`/`UI-03`/`UI-04` or `REF-UI-006`, and it does not authorize
+upgrading, regenerating or restyling any existing component.**
+
+Order of preference for any UI need — stop at the first that fits:
+
+1. **Search existing AIX components first** (`components/**`, `lib/`).
+2. **Reuse an already-installed shadcn primitive** (`components/ui/`).
+3. **Search the official shadcn MCP** (`@shadcn` registry) third.
+4. **Install only the primitive the current screen requires** — one at a
+   time, never in bulk.
+5. **Create custom UI** only when 1–4 are insufficient.
+
+Rules:
+
+- **Official registry only.** No third-party/community registry without an
+  explicit, separate review. No blocks copied wholesale into AIX — take the
+  primitive, discard the block's layout and styling opinions.
+- **Never `add` a component that already exists** in `components/ui/`, and
+  never use `--overwrite`. Existing source may hold AIX adaptations (e.g.
+  `table.tsx`'s UI-QA-002 scroll region).
+- **Do not trust MCP-generated add commands blindly.** The current MCP
+  prints `Add command: [object Promise]` in search results (an upstream
+  limitation — not worked around in AIX). Run any add from
+  `platform/apps/web` (the only place `components.json` lives), and review
+  the resulting `git diff` before keeping it.
+- **`platform/apps/web/components.json` is the sole shadcn config.** The MCP
+  is launched from that directory by a deliberate working-directory
+  adaptation in `.mcp.json`; never add a second `components.json`, a root
+  `package.json`, or a root install to make the MCP work.
+- **Preserve shadcn/Radix accessibility** when restyling.
+- **Thin AIX wrappers only when repeated domain behavior justifies them**
+  (`UI-01` §2.1), never rename-only wrappers.
+- **Do NOT update all existing shadcn components.** Existing UI is
+  implemented and governed, source may carry AIX adaptations, blanket
+  regeneration means uncontrolled diffs, and visual QA is deferred. Upgrades
+  are evidence-driven only (a newer upstream version alone is not a reason);
+  a future **SHADCN CONSISTENCY / UPGRADE AUDIT** may run once the
+  authenticated UI is complete.
+
 ## After implementing
 
 13. **Perform responsive review** across desktop/tablet/mobile before

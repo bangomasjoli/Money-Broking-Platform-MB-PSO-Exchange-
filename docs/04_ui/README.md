@@ -711,6 +711,24 @@ claim.** Public homepage unaffected.
   interactions were reasoned from source, **not** exercised, and nothing was
   rendered. Full record: `UI-04` §45, `UI-02`'s new "UI Phase 2J" section,
   `UI-03` §45.
+- **Tooling: official shadcn MCP — CONFIGURED / RESTART REQUIRED.**
+  `.mcp.json` registers the official `shadcn` MCP, launched from
+  `platform/apps/web` by a deliberate working-directory adaptation: the
+  initializer's root-oriented config could not see the nested
+  `components.json` (verified by probe — no registries at all from the
+  root). The authoritative shadcn config remains solely
+  `platform/apps/web/components.json`; no root config, `package.json` or
+  install exists (the initializer's redundant ones were removed).
+  Official registry only. Known upstream limitation: search results print
+  `Add command: [object Promise]` — recorded, not worked around; add
+  commands are never trusted blindly. Existing component audit: 9
+  primitives — **6 KEEP** (`badge`, `button`, `dialog`, `input`, `label`,
+  `navigation-menu`), **3 REVIEW LATER** (`select`, `sheet`, `table`),
+  **0 UPDATE CANDIDATE**. **No existing UI changed and no component
+  installed or regenerated; updating all shadcn components now is
+  explicitly deferred** to a possible future SHADCN CONSISTENCY / UPGRADE
+  AUDIT after the authenticated UI is complete. Search-before-create policy
+  is in the `aix-ui-design` skill. Full record: `UI-03` §46.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real

@@ -1601,3 +1601,147 @@ touched by the hook extraction), `/app/profile`, `/app/compliance-status`,
 `/ops` and `/admin` all return 200 with unchanged structure. Backend
 regression not required — zero `platform/services/**`, `packages/**`,
 `edge/**`, `infra/**` change. Public homepage unaffected.
+
+## 46. Tooling — Official shadcn MCP (project-aware configuration)
+
+**Status: CONFIGURED / RESTART REQUIRED.** A tooling and governance change
+only: no UI, backend, package or lockfile change, and no component
+installed, updated or regenerated. (Executed on `ed1fa15`, one commit ahead
+of the brief's stated `766d05b` — that commit was `UI Phase 2J`; the
+difference was reviewed and approved before proceeding.)
+
+### 46.1 Configuration
+
+`.mcp.json` at the repository root registers one server, `shadcn`, from the
+official registry tooling only. It is launched as:
+
+```json
+"command": "sh",
+"args": ["-c", "cd platform/apps/web && exec npx shadcn@latest mcp"]
+```
+
+**Why the official generated config was not used as-is.** The official
+initializer (`npx shadcn@latest mcp init --client claude`, run with `npx`
+because `pnpm` is not installed and npm is this project's package manager)
+produced a root-oriented `command: "npx", args: ["shadcn@latest", "mcp"]`.
+Claude Code starts project MCP servers from the repository root, but this
+repository's only shadcn project is nested at `platform/apps/web`. Probed
+before adapting: launched from the root, the server reported **no
+configured registries at all** (not even `@shadcn`); launched from the
+directory holding `components.json`, it reported `@shadcn` plus the
+project's own. So the generated config was unsuitable for the nested app.
+The `cd` above is a **controlled working-directory adaptation**, not a
+different server.
+
+**The initializer also had a side effect**, removed: it created a
+repo-root `package.json` (`shadcn ^4.21.0`), a 4,302-line
+`package-lock.json` and a 248-package `node_modules`. `shadcn@4.21.0` is
+already a dependency of `platform/apps/web`, and the server command needs
+no local install, so all three were redundant — and a second npm root above
+`platform/` is a hazard. They were deleted the same session they were
+created; the tree contains none of them.
+
+**The authoritative shadcn configuration remains solely
+`platform/apps/web/components.json`.** No `components.json` exists at the
+root, and none may be added.
+
+### 46.2 Verification
+
+Probed over stdio exactly as Claude Code launches it (from the repo root,
+through `sh -c`):
+
+| Check | Result |
+|---|---|
+| Server starts, `initialize` | `shadcn` 1.0.0 |
+| Tools exposed (7) | `get_project_registries`, `list_items_in_registries`, `search_items_in_registries`, `view_items_in_registries`, `get_item_examples_from_registries`, `get_add_command_for_items`, `get_audit_checklist` |
+| Real repo, `get_project_registries` | `@shadcn` (our `registries` list is empty — acceptable; none added) |
+| Nested config actually read | A scratch tree with a marker registry in a nested `components.json` — adapted launch from the tree root listed `@shadcn` **and** the marker; the unadapted launch listed neither |
+| `@shadcn` search / view | Works (33 matches for "button"; item details returned) |
+| Project aliases / style | **Not exposed by any of the 7 tools.** They apply when `add` runs, from `components.json` in the working directory |
+
+### 46.3 Known limitations (recorded, not worked around)
+
+- **`[object Promise]`:** `search_items_in_registries` prints the literal text
+  `[object Promise]` in place of the add command for every result — an upstream MCP defect,
+  reproduced from both the repo root and `apps/web`. `get_add_command_for_items`
+  returns a well-formed command. AIX does not patch or compensate for it.
+- **Add commands are not trusted blindly.** Any future component addition
+  is run from `platform/apps/web` and verified against the actual directory
+  and `git diff`.
+- **`@latest` is unpinned** (as in the official config), so the server
+  version follows npm on each launch. Pinning is a possible future
+  decision, not made here.
+
+### 46.4 Runtime status
+
+**CONFIGURED / RESTART REQUIRED.** The running Claude Code process has not
+loaded `.mcp.json`. After a restart, and approval of the project-scoped
+server when prompted, `/mcp` should show `shadcn` as connected. Until that
+is observed, the server is not claimed to be connected.
+
+### 46.5 Existing component inventory (from the repo, not memory)
+
+`platform/apps/web/components/ui/` — 9 primitives, 950 lines, all present
+in Git with 1–2 commits each. All import `cn` from the `cn` package
+(the `shadcn@4` convention; `cn ^0.3.0` is a declared dependency).
+
+| Primitive | Lines | Added | Consumers | Classification |
+|---|---|---|---|---|
+| `badge` | 48 | `faebd94` | destination status, public product preview | **KEEP** |
+| `button` | 66 | `997528e` | 8 files — public site and authenticated shell/pages | **KEEP** |
+| `dialog` | 168 | `a07af94` | add-destination dialog | **KEEP** |
+| `input` | 18 | `a07af94` | add-destination dialog | **KEEP** |
+| `label` | 23 | `a07af94` | add-destination dialog, Client Requests filter | **KEEP** |
+| `navigation-menu` | 163 | `537c71d` | public header only (visually accepted, closed) | **KEEP** |
+| `select` | 191 | `a07af94` | add-destination dialog, Client Requests filter | **REVIEW LATER** |
+| `sheet` | 147 | `537c71d` | public header, authenticated mobile nav, nav list, 2 detail workspaces | **REVIEW LATER** |
+| `table` | 126 | `faebd94`, fix `c02a472` | destination table, Client Requests table, public product preview | **REVIEW LATER** |
+
+**Totals: KEEP 6 · REVIEW LATER 3 · UPDATE CANDIDATE 0.**
+
+Rationale for the three REVIEW LATER entries (none is a defect):
+
+- **`select`** — Radix renders `SelectValue` empty during server rendering
+  until the client mounts; `UI Phase 2J` handled it at the call site by
+  passing the label explicitly. Worth comparing against upstream during QA.
+- **`sheet`** — the most-shared overlay (five consumers). Its default
+  `w-3/4 sm:max-w-sm` yields ~322px at 430px wide, which `UI-04` §45 only
+  *reasoned* about; restyling has been done at call sites.
+- **`table`** — the only primitive with an AIX edit inside `ui/`
+  (`UI-QA-002`: the scrollable region gained `role="region"`, `tabIndex` and
+  an `aria-label`). A blind upstream update would erase it, and its fixed
+  label ("Scrollable table") is shared by every table on the platform.
+
+**No primitive is an UPDATE CANDIDATE** — none has a concrete known defect
+or unmet requirement, and a newer upstream version alone does not qualify.
+No upstream diff was run: comparing against the base registry would use the
+wrong style, and comparison belongs to the future audit below.
+
+### 46.6 Workflow and policy
+
+Recorded in `.claude/skills/aix-ui-design/SKILL.md` ("shadcn MCP policy"):
+search existing AIX components → reuse an installed primitive → search the
+official MCP → install only what the current screen requires → custom UI
+last. Official registry only; no bulk installs; no community registries or
+wholesale blocks without explicit review; the MCP does not override
+`UI-01`–`UI-04` or `REF-UI-006`, and does not authorize upgrades;
+shadcn/Radix accessibility preserved; thin AIX wrappers only for repeated
+domain behavior.
+
+### 46.7 Global update policy
+
+**DO NOT UPDATE ALL EXISTING SHADCN COMPONENTS NOW.** The existing UI is
+already implemented and governed; existing source may carry AIX adaptations
+(`table.tsx` does); broad regeneration would create uncontrolled diffs;
+and full visual QA is intentionally deferred until the authenticated UI is
+complete. Upgrades must be evidence-driven. A separate future turn may run
+a **SHADCN CONSISTENCY / UPGRADE AUDIT** after the authenticated UI is
+built.
+
+### 46.8 Scope confirmation
+
+No change to `platform/apps/web/**` (including `components/ui/`),
+`platform/services/**`, `packages/**`, `edge/**` or `infra/**`; no package
+or lockfile change; no component added, updated or regenerated; public
+homepage untouched. Quality gates (`typecheck`/`lint`/`build`) not required
+— no application or package source changed.

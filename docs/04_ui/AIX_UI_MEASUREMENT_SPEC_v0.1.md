@@ -2612,3 +2612,27 @@ arithmetic; **not rendered** — visual QA is deferred.
 **Width arithmetic** (content = viewport − 48px below 1280px; viewport −
 241px − 64px from 1280px): table region ≈ 783px @1440, ≈ 623px @1280,
 ≈ 624px @1024, 720px @768. The 4 base columns are estimated at ~600px.
+
+## UI Phase 2K — Wallet Destination Review Geometry
+
+Values used by `/ops/wallet-destination-review` (`UI-04` §46). The layout
+deliberately **reuses `UI Phase 2J`'s values** — nothing new except one
+container-query breakpoint. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Table row height | `h-10` = **40px** | `COMPACT` tier (`UI-04` §35.14) — reuse |
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | Reuse of Phase 2J |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px) | Reuse |
+| Selected-row marker | `border-l-2` = **2px**, `border-foreground` on the first cell | Reuse of Phase 2J's first implementation of `UI-04` §35.15 |
+| Filter trigger | `h-10` × `w-64` (40 × 256px) | Reuse |
+| Status icon | `size-4` = 16px (`DestinationStatusLine`); gate icons `size-3.5` = 14px | Existing sizes |
+| Container-query breakpoints | Registered at `@2xl` = **42rem (672px)** — *new*; Type at `@3xl` = 48rem (768px), Client at `@4xl` = 56rem (896px) — reuse of Phase 2J's two | |
+| Compact list row (`<768px`) | `py-3` (12px), three text lines | ≥44px touch target |
+| Sheet (`<1024px`) | Existing `SheetContent` | Unchanged |
+
+**Width arithmetic** (content = viewport − 48px below 1280px; viewport −
+305px from 1280px): table region ≈ 783px @1440, ≈ 623px @1280, ≈ 624px
+@1024, 720px @768. Estimated column widths: Destination ~155px, Network /
+Rail ~146px, Status ~200px (3 base columns ≈ 500px); Registered +~102px
+(≈ 600px), Type +~96px (≈ 700px), Client +~102px (≈ 800px).

@@ -1,9 +1,15 @@
 import {
   AWAITING_STAFF_ACTION_STATUSES,
-  DEMO_APPROVED_CLIENT_REF,
   DEMO_CLIENT_REQUESTS,
   demoRequestReference,
 } from "@/components/ops/client-request-data";
+import {
+  DEMO_REVIEW_RECORDS,
+  demoDestinationReference,
+  destinationReference,
+  isAwaitingStaffAction,
+  recordId,
+} from "@/components/ops/destination-review-data";
 import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } from "@/components/wallet-destinations/destination-data";
 
 /**
@@ -18,15 +24,12 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
  * - Client Requests — the status enum, labels, demo records and "awaiting staff action" set live
  *   in `client-request-data.ts` since `UI Phase 2J` (a second Ops page now needs them); this file
  *   imports them so the overview and `/ops/client-requests` can never disagree.
- * - Wallet destination status reuses `UI Phase 2E`'s own `STATUS_LABELS` from
- *   `wallet-destinations/destination-data.ts` DIRECTLY — the same `wlt1.destination.status`
- *   column, the same governed values. Verified this turn that the internal "safe staff" response
- *   shape (`safeWalletDestinationResponse`, `lib/safe-response.ts`) masks the address IDENTICALLY
- *   to the public client response — staff do NOT get an unmasked view; the only real difference is
- *   `client_id` being present (staff need to know whose destination it is). Reusing the client
- *   labels is therefore a deliberate choice, not an oversight — the underlying fact and its
- *   correct human phrasing are identical; Ops additionally shows the owning client reference,
- *   which the client's own page omits (redundant for a client viewing their own destination).
+ * - Wallet Destination Review — the demo records, status labels and "awaiting staff action" rule live
+ *   in `destination-review-data.ts` since `UI Phase 2K` (a second Ops page now needs them). The
+ *   status LABELS are still `UI Phase 2E`'s `STATUS_LABELS`, reused directly — the underlying
+ *   `wlt1.destination.status` column and its correct phrasing are identical for staff and client.
+ *   The overview lists only destinations awaiting staff action (`pending_review`, and a stuck
+ *   `pending_screening`), not every non-active one.
  * - `MakerCheckerStatus` — the exact status literals from `platform/services/iam2/src/routes/
  *   approvals.ts` (`pending`/`approved`/`rejected`/`expired`/`blocked` — the last set when an
  *   `iam2.sod_check` blocks a self-approval attempt).
@@ -53,12 +56,11 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
 export { CLIENT_APPLICATION_STATUS_LABELS, DEMO_CLIENT_REQUESTS } from "@/components/ops/client-request-data";
 
 // ---------------------------------------------------------------------------
-// B. Wallet Destination Review — WLT-01 wlt1.destination.status, reusing client-facing labels.
+// B. Wallet Destination Review — WLT-01 wlt1.destination.status. Source of truth:
+//    destination-review-data.ts; the Overview lists only destinations AWAITING STAFF ACTION.
 // ---------------------------------------------------------------------------
 
 export const WLT_STATUS_LABELS = CLIENT_WLT_STATUS_LABELS;
-
-const WLT_REVIEW_OPEN_STATUSES: DestinationStatus[] = ["pending_screening", "pending_review"];
 
 export interface DemoWalletReviewItem {
   id: string;
@@ -67,20 +69,14 @@ export interface DemoWalletReviewItem {
   status: DestinationStatus;
 }
 
-export const DEMO_WALLET_REVIEW_ITEMS: DemoWalletReviewItem[] = [
-  {
-    id: "demo-wlt-001",
-    reference: "Wallet Destination DEMO-WLT-001",
-    clientReference: `Client ${DEMO_APPROVED_CLIENT_REF}`,
-    status: "pending_screening",
-  },
-  {
-    id: "demo-wlt-002",
-    reference: "Wallet Destination DEMO-WLT-002",
-    clientReference: `Client ${DEMO_APPROVED_CLIENT_REF}`,
-    status: "pending_review",
-  },
-];
+export const DEMO_WALLET_REVIEW_ITEMS: DemoWalletReviewItem[] = DEMO_REVIEW_RECORDS.filter(isAwaitingStaffAction).map(
+  (record) => ({
+    id: recordId(record),
+    reference: destinationReference(record),
+    clientReference: `Client ${record.review.clientRef}`,
+    status: record.destination.status,
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // C. Maker-Checker Queue — IAM-02 iam2.approval_request.status.
@@ -118,7 +114,7 @@ export const DEMO_APPROVAL_REQUESTS: DemoApprovalRequest[] = [
     id: "demo-apr-001",
     reference: "Approval Request DEMO-APR-001",
     action: "wlt1.destination.approve",
-    subjectReference: "Wallet Destination DEMO-WLT-002",
+    subjectReference: demoDestinationReference("demo-dest-003"),
     status: "pending",
   },
   {
@@ -147,7 +143,7 @@ export const ATTENTION_ROLLUP: AttentionRollupRow[] = [
   },
   {
     label: "Wallet Destination Review",
-    count: DEMO_WALLET_REVIEW_ITEMS.filter((r) => WLT_REVIEW_OPEN_STATUSES.includes(r.status)).length,
+    count: DEMO_WALLET_REVIEW_ITEMS.length,
   },
   {
     label: "Maker-Checker Queue",
@@ -167,7 +163,7 @@ export interface OpsWorkflowAvailabilityItem {
 
 export const OPS_WORKFLOW_AVAILABILITY: OpsWorkflowAvailabilityItem[] = [
   { label: "Client Requests", status: "Available", href: "/ops/client-requests" },
-  { label: "Wallet Destination Review", status: "Interface planned" },
+  { label: "Wallet Destination Review", status: "Available", href: "/ops/wallet-destination-review" },
   { label: "Maker-Checker Queue", status: "Interface planned" },
   { label: "Audit / Activity", status: "Interface planned" },
 ];

@@ -72,11 +72,15 @@ export const CLIENT_NAV: NavItem[] = [
  * `UI Phase 2J`: "Client Requests" gains a real `href` (`/ops/client-requests`) — `B`-classified
  * (real `CLT-01` application/decision model, every route `requireInternal`-guarded). The other
  * three inert rows are unchanged. Label preserved exactly.
+ *
+ * `UI Phase 2K`: "Wallet Destination Review" gains a real `href` (`/ops/wallet-destination-review`) —
+ * `B`-classified (real `WLT-01` destination lifecycle, every internal route `requireInternal`-
+ * guarded). "Maker-Checker Queue" and "Audit / Activity" remain inert. Label preserved exactly.
  */
 export const OPS_NAV: NavItem[] = [
   { label: "Operational Overview", href: "/ops", icon: "layout-grid" },
   { label: "Client Requests", href: "/ops/client-requests", icon: "inbox" },
-  { label: "Wallet Destination Review", icon: "wallet" },
+  { label: "Wallet Destination Review", href: "/ops/wallet-destination-review", icon: "wallet" },
   { label: "Maker-Checker Queue", icon: "list-checks" },
   { label: "Audit / Activity", icon: "history" },
 ];

@@ -189,12 +189,18 @@ export const DEMO_APPROVED_CLIENT_REF = "DEMO-CLI-001";
  *
  * Awaiting staff action: `DEMO-001` (`submitted`) and `DEMO-002` (`under_review`) — the same two
  * records, in the same states, that `UI Phase 2I`'s overview already showed.
+ *
+ * `DEMO-004` (approved → client `DEMO-CLI-001`) is named "Example Institutional Holdings Ltd." — the
+ * same organisation the Client Portal's own demo state shows as an `active_limited` client — so that
+ * the client who owns the demo wallet destinations is one organisation across both portals.
+ * (`UI Phase 2J` had that name on a still-`submitted` application, which contradicted the Client
+ * Portal; corrected in `UI Phase 2K`, `UI-04` §46.4.)
  */
 export const DEMO_CLIENT_REQUESTS: DemoClientRequest[] = [
   {
     id: "demo-app-001",
     applicationRef: "DEMO-001",
-    legalName: "Example Institutional Holdings Ltd.",
+    legalName: "Illustrative Treasury Services Ltd.",
     applicantType: "institutional",
     clientClass: "institutional",
     status: "submitted",
@@ -260,7 +266,7 @@ export const DEMO_CLIENT_REQUESTS: DemoClientRequest[] = [
   {
     id: "demo-app-004",
     applicationRef: "DEMO-004",
-    legalName: "Illustrative Treasury Services Ltd.",
+    legalName: "Example Institutional Holdings Ltd.",
     applicantType: "institutional",
     clientClass: "institutional",
     status: "approved",

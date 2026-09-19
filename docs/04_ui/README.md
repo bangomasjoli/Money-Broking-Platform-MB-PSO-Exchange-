@@ -729,13 +729,45 @@ claim.** Public homepage unaffected.
   explicitly deferred** to a possible future SHADCN CONSISTENCY / UPGRADE
   AUDIT after the authenticated UI is complete. Search-before-create policy
   is in the `aix-ui-design` skill. Full record: `UI-03` §46.
+- **Phase 2K:** Staff/Operations Wallet Destination Review
+  (`/ops/wallet-destination-review`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** `B`-classified List + Detail workspace over `WLT-01`
+  destinations (wallet **and** fiat payout — both go through the same
+  approve/revoke routes). Every internal route is `requireInternal`-guarded,
+  **no list route exists at any layer**, and the internal safe responses
+  omit the review evidence — cooling end, screening outcome and
+  proof-of-control state — so those are demo-projected or omitted (no
+  countdown, no first-use or limits display; the only proof-of-control read
+  returns the *full address*, so it is not a summary). A mandatory
+  state-transition matrix (`UI-04` §46.6) drives everything: **approval is
+  maker-checker** (shown as "Request approval", offered only when the
+  backend's gates are met); **revocation is deliberately not
+  maker-checker**, is valid from any non-revoked state and is the only
+  staff termination — **the backend has no reject**, so none is shown;
+  screening is automated and staff act only to recover a stalled one;
+  `approved_pending_cooling → active` is lazy on first use, not a timer.
+  Destinations belong to approved clients, never applications; the staff
+  records reuse the Client Portal's fixtures by reference plus a separate
+  staff-only `review` object. Corrections to earlier demo data: the Overview
+  now lists only records awaiting staff (2 → 3), the approval-request
+  subject is a destination that can actually be approved, and the organisation
+  names of two Client Requests fixtures were swapped so the client who owns
+  the destinations is one organisation across both portals. Masked values
+  only; no reveal; Sensitive Read is not treated as a reveal permission. No
+  mutation; actions are natively disabled. `typecheck:web`/`lint:web`/
+  `build:web` all pass (11 static pages); verified via rendered-HTML and
+  compiled-CSS inspection plus a server-side render of every state's detail —
+  interactions were reasoned from source, **not** exercised, and nothing was
+  rendered. Full record: `UI-04` §46, `UI-02`'s new "UI Phase 2K" section,
+  `UI-03` §47.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
   authenticated Client Portal product pages — every Client Portal nav
-  item now has one. Operational Overview and Client Requests (both
-  `B`-classified) are the two real Staff/Operations pages — the other
-  three Ops nav items and every Admin page remain unimplemented. No API/auth integration exists on any of
+  item now has one. Operational Overview, Client Requests and Wallet
+  Destination Review (all `B`-classified) are the three real
+  Staff/Operations pages — Maker-Checker Queue, Audit / Activity and every
+  Admin page remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

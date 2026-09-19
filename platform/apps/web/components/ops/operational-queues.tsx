@@ -60,7 +60,18 @@ export function OperationalQueues() {
           </ul>
         </QueueGroup>
 
-        <QueueGroup title="Wallet Destination Review">
+        <QueueGroup
+          title="Wallet Destination Review"
+          action={
+            <Link
+              href="/ops/wallet-destination-review"
+              aria-label="View all wallet destination reviews"
+              className="text-xs text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              View all
+            </Link>
+          }
+        >
           <ul className="flex flex-col">
             {DEMO_WALLET_REVIEW_ITEMS.map((item) => (
               <li key={item.id} className="flex h-8 items-center justify-between gap-4 border-t border-border first:border-t-0">

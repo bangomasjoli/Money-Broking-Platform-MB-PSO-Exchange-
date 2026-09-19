@@ -2965,7 +2965,7 @@ today.** Every concept below was traced to its exact source:
 | Overview element | Owning module | Current internal route/model | Staff-facing (browser)? | Status |
 |---|---|---|---|---|
 | Client Requests | `CLT-01` | `/internal/clt1/applications` (**correction, UI Phase 2J: that path is `POST` create only — no list route exists at any layer; see §45.1**), `.../start-review`, `.../hold`, `.../reject`, `.../approve/{request,apply}` — real `client_application.status` enum (`routes/applications.ts`/`decisions.ts`: `draft`/`submitted`/`under_review`/`held`/`approved`/`rejected`/`cancelled`) | No | **PARTIAL/B** |
-| Wallet Destination Review | `WLT-01` | `/internal/wlt1/wallet-destinations`, `/internal/wlt1/destinations/:id/approve/{request,apply}`, `/internal/wlt1/stuck-screenings`, `/internal/wlt1/rescreening-runs` — real `wlt1.destination.status` enum, same as `UI Phase 2E`'s own; internal "safe staff" response (`lib/safe-response.ts`'s `safeWalletDestinationResponse`) masks the address IDENTICALLY to the public client response, verified this turn — staff do NOT get an unmasked view | No | **PARTIAL/B** |
+| Wallet Destination Review | `WLT-01` | `/internal/wlt1/wallet-destinations` (**correction, UI Phase 2K: `POST` registration, not a list — no list route exists; see §46.1**), `/internal/wlt1/destinations/:id/approve/{request,apply}`, `/internal/wlt1/stuck-screenings`, `/internal/wlt1/rescreening-runs` — real `wlt1.destination.status` enum, same as `UI Phase 2E`'s own; internal "safe staff" response (`lib/safe-response.ts`'s `safeWalletDestinationResponse`) masks the address IDENTICALLY to the public client response, verified this turn — staff do NOT get an unmasked view | No | **PARTIAL/B** |
 | Maker-Checker Queue | `IAM-02` | `/iam2/approvals/request`, `/iam2/approvals/:id/{approve,reject}` — real `iam2.approval_request.status` enum (`routes/approvals.ts`: `pending`/`approved`/`rejected`/`expired`/`blocked`, the last set by an `iam2.sod_check` blocking a self-approval attempt) | No | **PARTIAL/B** |
 | Recent Staff Activity (evidence) | `SEC-01` | `/internal/sec1/audit-events/{read,search}` — a real, confirmed-SAFE (already tier-redacted) field subset exists (`lib/read-redaction.ts`'s own `RedactableAuditEventRow`: `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc`, deliberately excluding hash-chain/integrity fields and raw payload at the SELECT level, not merely at response time) | No | **PARTIAL/B, minimal safe-field summary only** |
 | Workflow Availability | N/A — presentation of `UI-04` §8's own nav IA | `components/shell/nav-data.ts`'s `OPS_NAV` | N/A (UI-internal) | Shown as-is — the 4 other `B`-classified Ops nav items, all "Interface planned" |
@@ -3099,7 +3099,8 @@ dedicated Audit / Activity page.
 6 operational-queue records (2 per queue: Client Requests, Wallet
 Destination Review, Maker-Checker Queue) plus 2 Recent Staff Activity
 evidence rows — obviously fictitious references (`Client Application
-DEMO-001`/`DEMO-002`, `Wallet Destination DEMO-WLT-001`/`DEMO-002`,
+DEMO-001`/`DEMO-002`, `Wallet Destination DEMO-WLT-001`/`DEMO-002` — **superseded by UI Phase 2K,
+see §46.4** —
 `Approval Request DEMO-APR-001`/`DEMO-002`), no real IDs from the
 repository, no real staff names anywhere.
 
@@ -3303,11 +3304,12 @@ transition is ever added.
 ### 45.4 Demo fixtures
 
 4 obviously fictitious records, one per lifecycle stage a queue reviewer
-meets: `DEMO-001` Example Institutional Holdings Ltd. (`submitted`,
+meets: `DEMO-001` Illustrative Treasury Services Ltd. (`submitted`,
 institutional), `DEMO-002` Demo Capital Partners Ltd. (`under_review`,
 professional), `DEMO-003` Sample Family Office Ltd. (`held`, HNWI),
-`DEMO-004` Illustrative Treasury Services Ltd. (`approved`,
-institutional; client `DEMO-CLI-001`, approval `DEMO-APR-003`). No
+`DEMO-004` Example Institutional Holdings Ltd. (`approved`,
+institutional; client `DEMO-CLI-001`, approval `DEMO-APR-003`;
+**names of `DEMO-001`/`DEMO-004` swapped in UI Phase 2K, §46.4**). No
 real client name or repository id. Only `institutional`/`hnwi`/
 `professional` are used: `retail` and `unknown` map to CFG-01's
 permanently blocked `onboarding.retail_default` gate
@@ -3532,3 +3534,395 @@ No API/auth/permission code; no mutation; no audit timeline; no
 search; no separate review dialog; no C-classified or Exchange element; no
 KYC/AML detail; no change to the public homepage, backend, packages or
 lockfile.
+
+## 46. UI Phase 2K — Staff/Operations Wallet Destination Review (`B`-classified Ops page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The third real page on the
+Staff/Operations surface and its second List + Detail workspace
+(`UI Phase 2J` built the first). Same visual-QA posture as every phase
+since `UI Phase 2E`. Executed on `7c3c89c` (the shadcn-MCP tooling commit;
+the brief named `ed1fa15` — the delta touches no `platform/` file).
+
+### 46.1 Capability map (verified against `platform/services/wlt1/src`, not assumed)
+
+Every registered `wlt1` route was enumerated. **All `/internal/wlt1/*`
+routes are `requireInternal`-guarded** (interim shared-token identity —
+`plugins/internal-identity.ts`); the six `/wlt1/*` public routes are the
+Client contract `UI Phase 2E` already used and are not staff routes. Three
+findings shape this page:
+
+- **No list route exists at any layer.** `POST /internal/wlt1/wallet-
+  destinations` and `POST .../payout-destinations` are *registration*, not
+  reads (`UI Phase 2I`'s §44.1 listed the first without saying so).
+  Internal reads are per-destination and require the owning `client_id`
+  as a query parameter. The only list is `GET /internal/wlt1/stuck-
+  screenings`.
+- **The internal safe responses omit almost everything a reviewer
+  needs.** `safeWalletDestinationResponse` / `safeFiatDestinationResponse`
+  return identity, `client_id`, status, network/rail fields, the *masked*
+  value, `created_at_utc` and three version counters. They contain **no**
+  `cooling_off_until_utc`, screening outcome, proof-of-control state,
+  `updated_at_utc` or revocation evidence (fiat additionally has
+  `verification_status`).
+- **The only proof-of-control read is not a summary.** `GET .../proof-of-
+  control` returns the **full recovered address** (`verified_address`) and
+  writes a `wlt1.sensitive_destination_read` audit event.
+
+| UI element / action | WLT-01 route / model | Staff-visible? | Kind | Status |
+|---|---|---|---|---|
+| Destination list | none | — | read | **PARTIAL/B** — model real, no read route |
+| Destination detail (masked) | `GET .../wallet-destinations/:id?client_id=`, `GET .../payout-destinations/:id?client_id=` | No (internal only) | read | **PARTIAL/B** |
+| Client reference | `client_id` — in both internal safe responses | No | read | **PARTIAL/B** |
+| Type / network / rail / masked value | safe responses | No | read | **PARTIAL/B** |
+| Status | `wlt1.destination.status` (6 values) | No | read | **PARTIAL/B** |
+| Registered | `created_at_utc` (only timestamp exposed) | No | read | **PARTIAL/B** |
+| Fiat beneficiary verification | `verification_status` in the fiat safe response | No | read | **PARTIAL/B** |
+| Screening outcome | `wallet_screening_result.risk_status` — no read route | — | read | **DEMO-ONLY** (coarse; `risk_score`, categories, exposure never shown) |
+| Proof of control | only the address-disclosing sensitive GET above | — | read | **DEMO-ONLY** (coarse state); raw signature/challenge **OMITTED** |
+| Cooling-off end / countdown | column exists (`migration 055`), in no safe projection | — | read | **OMITTED** — status label only |
+| First-use state | evaluated inside `evaluate-use`; no read route | — | read | **OMITTED** |
+| Limits / velocity / concentration | `lib/limits.ts`; no read route | — | read | **OMITTED** — no restriction flag either |
+| Lifecycle history | `destination_revocation` evidence table etc.; no read route | — | read | **OMITTED** — no timeline fabricated |
+| Recover stuck screening | `POST .../stuck-screenings/:id/recover` | No | mutation | **PARTIAL/B**, disabled placeholder |
+| Request approval (maker) | `POST .../destinations/:id/approve/request` (read-only preflight) → IAM-02 approval → `.../approve/apply` | No | mutation | **PARTIAL/B**, disabled placeholder |
+| Revoke | `POST .../destinations/:id/revoke` | No | mutation | **PARTIAL/B**, disabled placeholder |
+| Reject a request | **none** | — | — | **OMITTED** |
+| Reveal full value | **none as a staff feature** (§46.9) | — | read | **OMITTED** |
+| Balances / ledger / custody / settlement | not owned by WLT-01 | — | — | **OMITTED** |
+
+### 46.2 Route, navigation and page architecture
+
+New route `/ops/wallet-destination-review`. `OPS_NAV` "Wallet Destination
+Review" gains its `href` (label unchanged — the governed §8 IA name);
+"Maker-Checker Queue" and "Audit / Activity" remain inert. The Overview's
+Workflow Availability row now reads "Available" and links, and its queue
+group gains a "View all" link (the `UI Phase 2H`/`2J` precedent).
+
+```
+app/ops/wallet-destination-review/page.tsx      — header + disclosure + workspace (Server Component)
+components/ops/
+  destination-review-data.ts                    — shared records, staff metadata, actions, readiness
+  destination-review-table.tsx                  — table (≥768px) / compact list (<768px)
+  destination-review-detail.tsx                 — staff detail (panel + Sheet share it)
+  destination-review-workspace.tsx              — filter, selection, panel/Sheet composition
+```
+
+**Wording.** Title "Wallet Destination Review" (governed IA label,
+preserved); description "Review governed wallet and payout destination
+requests and their current control state." — verified that the internal
+review covers **both** categories: `destination-approval` and `revoke` are
+destination-agnostic and `payout-destinations` has its own `assess`. So
+"payout" belongs in the description even though the nav label says
+"Wallet". `DemoDisclosure`: "Interface preview — wallet destination review
+records are demonstrative until the staff-facing WLT review routes are
+integrated."
+
+### 46.3 Destination categories
+
+Exactly the two WLT-01 supports — `wallet` and `fiat_payout` — and no third
+(re-confirmed against `dto.ts` and the `destination_type` handling). They
+differ materially in review, and the UI preserves it: a wallet has proof of
+control (when `unhosted`/`unknown`) and can be `pending_screening`; a fiat
+payout has beneficiary verification and rail coverage, **never enters
+`pending_screening`** (`draft → pending_review` directly via `assess`), and
+has no proof of control.
+
+### 46.4 Ownership model, shared data, and corrections
+
+**A destination belongs to an approved client — never to an application**
+(`UI Phase 2J`'s correction, preserved). Every record carries a `client_id`
+reference (`DEMO-CLI-001` / `DEMO-CLI-002`); no record references a CLT
+application.
+
+**Shared base + staff-only metadata.** `destination-review-data.ts` takes
+each record's `destination` **by reference** from the Client Portal's own
+`DEMO_DESTINATIONS` — the same five objects — so both portals agree on
+identity, type, masked value, network/rail and status. Everything staff-only
+(client ref, screening outcome, proof-of-control state, beneficiary
+verification, stuck age) lives in a separate `review` object the client
+fixtures never see; nothing staff-only leaks into a client fixture. The sixth
+record (`demo-dest-006`) is staff-only because it belongs to a second client
+and therefore must not appear on the first client's page. `DEMO-CLI-002` is a
+reference string only — no CLT demo application backs it.
+
+Corrections and changes to earlier demo data, made here rather than carried
+forward:
+
+1. **Overview count 2 → 3.** `UI Phase 2I` counted `pending_screening` and
+   `pending_review` as open. A healthy `pending_screening` is not awaiting
+   staff (the platform runs screening itself). The Overview's Wallet
+   Destination Review group now lists exactly the records the review page
+   marks awaiting staff — 3 (`DEMO-WLT-002` stuck screening, `DEMO-PAY-001`,
+   `DEMO-WLT-004`) — from the same source.
+2. **Reference renumbering.** The two `UI Phase 2I` wallet references
+   (`DEMO-WLT-001`/`002`) are superseded; references now follow creation
+   order, and a payout uses `Payout Destination DEMO-PAY-00n` (the Overview
+   previously called every destination a "Wallet Destination").
+3. **Approval subject.** The demo `wlt1.destination.approve` request now
+   targets `DEMO-PAY-001`, a `pending_review` destination whose approval
+   gates are all met — a request that could actually be raised.
+4. **Cross-portal organisation.** `UI Phase 2J` named the *submitted*
+   application `DEMO-001` "Example Institutional Holdings Ltd." — the same
+   organisation the Client Portal shows as an `active_limited` client. Names
+   were swapped: `DEMO-004` (approved → `DEMO-CLI-001`) is now that
+   organisation; `DEMO-001` is "Illustrative Treasury Services Ltd.". The
+   client who owns the demo wallet destinations is now one organisation
+   across both portals.
+
+### 46.5 Fixtures and reachable states
+
+6 obviously fictitious records; masked values only, no address, account
+number, IBAN, transaction hash or client name. Each is a reachable
+combination:
+
+| Ref | Type | Status | Notes |
+|---|---|---|---|
+| `DEMO-WLT-002` | wallet (Tron, unhosted) | `pending_screening` | Screening in progress 1 h 34 min — past the recovery threshold, so it appears in the stuck-screening list. Wallet only |
+| `DEMO-PAY-001` | payout (MY) | `pending_review` | Screening clear, beneficiary verified — all gates met |
+| `DEMO-WLT-004` | wallet (Ethereum, unhosted) | `pending_review` | Screening `review_required`, proof of control verified — reachable because *any* terminal screening result advances a wallet to `pending_review` (`lib/screening-application.ts`), but only `clear` passes the approval gate |
+| `DEMO-WLT-001` | wallet (Ethereum, hosted) | `active` | Hosted → no proof of control applies |
+| `DEMO-PAY-002` | payout (SG) | `approved_pending_cooling` | Cooling end not staff-visible |
+| `DEMO-WLT-003` | wallet (Ethereum, unknown) | `revoked` | Terminal |
+
+No `draft` row (nothing for staff to see), no `high_risk`/`hit` row (same
+mechanism as `review_required`; this turn asks not to overload negatives).
+The filter includes every governed status, so `Draft` yields the empty state.
+
+### 46.6 State-transition matrix (reachable transitions only)
+
+| # | Source state | Staff action | Target | Route | Authority | UI representation |
+|---|---|---|---|---|---|---|
+| 1 | `draft` | *none — system* | `pending_screening` | `POST /internal/wlt1/wallet-destinations/:id/screen` (wallet; also resumes a stalled screening) | Internal token, `Idempotency-Key` | Status + explanatory note; no control |
+| 2 | `pending_screening` | *none — system* | `pending_review` | Provider result applied — synchronously in `/screen`, or async via `POST /internal/wlt1/provider-results/receipt` (authenticated receipt). **Any** terminal outcome (`clear`/`review_required`/`high_risk`/`hit`) | Internal token / receipt auth | "Screening outcome" row |
+| 3 | `draft` | *none — system* | `pending_review` | `POST /internal/wlt1/payout-destinations/:id/assess` (fiat: screening + beneficiary verification) | Internal token | Fiat never shows `pending_screening` |
+| 4 | `pending_screening` | **Recover stuck screening** | `draft` (screening `pending → failed`) | `POST /internal/wlt1/stuck-screenings/:screening_result_id/recover` — `reason_code` ∈ `provider_result_never_delivered`/`provider_outage`/`operator_containment`; refused before the age threshold | Internal token only — **no IAM-02** | Disabled "Recover stuck screening", offered only when stuck |
+| 5 | `pending_review` | **Request approval** (maker) | `approved_pending_cooling` | `POST .../destinations/:id/approve/request` (read-only preflight; IAM-02 `checkPermission` advisory) → IAM-02 approval created **outside WLT** by a different actor → `POST .../approve/apply` (decision token bound to the payload hash; sets `cooling_off_until_utc` and `whitelist_approval_ref`) | **Maker-checker via IAM-02** | Disabled "Request approval", offered only when every gate is met |
+| 6 | `approved_pending_cooling` | *none — system* | `active` | Lazy promotion inside `POST .../destinations/:id/evaluate-use` on the first eligible use after cooling-off elapses | Internal token | Status note — **not a timer, not a staff action** |
+| 7 | `draft`, `pending_screening`, `pending_review`, `approved_pending_cooling`, `active` | **Revoke destination** | `revoked` | `POST /internal/wlt1/destinations/:id/revoke` — `reason_code` ∈ `compromise`/`client_request`/`beneficiary_change`/`operator_security_action`/`administrative`, optional detail ≤280 | Internal token only — **no IAM-02, no maker-checker** (deliberate) | Disabled "Revoke destination" on every non-revoked record |
+| 7a | (same states) | *none — system* | `revoked` | `POST /internal/wlt1/aml-revocations` (`aml_risk_signal`); rescreening run (`rescreen_adverse`) | Internal token | — |
+| 8 | `revoked` | — | — | Absorbing; a second revoke is a no-op | — | "No staff action is available" |
+
+**Not represented because unreachable:** a fiat `pending_screening`; any
+"reject" transition; `revoked` → anything; `pending_review` → `draft`; any
+staff-driven `approved_pending_cooling → active`.
+
+**Approval gates** (`lib/destination-approval.ts`, evaluated at both
+`approve/request` and `approve/apply`): status is `pending_review`; the
+latest screening is `clear` **and unexpired**; a wallet of type `unhosted`
+or `unknown` has verified proof of control (`hosted` does not); a fiat
+destination has a supported rail, a verified and unexpired beneficiary
+verification, and no proof of control.
+
+### 46.7 Lifecycle mapping and "awaiting staff action"
+
+Labels are `UI Phase 2E`'s `STATUS_LABELS`, reused directly (single source,
+the `UI Phase 2I` precedent). Staff and client wording do not differ:
+`pending_screening` "Screening in Progress", `pending_review` "Pending
+Review", `approved_pending_cooling` "Approved — Cooling-Off". Staff get
+extra semantics through a one-sentence **Control State** note per status,
+not different labels.
+
+**Awaiting staff action** is derived from the matrix, not "every non-active
+state":
+
+- `pending_review` — a decision is required (request approval, or revoke).
+- `pending_screening` **only when stuck** — the platform runs screening; the
+  sole staff action is recovery, which the route refuses before its
+  threshold.
+- **Not awaiting:** `draft` (platform initiates screening); a healthy
+  `pending_screening`; `approved_pending_cooling` (no manual step — and
+  because promotion is lazy, the status can outlast the cooling window until
+  the first use is evaluated, so the status alone does not say cooling is
+  still running); `active`; `revoked`. Revocation stays available from every
+  non-revoked state, but availability is not a queue.
+
+**Screening is both** an automated state and, when it stalls, a staff
+state. No "Pass Screening" control exists: no route lets staff set a
+screening outcome.
+
+### 46.8 Queue, density, filter, search
+
+**Columns** (only fields the safe responses back): Destination (masked),
+Network / Rail, Status always; Registered, Type and Client as the table
+region widens (container query: `≥42rem` / `≥48rem` / `≥56rem`). No
+balance, amount, risk-score, settlement or SLA column. Awaiting-staff
+records lead the queue, so the panel's default selection is one that
+matters. **Density:** `COMPACT` 40px (`h-10`) — `UI-04` §35.14 names "Wallet
+Destination Review" in the "standard lists" tier; nothing suggests a
+high-volume queue.
+
+**Filter: implemented** — a labelled `Select`, options derived from
+`DESTINATION_STATUSES` and `STATUS_LABELS`, so it can never omit or reword a
+status; a polite live region reports "Showing N of M destinations".
+**Search: not added** — WLT-01 has no search capability and six records do
+not justify one.
+
+### 46.9 Detail panel and the controls WLT exposes
+
+Sections (each only where backed): **Client Context**, **Destination
+Details**, **Control State**, **Screening & Evidence** (non-revoked only),
+**Review Actions**. Not the Client `DestinationDetail` — a client reviews
+their own destination, staff decide; only the domain formatters and status
+line are shared, never the layout. No version counters, hashes, internal
+ids or provider names.
+
+- **Wallet fields:** network, wallet type, relationship, memo/tag present.
+  **Fiat fields:** country, currency, rail (governed code shown verbatim —
+  no invented label), bank identifier, branch, beneficiary type.
+- **Masking.** Only `address_masked` / `account_identifier_masked`, already
+  masked by WLT-01. **No reveal control.**
+- **Sensitive Read is not a reveal permission.** `lib/sensitive-read.ts`
+  publishes a service-attributed audit event around the proof-of-control
+  routes (its actor is `request.ctx.actor_id ?? "wlt1_internal_service"`,
+  "never a fabricated human/staff id"). No route discloses a full address or
+  account number to a staff role; a real reveal would need its own route,
+  authority and evidence, so none is built or implied.
+- **Proof of control.** Applies to wallets only (`unhosted`/`unknown`), is
+  obtainable only while `pending_review`, and is a hard approval gate. The
+  UI shows a coarse Verified / Not verified / Not applicable — **demo-
+  projected**, since no summary projection exists. Raw signature, challenge
+  and recovered address are never shown.
+- **Cooling-off.** Label "Approved — Cooling-Off" plus the note in §46.7.
+  **No end time, countdown or time-remaining** — `cooling_off_until_utc`
+  is in no safe projection.
+- **First-use, limits, velocity, concentration.** Evaluated only inside
+  `evaluate-use` at use time; **no read route and no safe-response field**.
+  Omitted entirely — not even a "restriction present" flag, since nothing
+  backs one.
+- **Client context.** A client reference only. No KYC file, risk score, AML
+  case or UBO detail — those belong to Admin/Compliance.
+- **History/audit.** Only `created_at_utc` is exposed; no state-transition
+  timestamps or revocation evidence have a read route, so **no timeline is
+  fabricated**. Full audit belongs to Audit / Activity.
+
+### 46.10 Maker-checker, reject vs revoke
+
+- **Approval is maker-checker.** `approve/request` is a read-only preflight
+  that returns the canonical payload; an operator creates the IAM-02
+  approval *outside WLT* (WLT "does NOT call `/iam2/approvals/request`");
+  `approve/apply` requires a decision token bound to that payload hash. The
+  UI therefore offers **"Request approval"**, never "Approve", and states
+  that a different authorised approver completes it. One reviewer cannot
+  complete both stages.
+- **Revocation is deliberately *not* maker-checker** (route header:
+  "unlike whitelist approval, this route has NO IAM-02 call and NO maker-
+  checker — approval grants authority and requires a second approver;
+  revocation REMOVES authority and must support immediate operator
+  containment"). The panel says so: "immediate, single-step and
+  irreversible". Recovering a stuck screening is likewise single-step.
+- **Reject vs revoke: the backend has no reject.** Declining a request
+  before activation is done by revoking it — the same `revoked` state,
+  reachable from any non-revoked state, with an operator reason code. The UI
+  therefore has **no "Reject" control and no "Rejected" state**; inventing
+  one would misrepresent the model. The distinction that *does* exist is
+  provenance: operator revoke vs system revoke (AML signal, rescreening).
+
+### 46.11 Actions and the mutation boundary
+
+**No mutation exists on this page** — no fetch, server action, auth or
+permission code. Review Actions shows exactly the actions §46.6 defines for
+the current status; every one is a natively `disabled` `Button` (not
+focusable), under a "staff action routes are not yet integrated" note. The
+verbs are the backend's own — **Recover**, **Request approval**,
+**Revoke** — not "Verify", "Trust" or "Whitelisting Complete". "Request
+approval" appears only when every approval gate is met, because the
+backend refuses `approve/request` otherwise; a `pending_review` record with
+unmet gates says so and offers revoke alone.
+
+### 46.12 Backend gaps for a live review page
+
+Inspected first; not all are missing.
+
+| Need | Exists? | Gap |
+|---|---|---|
+| Staff **list** projection | **No** — no list route at any layer | New paged, status-filtered, cross-client route through a staff-session path |
+| Staff **detail** projection | **Partly** — internal `GET` per destination with `client_id` query | Staff-session exposure; and it lacks the fields below |
+| **Cooling** state/timestamp | Column exists; **in no safe projection** | Expose `cooling_off_until_utc`, or a derived "cooling elapsed" flag (needed because promotion is lazy) |
+| **Screening result** summary | **No read route** | Coarse `risk_status` plus validity/freshness (approval requires an unexpired result) |
+| **Proof-of-control** summary | Only a sensitive GET that returns the full address | A coarse-status projection with no address and no sensitive-read event |
+| Beneficiary verification (fiat) | **Yes** — `verification_status` in the fiat safe response | Freshness (`valid_until`) is not exposed |
+| **Review actions** | **Yes** — `recover`, `approve/request`+`apply`, `revoke` exist internally | Staff-session exposure; browser-safe actor binding (bodies carry `actor_id` and `client_id`); the request bodies need the record's `client_id` |
+| **Maker-checker handoff** | IAM-02 approval is created outside WLT | No UI path; approver identity is not visible to WLT |
+| **Lifecycle history** | Evidence exists (`destination_revocation`, screening rows, audit) | No read route; needs a safe summary or defers to Audit / Activity |
+| **First-use / limits** | Evaluated at use time only | No read route; would need an explicit policy decision on what staff may see |
+| **Controlled sensitive read** | Logging exists; **no staff reveal feature** | Its own route, authority, evidence and SEC-01 tie-in — none implied by this page |
+| Reject transition | **None** | A backend lifecycle decision before any "Reject" UI |
+
+### 46.13 Responsive reasoning (structural, not rendered)
+
+Shell facts as `UI-04` §45.11: content width ≈ viewport − 48px below
+1280px, ≈ viewport − 305px from 1280px (sidebar 240px + 1px border + 64px
+padding).
+
+| Viewport | Content | Layout | Table region | Columns |
+|---|---|---|---|---|
+| **1440** | ≈1135px | Split: queue + 320px panel, 32px gap | ≈783px | Destination, Network/Rail, Status, Registered, **Type** (Client hidden) |
+| **1280** | ≈975px | Split | ≈623px | 3 base columns (~500px) |
+| **1024** | ≈976px | Split (`lg:`) | ≈624px | Same as 1280 |
+| **768** | ≈720px | Queue full width; detail in Sheet | 720px | 3 base + Registered (~600px) |
+| **430** | ≈398px | Compact list; detail in Sheet | — | Identifier / date · client · type · network / state |
+
+The persistent panel is used from `lg:` — `≥1280` and `1024–1279` resolve
+identically (the sidebar's 241px arrives as the viewport gains 256px), so
+the split is as safe in one as the other. Below `lg:` selection opens a
+right `Sheet` via `useIsLgUp`. **Visual risks for the consolidated pass**
+(none verifiable without rendering): (1) the 3-column fit at ~623px rests on
+estimated text widths (~120px slack); (2) `text-sm` medium status text in a
+40px row; (3) the row highlight appears only after hydration (the
+`matchMedia` snapshot is `false` on the server); (4) `max-width`-free
+`nowrap` cells rely on the container-query hiding, not truncation.
+
+### 46.14 Accessibility
+
+One `<h1>`. The panel is `<h2>` (masked identifier) with `<h3>` sections; in
+the Sheet, `SheetTitle` carries the identifier. A real `<table>` with an
+accessible name; one tab stop per row — a native `<button>` in the
+Destination cell (`aria-current` marks the open record; its accessible name begins with the
+visible masked identifier — "…, open Wallet Destination DEMO-WLT-002" — so
+label-in-name holds; an earlier draft used a name that omitted the visible
+text and was corrected before commit). The row `onClick` is a mouse-only hit-area
+convenience; the button has no `onClick` of its own, so selection never
+double-fires. A real `<label>` for the filter; an `aria-live="polite"`
+count. Status is icon + text; approval gates are icon + text (Met / Not met /
+Not applicable), never colour alone. **No fake mutation is focusable** —
+every action button is natively `disabled`, with the reason stated in
+adjacent text. Empty states: filter yielding nothing → "No wallet
+destination reviews match the current view." with a "Show all destinations"
+button; a genuinely empty queue → "No wallet destination requests currently
+require review." (reachable in code; deliberately does not say destinations
+are safe). Loading/error states are not built — nothing is fetched.
+
+### 46.15 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `DestinationReviewTable`,
+  `DestinationReviewDetail`, `DestinationReviewWorkspace`. No `Aix*`
+  wrapper.
+- **Reused:** `useIsLgUp`, `DemoDisclosure`, `PageHeader`, `DestinationStatusLine`
+  and the formatters from `UI Phase 2E`, `formatRequestDate(Time)` from
+  `UI Phase 2J` (UTC-pinned — a generic formatter living in a requests
+  module; a rename is a cleanup candidate).
+- **Not extracted:** a generic `ListDetailWorkspace`. This is now the third
+  filter/panel/Sheet workspace (Wallet & Payout Destinations, Client
+  Requests, this), so the repetition is real — but promoting it means
+  editing two shipped pages during deferred QA. Recorded as a consolidation
+  candidate alongside the `Row`/`Section` helpers (§45.13).
+- **shadcn:** no component added, updated or regenerated. Existing `Table`,
+  `Button`, `Sheet`, `Select` and `Label` sufficed, so the MCP policy stopped
+  at step 2 (reuse an installed primitive); the official MCP was not needed.
+
+### 46.16 Boundaries
+
+**WLT-01 ownership:** no wallet balance, account balance, ledger,
+settlement accounting, custody accounting or finality anywhere — WLT-01 owns
+destination eligibility and control only. **No `C`-classified Ops element**
+(Deposit/Withdrawal/Broking-RFQ Operations, Settlement, Reconciliation,
+Exceptions/Breaks). **No Exchange element** — no trading, order book,
+pricing or market data. Confirmed by source inspection and a forbidden-term
+scan of the rendered page.
+
+### 46.17 What this phase explicitly did not do
+
+No API/auth/permission code; no mutation; no reveal; no timeline; no
+search; no separate review dialog; no reject; no cooling countdown; no
+first-use/limit display; no C-classified or Exchange element; no change to
+the public homepage, backend, packages or lockfile.

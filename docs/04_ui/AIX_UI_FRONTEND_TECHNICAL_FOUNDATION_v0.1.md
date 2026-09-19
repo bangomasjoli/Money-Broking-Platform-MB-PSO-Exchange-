@@ -1745,3 +1745,53 @@ No change to `platform/apps/web/**` (including `components/ui/`),
 or lockfile change; no component added, updated or regenerated; public
 homepage untouched. Quality gates (`typecheck`/`lint`/`build`) not required
 — no application or package source changed.
+
+## 47. Phase 2K — Staff/Operations Wallet Destination Review (third Ops page, visual QA deferred)
+
+`/ops/wallet-destination-review` (`UI-04` §46): a List + Detail workspace
+over `WLT-01` destinations — wallet and fiat payout. `B`-classified; demo
+data only; no fetch, server action, auth or mutation.
+
+**Files created (5):** `app/ops/wallet-destination-review/page.tsx`;
+`components/ops/{destination-review-data.ts, destination-review-table.tsx,
+destination-review-detail.tsx, destination-review-workspace.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (Wallet Destination
+Review gains `href`); `components/ops/{ops-data.ts, operational-queues.tsx}`
+(Overview now derives its WLT rows from the shared data and links to the
+page); `components/ops/client-request-data.ts` (organisation names of
+`DEMO-001`/`DEMO-004` swapped for cross-portal consistency — `UI-04` §46.4).
+The Client Portal's `destination-data.ts` is **unchanged**; the staff data
+imports its fixtures by reference.
+
+**shadcn impact: none** — `Table`, `Button`, `Sheet`, `Select`, `Label`
+already installed; the official shadcn MCP was not needed (policy stopped
+at "reuse an installed primitive"). **No package or lockfile change.**
+
+**Client/server boundary:** the page is a Server Component; the workspace,
+table and detail are client-bundled. Dates render through UTC-pinned
+formatters so server and browser output match. Container queries are reused
+from `UI Phase 2J` (`@container` + `@2xl:`/`@3xl:`/`@4xl:`), confirmed in the
+compiled stylesheet (`min-width: 42rem`, `48rem`, `56rem`).
+
+**Quality gates:** `typecheck:web`, `lint:web`, `build:web` all pass; **11**
+static pages generated (was 10).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev
+server + `curl` + rendered-HTML and compiled-CSS inspection, **plus a
+server-side render of the detail component for all six records** (a
+scratch `tsx` script in a git-ignored directory, removed afterward — it
+found and led to a fix for a review action being offered when its gates
+were unmet). Confirmed: one `<h1>`; the 6 queue rows and their values; the
+mobile list's 6 items; the labelled filter with its SSR value; the live
+region; one button per row; each state's sections and natively-disabled
+actions; the Overview's "3 items" agreeing with the queue's awaiting rows;
+the sidebar's three live Ops links and two inert rows; no forbidden term
+(balance, settlement, reveal, reject, trading…) in the page text. **Not
+verifiable here:** filter/selection/Sheet interaction (no browser or
+jsdom) — reasoned from source, not exercised.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests` and `/admin` all
+return 200 with unchanged structure. Backend regression not required — zero
+`platform/services/**`, `packages/**`, `edge/**`, `infra/**` change. Public
+homepage unaffected.

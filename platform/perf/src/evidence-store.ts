@@ -8,8 +8,8 @@
  * `platform/edge/uat-tls/evidence/.gitignore` — only `.gitignore` itself is ever tracked; every
  * generated file here is git-ignored (`perf/evidence/.gitignore`).
  */
-import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { mkdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { randomBytes } from "node:crypto";
 import { assertNoSecrets } from "./secret-scan.js";
 
@@ -67,6 +67,13 @@ export function writeEvidenceAtomic(input: WriteEvidenceAtomicInput): string {
 
   const dir = dirname(absolutePath);
   mkdirSync(dir, { recursive: true });
+
+  // A symlink under perf/evidence/ can make a lexically in-root path resolve elsewhere.
+  const realRoot = realpathSync(EVIDENCE_ROOT);
+  const realRel = relative(realRoot, realpathSync(dir));
+  if (realRel === ".." || realRel.startsWith(`..${sep}`) || isAbsolute(realRel)) {
+    throw new EvidencePathError(`evidence path "${input.relativePath}" resolves outside the real platform/perf/evidence/ root via a symlink — refused`);
+  }
 
   const tempPath = join(dir, `.tmp-${randomBytes(6).toString("hex")}-${Date.now()}`);
   try {

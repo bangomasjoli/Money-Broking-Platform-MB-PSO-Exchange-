@@ -15,6 +15,8 @@
  * `validateStatusThresholdPairing` below for the load-bearing invariant this file enforces. */
 export type ResultStatus = "OBSERVED" | "PASS" | "FAIL" | "INCONCLUSIVE" | "INVALID";
 
+const RESULT_STATUSES = ["OBSERVED", "PASS", "FAIL", "INCONCLUSIVE", "INVALID"] as const satisfies readonly ResultStatus[];
+
 /**
  * Controlled measurement identifiers (IMP-02 M1-M8 architecture §41-42). `M2` itself is
  * deliberately NOT a member — only its two evidenced sub-parts, `M2a` (application-side pool
@@ -243,6 +245,16 @@ export function createMeasurementResult<TDetails>(
   input: CreateMeasurementResultInput<TDetails>,
 ): MeasurementResult<TDetails> {
   const status = input.status ?? "OBSERVED";
+  if (!(RESULT_STATUSES as readonly unknown[]).includes(status)) {
+    throw new MeasurementResultValidationError(
+      `status ${JSON.stringify(status)} is not one of the controlled states: ${RESULT_STATUSES.join(", ")}`,
+    );
+  }
+  if (!(ALL_MEASUREMENT_IDS as readonly unknown[]).includes(input.measurement_id)) {
+    throw new MeasurementResultValidationError(
+      `measurement_id ${JSON.stringify(input.measurement_id)} is not a controlled measurement identifier: ${ALL_MEASUREMENT_IDS.join(", ")}`,
+    );
+  }
   validateStatusThresholdPairing(status, input.threshold_ref);
   assertValidEnvironmentManifest(input.environment);
 

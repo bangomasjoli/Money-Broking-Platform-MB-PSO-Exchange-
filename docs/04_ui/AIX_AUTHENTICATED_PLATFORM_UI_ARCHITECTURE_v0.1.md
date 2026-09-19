@@ -3098,6 +3098,7 @@ dedicated Audit / Activity page.
 
 6 operational-queue records (2 per queue: Client Requests, Wallet
 Destination Review, Maker-Checker Queue) plus 2 Recent Staff Activity
+(**evidence rows superseded by UI Phase 2M, §48.7**)
 evidence rows — obviously fictitious references (`Client Application
 DEMO-001`/`DEMO-002`, `Wallet Destination DEMO-WLT-001`/`DEMO-002` — **superseded by UI Phase 2K,
 see §46.4** —
@@ -3188,7 +3189,9 @@ Derived directly from §44.1's capability map:
 5. **SEC-01 staff-facing safe-activity-summary projection** — the data
    SHAPE already exists and is already safe (`lib/read-redaction.ts`);
    the gap is exposing it through a staff-session-authenticated route,
-   not redesigning what "safe" means.
+   not redesigning what "safe" means. (**UI Phase 2M, §48.1/§48.11: the read
+   route exists, but no role holds its permission and no relay carries module
+   events into SEC-01 — the gap is larger than exposure alone.**)
 
 No system-health/control-notes projection gap is listed — that
 candidate section was omitted by design (§44.4), not because a gap
@@ -4299,3 +4302,341 @@ No API/auth/permission code; no mutation and no local fake success; no
 search; no reason field; no reveal; no audit timeline; no approver identity;
 no required-role claim; no C-classified or Exchange element; no change to the
 public homepage, backend, packages or lockfile.
+
+## 48. UI Phase 2M — Staff/Operations Audit / Activity (`B`-classified Ops page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The fifth and last real page in
+the initial Staff/Operations set, and its fourth List + Detail workspace. Same
+visual-QA posture as every phase since `UI Phase 2E`. Baseline `d77ae73`, as the
+brief stated. **`STAFF / OPS INITIAL UI SET: IMPLEMENTED / VISUAL QA DEFERRED`**
+(§48.15).
+
+### 48.1 Capability map (verified against `platform/services/sec1/src`, not assumed)
+
+Unlike CLT-01, WLT-01 and IAM-02, **SEC-01 does have a real, paginated,
+tier-redacted read**: `POST /internal/sec1/audit-events/search` (filters +
+`cursor`, default 50, max 200) and `POST .../read` (one event). It is still not
+callable from a staff browser session — the route needs the internal service
+token, an `IAM-02` baseline permission (`sec1.audit_event.search` / `.read`) with
+the acting user in the request body, and **no role is granted those permissions**
+(`011_iam2_register_sec1_permissions.cjs`: "NO role_permission rows seeded").
+Four findings shape the page:
+
+- **The safe projection is explicit and small** (`lib/read-redaction.ts`), and
+  hash-chain/integrity fields are never even selected.
+- **Redaction leaves no marker.** At normal tier `session_id`, `request_id`,
+  `correlation_id` and `metadata_redacted` are omitted "as keys, not
+  null/placeholder, so a caller cannot distinguish 'redacted' from 'genuinely
+  absent'" — deliberately. So a per-row "redacted" flag cannot exist.
+- **Nothing carries module events into SEC-01.** `publishAudit` writes to the
+  outbox topic `audit.event`; **no consumer or relay exists in the repository**;
+  SEC-01's ingestion API needs a per-module source-identity binding, seeded only
+  for `FND-01`, `IAM-01`, `IAM-02`; and only **four event types** are registered
+  (`fnd01.generic_event`, `iam01.generic_event`, `iam02.generic_event`,
+  `sec1.self_audit_event`). Every module-specific type (`clt1.application_
+  submitted`, …) would be refused `SEC1_EVENT_TYPE_UNKNOWN`.
+- **Emitter and store disagree.** SEC-01's `actor_type` is `client | staff |
+  system | service`; `publishAudit`'s is `user | system | service` (no mapping for
+  `user`). SEC-01 mandates `severity`, `action` and `result`; `wlt1.*`, `iam2.*`
+  and the sensitive-read emitters supply none of the three (`clt1.*` supplies all).
+
+| UI element / event field | SEC-01 route / model | Staff-visible (browser)? | Safe / redacted / internal | Status |
+|---|---|---|---|---|
+| Activity list | `POST .../audit-events/search` (cursor-paged) | No | safe | **PARTIAL/B** — real route, not callable |
+| Event detail | `POST .../audit-events/read` | No | safe | **PARTIAL/B** |
+| `audit_event_ref` (event reference) | projection | No | safe | **PARTIAL/B** |
+| `event_type`, `action`, `result`, `severity` | projection | No | safe | **PARTIAL/B** |
+| `event_category` | projection (from the event schema) | No | safe | **PARTIAL/B** — null for unregistered types |
+| `source_module` (domain) | projection | No | safe | **PARTIAL/B** |
+| `actor_type` | projection — `client`/`staff`/`system`/`service` | No | safe | **PARTIAL/B** |
+| `actor_user_id` | projection, **both tiers** | No | safe but **opaque** | **OMITTED** — no display projection, so not shown |
+| `entity_type`, `entity_id` | projection | No | safe, `entity_id` opaque | **PARTIAL/B** (label is a demo projection) |
+| `reason_code` | projection, optional | No | safe | **PARTIAL/B** — shown only if present |
+| `occurred_at_utc`, `ingested_at_utc` | projection | No | safe | **PARTIAL/B** |
+| `classification` | projection | No | safe | **PARTIAL/B** |
+| `retention_class`, `status` | projection | No | safe | **OMITTED** (§48.9) |
+| `client_id` | only when the search is scoped to that client | No | **redacted** at normal tier | **OMITTED** |
+| `session_id`, `request_id`, `correlation_id` | sensitive tier only | — | **redacted** | **OMITTED** — no correlation shown |
+| `metadata_redacted` | sensitive tier only | — | **redacted** | **OMITTED** |
+| Hash-chain / integrity fields | never selected | — | **internal** | **OMITTED** |
+| "Sensitive access recorded" | event types that record a governed read (`wlt1.`/`kyc1.`/`aml1.` `*_read`) | No | safe (coarse) | **PARTIAL/B** |
+| Per-row "redacted" marker | **none, by design** | — | — | **OMITTED** |
+| Sensitive-tier read | `sec1.audit_event.read_sensitive`; writes a `sensitive_read_log` row | — | — | **OMITTED** — not used by this page |
+| Audit export | **no route** | — | — | **OMITTED** |
+| Security alerts, monitoring dead-letter, integrity verify, seal verify | separate `/internal/sec1/*` routes | — | — | **Not on this page** (Admin/Compliance) |
+
+### 48.2 Event types represented
+
+Only real `event_type` strings, verified against each module's `publishAudit`
+call sites. Nine types, three modules:
+
+| Event type | Module | Emitter supplies `severity`/`action`/`result`? | Recorded as |
+|---|---|---|---|
+| `clt1.application_submitted` | CLT-01 | **Yes** | actor `service`, action `submit`, `medium` |
+| `clt1.application_under_review` | CLT-01 | **Yes** | action `start_review`, `medium` |
+| `clt1.application_approval_requested` | CLT-01 | **Yes** | action `approve_request`, `medium` |
+| `clt1.application_approved` | CLT-01 | **Yes** | action `approve`, `high` |
+| `iam2.approval_requested` | IAM-02 | No | demo-projected |
+| `iam2.approval_approved` | IAM-02 | No | demo-projected |
+| `iam2.sod_conflict_detected` | IAM-02 | No | demo-projected (`blocked`, `high`) |
+| `wlt1.proof_of_control_verified` | WLT-01 | No | demo-projected |
+| `wlt1.sensitive_destination_read` | WLT-01 | No | demo-projected; metadata `access_action` is `read` |
+
+The UI label ("Application approved") is a name for the event type, never new
+vocabulary, and the exact string is always shown in the detail. WLT-01 alone
+emits ~27 event types; KYC-01, AML-01, CFG-01, IAM-01 and the rest are not
+represented (KYC/AML subjects are compliance-portal domain; the rest have no
+Ops workflow yet). The mapping is data-driven, so another type is one entry.
+`iam2.approval_expired` was deliberately not used: that emitter carries no
+result, and mapping an expiry onto `success | failure | blocked` would invent
+an outcome.
+
+### 48.3 Route and navigation
+
+**`/ops/audit-activity`** — the slug of the governed nav label "Audit /
+Activity" (`/` → `-`), following the label → slug convention `client-requests`,
+`wallet-destination-review` and `maker-checker-queue` set. `OPS_NAV` "Audit /
+Activity" gains its `href` (label unchanged): **no inert row remains on the Ops
+surface.** The Overview's Workflow Availability now shows all four as
+"Available", and its Recent Staff Activity gains "View all".
+
+```
+app/ops/audit-activity/page.tsx             — header + disclosure + workspace (Server Component)
+components/ops/
+  audit-activity-data.ts                    — shared: vocabularies, event types, fixtures, helpers
+  audit-result-line.tsx                     — icon + governed result
+  audit-activity-table.tsx                  — DENSE table (≥768px) / compact list (<768px)
+  audit-activity-detail.tsx                 — detail (panel + Sheet share it)
+  audit-activity-workspace.tsx              — filters, selection, panel/Sheet composition
+```
+
+Header "Audit / Activity" / "Review governed operational activity and safe audit
+evidence across supported AIX workflows." `DemoDisclosure`: "Interface preview —
+activity records are demonstrative until the staff-facing SEC-01 audit
+projection is integrated."
+
+### 48.4 The safe-read model and redaction
+
+The UI is designed against the **normal-tier projection** and models nothing
+outside it. Two tiers exist: a normal read, and — with `sec1.audit_event.read_
+sensitive` and for events whose schema is flagged `sensitive_read` — a sensitive
+read that adds `session_id`, `client_id`, `request_id`, `correlation_id` and
+`metadata_redacted` **and writes a `sensitive_read_log` row in the same
+transaction** (fail-closed). This page uses only the normal tier and offers no
+way to escalate.
+
+Because redaction is invisible by design, the page carries **one static
+statement**, identical for every event: "Standard-tier view. Session, request
+and correlation identifiers, the client identifier and event metadata are not
+included, and cannot be revealed from this page." No per-row indicator, no field
+names, no counts — none is exposed, so none is invented. No raw metadata JSON,
+payload, IP address, token, hash or error detail appears anywhere.
+
+### 48.5 Actor and service-actor treatment
+
+Only the actor **class** is shown — Client user, Staff user, System, Service —
+because `actor_user_id` is an opaque id with no display projection, and no
+personal name is ever invented. A **service** is shown as "Service · WLT-01"
+(the emitting module) and described as "an automated internal service — not a
+person", so it can never be read as a human actor. Client and staff classes
+state that identity is an opaque id not shown in the preview.
+
+### 48.6 Sensitive access, kept distinct from sensitive-tier redaction
+
+Two different things share the word "sensitive":
+
+1. **An event that RECORDS a governed read of restricted data** —
+   `wlt1.sensitive_destination_read`, `kyc1.sensitive_evidence_read`,
+   `aml1.sensitive_match_detail_read`. Represented coarsely: a "Sensitive
+   Access" section reading "Sensitive access recorded", with the domain, actor
+   class, target reference and timestamp the panel already shows. The value read
+   is **never** shown, the data class is not shown (it lives in the omitted
+   `metadata`), and there is **no reveal control**.
+2. **An event whose OWN detail is sensitive-tier only** (`event_schema.
+   sensitive_read`). Invisible in the normal-tier projection — covered by the
+   static statement in §48.4.
+
+A filter "Activity → Sensitive access only" isolates category 1.
+
+### 48.7 Demo fixtures and cross-page consistency
+
+10 obviously fictitious events (IAM-02 ×4, CLT-01 ×4, WLT-01 ×2), newest first,
+references `DEMO-EVT-001`…`010`. No user name, email, client id, wallet address,
+payload, IP, token, session id or hash. Each is consistent with a state already
+shown elsewhere — including timestamps:
+
+| Event | Matches |
+|---|---|
+| `clt1.application_submitted` 2026-09-16 10:05 | `DEMO-001` `submitted` |
+| `clt1.application_under_review` 2026-09-14 09:20 | `DEMO-002` `under_review` since that time |
+| `clt1.application_approval_requested` 2026-09-19 08:05, `iam2.approval_requested` 08:10 | `DEMO-002`'s pending `DEMO-APR-002` (created 08:10) |
+| `iam2.approval_requested` 2026-09-18 15:30 | `DEMO-APR-001` (payout `DEMO-PAY-001`) |
+| `iam2.approval_approved` 2026-09-10 14:52, `clt1.application_approved` 15:00 | `DEMO-APR-003` completed 14:52; `DEMO-004` approved 15:00 |
+| `iam2.sod_conflict_detected` 2026-09-17 16:40 | `DEMO-APR-006` blocked (created 14:00) |
+| `wlt1.proof_of_control_verified` 13:00, `wlt1.sensitive_destination_read` 13:02 (2026-09-14) | `DEMO-WLT-004`'s verified proof of control (registered 12:20) |
+
+`UI Phase 2I`'s own two Recent Staff Activity events are **superseded**: they
+used `actor_type` `user`/`system` (`user` is not a SEC-01 actor class), and a
+"failed" registration refusal that no other page reflected. The Overview now
+shows the two most recent shared events. No fixture is a `failure`; the one
+non-`success` is the segregation-of-duties event (`blocked`).
+
+### 48.8 List, density, filters, empty states
+
+**Columns** (only what the projection backs): Time, Event, Domain, Actor,
+Target, Result — Target, Domain and Actor appear as the table region widens
+(container query `≥48rem` / `≥56rem` / `≥64rem`). No payload, hash, IP, token or
+error column. **Density: `DENSE` 32px (`h-8`)** — `UI-04` §18 and §35.14 agree
+that Audit/Activity is in the audit/high-volume tier (no conflict, unlike §47.9),
+and every row is short plain text; cells use `py-1` so the shared `Table`'s `p-2`
+does not push a row past 32px. **Filters:** *Domain* (derived from the modules
+present) and *Activity* (All / Sensitive access only). **No search** — SEC-01
+search takes exact-match filters, not free text; **no date-range control** — no
+"Last 24 hours" analytics, and ten fixtures would make one decorative. **Default
+view:** everything, newest first — an audit view does not hide history behind a
+default. A polite "Showing N of M events" region. Empty states: a filter with no
+match → "No activity matches the current view." with a "Clear filters" button; no
+data at all → "No audit activity is available." Neither says nothing happened.
+
+### 48.9 Detail panel and the deliberate omissions
+
+Sections, each only where the projection backs them: **Event Summary** (event
+type, domain, action, severity, category if any), **Actor Context**, **Target**
+(reference, entity type, a link to the originating page where one exists),
+**Result** (icon + governed value; reason code only if present), **Sensitive
+Access** (only for events that record it), **Evidence & Redaction**
+(classification + the static tier statement), **Reference** (event reference,
+occurred, recorded). It clarifies one event; the list is the history, and there
+is no timeline or related-event group.
+
+- **Correlation:** none shown — `correlation_id` and `request_id` are omitted at
+  normal tier, and the brief's default is no raw request ids. The event reference
+  is the row's own handle.
+- **Result:** the projection's `result` is NOT NULL, so one always exists; it is
+  shown exactly. Nothing beyond `success | failure | blocked` is inferred.
+- **Retention:** omitted — `retention_class` is a bare class label and no
+  retention period is exposed; none is invented.
+- **Actions:** **none.** No replay, retry, delete, edit or export control exists
+  in the panel. **Export:** none — SEC-01 has no export route; WLT-01's
+  `evidence_export` is a different, maker-checker-gated feature and is not
+  conflated with audit export.
+- **Errors:** no stack trace, database error or exception text is modelled; the
+  safe error taxonomy remains separate.
+
+### 48.10 Responsive reasoning (structural, not rendered)
+
+Shell facts as `UI-04` §46.13 (content ≈ viewport − 48px below 1280px, ≈ viewport
+− 305px from 1280px).
+
+| Viewport | Layout | Table region | Columns |
+|---|---|---|---|
+| **1440** | Split: list + 320px panel, 32px gap | ≈783px | Time, Event, Target, Result (~750px) |
+| **1280** | Split | ≈623px | Time, Event, Result (~510px) |
+| **1024** | Split (`lg:`) | ≈624px | Same as 1280 |
+| **768** | List full width; detail in Sheet | 720px | Time, Event, Result |
+| **430** | Compact list; detail in Sheet | — | Event / time · target · domain / actor · result |
+
+Domain appears at container `≥896px` (viewport ≈1553px in the split) and Actor
+at `≥1024px` (≈1681px). `≥1280` and `1024–1279` resolve identically (the
+sidebar's 241px arrives as the viewport gains 256px), so the persistent panel is
+used from `lg:`. **Visual risks for the consolidated pass** (none verifiable
+without rendering): (1) Target fits at 783px with only ~35px of slack on
+estimated widths, and the widest target text drives that column; (2) at 1280px
+the list shows only Time / Event / Result — target and domain live in the panel;
+(3) whether `py-1` really yields a 32px row given the button's line height needs a
+real measurement; (4) the row highlight appears only after hydration; (5) ten
+`h3` sections' worth of detail in a 320px column.
+
+### 48.11 Backend gaps for a live page
+
+Inspected first; not all are missing.
+
+| Need | Exists? | Gap |
+|---|---|---|
+| Staff-safe **list** projection | **Yes** — `audit-events/search`, cursor-paged (50 / max 200), ordered `ingested_at_utc DESC` | Staff-session exposure; the actor is a body field (`actor_id`), which a browser must not supply |
+| **Detail** projection | **Yes** — `audit-events/read` | Same |
+| **Authorisation** | Baseline `sec1.audit_event.search`/`.read` via IAM-02 | **No role holds these permissions** — nobody can pass the check today |
+| **Ingestion of module events** | Ingestion API exists | **No relay**: `publishAudit` → outbox `audit.event` has no consumer in the repo |
+| **Source bindings** | Seeded for FND-01, IAM-01, IAM-02 only | WLT-01, CLT-01, KYC-01, AML-01, CFG-01 have none |
+| **Event-type registry** | 4 types seeded; no schema-management API | Every module-specific type is refused `SEC1_EVENT_TYPE_UNKNOWN` |
+| **Mandatory-field completeness** | `clt1.*` complete | `wlt1.*`, `iam2.*` and the sensitive-read emitters omit `severity`/`action`/`result` |
+| **`actor_type` mapping** | SEC-01: `client`/`staff`/`system`/`service` | Emitters use `user`/`system`/`service` — `user` has no mapping |
+| **Actor display** | `actor_user_id` is opaque, visible at both tiers | A projection through IAM-01; SEC-01 holds no names |
+| **Target labels** | `entity_id` is opaque | A cross-module subject-label projection (same gap as `UI-04` §47.11) |
+| **Redaction metadata** | **None, by design** | A "redacted" marker would need an explicit design decision that reverses the no-oracle rule |
+| **Sensitive-access classification** | Only the event type name identifies it | A schema flag or category exposed in the projection, and a matching search filter |
+| **Filtering** | `source_module`, `event_type`, `severity`, `result`, `actor_user_id`, `client_id`, `entity_*`, occurred/ingested ranges, `correlation_id`, `request_id` | No `event_category` filter, no free text |
+| **Correlation** | `correlation_id`/`request_id` are sensitive-tier only | A safe correlation field, if operations need one |
+| **Audit export** | **No route** | Its own route, authority and evidence; not WLT's `evidence_export` |
+| **Reads of the audit log itself** | `sensitive_read_log` is written | **No route reads it** |
+| **Retention** | `retention_class` present | No retention periods exposed |
+
+**Open backend/governance observations carried forward** (recorded, not fixed —
+for a later dedicated security/compliance review; none is UI work). From
+`UI Phase 2L`: IAM-02's `approve` does not enforce an approver role or
+permission; `reject` performs no maker/SoD check; no `approval_policy` rows are
+seeded. New in this phase: no role is granted the SEC-01 read permissions; no
+relay carries module audit events into SEC-01; only 4 event types and 3 source
+bindings are registered; emitter/store `actor_type` and mandatory-field
+mismatches. IAM-02 was not modified.
+
+### 48.12 Accessibility
+
+One `<h1>`. The panel is `<h2>` (event label) with `<h3>` sections; in the Sheet,
+`SheetTitle` carries the event. A real `<table>` with an accessible name; one tab
+stop per row — a native `<button>` whose accessible name begins with the visible
+label ("Approval requested, open DEMO-EVT-001"), `aria-current` marking the open
+event; the row `onClick` is a mouse-only convenience and the button has no
+`onClick` of its own. Two labelled filters and an `aria-live="polite"` count.
+Result is icon + text, never colour alone, and `blocked` has its own icon. The
+redaction and sensitive-access meaning is carried in text, not by an icon or a
+hidden field. **The panel has zero interactive elements** — no button, form or
+input — apart from the single "Open related page" link. Loading/error states are
+not built — nothing is fetched.
+
+### 48.13 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `AuditActivityTable`,
+  `AuditActivityDetail`, `AuditActivityWorkspace`, `AuditResultLine`.
+- **`AixAuditTrail` (`UI-04` §27) is not promoted.** §27 names it as a candidate
+  once "both" audit surfaces exist (Staff/Ops Audit / Activity and Admin Audit /
+  Sensitive Access). Only one exists, and the other cross-domain pages show a
+  single event line at most, so there is no repetition to consolidate yet.
+- **Recorded consolidation candidates for the visual-QA pass** (unchanged): a
+  generic `ListDetailWorkspace` (now the **fifth** filter/panel/Sheet workspace,
+  counting Wallet & Payout Destinations) and the `Row`/`Section` helpers.
+- **shadcn:** no component added, updated or regenerated. `Table`, `Sheet`,
+  `Select`, `Label` and `Button` sufficed; the REVIEW LATER primitives were
+  used, not modified. The official MCP was not needed.
+
+### 48.14 Boundaries
+
+No `C`-classified Ops element. No balance, volume, PnL, fee, order book or
+market data. No raw log viewer, SIEM, debug console or database event browser.
+No payload, IP, token, session id, transaction hash or wallet address. No SEC-01
+audit record is exported or replayed. Confirmed by source inspection and a
+forbidden-term scan of the rendered page.
+
+### 48.15 Staff / Ops initial UI set — closure
+
+| Nav item | Route | Phase |
+|---|---|---|
+| Operational Overview | `/ops` | 2I |
+| Client Requests | `/ops/client-requests` | 2J |
+| Wallet Destination Review | `/ops/wallet-destination-review` | 2K |
+| Maker-Checker Queue | `/ops/maker-checker-queue` | 2L |
+| Audit / Activity | `/ops/audit-activity` | 2M |
+
+**`STAFF / OPS INITIAL UI SET: IMPLEMENTED / VISUAL QA DEFERRED`.** All five
+`B`-classified pages exist and every nav row is live. Not accepted visually —
+no Ops page has been rendered. `C`-classified Ops pages (Deposit, Withdrawal,
+Broking/RFQ Operations, Settlement, Reconciliation, Exceptions/Breaks) remain
+unbuilt by design. The Admin/Compliance surface is entirely unimplemented.
+
+### 48.16 What this phase explicitly did not do
+
+No API/auth/permission code; no export, replay, retry, delete or edit; no search
+or date range; no per-row redaction marker; no reveal; no timeline; no actor
+name; no correlation id; no retention period; no `C`-classified or Exchange
+element; no change to IAM-02 or any backend service, the public homepage,
+packages or lockfile.

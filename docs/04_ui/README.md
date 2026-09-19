@@ -790,14 +790,44 @@ claim.** Public homepage unaffected.
   status — interactions were reasoned from source, **not** exercised, and
   nothing was rendered. Full record: `UI-04` §47, `UI-02`'s new "UI Phase 2L"
   section, `UI-03` §48.
+- **Phase 2M:** Staff/Operations Audit / Activity (`/ops/audit-activity`) —
+  **IMPLEMENTED / VISUAL QA DEFERRED. This completes the initial Staff/Operations
+  UI set** (Operational Overview, Client Requests, Wallet Destination Review,
+  Maker-Checker Queue, Audit / Activity — every Ops nav row is now live; **STAFF
+  / OPS INITIAL UI SET: IMPLEMENTED / VISUAL QA DEFERRED**, not visually
+  accepted). `B`-classified List + Detail workspace over the SEC-01
+  **normal-tier** audit projection. Findings from the source: unlike CLT-01,
+  WLT-01 and IAM-02, SEC-01 **does** have a real paginated, tier-redacted
+  `audit-events/search` and `/read` — but no role holds the `IAM-02` permission
+  they need, and **nothing carries module audit events into SEC-01**: no relay,
+  three source bindings, four registered event types, and emitters that omit
+  `severity`/`action`/`result` and use an `actor_type` vocabulary SEC-01 does not
+  accept. Redaction leaves **no marker by design**, so the page carries one
+  static statement about the tier instead of faking per-row flags; correlation,
+  session, request and client identifiers and metadata are omitted at this tier
+  and not shown. The actor is shown as a class only (a service by its emitting
+  module, never as a person); "sensitive access recorded" is represented
+  coarsely with **no reveal**, kept distinct from sensitive-tier redaction.
+  Nine real event types across IAM-02, CLT-01 and WLT-01, ten fixtures each
+  consistent (down to timestamps) with the other Ops pages; `DENSE` 32px rows,
+  Domain and Activity filters, no search/date-range/export/actions. Read-only:
+  no replay, retry, delete or edit. The Overview's Recent Staff Activity now
+  derives from the same data, superseding `UI Phase 2I`'s events (which used a
+  `user` actor class SEC-01 does not have). `IAM-02` and every backend service
+  untouched; the `UI Phase 2L` governance observations are carried forward, not
+  fixed. `typecheck:web`/`lint:web`/`build:web` all pass (13 static pages);
+  verified via rendered-HTML and compiled-CSS inspection plus a server-side render
+  of the detail branches — interactions reasoned from source, **not** exercised,
+  and nothing rendered. Full record: `UI-04` §48, `UI-02`'s new "UI Phase 2M"
+  section, `UI-03` §49.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
   authenticated Client Portal product pages — every Client Portal nav
   item now has one. Operational Overview, Client Requests, Wallet
-  Destination Review and Maker-Checker Queue (all `B`-classified) are the
-  four real Staff/Operations pages — only Audit / Activity and every Admin
-  page remain unimplemented. No API/auth integration exists on any of
+  Destination Review, Maker-Checker Queue and Audit / Activity (all
+  `B`-classified) are the five real Staff/Operations pages — **the initial
+  Ops set is complete**; every Admin page remains unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

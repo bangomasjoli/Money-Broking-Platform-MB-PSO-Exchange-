@@ -2661,3 +2661,31 @@ Estimated column widths: Request ~168px ("Destination approval"), Status
 ~158–270px (the widest, "Blocked — Segregation of Duties", drives the
 column), Subject ~239px, Created / Expires ~102px each. Request + Status
 ≈ 440px; + Subject ≈ 680px.
+
+## UI Phase 2M — Audit / Activity Geometry
+
+Values used by `/ops/audit-activity` (`UI-04` §48). Layout **reuses the earlier
+Ops values**; the page introduces the first use of the `DENSE` table tier and
+one new container breakpoint pair. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Table row height | `h-8` = **32px** | `DENSE` tier — the **first `DENSE` table** (Phase 2I used it for plain lists). `UI-04` §18 and §35.14 agree for this page |
+| Cell padding | `py-1` = 4px vertical | Overrides the shared `Table` cell's `p-2`; a 20px line + 16px padding would be 36px and defeat `h-8` |
+| Header row | `h-8` on each `TableHead` | Overrides the primitive's `h-10` so the header matches the rows |
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` | Reuse |
+| Detail panel | `lg:border-l lg:pl-8` | Reuse |
+| Selected-row marker | `border-l-2` = **2px** | Reuse |
+| Filter triggers | `h-10` × `w-40` (Domain, **160px**) and `w-52` (Activity, **208px**) | Widths new; height = the 40px control token |
+| Result icon | `size-3.5` = 14px (list), `size-4` = 16px (detail) | Existing sizes |
+| Container-query breakpoints | Target at `@3xl` = 48rem (768px), Domain at `@4xl` = 56rem (896px), Actor at `@5xl` = 64rem (1024px) | Standard steps, all previously used |
+| Compact list row (`<768px`) | `py-3` (12px), three text lines | ≥44px touch target |
+| Sheet (`<1024px`) | Existing `SheetContent` | Unchanged |
+
+**Width arithmetic** (content = viewport − 48px below 1280px; viewport − 305px
+from 1280px): table region ≈ 783px @1440, ≈ 623px @1280, ≈ 624px @1024, 720px
+@768. Estimated column widths: Time ~182px ("19 Sept 2026, 08:10 UTC"), Event
+~245px (widest "Application approval requested"), Result ~80px, Target ~239px
+("Payout Destination DEMO-PAY-001"), Domain ~70px, Actor ~131px. Time + Event +
+Result ≈ 510px; + Target ≈ 750px. **Open measurement:** whether 4px cell padding
+around a 20px text line really lays out at 32px in the browser.

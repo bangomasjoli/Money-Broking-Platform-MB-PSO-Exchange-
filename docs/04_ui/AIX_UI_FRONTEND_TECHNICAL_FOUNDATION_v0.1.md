@@ -1848,3 +1848,55 @@ from source, not exercised.
 `/ops/wallet-destination-review` and `/admin` all return 200. Backend
 regression not required — zero `platform/services/**`, `packages/**`, `edge/**`,
 `infra/**` change. Public homepage unaffected.
+
+## 49. Phase 2M — Staff/Operations Audit / Activity (fifth Ops page, visual QA deferred)
+
+`/ops/audit-activity` (`UI-04` §48): a List + Detail workspace over the SEC-01
+normal-tier audit projection. `B`-classified; demo data only; no fetch, server
+action, auth, permission check, export or mutation. **Completes the initial
+Staff/Operations UI set** (`STAFF / OPS INITIAL UI SET: IMPLEMENTED / VISUAL QA
+DEFERRED`).
+
+**Files created (6):** `app/ops/audit-activity/page.tsx`;
+`components/ops/{audit-activity-data.ts, audit-result-line.tsx,
+audit-activity-table.tsx, audit-activity-detail.tsx,
+audit-activity-workspace.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (Audit / Activity gains `href`
+— no inert Ops row remains); `components/ops/{ops-data.ts,
+workflow-availability.tsx}` (the Overview's Recent Staff Activity now derives
+from the shared audit data and links to the page; `ops-data.ts` loses its
+separate audit fixture and formatter; the four workflow-availability items are
+all "Available").
+
+**shadcn impact: none** — `Table`, `Sheet`, `Select`, `Label`, `Button` already
+installed; the REVIEW LATER primitives were used but not modified. **No package or
+lockfile change.** The official shadcn MCP was not needed.
+
+**Client/server boundary:** the page is a Server Component; the workspace, table
+and detail are client-bundled. Timestamps use the UTC-pinned formatters (audit
+times are `*_utc`; "UTC" is shown). Container queries reuse `@3xl`/`@4xl`/`@5xl`,
+confirmed in the compiled stylesheet with `.h-8` and `.py-1`.
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all
+pass; **13** static pages generated (was 12).
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server +
+`curl` + rendered-HTML and compiled-CSS inspection, **plus a server-side render of
+the detail component for the events that exercise each branch** (a scratch `tsx`
+script in a git-ignored directory, removed afterward). Confirmed: one `<h1>`; the
+10 rows and their values (all `h-8`); two labelled filters with SSR values; one
+button per row with a label-in-name accessible name; the panel's zero interactive
+elements apart from one link; the sensitive-access section on exactly
+`DEMO-EVT-006`; a leak scan of all ten details (only the redaction note mentions
+"session"/"correlation"); the Overview's two most recent events matching the
+list's top two; the sidebar's **five live Ops links and zero inert rows**; no
+forbidden term (balance, settlement, export, replay, reveal, token…) in the page
+text. **Not verifiable here:** filter/selection/Sheet interaction (no browser or
+jsdom) — reasoned from source, not exercised.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`,
+`/app/compliance-status`, `/ops`, `/ops/client-requests`,
+`/ops/wallet-destination-review`, `/ops/maker-checker-queue` and `/admin` all
+return 200. Backend regression not required — zero `platform/services/**`,
+`packages/**`, `edge/**`, `infra/**` change (IAM-02 and SEC-01 untouched). Public
+homepage unaffected.

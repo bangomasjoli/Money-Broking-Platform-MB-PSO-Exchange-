@@ -81,13 +81,17 @@ export const CLIENT_NAV: NavItem[] = [
  * the label's slug, the convention `client-requests`/`wallet-destination-review` already set) —
  * `B`-classified (real `IAM-02` approval model, every route `requireInternal`-guarded). Only
  * "Audit / Activity" remains inert. Label preserved exactly.
+ *
+ * `UI Phase 2M`: "Audit / Activity" gains a real `href` (`/ops/audit-activity`) — `B`-classified (real
+ * `SEC-01` audit search/read, internal-token + IAM-02-permission gated). **Every initial Staff/
+ * Operations nav item is now live** — no inert row remains on this surface. Label preserved exactly.
  */
 export const OPS_NAV: NavItem[] = [
   { label: "Operational Overview", href: "/ops", icon: "layout-grid" },
   { label: "Client Requests", href: "/ops/client-requests", icon: "inbox" },
   { label: "Wallet Destination Review", href: "/ops/wallet-destination-review", icon: "wallet" },
   { label: "Maker-Checker Queue", href: "/ops/maker-checker-queue", icon: "list-checks" },
-  { label: "Audit / Activity", icon: "history" },
+  { label: "Audit / Activity", href: "/ops/audit-activity", icon: "history" },
 ];
 
 /** `UI-04` §9 — Admin/Compliance Portal B-classified IA. */

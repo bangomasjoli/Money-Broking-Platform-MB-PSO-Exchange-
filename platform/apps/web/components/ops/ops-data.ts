@@ -41,15 +41,10 @@ import { STATUS_LABELS as CLIENT_WLT_STATUS_LABELS, type DestinationStatus } fro
  *   Note `blocked` is set by a role/permission segregation-of-duties CONFLICT found while an approver
  *   tries to approve — NOT by a self-approval attempt (that leaves the request `pending`); this file
  *   said otherwise before `UI Phase 2L` corrected it.
- * - Audit/Activity fields — the exact SAFE (already tier-redacted) field set from
- *   `platform/services/sec1/src/lib/read-redaction.ts`'s own `RedactableAuditEventRow` —
- *   `event_type`/`actor_type`/`entity_type`/`action`/`result`/`occurred_at_utc` only. Hash-chain/
- *   integrity internals and raw payloads are never selected by that module either — there is
- *   nothing sensitive to accidentally leak by using this exact field subset. `actor_user_id` is
- *   deliberately NOT shown even though the real redaction model marks it visible at both tiers —
- *   this turn's own "do not fabricate approver/actor names" instruction is read to also mean "do
- *   not show even a real-shaped fake identifier" for demo data; `actor_type` (a role class, not an
- *   identity) is shown instead.
+ * - Recent Staff Activity — the events live in `audit-activity-data.ts` since `UI Phase 2M` (a second
+ *   Ops page now needs them), so the Overview and `/ops/audit-activity` cannot disagree. The
+ *   Overview shows the two most recent. (`UI Phase 2I`'s own two events used `actor_type` values
+ *   `user`/`system` — `user` is not a SEC-01 actor class — and are superseded.)
  *
  * Deliberately NOT modeled — no client-visible severity/urgency field exists in any of these
  * governed models (none was found by direct inspection); no financial figure (revenue, volume,
@@ -147,7 +142,7 @@ export const ATTENTION_ROLLUP: AttentionRollupRow[] = [
 
 export interface OpsWorkflowAvailabilityItem {
   label: string;
-  status: "Available" | "Interface planned";
+  status: "Available";
   href?: string;
 }
 
@@ -155,53 +150,5 @@ export const OPS_WORKFLOW_AVAILABILITY: OpsWorkflowAvailabilityItem[] = [
   { label: "Client Requests", status: "Available", href: "/ops/client-requests" },
   { label: "Wallet Destination Review", status: "Available", href: "/ops/wallet-destination-review" },
   { label: "Maker-Checker Queue", status: "Available", href: "/ops/maker-checker-queue" },
-  { label: "Audit / Activity", status: "Interface planned" },
+  { label: "Audit / Activity", status: "Available", href: "/ops/audit-activity" },
 ];
-
-// ---------------------------------------------------------------------------
-// E. Recent Staff Activity — SEC-01 safe (already tier-redacted) audit-event field subset only.
-// ---------------------------------------------------------------------------
-
-export interface DemoAuditEvent {
-  id: string;
-  eventType: string;
-  actorType: string;
-  entityType: string;
-  action: string;
-  result: "success" | "failure";
-  occurredAtUtc: string;
-}
-
-/** 2 records — safe field subset only, no actor identity, no raw payload, no hash-chain field. */
-export const DEMO_AUDIT_EVENTS: DemoAuditEvent[] = [
-  {
-    id: "demo-audit-001",
-    eventType: "wlt1.destination_registration_refused",
-    actorType: "system",
-    entityType: "destination_registration",
-    action: "register",
-    result: "failure",
-    occurredAtUtc: "2026-09-18T10:15:00Z",
-  },
-  {
-    id: "demo-audit-002",
-    eventType: "clt1.application_submitted",
-    actorType: "user",
-    entityType: "client_application",
-    action: "submit",
-    result: "success",
-    occurredAtUtc: "2026-09-18T09:40:00Z",
-  },
-];
-
-export function formatOccurredAt(occurredAtUtc: string): string {
-  const date = new Date(occurredAtUtc);
-  if (Number.isNaN(date.getTime())) return occurredAtUtc;
-  return new Intl.DateTimeFormat("en-GB", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}

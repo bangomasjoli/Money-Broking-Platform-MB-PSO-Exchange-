@@ -44,6 +44,7 @@ export function ReviewAreas() {
               )}
               <span className="block text-xs text-muted-foreground">
                 {area.owner} · {area.href ? "Interface preview" : "Interface planned"}
+                {area.note ? ` · ${area.note}` : ""}
               </span>
             </li>
           ))}

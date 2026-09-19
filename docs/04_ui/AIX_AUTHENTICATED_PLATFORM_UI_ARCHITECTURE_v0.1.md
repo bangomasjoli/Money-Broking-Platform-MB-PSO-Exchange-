@@ -336,7 +336,7 @@ Same rule as §8: **no page below is `A`**.
 | Compliance Overview | Kept | **B** | No unified aggregation route; would compose KYC-01/AML-01 sources below. |
 | Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** **UI Phase 2O, §50: implemented at `/admin/client-risk-kyc-kyb`; adds `GET .../cases/:id/checklist`, and `completed` covers both `pass` and `fail`.** |
 | AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** **UI Phase 2P, §51: implemented at `/admin/aml-transaction-monitoring`; transaction monitoring itself is not implemented anywhere in the backend (§51.2).** |
-| EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** |
+| EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** **UI Phase 2Q, §52: implemented at `/admin/edd-review`; EDD re-verified NOT IMPLEMENTED (§52.1) — the page is review attention over KYC/KYB and AML states, not EDD cases.** |
 | Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8. |
 | Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** |
 | Feature Flags / Configuration | Kept, mapped to `CFG-01` | **B** | `POST /internal/cfg1/features/evaluate`, `/internal/cfg1/feature-changes/request`\|`/apply`, `/internal/cfg1/kill-switches/activate` — real, partial (through Phase 3B). |
@@ -4668,7 +4668,7 @@ real route. The map separates the two.
 | Sensitive-access activity | SEC-01 event types that record a governed read (`wlt1`/`kyc1`/`aml1` `*_read`); `POST /internal/sec1/audit-events/search` | Safe (coarse) | Concept real; count = Audit fixtures | **PARTIAL/B** |
 | AML screening / matches / risk signals | AML-01: screening requests (`clear`/`potential_match`/`confirmed_hit`/`error`), matches (`sanctions`/`pep`/`adverse_media`), risk signals (`open`/`acknowledged`/`superseded`, severity `low`–`critical`); `GET .../risk-signals` **requires `subject_type` + `subject_ref`** | **No admin-safe projection**; match detail is sensitive-gated — **refined, `UI Phase 2P` §51.3: PII-free projections DO exist per subject (screening, match inventory, risk signals, run summary); what is missing is any cross-subject aggregate, and the one cross-subject read is the stuck-request list. Also: the parenthesised values are `screening_result.overall_status` — request status is `requested`/`completed`/`failed`, and `confirmed_hit`/`error` are never written to a result** | Real concepts, no safe aggregate | **OMITTED** — "Interface planned" — **now an interface preview, `UI Phase 2P`** |
 | "Transaction monitoring" | AML-01 `monitoring-runs` are **route-triggered periodic rescreening** (`periodic_due`/`list_version_changed`), not transaction monitoring; no transaction module exists | — | — | **OMITTED** |
-| EDD | **No model in code**; KYC-01's `manual_review`/`edd` states are excluded from its CHECK ("no reachable code path") | — | — | **OMITTED** |
+| EDD | **No model in code**; KYC-01's `manual_review`/`edd` states are excluded from its CHECK ("no reachable code path") | — | — | **OMITTED** — **still true, re-verified `UI Phase 2Q` §52.1; the Overview row is now "Interface preview · EDD backend not implemented" (§49.15)** |
 | Client risk rating | CLT-01 `CDD_RISK_RATINGS` (`low`/`medium`/`high`/`prohibited`) stored on `cdd_outcome.risk_rating`; **no read projection returns the value** — `outcome-status` returns only the four rollup STATUSES | Not projected | Real concept, no projection | **OMITTED** |
 | CDD rollup statuses (`aml_sanctions_status` etc.) | `GET .../applications/:id/outcome-status` (IAM-02 `clt1.cdd_outcome.read`), per application | Safe (statuses) | Real, application-scoped | **OMITTED** (no fixtures; would invent AML facts) |
 | Users / roles / permissions | IAM-02 `POST /iam2/users/:user_id/roles` (assign only) | — | — | **Review Area, planned** |
@@ -4900,6 +4900,17 @@ or lockfile.
 > "Interface preview". (3) §49.3's "four attention rows" therefore reads six (the two
 > KYC/KYB rows from `UI Phase 2O`, plus AML and EDD). The Overview still claims no live
 > AML integration, and no count was added that does not derive from the shared dataset.
+
+> **Amended by `UI Phase 2Q` (§52.10) — the Compliance Overview changed in two places,
+> nothing else.** (1) The "Enhanced due diligence (EDD) — Not represented in this preview"
+> row (from `UI Phase 2P`) is replaced by **EDD / Review — "Interface preview · EDD backend
+> not implemented"**, with a count derived from the EDD / Review page's own projection ("6
+> items") and a meaning that says those items are not EDD cases. The status deliberately keeps
+> the gap in the same line as the preview: "Interface preview" alone would hide that no EDD
+> backend exists. (2) Review Areas' "EDD / Review" is now a link marked "Interface preview ·
+> EDD backend not implemented" (`REVIEW_AREAS` gained an optional `note`). The Overview
+> therefore still has six attention rows, and it still claims no live EDD, AML or KYC
+> integration.
 
 ## 50. UI Phase 2O — Admin / Client Risk / KYC-KYB (`B`-classified Admin page)
 
@@ -5390,7 +5401,8 @@ reads "No result", never blank and never implied clear.
   wording appears in the UI** — the boundary section says only that "regulatory reporting
   workflows are not represented", without inventing one.
 - **EDD:** no model exists; not shown, and the future EDD / Review page is not absorbed. The
-  Compliance Overview keeps "Not represented in this preview" for it.
+  Compliance Overview kept "Not represented in this preview" for it — **superseded by `UI
+  Phase 2Q`, §52.10: it now reads "Interface preview · EDD backend not implemented".**
 - **AML cases and alert investigation:** likewise absent (CMP-13) and named only as "not
   represented".
 
@@ -5554,3 +5566,378 @@ across every rendered surface. **Regression:** all other routes return 200.
 consolidated visual-QA program); no transaction, alert, case, STR, EDD or risk-rating content;
 no action control; no fetch, auth or mutation; no change to any backend service, the public
 homepage, any Ops or Client page, packages or lockfile.
+
+## 52. UI Phase 2Q — Admin / EDD / Review (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The fourth real Admin / Compliance page, at
+`/admin/edd-review` (the nav label's slug — the convention every Ops and Admin route set).
+Baseline `1118be3`, as the brief stated. **The page keeps its governed title, but the
+capability behind it is *review attention over existing KYC/KYB and AML states*; a dedicated
+EDD workflow does not exist in the current backend, and the page says so.**
+
+### 52.1 EDD capability decision (mandatory; re-verified from source, not carried forward)
+
+**EDD NOT IMPLEMENTED.** The carried finding was re-tested with a fresh search of all
+non-test backend source, migrations and packages, and holds. Evidence:
+
+1. **Eight lines mention "EDD" in the whole backend, in three files, and every one states that
+   it is excluded** (none is in a test). Five in `services/kyc1/src/lib/errors.ts` ("No
+   IAM-02/maker-checker/vendor/UBO/EDD/… error code of any kind"), one in
+   `services/kyc1/package.json` ("no … UBO/vendor/EDD"), and two in one comment block of migration
+   `042_kyc1_core.cjs`. There is no EDD table, column, enum value, route or code.
+2. **KYC-01's own migration says so.** `kyc_case.status` is `pending_documents` / `completed` /
+   `remediation` only; the blueprint's richer machine (`manual_review`/`edd`/`closed`/`stale`)
+   "has no reachable Phase 1 code path — no manual review, no EDD routing, no periodic
+   review/closure exists until later phases". No later migration alters `kyc_case` (045 states
+   "No ALTER to `kyc_case`"), and `errors.ts` records that the override table "is
+   `manual_override_request`, not a review queue (D10)".
+3. **No EDD operation could be authorised.** The IAM-02 permission registrations contain no
+   EDD or manual-review permission (the nearest are `kyc1.outcome.override`,
+   `clt1.application.review` and `.hold`, and the client-profile `suspend`/`reactivate`).
+4. **No EDD outcome or trigger exists.** CLT-01's outcome types are `kyc_kyb`,
+   `aml_sanctions`, `pep_adverse_media` and `risk_rating` — no EDD type; AML-01's rescreen
+   triggers are `manual`, `periodic_due` and `list_version_changed` — no EDD trigger.
+5. **SOF/SOW has zero code hits** (`source of funds/wealth`, `source_of_*`) — no model, no
+   checklist document type (KYC-01's are `certificate_of_incorporation`,
+   `authorised_representative_evidence`, `identity_document`, `authority_evidence`).
+6. **The masters define it; nothing implements it.** **CMP-07 Enhanced Due Diligence**
+   (MVP-Critical, "EDD workflow for high-risk clients", depends on AML Risk);
+   **AML-RULE-006** ("high-risk client, transaction, jurisdiction, wallet exposure, PEP exposure
+   or unusual activity must trigger EDD where required"; "EDD must be reviewed and approved
+   before product access"); workflow step 4 ("EDD initiated if required — Compliance Analyst"),
+   with the Compliance Officer / MLRO as checker; DF-03 (SOF/SOW evidence, "EDD requirement /
+   decision — maker-checker"). None of these has a service in `platform/services/`.
+
+**Look-alike models that are *not* EDD** (recorded so none is mistaken for one):
+
+| Model | Owner | What it is | Why it is not EDD |
+|---|---|---|---|
+| Security alert lifecycle (`open → assigned → triaged → {closed, escalated}`; `assigned_to`, `due_at_utc`, `closure_reason`) | SEC-01 | Triage of **security** monitoring alerts | A different domain (Audit / Sensitive Access); no client, no compliance subject. It proves an *assignee/SLA/escalation* model exists — for security alerts only |
+| Application review (`under_review`, `held`, `assigned_reviewer`, `hold_reason`) | CLT-01 | Review of an **onboarding application** | Owned by Ops Client Requests; ends at approve/reject/hold |
+| Outcome override (`manual_override_request`, maker-checker) | KYC-01 | A human override of a computed CDD outcome | Not a queue or case (errors.ts D10); **no GET exists** |
+| Match disposition (confirm/dismiss, maker-checker) | AML-01 | A human decision on one screening match | A decision on a match, not an assessment case |
+
+**The EDD trigger decision:** *the current backend does not define a formal EDD trigger model.*
+No current state is labelled an "EDD trigger" or "EDD required". The masters *intend* a PEP match
+and a high risk rating to trigger EDD (AML-RULE-006; test `AML-TC-017`), but the code today only
+flags a potential match awaiting disposition, and the rating is unreadable — so a potential match
+is shown as **review attention**, never as EDD.
+
+**A real EDD workflow requires a controlled backend/compliance design turn before
+implementation; it is not a frontend backlog item** (§52.9).
+
+### 52.2 Review-source table (mandatory)
+
+"Safe projection" means an explicit PII-free response shape exists, not that a browser can call
+it (every route is `requireInternal`-guarded). **No row is an EDD case.**
+
+| Review condition | Source module | Source model / state | Safe admin projection? | UI treatment | EDD case? |
+|---|---|---|---|---|---|
+| KYC pending documents | KYC-01 | `kyc_case.status = pending_documents` | Yes, per case (list needs a scope) | **Item** — "Pending required information" | **NO** |
+| KYC remediation required | KYC-01 | `status = remediation`, outcome `remediation_required` | Yes | **Item** — "Remediation required" | **NO** |
+| KYC completed with fail outcome | KYC-01 | `status = completed` + `current_outcome_status = fail` | Yes | **Rule implemented**, no fixture (verified by scratch render) | **NO** |
+| AML potential match awaiting review | AML-01 | derived outcome `potential_match` (a match with `match_status = potential_match`) | Yes, per subject (screening read + match inventory) | **Item** — "Potential match awaiting review" | **NO** |
+| AML failed screening | AML-01 | `screening_request.status = failed`, no result | Per subject; no list route | **Item** — "Screening failed" | **NO** |
+| AML stalled screening | AML-01 | `requested` past the stuck threshold | Yes — the only cross-subject read | **Item** — "Screening stalled" | **NO** |
+| Open AML risk signal | AML-01 | `risk_signal.status = open` | Yes, per subject | **Related context** in AML detail; primary reason only if nothing else applies ("Open risk signal") | **NO** |
+| AML confirmed hit | AML-01 | match `confirmed_hit`; `critical` signal | Yes | Not a pending review (a determination already made); surfaces only via an open signal | **NO** |
+| KYC outcome override | KYC-01 | `manual_override_request` (maker-checker) | **No — no GET** | Not shown | **NO** |
+| Client lifecycle suspended / closed | CLT-01 | `client_profile.status` | Status yes; **the reason is stored and returned by no read** | **Not an item** — the result of a decision already made, not a pending assessment, and its reason is unreadable (§52.3) | **NO** |
+| Held application | CLT-01 | `client_application.status = held`, `hold_reason` | Yes | Not aggregated — **Ops Client Requests** owns it | **NO** |
+| Wallet destination `pending_review` | WLT-01 | `destination.status` | Internal | Not aggregated — **Ops Wallet Destination Review** owns it | **NO** |
+| Pending independent approval | IAM-02 | `approval_request.status = pending` | **No list route** | Not absorbed — the future **Approval Queue** owns it | **NO** |
+| CLT-01 rollups (`aml_sanctions_status = hit` …) | CLT-01 | application columns | Application-scoped | Not shown (the `UI Phase 2N`/`2O`/`2P` decision) | **NO** |
+| Risk rating high | CLT-01 | `cdd_outcome.risk_rating` | **No read returns it** | Not shown, inferred or derived | **NO** |
+| Security alert | SEC-01 | `security_alert` | — | Different domain; the future Audit / Sensitive Access page | **NO** |
+| EDD case, status, trigger, owner, due date, SLA, decision, SOF/SOW pack | — | **none exists** | — | **Not modelled, not shown** | — |
+
+### 52.3 Review aggregation semantics
+
+**REVIEW ATTENTION IS A DEMO/ADMIN PROJECTION, NOT A SINGLE BACKEND CASE OBJECT.** No backend
+"review state" exists: the items below are computed in the UI from two existing shared demo
+datasets, each of which stands in for a different module's real state.
+
+- **Item = (subject × review area).** One item per subject per area, so one underlying event is
+  never counted twice: `DEMO-PTY-001`'s open signal was raised *because of* its unresolved
+  match, so it is one AML-screening item with the signal as related context, not two.
+- **The rule, in one place** (`edd-review-data.ts`): a KYC case with status `pending_documents`
+  or `remediation`, or outcome `fail`; or an AML subject in the shared `subjectsNeedingAttention`
+  set. **The AML half reuses `UI Phase 2P`'s own definition**, so the two pages cannot disagree.
+- **Reason selection is a label choice, not a ranking**: stalled, then failed, then potential
+  match, then open signal — exceptions with no result first because a potential match needs a
+  completed result. It orders nothing by importance.
+- **Lifecycle is excluded on principle**, not by quota: a suspension is the *outcome of a
+  decision already taken* (a maker-checker transition), not an assessment waiting to happen, and
+  the reason recorded with it (`client_profile_lifecycle_decision.reason`) is returned by no read
+  — so this page could not say why it would need review, and must not guess.
+- **No review reference is invented.** The brief allowed a neutral `DEMO-REV-001`; it was not
+  used, because a per-row identifier is the one thing that makes a projection look like a case.
+  A row's identity is its subject and area.
+- **No universal priority, and no ordering by one.** KYC status is not ranked against AML signal
+  severity. Rows are listed by review area, then subject, and the page says so.
+
+### 52.4 Composition
+
+`/admin/edd-review`. Header **"EDD / Review"** — "Review governed compliance conditions that may
+require further assessment, while preserving the current EDD capability boundary." (no "manage
+EDD cases"). `DemoDisclosure`: "Interface preview — review items are demonstrative projections of
+existing compliance states. A dedicated EDD workflow is not represented; it is not implemented in
+the current backend." Then, in order: **Review Attention** — the List + Detail workspace (§35.16) —
+and **EDD Capability**, a restrained boundary section. No KPI card, no case-age chart, no
+investigator metric, no separate attention block (the list *is* the attention view).
+
+**List columns** (`COMPACT` 40px, `h-10`): **Subject** (a real `<button>` holding the reference),
+**Review Area**, **Reason**, and — as room allows — **State** and **Source**. **No EDD Status,
+Case Owner, Priority, Risk Score, SLA, Due Date or Updated column**: none exists, and "Updated"
+would mean a screening date for AML but nothing for KYC, whose shared data carries no timestamp.
+Reason is in the base columns and State is not, on purpose: Reason is derived from State (they
+overlap heavily), the split has room for one, and the reason says why the row is listed.
+**Detail sections:** Review Condition (area, reason, source module, source state, and a plain
+statement that this is a projection and not an EDD case); then **either** KYC / KYB Context
+(case type, CDD outcome, checklist, lifecycle) plus Outstanding Information, **or** AML Context
+(outcome, matched categories, timestamps, matches, related risk signals). Two source-specific
+contexts, not one universal case schema.
+
+### 52.5 Demo dataset — six items, no facts of its own
+
+**Nothing new was invented.** `client-risk-data.ts` and `aml-monitoring-data.ts` were not
+modified; their output is preserved exactly. The page owns no domain data — every item is
+*computed* from those two datasets by `buildReviewItems`, so it cannot contradict either page.
+
+| Item (subject) | Review area | Reason | State (as on the source page) | Source page |
+|---|---|---|---|---|
+| `DEMO-CLI-001` | KYC / KYB | Pending required information | Pending Documents | 2O |
+| `DEMO-CLI-003` | KYC / KYB | Remediation required | Remediation Required | 2O |
+| `DEMO-002` | AML screening | Potential match awaiting review | Completed · Potential match | 2P |
+| `DEMO-PTY-001` | AML screening | Potential match awaiting review | Completed · Potential match | 2P |
+| `DEMO-PTY-002` | AML screening | Screening stalled | Requested · Stalled | 2P |
+| `DEMO-PTY-003` | AML screening | Screening failed | Failed | 2P |
+
+Not items: `DEMO-CLI-002` (`completed` + `pass`) and `DEMO-CLI-004` (suspended — §52.2). **`DEMO-PTY-001`'s
+open `medium` risk signal is related context on its one item, not a second item** — it was raised
+*because of* the unresolved match, and counting it twice would inflate the page. The KYC and AML
+halves also tie to the Compliance Overview: 2 + 4 = the "6 items" it shows, equal to its two KYC/KYB
+rows plus its "4 subjects".
+
+### 52.6 Reason, state, priority and ownership language
+
+- **Reasons are UI projection labels, not backend states**, chosen for factual accuracy and each
+  defined beside the governed state it reads: *Pending required information* (`pending_documents`),
+  *Remediation required* (`remediation`), *Completed with fail outcome* (`completed` + `fail`),
+  *Potential match awaiting review* (derived outcome `potential_match`), *Screening stalled*,
+  *Screening failed*, *Open risk signal*. **State is the source module's own wording**, delegated to
+  the source pages' state lines, so an item reads exactly as it does there and keeps that page's
+  icon meaning (a completed AML screening is a neutral circle whatever it found).
+- **There is no "review status."** No backend review object exists, so nothing says a review is
+  open, in progress, closed, overdue or assigned.
+- **No universal priority, and no ordering by one.** KYC status is not ranked against AML signal
+  severity. Rows are grouped by review area (KYC / KYB, then AML screening) and the page says
+  "Items are grouped by review area and are not ranked by priority." Reason *selection* (stalled,
+  then failed, then potential match, then open signal) only picks which label an AML subject
+  carries — exceptions with no result first, because a potential match needs a completed result.
+- **Signal severity** (`low`–`critical`) is shown only inside AML Context, labelled "Signal
+  severity", with the sentence "It is not a priority and not a client risk rating". It is never
+  mapped into a review priority.
+- **No owner, assignee or reviewer, no name, no due date, no SLA, no escalation.** None exists for
+  a KYC or AML condition (§52.1's look-alike table records where such fields *do* exist — for
+  security alerts and applications — and why they are not EDD).
+
+### 52.7 Per-source treatment
+
+- **KYC review:** case type, CDD outcome, checklist counts, lifecycle, and the outstanding items
+  by exact document-type label and state — reusing `UI Phase 2O`'s helpers. No file, hash, PII,
+  reviewer note or evidence. A CDD outcome of "Not yet computed" is preserved. **A CDD `fail` is
+  never converted into "EDD required"** — no source does so (a `completed` + `fail` case is shown
+  as "Completed with fail outcome"; the rule is implemented and verified by scratch render, with no
+  fixture, exactly as `UI Phase 2O` handled `fail`).
+- **AML review:** screening state, coarse outcome, matched categories, timestamps, the stalled age,
+  the match category/status, and related risk signals — reusing `UI Phase 2P`'s labels. No provider
+  payload, matched name, score, list source or vendor evidence. Disposition and recovery are stated
+  to be separate operations, not offered.
+- **Client lifecycle:** shown only as context inside KYC detail. **A suspended client is not an
+  item**, and no reason is inferred: the reason is stored in `client_profile_lifecycle_decision.reason`
+  and returned by no read.
+- **CDD outcome / risk rating:** the outcome is shown exactly. **No rating is shown or derived** —
+  a governed rating exists (`low|medium|high|prohibited`) and no read returns it, so it is never
+  derived from a reason, state, signal severity, outcome or client class. The masters intend a high
+  rating to trigger EDD (AML-RULE-006); with the rating unreadable, that link cannot be drawn here.
+- **SOF/SOW:** zero code hits — no model, checklist document type or evidence. Named once, in the
+  EDD Capability section, only to state that no such evidence model exists; never displayed as a
+  case requirement.
+- **STR / SAR:** no filing model exists (`CMP-14`, not implemented); **no filing action, state or
+  wording appears anywhere.**
+- **Timeline / history:** none. Source timestamps appear only where the source has one (an AML
+  screening's last-screened or requested time, a signal's raised/acknowledged time); the detail
+  explains the *current condition* and manufactures no history.
+- **Approval Queue:** not absorbed. No maker-checker approval is shown — even AML match disposition
+  (which is independently approved) is mentioned only as "a separate, independently approved step
+  and is not represented".
+
+### 52.8 Filter, search and empty states
+
+**One filter — Review area**, offering only areas that have an item (`areasPresent`), so it never
+shows an empty choice. It separates KYC/KYB from AML screening — two domains whose states must not
+be read against each other. **A Current-state filter was considered and left out**: states are
+already distinct per area, a second control would invite combining them across domains, and there is
+no "EDD status" to filter. **No search** (six items; no free-text capability in the backend). Empty
+states: filtered "No review items match the current view." with a "Show all review items" button;
+global "No review items are represented in this demo view." Never "No EDD required", "No compliance
+issues" or "All clear" (checked against the rendered corpus).
+
+### 52.9 EDD capability section, implementation boundary and backend gaps
+
+**EDD Capability** (below the workspace): the status line *Not implemented in the current backend.*
+(plain, not an error style); one paragraph — existing KYC/KYB and AML states can show that a subject
+needs further assessment, they do not create an EDD case, and in the governing design EDD follows
+screening and risk assessment and precedes product access approval — with "Stating this boundary
+does not mean the related obligations are met"; then four absent things (case lifecycle, trigger —
+*"The current backend does not define a formal EDD trigger model."* — evidence, and a review
+record); and the closing line that implementing EDD needs backend and compliance design, not a
+frontend change. No empty case table, no "0 EDD cases", no disabled "Start EDD".
+
+**A real EDD workflow requires a controlled backend/compliance design turn before implementation;
+it is not a frontend backlog item.**
+
+**Exact gaps for a real EDD / Review system** (each confirmed in source or the masters):
+
+1. **A formal EDD case model** — none (CMP-07).
+2. **EDD trigger rules** — none; the masters name high risk, PEP exposure, jurisdiction, wallet
+   exposure and unusual activity (AML-RULE-006), but the rating is unreadable and transaction
+   monitoring does not exist (§51.2).
+3. **An EDD lifecycle and decision/outcome** — none; the masters require a maker (Compliance
+   Analyst) and a checker (Compliance Officer / MLRO).
+4. **Case owner / assignment** — none for EDD. An assignee/due-date/escalation pattern exists only
+   for SEC-01 security alerts, and `assigned_reviewer` only for CLT-01 applications.
+5. **A review queue / list projection** — none.
+6. **Cross-module review aggregation** — none: KYC-01's list needs a client or application scope,
+   AML-01's reads are subject-scoped (its stuck list is the one cross-subject read), and CLT-01 has
+   no list. This page's aggregation is a UI projection only.
+7. **A SOF/SOW evidence model** — zero code; KYC-01's checklist has no such document type.
+8. **A review-notes / evidence model** — none; KYC-01's evidence is a checklist reference.
+9. **Approval integration** — no EDD action is registered in IAM-02 (`approve` also enforces no
+   approver role; carried finding).
+10. **STR escalation linkage** — none (CMP-14 not implemented).
+11. **A safe Admin read projection and role/permission model** — no EDD permission exists; KYC-01's
+    reads are service-token only.
+12. **A case audit trail** — no relay carries module events into SEC-01 (carried finding).
+13. **Pagination / filter exposure** — KYC-01's and AML-01's lists are fixed at 200.
+14. **A readable risk rating** — the input the masters use to decide EDD.
+
+**Carried open observations (recorded, not fixed):** IAM-02 `approve` checks no approver role,
+`reject` has no maker/SoD check, no approval policy is seeded; no role holds the SEC-01 read
+permissions and no relay carries module events into SEC-01.
+
+### 52.10 Cross-surface consistency and the Compliance Overview amendment
+
+Verified programmatically against the rendered pages, cell by cell:
+
+| Check | Result |
+|---|---|
+| `DEMO-CLI-001` state vs `/admin/client-risk-kyc-kyb` | "Pending Documents" = "Pending Documents" |
+| `DEMO-CLI-003` state vs the same page | "Remediation Required" = "Remediation Required" |
+| Each AML item's state vs `/admin/aml-transaction-monitoring` | "Completed · Potential match" ×2, "Requested · Stalled", "Failed" — all equal to that page's Screening and Outcome cells |
+| KYC items vs the 2O page's cases needing attention | `{CLI-001, CLI-003}` = `{CLI-001, CLI-003}` |
+| AML items vs the 2P page's subjects needing attention | `{DEMO-002, PTY-001, PTY-002, PTY-003}` = the same set |
+| Suspended `DEMO-CLI-004`; passed `DEMO-CLI-002` | not items |
+| `DEMO-PTY-001` | one item, not two |
+| Overview "EDD / Review — 6 items" | 2 KYC + 4 AML = 6 |
+
+**`UI Phase 2N`'s Overview changed in two places** (pointer at §49.15): the "Enhanced due diligence
+(EDD) — Not represented" row is replaced by **EDD / Review — "Interface preview · EDD backend not
+implemented"** with a derived count, and Review Areas links this page with the same caveat. **The
+status keeps the gap in the same line as the preview** — the brief was explicit that "Interface
+preview" alone would hide it. It claims no live integration and no EDD count. **`UI Phase 2O` and
+`UI Phase 2P` are unchanged** (their modules were imported, not edited); `UI Phase 2O`'s "Screening
+and EDD — Not represented" row on its own page stays true, since that page still does not represent
+either.
+
+### 52.11 Read-only, and the Admin / Ops authority boundary
+
+**No action control and no local state transition.** No Start EDD, Assign Reviewer, Escalate,
+Resolve, Approve, Reject, Request SOF/SOW, Close Case or File STR control exists. Admin visibility
+does not imply mutation authority. Audited by scratch render: **zero** interactive elements in any
+detail (the six fixtures plus four synthetic branch records) or the EDD Capability section. The
+future Approval Queue, Users / Roles / Permissions, Feature Flags / Configuration and Audit /
+Sensitive Access pages are not absorbed.
+
+### 52.12 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width is ~976px at 1024px (no sidebar) and ~975px at 1280px (240px sidebar appears), so
+`lg:` is the split breakpoint — the same figure at both ends, so the brief's `≥1280` and
+`1024–1279` cases resolve identically, as in `UI Phase 2J`, `2O` and `2P`.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Workspace as a persistent split — list (~623px) + 320px detail panel, single leading `border-l`. Three base columns fit (~448px including cell padding: reference ~108 + area ~107 + reason ≤233); State and Source do not appear. EDD Capability stacks full-width below |
+| `1024–1279px` | The same split, same ~623px list |
+| `768–1023px` | List full width (~720–975px); an item opens a `Sheet`. State appears at ≥768px of table width (~651px in all), Source at ≥896px |
+| `<768px` | Compact separated list (reference; area · reason; state), no rounded cards; an item opens a `Sheet` |
+
+Columns hide by **container query** (`@container`, `@3xl`/`@4xl`), confirmed present in the compiled
+CSS at 48rem/56rem. `<768px` uses a list, so no horizontal scroll is forced. **Not rendered:** the
+widths are estimates of glyph widths. This is the *least* tight table so far (~175px to spare at the
+split), so a longer reason label would still fit; "Potential match awaiting review" is the cell to check
+first in visual QA. The EDD Capability section is single-column at every width (`max-w-prose`).
+
+### 52.13 Accessibility
+
+One `<h1>`; three `<h2>` (Review Attention, the desktop detail's subject, EDD Capability) with `<h3>`
+sections inside the detail; a real `<table>` with a label and column headers; selection is a real
+`<button>` per row (one tab stop, native Enter/Space) whose accessible name begins with the visible
+reference ("DEMO-PTY-001, AML screening" — label-in-name, checked for all six); `aria-current` marks
+the open item; the filter is a labelled `Select`; the "Showing N of M" count is `aria-live="polite"`;
+state is icon + governed text, never colour; **the EDD limitation is conveyed in text in four places**
+(the disclosure, the "not an EDD case" line in every detail, the EDD Capability section, and — on the
+Overview — the status line); the `Sheet` keeps its own title/description; DOM order is filter, caption,
+list, detail, EDD Capability. No fake action control. **Rendered focus/keyboard behaviour was not
+exercised** (visual QA deferred).
+
+### 52.14 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `EddReviewWorkspace`, `ReviewAttentionTable`,
+  `ReviewAttentionDetail`, `ReviewStateLine`, `EddCapabilityBoundary`, and `edd-review-data.ts`. Only
+  the workspace and table are Client Components (local UI state only); the state line and detail carry
+  no directive but are imported into that client subtree, and the boundary section renders on the
+  server only.
+- **Reused:** `PageHeader`, `DemoDisclosure`, `useIsLgUp`, `KycStateLine` and `ScreeningStateLine` (the
+  source pages' own state lines), the `UI Phase 2O`/`2P` data helpers, the UTC-pinned formatters, and
+  the existing shadcn `Table`, `Select`, `Sheet`, `Button`, `Label`. **No primitive was added,
+  regenerated or modified**; the REVIEW LATER `Select`/`Sheet`/`Table` were used unchanged. The
+  official MCP was not needed. **No package or lockfile change.**
+- **Consolidation candidates recorded for the visual-QA pass, not refactored:** the generic
+  `ListDetailWorkspace` (now eight near-identical workspaces), shared `Row`/`Section` helpers (now
+  duplicated across the detail components), and the AML/KYC detail sections, which the review detail
+  re-composes rather than reuses because the source detail components carry their own headings.
+
+### 52.15 Boundaries
+
+No `C`-classified Admin element (Reporting, Incidents / Exceptions). No balance, transaction amount,
+trade data, PnL, order book, market data or Exchange operation. No fetch, server action, auth or
+permission code and no mutation. The four other Admin areas (Approval Queue, Users / Roles /
+Permissions, Feature Flags / Configuration, Audit / Sensitive Access) stay inert in `ADMIN_NAV`.
+
+### 52.16 Verification and what this phase did not do
+
+**Verified:** `typecheck:web`, `lint:web` (warning-free) and `build:web` pass; **16** static pages
+(15 + the new route). Dev server + `curl` + rendered-HTML inspection confirmed one `<h1>`, three `<h2>`,
+one labelled table with six rows and the exact cells above, the default detail, the active nav item,
+and zero controls in the detail and the EDD Capability section; and — cell by cell — agreement with
+`/admin/client-risk-kyc-kyb` and `/admin/aml-transaction-monitoring`. A scratch server-side render
+(deleted afterwards) verified: the projection rules (a passed case and a suspended client yield no
+item; `completed` + `fail` yields "Completed with fail outcome"; a dismissed-only subject with an open
+signal yields "Open risk signal"; a confirmed hit is an item only while its signal is open; a stalled
+subject with a signal keeps the stalled label and the signal as related context; every subject the AML
+page flags yields a reason); no duplicate keys; `areasPresent` for real, KYC-only and empty inputs; the
+detail branches (related signal shown once, stalled age and recovery note, failed note, outstanding
+items, CDD `fail`); icon meanings; label-in-name for all six buttons; and **a scan for invented
+vocabulary** (EDD case/status/required/pending/complete, assignee, reviewer, escalation, Start EDD, SOF/
+SOW request, STR, SAR, a percentage, a score, an amount, a demo review reference). Its only hits were
+legitimate: "EDD trigger" inside the negations "No EDD trigger…" and "does not define a formal EDD trigger
+model", and "Reject" inside the governed checklist status "Rejected". **Regression:** all other routes
+return 200.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the
+consolidated visual-QA program); no EDD case, status, trigger, owner, due date, SLA, decision, evidence
+or SOF/SOW content; no risk rating or priority; no action control; no fetch, auth or mutation; no change
+to any backend service, the public homepage, any Ops or Client page, `UI Phase 2O`/`2P`'s modules,
+packages or lockfile.

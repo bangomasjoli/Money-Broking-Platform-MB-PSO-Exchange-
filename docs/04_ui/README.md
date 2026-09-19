@@ -899,6 +899,30 @@ claim.** Public homepage unaffected.
   added or changed.** `typecheck:web`/`lint:web`/`build:web` all pass (15 static pages);
   verified via rendered-HTML inspection and a scratch server-side render — nothing was rendered.
   Full record: `UI-04` §51, `UI-02`'s new "UI Phase 2P" section, `UI-03` §52.
+- **Phase 2Q:** Admin / EDD / Review (`/admin/edd-review`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** The **fourth real Admin page**, `B`-classified: review attention over existing
+  KYC/KYB and AML states. **The decisive finding, re-verified from source rather than carried
+  forward: EDD IS NOT IMPLEMENTED** — eight lines in three files mention it and every one says it
+  is excluded; KYC-01's `manual_review`/`edd` case states have "no reachable code path"; no EDD
+  permission, route, outcome type or rescreen trigger exists; source-of-funds/wealth has no code
+  at all; the masters define it (CMP-07, AML-RULE-006) but no service exists. Three look-alike
+  models were found and recorded as **not EDD**: SEC-01's security-alert assignee/due-date/
+  escalation lifecycle, CLT-01's application reviewer, and KYC-01's maker-checker outcome
+  override. The page keeps its governed title, models **no EDD case, status, trigger, owner, due
+  date, SLA, decision or evidence**, and says so in an EDD Capability section ("Not implemented
+  in the current backend"). **Review attention is a demo/admin projection, not a single backend
+  case object**: six items are *computed* from the Phase 2O and 2P datasets (which were not
+  modified), each item is one (subject × area) so a related risk signal is context rather than a
+  second item, and every state was checked cell by cell against its source page. **No universal
+  priority and no ranking** (the list says so), no review reference, no risk rating, no reviewer,
+  no timeline. A suspended client is deliberately not an item — the result of a decision already
+  taken, with a reason no read returns. **Read-only — no action control and no local state
+  transition.** One filter (review area), no search. The Compliance Overview now reads "EDD /
+  Review — Interface preview · EDD backend not implemented", keeping the gap in the same line as
+  the preview. **No shadcn primitive added or changed.** `typecheck:web`/`lint:web`/`build:web`
+  all pass (16 static pages); verified via rendered-HTML inspection and a scratch server-side
+  render — nothing was rendered. Full record: `UI-04` §52, `UI-02`'s new "UI Phase 2Q" section,
+  `UI-03` §53.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -906,8 +930,8 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB and AML / Transaction Monitoring are
-  the three real Admin pages; the five other Admin areas remain unimplemented. No API/auth integration exists on any of
+  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring and EDD / Review
+  are the four real Admin pages; the four other Admin areas remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

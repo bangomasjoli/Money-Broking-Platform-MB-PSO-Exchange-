@@ -1,4 +1,5 @@
 import { AML_MONITORING_HREF, subjectsNeedingAttention } from "@/components/admin/aml-monitoring-data";
+import { EDD_REVIEW_HREF, REVIEW_ITEMS } from "@/components/admin/edd-review-data";
 import {
   CHECKLIST_STAFF_LABELS,
   CLIENT_RISK_KYC_KYB_HREF,
@@ -171,15 +172,20 @@ export function buildAttentionRows(): AttentionRow[] {
       "Potential matches awaiting review, stalled or failed screenings and open risk signals are shown in the AML / Transaction Monitoring preview. Transaction monitoring is not implemented in the current backend.",
   });
 
-  // EDD — still no model in code (KYC-01's `manual_review`/`edd` states are excluded from its CHECK), so it
-  // stays "not represented": stated, never implied to be clear.
+  // EDD / Review — the EDD / Review page now exists as an interface preview, but a dedicated EDD workflow
+  // still does NOT (re-verified `UI Phase 2Q`: no EDD table, route, permission, outcome type or trigger, and
+  // KYC-01's `manual_review`/`edd` states are excluded from its CHECK). So the status keeps the gap in the
+  // same line as the preview — "Interface preview" alone would hide it. The count comes from that page's own
+  // projection (`REVIEW_ITEMS`); it is not an EDD count, the meaning says so, and the items it counts are the
+  // same KYC/KYB and AML conditions already listed in the rows above.
   rows.push({
     id: "edd",
-    area: "Enhanced due diligence (EDD)",
+    area: "EDD / Review",
     owner: "KYC-01",
-    status: "Not represented in this preview",
-    count: "—",
-    meaning: "No EDD model exists yet, so nothing is implied about enhanced due diligence.",
+    status: "Interface preview · EDD backend not implemented",
+    count: plural(REVIEW_ITEMS.length, "item"),
+    meaning:
+      "Existing KYC/KYB and AML conditions that may need further assessment are listed in the EDD / Review preview. They are not EDD cases; no EDD model exists.",
   });
 
   return rows;
@@ -269,14 +275,16 @@ export interface ReviewArea {
   /** Exact governed label — identical to `ADMIN_NAV`. */
   label: string;
   owner: string;
-  /** Present only once the area's page exists (`UI Phase 2O` was the first, `2P` the second) — otherwise "planned". */
+  /** Present only once the area's page exists (`UI Phase 2O` was the first, `2P` the second, `2Q` the third) — otherwise "planned". */
   href?: string;
+  /** A capability caveat shown beside the status, for a page whose backend is only partly there. */
+  note?: string;
 }
 
 export const REVIEW_AREAS: ReviewArea[] = [
   { label: "Client Risk / KYC-KYB", owner: "KYC-01", href: CLIENT_RISK_KYC_KYB_HREF },
   { label: "AML / Transaction Monitoring", owner: "AML-01", href: AML_MONITORING_HREF },
-  { label: "EDD / Review", owner: "KYC-01" },
+  { label: "EDD / Review", owner: "KYC-01", href: EDD_REVIEW_HREF, note: "EDD backend not implemented" },
   { label: "Approval Queue", owner: "IAM-02" },
   { label: "Users / Roles / Permissions", owner: "IAM-02 / IAM-01" },
   { label: "Feature Flags / Configuration", owner: "CFG-01" },

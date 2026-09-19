@@ -2068,3 +2068,61 @@ exercised** — filtering, selection and the Sheet are reasoned from source.
 `/ops/maker-checker-queue`, `/ops/audit-activity`, `/admin` and `/admin/client-risk-kyc-kyb` all
 return 200. Backend regression not required — zero `platform/services/**`, `packages/**`,
 `edge/**`, `infra/**` change. Public homepage unaffected.
+
+## 53. Phase 2Q — Admin / EDD / Review (fourth Admin page, visual QA deferred)
+
+`/admin/edd-review` (`UI-04` §52): review attention over existing KYC/KYB and AML states, with the EDD
+capability boundary stated. `B`-classified; a six-item projection **computed from the `UI Phase 2O` and `2P`
+datasets** (no cross-client or cross-subject read exists in the backend beyond the stuck-request list); no
+fetch, server action, auth, permission check, mutation or local state transition. Read-only. **EDD is not
+implemented in the current backend** (`UI-04` §52.1 — re-verified from source) and the page never implies
+otherwise: no EDD case, status, trigger, owner, due date, SLA, decision or evidence, and no risk rating or
+priority.
+
+**Files created (7):** `app/admin/edd-review/page.tsx`; `components/admin/{edd-review-data.ts,
+edd-review-state.tsx, edd-review-table.tsx, edd-review-detail.tsx, edd-review-workspace.tsx,
+edd-capability-boundary.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (the "EDD / Review" row gains `href`; the four other Admin
+rows stay inert); `app/admin/layout.tsx` (comment and metadata); and — **the Compliance Overview amendment**
+recorded at `UI-04` §49.15/§52.10 — `components/admin/admin-compliance-data.ts` (the EDD row becomes "EDD /
+Review — Interface preview · EDD backend not implemented" with a derived count; `ReviewArea` gains an optional
+`note`) and `components/admin/review-areas.tsx` (renders the note). **`client-risk-data.ts` and
+`aml-monitoring-data.ts` were not modified — their output is preserved exactly. No Ops or Client page was
+modified.**
+
+**Client/server boundary:** the page is a Server Component; `EddReviewWorkspace` and `ReviewAttentionTable` are
+the only Client Components (`"use client"`), holding only local UI state — `areaFilter`, `selectedKey`,
+`mobileDetailOpen`. `ReviewStateLine`, `ReviewAttentionDetail` and `EddCapabilityBoundary` carry no directive and
+are stateless: the first two are imported into the client subtree (so they ship to the browser), the last renders
+on the server only. `ReviewStateLine` delegates to `KycStateLine` and `ScreeningStateLine`, so a review item
+reads exactly as it does on its source page.
+
+**Data:** every item is computed by `buildReviewItems` from `DEMO_CLIENT_COMPLIANCE` and
+`subjectsNeedingAttention`, so the page owns no domain facts. An item is (subject × review area); reason
+selection is a label choice, not a ranking; there is no universal priority and no review reference (a neutral
+`DEMO-REV-001` was permitted and not used). `areasPresent` derives the filter's options from the items, so it
+never offers an empty choice.
+
+**shadcn impact: none.** Existing `Table`, `Select`, `Sheet`, `Button`, `Label` used unchanged; the REVIEW
+LATER primitives were not touched; the official MCP was not needed. **No package or lockfile change.**
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all pass; **16** static pages
+generated (15 + the new route). No lint finding.
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server + `curl` + rendered-HTML
+inspection, and a scratch server-side render (deleted afterwards) for branches the six fixtures do not reach.
+Confirmed: one `<h1>` and three `<h2>`; one labelled table, six rows and their cells; the default detail; the
+active nav item; zero interactive elements in the detail and the EDD Capability section; the amended Overview
+rows and Review Areas links; **cell-by-cell agreement with `/admin/client-risk-kyc-kyb` and
+`/admin/aml-transaction-monitoring`** (every KYC and AML state, and the two "needing attention" sets); the
+Overview's "6 items" equal to 2 KYC + 4 AML; the projection rules for every branch; and a scan for invented
+EDD vocabulary whose only hits were negations and the governed status "Rejected". **A correction made during
+the turn:** the count of EDD mentions in the backend is **eight lines in three files**, not the seven first
+written (a search filter had excluded `.json`); code comment and `UI-04` §52.1 were corrected. **No
+interaction was exercised** — filtering, selection and the Sheet are reasoned from source.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`, `/app/compliance-status`, `/ops`,
+`/ops/client-requests`, `/ops/wallet-destination-review`, `/ops/maker-checker-queue`, `/ops/audit-activity`,
+`/admin`, `/admin/client-risk-kyc-kyb` and `/admin/aml-transaction-monitoring` all return 200. Backend regression
+not required — zero `platform/services/**`, `packages/**`, `edge/**`, `infra/**` change. Public homepage
+unaffected.

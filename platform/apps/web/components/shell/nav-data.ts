@@ -112,12 +112,18 @@ export const OPS_NAV: NavItem[] = [
  * models, every route `requireInternal`-guarded, no cross-subject read). **The label is governed and kept,
  * but the capability behind it is AML screening: transaction monitoring is NOT implemented in the current
  * backend** (`UI-04` §51.2), and the page says so. The five remaining rows stay inert.
+ *
+ * `UI Phase 2Q`: "EDD / Review" gains a real `href` (`/admin/edd-review` — the label's slug) —
+ * `B`-classified: a projection of real `KYC-01` and `AML-01` states, every route `requireInternal`-guarded.
+ * **The label is governed and kept, but the capability behind it is review attention: a dedicated EDD
+ * workflow is NOT implemented in the current backend** (`UI-04` §52.1), and the page says so. The four
+ * remaining rows stay inert.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
   { label: "Client Risk / KYC-KYB", href: "/admin/client-risk-kyc-kyb", icon: "shield-alert" },
   { label: "AML / Transaction Monitoring", href: "/admin/aml-transaction-monitoring", icon: "activity" },
-  { label: "EDD / Review", icon: "search-check" },
+  { label: "EDD / Review", href: "/admin/edd-review", icon: "search-check" },
   { label: "Approval Queue", icon: "list-checks" },
   { label: "Users / Roles / Permissions", icon: "users" },
   { label: "Feature Flags / Configuration", icon: "sliders-horizontal" },

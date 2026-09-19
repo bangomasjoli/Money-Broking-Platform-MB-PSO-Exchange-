@@ -2774,3 +2774,33 @@ in the compiled CSS. **The ~570px total is an estimate of glyph widths, not a me
 widest cell is "Requested · Stalled" with its icon — it is the tightest fit on the page and the
 first thing visual QA should check (an over-full row would wrap and break the 40px tier). No shadcn
 primitive was added or changed.
+
+## UI Phase 2Q — EDD / Review Geometry
+
+Values used by `/admin/edd-review` (`UI-04` §52). The workspace **reuses `UI Phase 2J`/`2O`/`2P`'s List +
+Detail values exactly**, and the EDD Capability section reuses `UI Phase 2P`'s boundary-section values; the
+only new measurements are the column budget and one caption line. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | Reuse — the persistent panel at `lg:` |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px), 320px | Reuse; single leading `border-l` |
+| Table row | `h-10` = **40px** `COMPACT` | Reuse |
+| Selected-row marker | `border-l-2` on the first cell | Reuse |
+| Filter control | `h-10` (40px) trigger, `w-64` (256px, `max-w-full`) | Reuse |
+| Filter row → caption | `mb-2` = 8px | New use of an existing step |
+| Caption → list | `mb-4` = 16px | Reuse; the caption is `text-xs` muted ("not ranked by priority") |
+| Mobile record | `py-3` = 12px, `gap-1` = 4px, hairline `border-t`, three lines | Reuse of the Ops mobile list |
+| Detail sections | `gap-6` = 24px between; rows `gap-3` = 12px | Reuse |
+| Page sections (workspace / capability) | `gap-8` = 32px; capability `border-t` + `pt-8` (1px + 32px) | Reuse of `UI Phase 2P` |
+| Section heading → workspace | `mb-4` = 16px | Reuse |
+| Prose measure | `max-w-prose` on the capability paragraphs and list | Same as `UI Phase 2P` |
+
+**Column budget** (content width ~976px at 1024px, ~975px at 1280px; the persistent split leaves the list
+~623px at both). Estimated cell widths *including* 16px padding: reference ~108 + area ~107 + reason
+≤233 (the widest, "Potential match awaiting review", ~31 characters at 7px) = **~448px**, leaving
+~175px — **the least tight table so far**. State (~203px) is shown from a container width of **48rem
+(768px)** (~651px in all) and Source (~70px) from **56rem (896px)**, so the persistent split shows the
+three base columns only and a full-width list at 768–1023px shows four or five. The `@3xl`/`@4xl` rules are
+confirmed in the compiled CSS. **The widths are estimates of glyph widths, not measurements** — the first
+visual-QA check is the widest reason. No shadcn primitive was added or changed.

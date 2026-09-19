@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "taskId": "IMP02-MA-HARDEN-001",
+  "title": "Harden IMP-02 Turn M-A evidence paths and result validation",
+  "state": "PLAN_READY",
+  "risk": "MODERATE",
+  "category": "IMP-02 security hardening",
+  "baselineCommit": "7b5ce3d3848b4c64c385c355d7a4023b4509bc25",
+  "resultingCommit": null,
+  "planner": {
+    "role": "routine_planner",
+    "provider": "codex_cli",
+    "model": "gpt-5.6-sol",
+    "effort": "LOW"
+  },
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {
+    "routine_planner": "LOW"
+  },
+  "roundCounts": {
+    "planning": 1,
+    "architecture": 0,
+    "review": 0,
+    "remediation": 0,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
+    "openFindingIds": [],
+    "carryForwardIds": []
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/01-plan.md"
+  ],
+  "createdAt": "2026-09-19T16:39:06.000Z",
+  "updatedAt": "2026-09-19T16:39:06.000Z"
+}

@@ -2,13 +2,13 @@
 document_id: STATE-005
 title: AIX Platform — Current State
 version: N/A
-document_status: DRAFT
+document_status: APPROVED
 implementation_status: N/A
 module: N/A
 control: Compact navigation / current-state record
 owner: Unassigned
-effective_date: 2026-09-19
-last_reviewed: 2026-09-19
+effective_date: 2026-09-20
+last_reviewed: 2026-09-20
 supersedes: none
 baseline_commit: ae3322e
 ---
@@ -37,7 +37,7 @@ AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange ap
 - **UI:** the most recent commits (Phases 2N–2Q) are implementations, not acceptances. `AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded anywhere (04_ui README).
 
 ## 5. Active task
-None recorded. No conductor-managed task exists yet. When one starts, list its ID, state and folder here (`docs/03_implementation/tasks/<TASK-ID>/`).
+**IMP02-MA-HARDEN-001** — Harden IMP-02 Turn M-A evidence paths and result validation. State `PLAN_READY`: the plan is recorded and awaiting human approval to implement; nothing is implemented or accepted. Risk MODERATE. Intended to close the two IMP-02 Turn M-B gate findings (`IMP-02-FIND-010`, `IMP-02-FIND-011`) once independently accepted; they remain open. Records: [tasks/IMP02-MA-HARDEN-001/](../03_implementation/tasks/IMP02-MA-HARDEN-001/).
 
 ## 6. Open findings (IDs only — details and state in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md))
 - **HIGH:** `FND-FIND-001` — pre-authentication abuse control; trigger: before any WLT-01 public route is internet-exposed; resolved via IMP-02.

@@ -194,12 +194,12 @@ This document applies to two modules and is deliberately **not duplicated**. Bot
 
 | Folder | Contents |
 |---|---|
-| `00_project_state/` | Session-handover docs: `PROJECT_HANDOVER.md`, `MODULE_STATUS.md`, `SESSION_START_PROMPT.md`, `CLAUDE_CODE_USAGE_RULES.md` |
+| `00_project_state/` | Session-handover docs: `PROJECT_HANDOVER.md`, `MODULE_STATUS.md`, `SESSION_START_PROMPT.md`, `CLAUDE_CODE_USAGE_RULES.md`, and the compact `CURRENT_STATE.md` navigation record (does not replace this register) |
 | `01_masters/` | Current authoritative master documents (00–11) + `reviews/` |
 | `02_modules/<MODULE>/` | `blueprint/v1.x/`, `reviews/`, `acceptance/`, `notes/` per module |
 | `02_modules/_cross_module/` | Documents that genuinely span more than one module |
 | `04_ui/` | AIX UI design governance: direction, visual references, measurement discipline, token policy — see §4c |
-| `03_implementation/` | Master implementation handover pack(s) |
+| `03_implementation/` | Master implementation handover pack(s); `tasks/` holds canonical conductor-managed task records (see `03_implementation/tasks/README.md`) |
 | `90_archive/masters/` | Superseded master document versions |
 | `90_archive/modules/<MODULE>/v1.0/` | Superseded v1.0 blueprint packs |
 

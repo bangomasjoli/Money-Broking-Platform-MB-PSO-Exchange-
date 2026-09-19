@@ -33,8 +33,15 @@ below for current state.
 |---|---|
 | Project context, licence lock, accepted modules, next module — **read first** | [00_project_state/PROJECT_HANDOVER.md](00_project_state/PROJECT_HANDOVER.md) |
 | Module implementation status (accepted / in progress / not started) | [00_project_state/MODULE_STATUS.md](00_project_state/MODULE_STATUS.md) |
+| Compact current-state snapshot / navigation (~80 lines; orient here before the larger files) | [00_project_state/CURRENT_STATE.md](00_project_state/CURRENT_STATE.md) |
 | Copy-paste prompt to start a new session efficiently | [00_project_state/SESSION_START_PROMPT.md](00_project_state/SESSION_START_PROMPT.md) |
 | Model selection + working discipline | [00_project_state/CLAUDE_CODE_USAGE_RULES.md](00_project_state/CLAUDE_CODE_USAGE_RULES.md) |
+
+## Where conductor-managed task records live
+
+`03_implementation/tasks/<TASK-ID>/` — canonical durable records (plan, implementation report, evidence, review,
+remediation, acceptance, `task.json`) for conductor-managed work going forward. Rules and templates:
+[03_implementation/tasks/README.md](03_implementation/tasks/README.md). Historical acceptance records stay where they are.
 
 ## Where module documentation lives
 

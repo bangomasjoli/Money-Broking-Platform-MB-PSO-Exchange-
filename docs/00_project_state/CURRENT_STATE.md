@@ -23,7 +23,7 @@ Keep this file to ~120 lines. Current state only: no history, no narrative, no c
 AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange application pending). Documentation in `docs/`, code in `platform/` (npm workspaces: `packages/*`, `services/*`, `apps/*`). Docs entry point: [../README.md](../README.md).
 
 ## 2. Baseline (verified against the repository, 2026-09-20)
-- Branch `main` at `9b0bab7` — `fix(perf): harden IMP-02 measurement evidence validation` (fast-forwarded from `fd2a1af`; the acceptance records follow in one docs-only commit).
+- Last accepted implementation commit: `9b0bab7` — `fix(perf): harden IMP-02 measurement evidence validation` (fast-forwarded from `fd2a1af`). This is the front matter `baseline_commit`: the newest non-governance commit this file was verified against. It is not the repository HEAD, which this file never records; the conductor reads HEAD from Git. Only control-layer records (this file, the registers, `tasks/**`) follow it.
 - Migration head **070** (`platform/infra/migrations/070_fnd_rate_limit_policy_privilege_hardening.cjs`, 70 migrations); also stated in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) (FND-01 Shared Rate-Limit Engine).
 - Checks (from `platform/package.json`): `npm test` (vitest), `npm run typecheck` (`tsc -b`), `npm run lint:web`, `npm run typecheck:web`, `npm run build:web`. Test totals live in the acceptance records, not here.
 

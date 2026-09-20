@@ -10,7 +10,7 @@ owner: Unassigned
 effective_date: 2026-09-20
 last_reviewed: 2026-09-20
 supersedes: none
-baseline_commit: ae3322e
+baseline_commit: 9b0bab7
 ---
 
 # AIX Platform — Current State
@@ -22,8 +22,8 @@ Keep this file to ~120 lines. Current state only: no history, no narrative, no c
 ## 1. Identity
 AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange application pending). Documentation in `docs/`, code in `platform/` (npm workspaces: `packages/*`, `services/*`, `apps/*`). Docs entry point: [../README.md](../README.md).
 
-## 2. Baseline (verified against the repository, 2026-09-19)
-- Branch `main` at `ae3322e` — `feat(ui): add admin edd review page`.
+## 2. Baseline (verified against the repository, 2026-09-20)
+- Branch `main` at `9b0bab7` — `fix(perf): harden IMP-02 measurement evidence validation` (fast-forwarded from `fd2a1af`; the acceptance records follow in one docs-only commit).
 - Migration head **070** (`platform/infra/migrations/070_fnd_rate_limit_policy_privilege_hardening.cjs`, 70 migrations); also stated in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) (FND-01 Shared Rate-Limit Engine).
 - Checks (from `platform/package.json`): `npm test` (vitest), `npm run typecheck` (`tsc -b`), `npm run lint:web`, `npm run typecheck:web`, `npm run build:web`. Test totals live in the acceptance records, not here.
 
@@ -32,19 +32,20 @@ AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange ap
 - **UI:** public homepage **VISUALLY ACCEPTED / CLOSED** (UI Phase 1R). Authenticated platform: Phases 2A–2Q recorded in [04_ui/README.md](../04_ui/README.md) — 4 Client, 5 Staff/Ops and 4 Admin pages **IMPLEMENTED / VISUAL QA DEFERRED** by an explicit program decision; no API/auth integration on any page; four Admin areas remain unimplemented.
 
 ## 4. Most recently accepted
-- **Backend:** IMP-02 Measurement Harness Turn M-A, commit `d57b436` — record `IMP-02-ACC-004` ([DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) §4b).
+- **Backend:** `IMP02-MA-HARDEN-001` (closes `IMP-02-FIND-010` and `IMP-02-FIND-011`), commit `9b0bab7` — [06-acceptance.md](../03_implementation/tasks/IMP02-MA-HARDEN-001/06-acceptance.md). Before it: IMP-02 Measurement Harness Turn M-A, commit `d57b436` — record `IMP-02-ACC-004` ([DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) §4b).
 - **Modules:** accepted baselines and phases are in [MODULE_STATUS.md](MODULE_STATUS.md); per-module acceptance records are under `02_modules/<MODULE>/acceptance/` (indexed in DOCUMENT_REGISTER §4a).
 - **UI:** the most recent commits (Phases 2N–2Q) are implementations, not acceptances. `AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded anywhere (04_ui README).
 
 ## 5. Active task
-**IMP02-MA-HARDEN-001** — Harden IMP-02 Turn M-A evidence paths and result validation. State `PLAN_READY`: the plan is recorded and awaiting human approval to implement; nothing is implemented or accepted. Risk MODERATE. Intended to close the two IMP-02 Turn M-B gate findings (`IMP-02-FIND-010`, `IMP-02-FIND-011`) once independently accepted; they remain open. Records: [tasks/IMP02-MA-HARDEN-001/](../03_implementation/tasks/IMP02-MA-HARDEN-001/).
+
+None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independent GPT review `ACCEPT` (no findings), then human acceptance. Records: [tasks/IMP02-MA-HARDEN-001/](../03_implementation/tasks/IMP02-MA-HARDEN-001/). One residual behaviour was accepted by the human: `writeEvidenceAtomic` creates the target directory before its realpath containment check, so a symlink escape may create an empty directory outside `perf/evidence/` before the write is refused; no evidence file is written outside the root (`REVIEW_CONCERN-001`, see [04-review.md](../03_implementation/tasks/IMP02-MA-HARDEN-001/04-review.md)).
 
 ## 6. Open findings (IDs only — details and state in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md))
 - **HIGH:** `FND-FIND-001` — pre-authentication abuse control; trigger: before any WLT-01 public route is internet-exposed; resolved via IMP-02.
 - **BLOCKED:** `WDR-FIND-001` — WDR-01 implementation blocked on KMS as a platform prerequisite.
 - **OPEN, above LOW:** `IAM1-FIND-003` (MEDIUM), `IAM2-FIND-001` (severity recorded as "Requires triage"), `WLT-FIND-004` (prerequisites and implementation complete; see register).
 - **OPEN, LOW/INFORMATIONAL:** all remaining OPEN rows (CLT, FND, IAM1, IMP-02, WLT families).
-- **Mandatory gate:** `IMP-02-FIND-010` and `IMP-02-FIND-011` must close before IMP-02 Turn M-B.
+- **Closed:** `IMP-02-FIND-010` and `IMP-02-FIND-011` (`IMP02-MA-HARDEN-001`, commit `9b0bab7`); the Turn M-B gate on them is satisfied. Turn M-B has not started.
 - **Deferred / environment:** `IAM1-FIND-002`, `WLT-FIND-002`, `WLT-FIND-003` (deferred), `ENV-FIND-001` (shared test-DB grant drift, local state).
 - No other row in the register carries HIGH or BLOCKER severity at this baseline.
 
@@ -53,7 +54,7 @@ AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange ap
 - Architecture: **DEC-008** IAM-01 internal session-introspection seam; **DEC-009** shared rate-limit engine; **DEC-010** public perimeter / pre-auth abuse control (four layers).
 
 ## 8. Next intended work (only what the repository states)
-- IMP-02: Turn M-B is gated on `IMP-02-FIND-010`/`011` (IMP-02 README).
+- IMP-02: the Turn M-B gate findings (`IMP-02-FIND-010`/`IMP-02-FIND-011`) are closed. Turn M-B is not started, and whether it proceeds is not stated in a single authoritative place. Next work is to be determined by the planner, with a human deciding.
 - UI: build out the four remaining Admin areas, then one consolidated visual QA pass (04_ui README, Phase 2D/2E program decision).
 - Anything else is not stated in a single authoritative place. A human decides; do not infer it from this file.
 

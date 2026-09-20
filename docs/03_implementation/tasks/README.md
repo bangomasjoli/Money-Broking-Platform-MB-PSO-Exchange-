@@ -89,5 +89,6 @@ Machine state and references only — never long Markdown.
 | `roundCounts` | planning / architecture / review / remediation / escalation |
 | `findingsSummary` | open counts by severity, open finding IDs, carry-forward IDs |
 | `acceptanceStatus` | `NOT_ACCEPTED` / `ACCEPTED` / `FAILED` |
+| `acceptance` | optional; present only after human acceptance: `{ acceptedBy, acceptedAt, acceptedCommit, reviewExecutionId }` |
 | `relevantRecordPaths` | repo-relative paths of this task's records |
 | `createdAt`, `updatedAt` | ISO-8601 UTC |

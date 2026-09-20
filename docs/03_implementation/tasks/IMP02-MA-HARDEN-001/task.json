@@ -2,26 +2,38 @@
   "schemaVersion": 1,
   "taskId": "IMP02-MA-HARDEN-001",
   "title": "Harden IMP-02 Turn M-A evidence paths and result validation",
-  "state": "PLAN_READY",
+  "state": "ACCEPTED",
   "risk": "MODERATE",
   "category": "IMP-02 security hardening",
   "baselineCommit": "7b5ce3d3848b4c64c385c355d7a4023b4509bc25",
-  "resultingCommit": null,
+  "resultingCommit": "9b0bab7bbae7b59ebb75bcc4f963fdb853004363",
   "planner": {
     "role": "routine_planner",
     "provider": "codex_cli",
     "model": "gpt-5.6-sol",
     "effort": "LOW"
   },
-  "implementer": null,
-  "reviewer": null,
+  "implementer": {
+    "role": "implementer",
+    "provider": "claude_code",
+    "model": "claude-sonnet-5",
+    "effort": "MEDIUM"
+  },
+  "reviewer": {
+    "role": "routine_reviewer",
+    "provider": "codex_cli",
+    "model": "gpt-5.6-sol",
+    "effort": "MEDIUM"
+  },
   "selectedEfforts": {
-    "routine_planner": "LOW"
+    "routine_planner": "LOW",
+    "implementer": "MEDIUM",
+    "routine_reviewer": "MEDIUM"
   },
   "roundCounts": {
     "planning": 1,
     "architecture": 0,
-    "review": 0,
+    "review": 1,
     "remediation": 0,
     "escalation": 0
   },
@@ -35,10 +47,20 @@
     "openFindingIds": [],
     "carryForwardIds": []
   },
-  "acceptanceStatus": "NOT_ACCEPTED",
+  "acceptanceStatus": "ACCEPTED",
   "relevantRecordPaths": [
-    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/01-plan.md"
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/01-plan.md",
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/02-implementation-report.md",
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/03-evidence.md",
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/04-review.md",
+    "docs/03_implementation/tasks/IMP02-MA-HARDEN-001/06-acceptance.md"
   ],
   "createdAt": "2026-09-19T16:39:06.000Z",
-  "updatedAt": "2026-09-19T16:39:06.000Z"
+  "updatedAt": "2026-09-20T07:44:37.548Z",
+  "acceptance": {
+    "acceptedBy": "Aiman",
+    "acceptedAt": "2026-09-20T07:44:37.548Z",
+    "acceptedCommit": "9b0bab7bbae7b59ebb75bcc4f963fdb853004363",
+    "reviewExecutionId": "REV-20260920T063148Z-001"
+  }
 }

@@ -442,7 +442,7 @@ blocked acceptance; see that section for full text). **Turn M-B gate:
 `IMP-02-FIND-010` and `IMP-02-FIND-011` MUST be closed before Turn M-B
 introduces any externally-influenced path segment or untyped/CLI/JSON
 entrypoint** — both findings are contained today only because Turn M-A's
-producers are exclusively internal, typed, TypeScript callers.
+producers are exclusively internal, typed, TypeScript callers. **Both were closed by `IMP02-MA-HARDEN-001` at commit `9b0bab7` (`IMP-02-FIND-010`, `IMP-02-FIND-011`; see their rows in `OPEN_FINDINGS.md`): the gate's condition is satisfied. Turn M-B has not started.**
 
 ## Abuse-Test Matrix — IMP-02 Acceptance Obligations
 
@@ -593,7 +593,9 @@ FND-FIND-010 = CLOSED at 6af0d25 (IAM pool capacity INPUTS now governed; does no
 IMP-02-FIND-001..004 = LOW / OPEN (non-blocking Turn-A hardening residuals)
 IMP-02-FIND-005..007 = LOW / OPEN (non-blocking Turn-B hardening residuals)
 IMP-02-FIND-008..009 = LOW / OPEN (non-blocking Turn-C hardening residuals)
-IMP-02-FIND-010..012 = LOW / OPEN (non-blocking Turn-M-A hardening residuals; 010/011 MUST close before Turn M-B introduces an untyped/CLI/JSON entrypoint)
+IMP-02-FIND-010 = LOW / CLOSED at 9b0bab7 (IMP02-MA-HARDEN-001; Turn M-B gate condition satisfied; see OPEN_FINDINGS.md)
+IMP-02-FIND-011 = LOW / CLOSED at 9b0bab7 (IMP02-MA-HARDEN-001; Turn M-B gate condition satisfied; see OPEN_FINDINGS.md)
+IMP-02-FIND-012 = LOW / OPEN (non-blocking Turn-M-A hardening residual)
 IMP-02-FIND-013 = INFORMATIONAL / OPEN (bundled Turn-M-A test/scanner refinement observations)
 Internet exposure = PROHIBITED
 ```

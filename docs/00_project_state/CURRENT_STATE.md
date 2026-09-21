@@ -57,7 +57,8 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 ## 7A. Master re-baseline in progress
 - **Doc 00 `v1.4` is APPROVED and authoritative** (four pillars: AIX Spot / OTC / Pay / RWA; Model A accepted, Model B gated, Model C standing prohibition). `v1.3` archived. Review evidence: [`00_..._v1.4_Review.md`](../01_masters/reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md).
 - **Charter `v1.4` APPROVED** — AIX Institutional Digital Asset & RWA Platform; four products; §12A target architecture; §15.0 repository-as-control-plane delivery model. `v1.3` archived.
-- Downstream **MUST REBASELINE BEFORE IMPLEMENTATION** (Doc 00 §25): Module Index, SRS, Role & Permission Matrix, Workflow Map, System Rules; `TRD-01`, `LED-01`, `DEP-01`, `PRT-01`. **`LED-01` may not freeze its schema design until it consumes `DEC-011`.**
+- **Module Index `v1.3` APPROVED** — 33 modules; two-taxonomy collision resolved (implementation codes are the sole identifiers); all 17 accepted IDs retained unrenumbered; 16 new. `v1.2` archived.
+- Downstream **MUST REBASELINE BEFORE IMPLEMENTATION** (Doc 00 §25): SRS, Role & Permission Matrix, Workflow Map, System Rules; `TRD-01`, `LED-01`, `DEP-01`, `PRT-01`. **`LED-01` may not freeze its schema design until it consumes `DEC-011`.**
 - **No code, migration, test, seeded identifier or runtime guard changed.** Deferred code requirement: CFG-01 `DOC00_SOURCE_VERSION` label bump + reseal (Doc 00 §25.3); the sealed hash itself remains valid.
 
 ## 8. Next intended work (only what the repository states)

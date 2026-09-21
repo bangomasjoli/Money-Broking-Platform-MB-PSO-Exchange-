@@ -79,7 +79,7 @@ remediation, acceptance, `task.json`) for conductor-managed work going forward. 
 
 **Doc 00 is now v1.4** — [`00_Licence_Scope_And_Feature_Lock_v1.4.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md),
 APPROVED: the institutional four-pillar licence-scope baseline (AIX Spot / OTC / Pay / RWA).
-`v1.3` is superseded and archived.
+`v1.3` is superseded and archived. **Charter is v1.4** and **Master Module Index is v1.3**, both re-baselined on it.
 
 ## Where archives live
 

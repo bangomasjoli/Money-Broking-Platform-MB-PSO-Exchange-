@@ -31,8 +31,14 @@ below for current state.
 
 `05_strategy/` — platform-wide product/architecture strategy analysis
 (`DOCUMENT_REGISTER.md` §4d). **Analysis only — these documents carry no authority over the
-masters in `01_masters/`.** Current: [`AIX Institutional Platform Strategic Re-Baseline v0.1`](05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md)
-(DRAFT — four-pillar direction gap analysis; supersedes nothing, approves no scope).
+masters in `01_masters/`.** Current:
+
+- [`STR-01` AIX Institutional Platform Strategic Re-Baseline v0.1](05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md)
+  — DRAFT four-pillar direction gap analysis; supersedes nothing, approves no scope.
+- [`STR-02` AIX Re-Baseline Governance Decision Pack v0.1](05_strategy/AIX_Re-Baseline_Governance_Decision_Pack_v0.1.md)
+  — DRAFT proposed decisions (`DEC-REQ-R1`/`R3`/`R4`/`A2`) with an LFSA regulatory evidence
+  register. `DEC-REQ-A2` is approved and graduated to [DECISION_LOG.md](DECISION_LOG.md) as
+  `DEC-011`; the remaining decisions are not approved.
 
 ## Where current project state lives
 

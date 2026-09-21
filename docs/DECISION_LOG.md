@@ -840,3 +840,73 @@ Future decisions should be appended below this line, oldest first, using the sam
 - **Baseline commit:** `bb1ee1a` (WLT-01 Public Client Surface governance
   record — the last commit before this decision; no implementation commit
   exists yet for either Turn 1 or Turn 2 of this decision).
+
+### DEC-011 — Institutional account hierarchy: Legal Entity → Master Account → Subaccount → Ledger Account, extending CLT-01
+
+- **Date:** AIX institutional re-baseline, decision-pack turn (owner approval of
+  `DEC-REQ-A2`). Analysis: `05_strategy/AIX_Re-Baseline_Governance_Decision_Pack_v0.1.md`
+  §4, building on `05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md` §6.
+- **Scope:** The canonical account model for the whole platform — how a legal client
+  relationship, an operational account structure, and an accounting primitive relate to
+  one another. Binds `CLT-01`, `LED-01`, `IAM-02` and every module that posts to or reads
+  from the ledger.
+- **Decision — four distinct layers, never collapsed into one identifier:**
+  1. **Legal Entity / Client** — `clt1.client_profile`. Owns the regulatory client
+     relationship and legal ownership of assets. **Must never itself be treated as a
+     ledger account**, and must never carry financial balances.
+  2. **Authorised principals** — `clt1.authorised_user` plus the existing IAM binding
+     (`iam_user_id`, migration `067`). This is membership/authority over the client.
+     **A second organisation-membership system must not be created.**
+  3. **Master Account** — the top-level operational account structure belonging to a legal
+     entity. A legal entity may initially have exactly one, but the model **must not assume
+     the relationship can never become one-to-many**.
+  4. **Subaccount** — operational separation beneath the master account (e.g. Trading,
+     Treasury, Payments, RWA). Subaccounts are **not separate legal clients**; they inherit
+     legal ownership from the parent legal entity.
+  5. **Ledger Account** — the accounting/posting primitive, sitting beneath or referencing
+     the operational account/subaccount structure.
+
+  **Extend `CLT-01`; do not create a duplicate Organisation identity domain** unless later
+  evidence proves `CLT-01` inadequate. `clt1.client_profile` is already a legal-entity record
+  (`legal_name`, `registration_number`, `country_of_incorporation`, `applicant_type`,
+  `client_class`) and `clt1.authorised_user` is already organisation membership bound to IAM.
+  What is missing is the **account layer between the entity and the ledger**, not the entity.
+
+  **Binding design requirements** (full list: decision pack §4.9): stable identifiers for
+  master account and subaccount; explicit legal-entity ownership; no cross-client subaccount
+  ownership; lifecycle states; ownership immutable after financial activity absent a governed
+  migration; audit events; maker-checker for sensitive administrative changes; subaccount-scoped
+  permission capability (narrowing-only); compatibility with wallet ownership, ledger posting,
+  Spot, OTC, Pay, RWA and reporting/reconciliation; and **no financial balances on CLT identity
+  records**.
+
+- **Rationale:** `client_id` today conflates legal owner, operational account and accounting
+  destination. The platform is about to build its ledger, and `client_id` is a scoping column
+  in **9 of `LED-01`'s 23 specified tables** with no subaccount dimension anywhere. Deciding
+  this before `LED-01` is implemented costs a document revision; deciding it afterwards is an
+  account-identity migration across live double-entry records, balances, holds and
+  reservations. Extending `CLT-01` rather than adding a parallel Organisation domain avoids
+  duplicating accepted onboarding, KYB, UBO, mandate and membership models that are already
+  bound to the authority chain.
+- **Status:** **ACCEPTED** (architecture and direction). This is **not** schema approval: no
+  migration, table or column is designed by this decision, and each consuming module specifies
+  its own.
+  - **`LED-01` may not freeze its migration or schema design until it has consumed this
+    decision.** Its existing direct use of `client_id` must be reviewed table by table.
+    `client_id` must **not** be blindly replaced with `subaccount_id` — legal owner
+    (`client_id`), operational scope (`subaccount_id`) and accounting destination
+    (`ledger_account_id`) are different dimensions and some tables need more than one.
+  - **Enforcement dependency:** subaccount-scoped permissions cannot be *enforced* until
+    `iam2.role_permission` has rows; it currently has zero, so no identity holds an effective
+    permission (`OPEN_FINDINGS.md` `IAM2-FIND-002`).
+  - **Open, non-blocking:** whether institutional subaccounts attract distinct KYC, reporting
+    or safeguarding treatment (`A2-Q1`), and whether subaccount segregation affects
+    client-money safeguarding obligations (`A2-Q2`). Neither blocks the architecture; both must
+    be answered before subaccounts carry client money.
+- **Supersedes / Related:** None superseded. Related: `STR-01` §6 (institutional account model
+  gap), decision pack §4 (alternatives, consequences, binding requirements) and §4.10
+  (`LED-01` consequence). Does not alter `DEC-008` (IAM-01 introspection seam) or the accepted
+  `X-AIX-Client-Id` narrowing-only authority chain, which this decision extends rather than
+  replaces.
+- **Baseline commit:** `284e2e7` (strategic re-baseline draft — the last commit before this
+  decision; no implementation commit exists for it).

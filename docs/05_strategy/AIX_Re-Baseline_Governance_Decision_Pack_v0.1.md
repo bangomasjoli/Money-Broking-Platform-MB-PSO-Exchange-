@@ -58,6 +58,13 @@ Sources cited in this pack. Added at `284e2e7`+ in response to the `STR-02` §7 
 ("attach the DMB-guideline extract"), which is hereby discharged. Provisions are paraphrased
 concisely; no substantial regulatory text is reproduced.
 
+> **VERIFICATION STATUS — INDEPENDENTLY VERIFIED.** The product owner has verified the
+> provisions below directly against the published Labuan FSA documents. They may be treated as
+> **externally verified governance evidence**. This supersedes the earlier caveat in this pack's
+> first revision, which recorded the paraphrases as owner-supplied and unverified against the
+> source PDFs. One element is excepted and flagged in the table (post-trade information under
+> LFSA-DMB-2025 ¶5.9).
+
 | Ref | Source | Date / effect | URL |
 |---|---|---|---|
 | **LFSA-DMB-2025** | Guidelines on the Management of Digital Money Broking Platform (Final) | Effective **1 January 2027** | [labuanfsa.gov.my …Guidelines-on-the-Management-of-Digital-Money-Broking-Platform_Final.pdf](https://www.labuanfsa.gov.my/clients/asset_120A5FB8-61B6-45E8-93F0-3F79F86455C8/contentms/img/documents/Legislation_and_Guidelines/Guidelines/Other_businesses/2025/Guidelines-on-the-Management-of-Digital-Money-Broking-Platform_Final.pdf) |
@@ -71,36 +78,43 @@ concisely; no substantial regulatory text is reproduced.
 | LFSA-DMB-2025 | **2.1** | Applies to Labuan money brokers running technology-enabled digital money broking platforms that facilitate trading/exchanging of digital currencies **on behalf of clients** |
 | LFSA-DMB-2025 | **5.2** | A trade may be executed for a client **only when sufficient funds are available** in the client's platform account |
 | LFSA-DMB-2025 | **5.5** | Order handling: record particulars of client order instructions; take reasonable steps to execute promptly; do not improperly withdraw, delay or withhold client orders; execute on **best available terms** |
-| LFSA-DMB-2025 | **5.9** | Pre-trade information includes current bid prices, current offer prices, available asset volume and **depth of trading interest**; post-trade information includes price, trade time and volume |
-| LFSA-DMB-2025 | **5.12** | Records include **order details and trade confirmations**, retained for at least **six years** |
-| LFSA-DMB-2025 | **6.4(i)** | System controls include price/quantity thresholds, detection/blocking of suspicious client orders, and **cancellation of unexecuted orders** |
-| LFSA-DMB-2025 | **6.4(ii)** | **Automated pre-trade controls** apply before trades are executed |
+| LFSA-DMB-2025 | **5.9** | Pre-trade information includes current bid/offer prices, available volume and **depth of trading interest**. *(A post-trade element — price, trade time, volume — was stated in the original commissioning instruction but was **not re-listed in the independent verification**; it is therefore retained below the verified line and marked ‡ wherever relied on.)* |
+| LFSA-DMB-2025 | **5.12** | Detailed **order and trade records** must be retained for at least **six years** |
+| LFSA-DMB-2025 | **6.4(i)** | Controls include price/quantity thresholds, **suspicious-order blocking** and **cancellation of unexecuted orders** |
+| LFSA-DMB-2025 | **6.4(ii)** | **Automated pre-trade controls** must apply before execution |
 | LFSA-MB-2024 | **1.1** | Money broking is **intermediary activity** and excludes acting as principal, liquidity provider or market maker |
-| LFSA-MB-2024 | **fn to 1.2** | Digital assets traded under this framework **must not have the features of securities under LFSSA** |
-| LFSA-MB-2024 | **7.5** | Counterparties expressly include principal broker, custodian, payment system provider, e-wallet provider and **liquidity provider**; where applicable they should be appropriately regulated, of good track record and subject to due diligence; **changes to applicable counterparties require notification to Labuan FSA seven days before** the new arrangement commences |
-| LFSA-MB-2024 | **9.3** | Due diligence applies to clients, principal brokers / liquidity providers and trading-platform providers **according to exposure** |
-| LFSA-MB-2024 | **9.5** | Must make clear **the capacity in which it acts** and disclose relevant conflicts associated with service providers / liquidity providers |
-| LFSA-MB-2024 | **9.7(i)** | Must disclose how execution services are performed, including **order-routing procedures**, how routing is applied fairly, **third-party arrangements for routing client orders**, and relevant inducements / payment-for-order-flow arrangements |
-| LFSA-EXCH-WEB | — | Labuan Exchanges are described as platforms for **listing and trading financial instruments** — equities, investment funds, debt instruments, other financial instruments, **digital securities and security tokens** |
+| LFSA-MB-2024 | **fn 1 to 1.2** | Digital assets permitted to be traded under the Money Broking framework **must not have the features of securities as defined under section 2 LFSSA** |
+| LFSA-MB-2024 | **7.5** | Counterparties expressly include **liquidity providers**; applicable counterparties must be appropriately regulated / of good track record, undergo due diligence, and **changes require notification to Labuan FSA within seven days prior to commencement** of the new arrangement |
+| LFSA-MB-2024 | **9.2** | Expressly refers to risk-mitigating measures **such as stop loss orders**. **This does not by itself approve any particular exchange-style stop-order implementation** (§2.8, R3-Q3) |
+| LFSA-MB-2024 | **9.3** | Due diligence must cover clients, principal broker / liquidity provider and trading-platform providers, **proportionate to exposure** |
+| LFSA-MB-2024 | **9.5** | Must make clear **the capacity in which it acts** and disclose relevant conflicts involving service providers / liquidity providers |
+| LFSA-MB-2024 | **9.7(i)** | Must disclose how execution services are performed, including **order-routing procedures**, **fair application of routing**, **third-party arrangements for routing client orders**, and **payment-for-order-flow / inducement arrangements** |
+| LFSA-EXCH-WEB | — | Labuan Exchanges are described as venues for **listing/trading financial instruments** including equities, investment funds, debt instruments, **digital securities and security tokens** |
 
-**Two limits on this evidence, applied throughout:**
+**Three limits on this evidence, applied throughout:**
 
-1. **LFSA-DMB-2025 is effective 1 January 2027.** It establishes the forward regulatory
-   framework, not the position in force today. Any reliance on it in a build decision must
-   state that timing.
+1. **TEMPORAL RULE — LFSA-DMB-2025 is effective 1 January 2027.** It may be used as the
+   **target operating requirement** for a platform intended to operate from that date.
+   **No AIX document may describe it as already effective before 1 January 2027**, and any
+   build decision relying on it must state that timing.
 2. **LFSA-EXCH-WEB is a generic business-area description.** It establishes what Labuan
-   Exchanges are *in general*. It does **not** establish the scope of AIX's own pending
-   Exchange application, and is not used for that purpose anywhere in this pack.
+   Exchanges are *in general*. It does **not** establish the scope of AIX's own Exchange
+   approval, and is not used for that purpose anywhere in this pack.
+3. **A provision establishes only what it says.** LFSA-MB-2024 ¶9.2's reference to stop loss
+   orders as a risk-mitigation concept is the clearest example: it does not approve a stop-order
+   product, a stop-order implementation, or any exchange-style conditional-order mechanism.
 
 ### 0.3 Decision status summary
 
 | ID | Decision | Status |
 |---|---|---|
-| **DEC-REQ-R1** | Regulatory/product meaning of "Exchange" | `BLOCKED_PENDING_REGULATORY_CONFIRMATION` — generic Exchange meaning now evidenced (§1.5); AIX's own application scope still unconfirmed |
-| **DEC-REQ-R3** | AIX Spot order and execution model | **Model A architecture: `READY_FOR_GOVERNANCE_APPROVAL`.** Model B: `READY_FOR_GOVERNANCE_APPROVAL` **as technical capability only**, production activation gated. **Model C: `BLOCKED` — not approved** |
-| **DEC-REQ-R4** | RWA / securities regulatory architecture | `BLOCKED_PENDING_REGULATORY_CONFIRMATION` (securities route); **classification-gate architecture** `READY_FOR_GOVERNANCE_APPROVAL` — now reinforced by LFSA-MB-2024 fn 1.2 (§3.6) |
-| **DEC-REQ-A2** | Organisation / account / subaccount hierarchy | **`APPROVED` — recorded as [`DEC-011`](../DECISION_LOG.md) (owner approval)** |
-| **DEC-REQ-A7** | `assertNoExchangeRuntime` evolution | `PROPOSED` — deliberately deferred behind R1/R4; current lock remains active |
+| **DEC-REQ-R1** | Regulatory/product meaning of "Exchange" | **Platform terminology *direction* APPROVED — [`DEC-012`](../DECISION_LOG.md) clause 5.** The **scope of AIX's own Exchange approval remains `BLOCKED_PENDING_REGULATORY_CONFIRMATION`** (R1-Q1b) and is expressly not approved |
+| **DEC-REQ-R3 — Model A** | External-venue routing | **`ACCEPTED` — [`DEC-012`](../DECISION_LOG.md) clause 1.** Target initial architecture for AIX Spot |
+| **DEC-REQ-R3 — Model B** | Multi-LP / smart order routing | **`ACCEPTED_TECHNICAL_CAPABILITY` / `PRODUCTION_GATED` — [`DEC-012`](../DECISION_LOG.md) clause 2** |
+| **DEC-REQ-R3 — Model C** | Internal client-to-client matching | **`BLOCKED` / `OUT_OF_SCOPE` — [`DEC-012`](../DECISION_LOG.md) clause 3.** No architecture approval granted |
+| **DEC-REQ-R4** | RWA / securities regulatory architecture | `BLOCKED_PENDING_REGULATORY_CONFIRMATION` (securities route). **Asset-eligibility gate placement APPROVED — [`DEC-012`](../DECISION_LOG.md) clause 6**; classification-gate architecture otherwise `READY_FOR_GOVERNANCE_APPROVAL` |
+| **DEC-REQ-A2** | Organisation / account / subaccount hierarchy | **`APPROVED` — [`DEC-011`](../DECISION_LOG.md)** |
+| **DEC-REQ-A7** | `assertNoExchangeRuntime` evolution | `PROPOSED` — deliberately deferred behind R1/R4; **current lock remains active and unmodified** |
 
 ---
 
@@ -227,7 +241,23 @@ Per document:
 
 ### 1.9 Recommended technical architecture
 
-**[ARCH REC]** **Alternative 1 now, Alternative 2 staged after R1-Q1 is answered.**
+**[ARCH REC]** **Alternative 1 now, Alternative 2 staged after R1-Q1b is answered.**
+
+> **APPROVED as `DEC-012` clause 5 — the platform terminology *direction* only.**
+> The **scope of AIX's own Exchange approval is expressly not approved** and remains R1-Q1b.
+> Approving what the two product names *mean on this platform* does not assert what AIX is
+> licensed to do under either.
+>
+> - **"AIX Spot"** = the Digital Money Broking product for **eligible non-security digital
+>   currencies**.
+> - **"AIX Exchange"** = reserved platform/product terminology for the **securities /
+>   financial-instrument Exchange capability**, subject to AIX's actual regulatory approval and
+>   the applicable securities framework.
+>
+> **Historical references must not be silently rewritten.** Class B (155) references remain
+> historically accurate and stay. Class C (115) crypto-spot uses require a later controlled
+> migration. Class D (45) seeded identifiers remain **frozen** until a specific migration
+> decision exists. **No bulk rename is authorised by this decision.**
 
 Proposed terminology rule, for approval:
 
@@ -381,6 +411,53 @@ eventual `TRD-01` revision should distinguish *a record of client instructions t
 permitted) from *a book of mutually matchable orders* (Model C, prohibited). No change is made
 here.
 
+### 2.6a Market-data / order-book terminology rule (approved — `DEC-012` clause 4)
+
+Three concepts are routinely conflated under the word "order book". They are architecturally
+and regulatorily distinct, and AIX documentation must keep them apart:
+
+| | Concept | What it is | Status |
+|---|---|---|---|
+| **A** | **Client Order Store / OMS** | Records an AIX client's own instructions and their lifecycle. **Does not imply client-to-client matching** | **Permitted** — Model A |
+| **B** | **External Market Depth** *(or "Aggregated Market Depth")* | Bid/offer information **sourced or aggregated from approved external venues / LPs**. **Does not imply AIX operates an internal matching book** | **Permitted as market data** |
+| **C** | **Internal Matching Book** | Maintains mutually executable AIX client orders and **matches them internally** | **LOCKED — Model C** |
+
+**Rule.** "Market Depth" / "Aggregated Market Depth" may be used for (B). Neither term, nor any
+client-order record under (A), may be taken to imply (C). Conversely, no permission for (C) can
+be derived from the existence of (A) or (B).
+
+**Note on executability.** This rule governs *naming and architecture*, not whether a client may
+execute against displayed depth. That remains open as R3-Q2b, constrained today by Doc 00 §7.2's
+non-clickable rule.
+
+### 2.6b Required future drafting change to `TRD-01` §5.21 rule 7
+
+**[REPO FACT]** `TRD-01` v1.2 §5.21 rule 7 currently reads:
+
+> "No order book, matching, netting or internalisation data structures may exist."
+
+Read with rules 1–6 its intent is plainly anti-internalisation. Read literally, "order book …
+data structures" could be argued to prohibit (A) the OMS client-order record required by
+Model A, and (B) an aggregated external market-depth representation — neither of which was in
+contemplation when it was drafted.
+
+**[ARCH REC] The required future change is to re-scope rule 7 from a data-structure prohibition
+to a matching-capability prohibition**, along these lines:
+
+> *No internal matching book may exist: AIX must not maintain a data structure in which AIX
+> client orders are mutually executable against one another, and must not match, cross or net
+> one client's order against another's. This does not prohibit (a) a client order store
+> recording AIX clients' own instructions and their lifecycle, or (b) representation of market
+> depth sourced or aggregated from approved external venues — neither of which makes client
+> orders mutually executable within AIX.*
+
+The prohibition's **force is unchanged**; only its object moves from *any structure that
+resembles a book* to *the capability of internal matching*. Rules 1–6 of §5.21 are already
+capability-based and need no change.
+
+**`TRD-01` is not modified by this decision.** The change lands in the eventual `TRD-01`
+re-baseline (§4.11).
+
 ### 2.7 Regulatory facts already established
 
 From approved AIX masters:
@@ -428,9 +505,26 @@ because the evidence answers one half and is silent on the other.
 | **R3-Q1b** | Was AIX's **own Doc 00 §6 lock** on "resting exchange limit orders" drafted to reach an OMS-pending order routed externally? | **OPEN** — AIX-internal interpretation, not an LFSA question. To be settled by Doc 00's revision, informed by R1-Q1b. *(Note: §6's wording is "resting **exchange** limit orders", which on its face targets orders resting in an exchange book, not orders pending in a broker's OMS.)* |
 | **R3-Q2a** | May AIX **display** aggregated bid/offer/volume/depth? | **CLOSED_BY_REGULATORY_EVIDENCE** — LFSA-DMB-2025 ¶5.9 makes current bid, current offer, available volume and **depth of trading interest** part of required pre-trade information. Display is not merely permitted but **expected** |
 | **R3-Q2b** | May a client **execute against displayed depth** (click-to-order), given Doc 00 §7.2's non-clickable rule? | **OPEN** — ¶5.9 is an information-disclosure provision. It establishes nothing about executability of the displayed depth |
-| **R3-Q3** | Which specific order types are permitted: market, limit, IOC, FOK, GTC, stop? | **OPEN, narrowed.** Established: orders carry **price and quantity** (¶6.4(i)), may be **unexecuted and cancellable** (¶6.4(i)), and must be executed promptly on best available terms (¶5.5) — consistent with a priced, cancellable client order. **Not established:** any enumeration of permitted types, and nothing at all on time-in-force (GTC/IOC/FOK) or conditional/stop behaviour |
+| **R3-Q3** | Which specific order types are permitted: market, limit, IOC, FOK, GTC, stop? | **OPEN, further narrowed — see §2.8a.** Established: orders exist, carry **price and quantity** (¶6.4(i)), may be **unexecuted and cancellable** (¶6.4(i)), must be executed promptly on best available terms (¶5.5), and **stop loss orders are named as a risk-mitigation concept** (LFSA-MB-2024 ¶9.2). **Not established:** that any particular order type is approved as a product, or any time-in-force / conditional-order implementation |
 | **R3-Q4** | Does routing across **multiple** venues create additional regulatory obligation versus single-venue? | **CLOSED_BY_REGULATORY_EVIDENCE, in substance.** Multi-venue routing creates no new *category* of obligation, but multiplies existing per-counterparty duties and triggers routing-specific disclosure: each venue is a counterparty requiring appropriate regulation, good track record and due diligence (LFSA-MB-2024 ¶7.5), due diligence proportionate to exposure (¶9.3), **seven days' prior notification to Labuan FSA of counterparty changes** (¶7.5), disclosure of routing procedures and **fairness of routing** (¶9.7(i)), disclosure of inducements / payment-for-order-flow (¶9.7(i)), capacity and conflict disclosure (¶9.5), and best available terms across the routed set (LFSA-DMB-2025 ¶5.5) |
 | **R3-Q5** | Attach the DMB-guideline evidence | **CLOSED** — discharged by §0.2 |
+
+### 2.8a Order-type classification for the target architecture
+
+**[ARCH REC] A classification, not an approval.** Nothing below is enabled, implemented or
+approved for production by this decision; production order types remain separately governed
+(`DEC-012` clause 1, rule 10).
+
+| Tier | Order types | Basis |
+|---|---|---|
+| **Baseline candidates** | **Market**, **Limit**, **Cancel** | Client orders with price and quantity (¶6.4(i)), prompt execution on best available terms (¶5.5), and cancellation of unexecuted orders (¶6.4(i)) are all established concepts. These are the minimum set an OMS must express to satisfy the cited controls |
+| **Future — requires specific product-rule review** | **Stop**, **Stop-Limit**, **IOC**, **FOK**, **GTC** *(where persistence semantics raise further issues)* | ¶9.2 names stop loss orders only as a **risk-mitigation concept**; it approves no stop-order product or implementation. Nothing in either guideline addresses time-in-force semantics |
+
+**Definition — "Limit Order" under Model A.** A **client instruction containing a price
+condition, maintained by the AIX OMS, and routed for external execution when it becomes
+executable under the applicable routing and product policy.** It is expressly **not** an order
+resting on an AIX internal client-to-client matching engine — that is Model C, which remains
+locked. This definition is what makes a limit order compatible with the agency model.
 
 **Unresolved regardless of this evidence** (restated so it is not lost in the closures):
 
@@ -506,9 +600,9 @@ workflow with an external dependency and a waiting period**, not a configuration
 | **Documents affected** | Doc 00 §6, §7.2, §7.5, §11.1, §11.2; Module Index §12, §17 (`FUT-09`–`FUT-11`); Charter §10.2; `TRD-01` pack; `STR-01` §5 |
 | **Modules affected** | `TRD-01` (refactor), `CFG-01` (order-type + venue eligibility), `LED-01` (holds for pending orders), `REC-01` (multi-venue reconciliation), `SEC-01` (order-record retention evidence) |
 | **Feature-lock implications** | **Model C stays locked.** `FUT-01`/`02`/`05` and the `client-to-client` guard fragment remain untouched. If order types are re-decided under R3-Q3, `FUT-09`–`FUT-11` need **reclassification, not deletion**. A new lock is needed for venue activation pending 7-day notification (§2.10 requirement 5) |
-| **Status — Model A** | **`READY_FOR_GOVERNANCE_APPROVAL` at the architecture level.** Client orders, unexecuted states, cancellation, pre-trade controls and third-party routing are all evidenced (§2.2). Order-type scope (R3-Q3) and depth interaction (R3-Q2b) remain open but **constrain features within Model A, not the model itself** |
-| **Status — Model B** | **`READY_FOR_GOVERNANCE_APPROVAL` as a technical capability only.** Multi-venue routing is evidenced (¶9.7(i)) and its obligations enumerated (R3-Q4). **Production activation is gated per venue** on due diligence (¶7.5, ¶9.3), 7-day prior notification (¶7.5) and routing/inducement disclosure (¶9.7(i)) — approving the capability approves no venue |
-| **Status — Model C** | **`BLOCKED` — NOT APPROVED.** No cited provision supports internal client-to-client matching; LFSA-MB-2024 ¶1.1 confines money broking to intermediary activity. Remains feature-locked pending express regulatory confirmation |
+| **Status — Model A** | **`ACCEPTED` — [`DEC-012`](../DECISION_LOG.md) clause 1.** Target initial architecture for AIX Spot. Order-type scope (R3-Q3) and depth interaction (R3-Q2b) remain open but **constrain features within Model A, not the model itself** |
+| **Status — Model B** | **`ACCEPTED_TECHNICAL_CAPABILITY` / `PRODUCTION_GATED` — [`DEC-012`](../DECISION_LOG.md) clause 2.** Approving the capability approves **no venue**: each is gated on due diligence (¶7.5, ¶9.3), notification within seven days prior to commencement (¶7.5) and routing/inducement disclosure (¶9.7(i)) |
+| **Status — Model C** | **`BLOCKED` / `OUT_OF_SCOPE` — [`DEC-012`](../DECISION_LOG.md) clause 3.** No cited provision supports internal client-to-client matching; LFSA-MB-2024 ¶1.1 confines money broking to intermediary activity. Existing guards unmodified |
 
 ---
 
@@ -558,13 +652,32 @@ flowchart TD
 one most often omitted. It must be the *default* on asset creation, so an asset cannot reach
 issuance by an absent decision — fail-closed, consistent with the platform's existing posture.
 
-**[ARCH REC] Scope correction from the new evidence.** Because LFSA-MB-2024 fn ¶1.2 excludes
-securities-featured digital assets from the **money broking** framework, the classification test
-cannot live only in the RWA pillar. **Any asset admitted to AIX Spot or AIX OTC must first be
-tested for securities features**, otherwise a listing decision could silently take an asset
-outside the framework AIX operates under. The gate therefore belongs to the **Asset & Instrument
-Registry** and is consumed by every pillar — not to an RWA-only module. This widens
-`STR-01` §9.3's placement of the gate and should be carried into the Registry's design.
+**Scope correction — APPROVED as `DEC-012` clause 6.** Because LFSA-MB-2024 fn 1 to ¶1.2
+excludes assets bearing **the features of securities as defined under section 2 LFSSA** from the
+Money Broking framework, the classification test **cannot live only in the RWA pillar**. Any
+asset admitted to AIX Spot or AIX OTC must first be tested for securities features; otherwise a
+listing decision could silently take an asset outside the framework AIX operates under.
+
+**The gate therefore sits at the shared Asset & Instrument Registry level** and is consumed by
+every pillar. Architecture rule:
+
+```
+Asset proposed
+  → legal / regulatory classification
+  → product eligibility
+
+  NON-SECURITY DIGITAL ASSET
+    → potentially eligible for AIX Spot / OTC, subject to all other rules
+  SECURITY / SECURITY TOKEN
+    → NOT admitted to Spot / OTC under the Money Broking route
+    → route to the applicable securities / Exchange governance path
+  UNRESOLVED
+    → blocked from product activation (fail closed)
+```
+
+This widens `STR-01` §9.3's placement of the gate and must be carried into the Registry's
+design. **No specific token is classified by this decision**, and the securities *route* remains
+blocked (R4-Q2).
 
 ### 3.6 Regulatory facts already established
 
@@ -901,13 +1014,13 @@ R1 and R4.**
 
 | ID | Question | Blocks |
 |---|---|---|
-| **R1-Q1b** | Does **AIX's own** pending Exchange application cover securities, digital-currency order books, or both? | All terminology work |
+| **R1-Q1b** | Does **AIX's own** Exchange approval cover securities, digital-currency order-book activity, or both? *(The terminology **direction** is approved as `DEC-012` clause 5; this scope question is expressly not.)* | Class-C terminology migration; any securities venue |
 | **R1-Q2** | Does AIX's Exchange lock constrain AIX Spot at all under a Digital Money Broking reading? | Doc 00 §6 revision |
 | **R1-Q3** | May "AIX Exchange" name a securities venue before that licence is granted? | Product naming |
 | **R1-Q4** | Does renaming licence-lock identifiers require regulator notification? | Class-D migration |
 | **R3-Q1b** | Was Doc 00 §6's "resting exchange limit orders" lock drafted to reach an OMS-pending order? | Doc 00 §6 revision *(AIX-internal, not LFSA)* |
 | **R3-Q2b** | May a client **execute against** displayed depth (click-to-order)? | AIX Spot market view |
-| **R3-Q3** | Which specific order types are permitted — and what of time-in-force (GTC/IOC/FOK) and stop/conditional behaviour? | Doc 00 §6/§11.2; order-type scope within Model A |
+| **R3-Q3** | Which specific order types are approved **as products**? Baseline candidates (Market / Limit / Cancel) and the future tier (Stop, Stop-Limit, IOC, FOK, GTC) are classified in §2.8a; ¶9.2's stop-loss reference approves no implementation | Doc 00 §6/§11.2; order-type activation within Model A |
 | **R3-Q6** | **Is any specific external venue or LP acceptable for AIX?** ¶7.5 sets the standard and the notification process; it approves no particular venue | Every venue activation |
 | **R4-Q1** | Regulatory basis for issuing/servicing tokenized RWAs from Labuan | AIX RWA |
 | **R4-Q2** | Basis for lifting the **permanent** `securities.token_trading` prohibition | Security-token route |
@@ -916,7 +1029,7 @@ R1 and R4.**
 | **R4-Q5** | Custody basis for RWA tokens | Token lifecycle |
 | **R4-Q6** | May non-security RWA tokens be issued under existing licences? | Non-security route |
 | **R4-Q7** | Does non-security RWA secondary trading fall under MB, Exchange, or neither? | Secondary market |
-| **R-MODEL-C** | May AIX ever match one client's order against another's? **No cited provision supports it** | Model C — remains locked |
+| **R-MODEL-C** | May AIX ever match one client's order against another's? **No cited provision supports it**; `DEC-012` clause 3 blocks it | Model C — remains locked and out of scope |
 | **A2-Q1** | Are institutional subaccounts subject to distinct KYC/reporting/safeguarding treatment? | Subaccount operating rules *(not the approved architecture)* |
 | **A2-Q2** | Does subaccount segregation affect client-money safeguarding obligations? | Safeguarding design |
 
@@ -944,6 +1057,45 @@ DEC-REQ-A2~~ (`DEC-011`).
 **Not recommended yet:** any master edit, any module renaming or renumbering, any change to
 `assertNoExchangeRuntime`, any code, migration or test change.
 
+### 7.1 Proposed master re-baseline order (proposal only — nothing is updated)
+
+The masters form a declared dependency chain: each names the prior as its **base document**
+(`03_Master_Module_Index_v1.2.md` Document Control cites Doc 00 and the Charter as base
+documents 1 and 2) **[REPO FACT]**. Updating out of order creates contradictions that the later
+document then inherits.
+
+| # | Document | Why it must come here | Depends on |
+|---|---|---|---|
+| **1** | **Doc 00 — Licence Scope & Feature Lock** | The licence-scope control authority. Owns the Exchange lock (§6), the LP model (§7.5), UI naming (§11) and the prohibitions (§8) — every one of which the four-pillar direction touches. **Nothing downstream can be settled while its terms are unsettled** | `DEC-012`; R1-Q1b, R3-Q3, R4-Q2 |
+| **2** | **01 — Project Charter** | Declares vision, scope and out-of-scope (§10.2, which currently excludes resting orders and click-to-trade). Cites Doc 00 as its base | Doc 00 |
+| **3** | **03 — Master Module Index** | Adds the new domains and must resolve the **two-taxonomy collision** (`STR-01` §2.5). Cites Doc 00 **and** the Charter as base documents | Doc 00, Charter |
+| **4** | **02 — SRS** | Requirements derive from settled scope and a settled module set. Writing them before the index is renumbered would strand requirement-to-module references | Doc 00, Charter, Module Index |
+| **5** | **04 — Role & Permission Matrix** | **Affected** — needs organisation/subaccount scope (`DEC-011`) and client-side functional roles (Trader, Finance, API Operator). Follows the SRS because roles bind to requirements | SRS; `DEC-011` |
+| **6** | **05 — Master Workflow Map** | Spot order lifecycle, Pay merchant flows, RWA lifecycle — workflows presuppose modules, requirements and roles | SRS, Role Matrix |
+| **7** | **06 — Master System Rules** | Platform rules for order handling, the classification gate and eligibility. Rules are the invariants the workflows must satisfy, so they follow the workflow map | Workflow Map |
+| **8** | **Affected module blueprints** | `TRD-01` (§2.6b, §4.11), `LED-01` (§4.10 — **may not freeze until it consumes `DEC-011`**), `CLT-01`, `IAM-02`, `CFG-01`, plus new-domain packs | All of the above |
+
+**Proposed order confirmed as approximately correct**, with one qualification: **04 Role &
+Permission Matrix is genuinely affected** and should not be treated as conditional — `DEC-011`
+requires subaccount-scoped permissions and client-side functional roles that its §5.1 does not
+contain **[REPO FACT]**.
+
+**Not in this sequence, and deliberately so:** `07 Master Data Flow`, `08 Technical
+Architecture`, `09 Security Architecture`, `10 Testing Strategy` and `11 Deployment Strategy`
+all eventually need revision (`STR-01` §11), but none blocks the re-baseline's critical path and
+each is better written once the module set is settled.
+
+**Accepted modules needing NO change from this decision:**
+
+| Module | Why unaffected |
+|---|---|
+| `FND-01` | Envelope, context, idempotency, outbox, audit publisher and rate-limit engine are product-neutral. *(Its `assertNoExchangeRuntime` is affected only by a future `DEC-REQ-A7`, which is deferred.)* |
+| `IAM-01` | Session, MFA, step-up and introspection are unchanged by the pillar model or by `DEC-011` |
+| `SEC-01` | The audit/evidence model is product-neutral; new event types are additive |
+| `KYC-01` | Unaffected by `DEC-012`. *(Extends later for issuer due diligence under R4, not under this decision.)* |
+| `AML-01` | Unaffected by `DEC-012`. *(KYT is a later extension, `STR-01` §9.1.)* |
+| `WLT-01` | Unaffected by `DEC-012`. *(Destinations may later scope to a subaccount under `DEC-011`, which is a `CLT-01`/`LED-01`-led change.)* |
+
 ---
 
 ## 8. Document control
@@ -952,20 +1104,21 @@ DEC-REQ-A2~~ (`DEC-011`).
 |---|---|
 | Document ID | `STR-02` |
 | Version | v0.1 — **retained**; see revision note below |
-| Status | **DRAFT decision pack.** One decision within it (`DEC-REQ-A2`) is APPROVED and recorded as `DEC-011`; **R1, R3 Model C and the R4 securities route are NOT approved** |
+| Status | **DRAFT decision pack.** `DEC-REQ-A2` → `DEC-011`; R3 Models A/B, the terminology rules and the asset-gate placement → `DEC-012`. **NOT approved: the scope of AIX's Exchange approval (R1-Q1b), Model C, the R4 securities route, and any specific order type, venue or asset** |
 | Baseline commit | `284e2e7` (original); regulatory evidence attached in the following commit |
 | Depends on | [`STR-01`](AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md) v0.1 |
-| Method | Repository inspection at `284e2e7`; 315-occurrence semantic classification; `no-exchange.ts` caller and test-coverage audit; `TRD-01` v1.2 and `LED-01` v1.1 blueprint analysis. **Regulatory sources per §0.2 were supplied by the product owner with official Labuan FSA URLs; they were not retrieved over the network (no internet access) and the paraphrases were not independently verified against the published PDFs.** Governance should confirm the paraphrases against the linked sources before relying on them in a master revision |
+| Method | Repository inspection at `284e2e7`; 315-occurrence semantic classification; `no-exchange.ts` caller and test-coverage audit; `TRD-01` v1.2 and `LED-01` v1.1 blueprint analysis. **Regulatory sources per §0.2 have been independently verified by the product owner against the published Labuan FSA documents** (one exception flagged in §0.2: the post-trade element of LFSA-DMB-2025 ¶5.9). No network retrieval was performed by this analysis |
 | Authority | **None.** Masters, `DOCUMENT_REGISTER`, `OPEN_FINDINGS` and `DECISION_LOG` remain their respective authorities. `DEC-011` — not this document — is the authoritative record of the A2 decision |
 | Findings | **None created, none closed** |
 | Changes to code/migrations/tests | **None** |
 | Graduation | Approved decisions become `DEC-011`+ in `DECISION_LOG.md`. `DEC-REQ-A2` has graduated |
 
-**Revision note.** The version stays `v0.1` rather than bumping to `v0.2`: the repository's
+**Revision note.** The version stays `v0.1` rather than bumping: the repository's
 version-in-filename convention for controlled documents would require a rename, and `DEC-003`
-makes Git the primary change-history mechanism for a document still in `DRAFT`. The material
-changes in this revision are: regulatory evidence register (§0.2); R1 evidence strengthened
-(§1.4, §1.7); R3 re-assessed against evidence with four questions closed and three split
-(§2.2, §2.8, §2.10, §2.11); R4 evidence strengthened and the classification gate widened beyond
-the RWA pillar (§3.6, §3.5); `DEC-REQ-A2` marked APPROVED with binding design requirements and
-LED-01 / TRD-01 consequences (§4.9–§4.11).
+makes Git the primary change-history mechanism for a document still in `DRAFT`.
+
+| Revision | Commit | Material change |
+|---|---|---|
+| 1 | `284e2e7`+ | Original pack: four decisions prepared, 315-occurrence classification, `assertNoExchangeRuntime` assessment |
+| 2 | `5747367` | Regulatory evidence register (§0.2); R1 evidence strengthened; R3 re-assessed with four questions closed and three split; R4 gate widened beyond the RWA pillar; `DEC-REQ-A2` APPROVED → `DEC-011` with binding requirements and LED-01 / TRD-01 consequences |
+| 3 | *this revision* | **Evidence independently verified** and upgraded (§0.2), incl. new LFSA-MB-2024 ¶9.2 and the explicit temporal rule; **`DEC-012` approved** — Model A `ACCEPTED`, Model B `ACCEPTED_TECHNICAL_CAPABILITY`/`PRODUCTION_GATED`, Model C `BLOCKED`, market-depth terminology rule (§2.6a), `TRD-01` §5.21 rule 7 drafting change (§2.6b), order-type classification (§2.8a), asset-gate placement (§3.5), terminology direction (§1.9); proposed master re-baseline order (§7.1) |

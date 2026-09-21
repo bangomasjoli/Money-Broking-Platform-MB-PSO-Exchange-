@@ -910,3 +910,174 @@ Future decisions should be appended below this line, oldest first, using the sam
   replaces.
 - **Baseline commit:** `284e2e7` (strategic re-baseline draft — the last commit before this
   decision; no implementation commit exists for it).
+
+### DEC-012 — AIX Spot execution architecture: external-venue routing (Model A), gated multi-venue routing (Model B), internal matching locked (Model C), and the terminology that keeps them apart
+
+- **Date:** AIX institutional re-baseline, R3 decision turn, following independent owner
+  verification of the Labuan FSA sources against the published documents. Analysis:
+  `05_strategy/AIX_Re-Baseline_Governance_Decision_Pack_v0.1.md` §2 (evidence register §0.2).
+- **Scope:** The execution architecture for **AIX Spot**, the terminology that distinguishes a
+  client order store from market depth from an internal matching book, and the asset-eligibility
+  gate that determines what may be admitted to it. **Clause 6 has platform-wide reach beyond
+  Spot** and is recorded here because a Spot execution decision is incomplete without stating
+  what may be traded.
+- **Regulatory basis (independently verified):** *Guidelines on the Establishment of Money
+  Broking Business in Labuan IBFC*, 9 September 2024 — ¶1.1, fn 1 to ¶1.2, ¶7.5, ¶9.2, ¶9.3,
+  ¶9.5, ¶9.7(i). *Guidelines on the Management of Digital Money Broking Platform* (Final),
+  **effective 1 January 2027** — ¶2.1, ¶5.2, ¶5.5, ¶5.9, ¶5.12, ¶6.4(i), ¶6.4(ii). Labuan FSA
+  Exchange business-area description. Full citations and URLs: decision pack §0.2.
+  **TEMPORAL RULE: the 2025 DMB guideline is effective 1 January 2027.** It may be relied on as
+  the target operating requirement for a platform intended to operate from that date; **no AIX
+  document may describe it as already effective before then.**
+
+- **Decision — clause 1: Model A (external-venue routing) is ACCEPTED as the target initial
+  architecture for AIX Spot.**
+
+  ```
+  Institutional Client → AIX Spot UI/API → Client Order / OMS
+    → Eligibility + Pre-Trade Controls → Execution Routing
+    → Approved External Counterparty / LP / Venue → Execution / Fill
+    → AIX Ledger → Settlement → Reconciliation
+  ```
+
+  Binding rules:
+  1. AIX remains **intermediary / agency** (LFSA-MB-2024 ¶1.1).
+  2. **No AIX proprietary market making.**
+  3. **No principal dealing** under this architecture.
+  4. Client instructions/orders **may be represented in AIX's OMS** (LFSA-DMB-2025 ¶5.5).
+  5. Orders **may remain unexecuted/pending** where product rules allow (¶6.4(i)).
+  6. **Actual execution is sourced externally** through approved counterparties / venues
+     (LFSA-MB-2024 ¶9.7(i)).
+  7. Every execution must retain sufficient evidence of: client instruction; pre-trade checks;
+     routing decision; selected counterparty/venue; price; quantity; fees; timestamps; fill(s);
+     settlement; reconciliation (¶5.5, ¶5.12 — six-year retention; ¶9.7(i)).
+  8. The architecture **must support partial fills**.
+  9. **No approval of any specific LP / venue follows from this decision** (¶7.5 sets the
+     standard and the notification process; it approves no venue).
+  10. **Production order types remain separately governed** — see clause 7.
+
+- **Decision — clause 2: Model B (multi-venue / smart order routing) is ACCEPTED as a
+  TECHNICAL CAPABILITY, PRODUCTION-GATED.**
+
+  ```
+  AIX OMS → Market Data Aggregation → Execution Policy → Smart / Multi-LP Router
+    → Approved Venue Adapters → External LPs / Venues → Fill Aggregation
+    → Settlement / Reconciliation
+  ```
+
+  The routing architecture must support evaluation of: price; available quantity/depth; fees;
+  expected slippage where measurable; venue health; counterparty exposure/limit; supported
+  assets; settlement capability; regulatory eligibility; operational availability.
+
+  **A simplistic "lowest price always wins" rule is expressly rejected.** Routing policy must
+  eventually be **configurable and auditable**, and **every routing decision must be
+  reconstructable** — this is a disclosure obligation, not only an audit one (¶9.7(i) requires
+  disclosure of routing procedures, fair application of routing, third-party routing
+  arrangements and payment-for-order-flow / inducement arrangements; ¶9.5 requires capacity and
+  conflict disclosure).
+
+  **Production activation is gated per venue** on: appropriate regulation / good track record
+  and due diligence (¶7.5, ¶9.3 proportionate to exposure); **notification to Labuan FSA within
+  seven days prior to commencement** of the new arrangement (¶7.5); and the ¶9.7(i)/¶9.5
+  disclosures. **Approving the capability approves no venue.**
+
+- **Decision — clause 3: Model C (internal client-to-client matching) is BLOCKED / OUT OF
+  SCOPE.** No architecture approval is granted for: an AIX-operated central client-to-client
+  order book; internal crossing of independent AIX client orders; AIX acting as market maker;
+  or AIX providing its own principal liquidity. No cited provision supports any of them, and
+  LFSA-MB-2024 ¶1.1 confines money broking to intermediary activity. **Existing runtime guards
+  are not modified by this decision and remain active** (`TRD-01` §5.21 rules 1–6,
+  `assertNoExchangeRuntime`, the CFG-01 `exchange.` prefix guard and the seeded prohibited-
+  feature registry).
+
+- **Decision — clause 4: market-data / order-book terminology.** Three concepts must be kept
+  distinct in all AIX documentation and architecture:
+  - **(A) Client Order Store / OMS** — records an AIX client's own instructions and their
+    lifecycle. **Does not imply client-to-client matching.** Permitted (clause 1).
+  - **(B) External Market Depth** / **Aggregated Market Depth** — bid/offer information sourced
+    or aggregated from approved external venues / LPs. **Does not imply that AIX operates an
+    internal matching book.** Permitted as market data.
+  - **(C) Internal Matching Book** — maintains mutually executable AIX client orders and matches
+    them internally. **This is Model C and is LOCKED.**
+
+  No permission for (C) may be derived from the existence of (A) or (B). Whether a client may
+  *execute against* displayed depth is a separate open question (decision pack R3-Q2b),
+  constrained today by Doc 00 §7.2.
+
+  **Required future drafting change, recorded not made:** `TRD-01` v1.2 §5.21 rule 7 ("No order
+  book, matching, netting or internalisation data structures may exist") must be re-scoped from
+  a **data-structure** prohibition to a **matching-capability** prohibition, so that it
+  continues to prohibit (C) while not accidentally prohibiting (A) or (B). Proposed wording:
+  decision pack §2.6b. **`TRD-01` is not modified by this decision.**
+
+- **Decision — clause 5: platform terminology direction.**
+  - **"AIX Spot"** = the Digital Money Broking product for **eligible non-security digital
+    currencies**.
+  - **"AIX Exchange"** = reserved platform/product terminology for the **securities /
+    financial-instrument Exchange capability**, subject to AIX's actual regulatory approval and
+    the applicable securities framework.
+
+  **The scope of AIX's own Exchange approval is expressly NOT approved by this decision** and
+  remains open (decision pack R1-Q1b). Approving what these names mean on this platform asserts
+  nothing about what AIX is licensed to do.
+
+  **Historical references must not be silently rewritten.** Of the 315 "Exchange" occurrences
+  classified across the twelve masters (decision pack §1.5): **class B (155)** historical and
+  current approval references remain historically accurate and stay; **class C (115)**
+  crypto-spot uses require a later controlled migration; **class D (45)** seeded identifiers
+  remain **FROZEN** until a specific migration decision exists. **No bulk rename is authorised.**
+
+- **Decision — clause 6: the securities-feature gate sits at the shared Asset & Instrument
+  Registry level, not only inside RWA.** LFSA-MB-2024 fn 1 to ¶1.2 excludes assets bearing the
+  features of securities **as defined under section 2 LFSSA** from the Money Broking framework,
+  so any asset admitted to AIX Spot or AIX OTC must first be tested for securities features.
+  Architecture rule: *asset proposed → legal/regulatory classification → product eligibility*,
+  with outcomes — **non-security digital asset** → potentially eligible for Spot/OTC subject to
+  all other rules; **security / security token** → **not admitted to Spot/OTC under the Money
+  Broking route**, routed to the applicable securities / Exchange governance path; **unresolved**
+  → **blocked from product activation** (fail closed). **This is an architecture rule only: no
+  specific token is classified, and the securities route itself remains blocked** (decision pack
+  R4-Q2).
+
+- **Decision — clause 7: order-type classification (a classification, not an approval).**
+  **Baseline candidates:** Market, Limit, Cancel. **Future, requiring specific product-rule
+  review:** Stop, Stop-Limit, IOC, FOK, and GTC where its persistence semantics raise further
+  issues. **None is enabled, implemented or approved for production by this decision.**
+  LFSA-MB-2024 ¶9.2 refers to stop loss orders only as a **risk-mitigation concept** and
+  **approves no stop-order product or implementation**.
+
+  **"Limit Order" under Model A means** a client instruction containing a price condition,
+  maintained by the AIX OMS and routed for external execution when executable under the
+  applicable routing and product policy — **not** an order resting on an AIX internal
+  client-to-client matching engine.
+
+- **Rationale:** The independently verified guidelines establish that client orders are a
+  regulated object under Digital Money Broking (recorded, promptly executed on best available
+  terms, capable of being unexecuted and cancelled, subject to automated pre-trade controls and
+  price/quantity thresholds) and that **third-party routing of client orders is expressly
+  contemplated and must be disclosed**. Model A is therefore the architecture that delivers an
+  order-driven institutional product while keeping AIX on the intermediary side of ¶1.1. Model B
+  is the same architecture generalised across venues; its risk is operational and
+  counterparty-related rather than structural, so it is approved as a capability and gated at
+  activation. Model C would make AIX a venue operator, which no cited provision supports.
+  Deciding the terminology alongside the models is deliberate: the three concepts in clause 4
+  are routinely conflated, and conflating them is how an internal matching book gets built by
+  accident.
+- **Status:** **ACCEPTED** — architecture only. **Not** an approval of: any specific LP or venue
+  (clause 1 rule 9, clause 2); any production order type (clause 7); any specific asset
+  (clause 6); the scope of AIX's Exchange approval (clause 5); Model C (clause 3); or any code,
+  schema or migration. No existing runtime guard is modified or weakened.
+  - **Consuming work:** `TRD-01` re-baseline (clause 4's drafting change, plus the client-order
+    state machine, routing policy, venue health, split fills and best-execution reasoning —
+    decision pack §4.11); the Asset & Instrument Registry design (clause 6); `CFG-01` eligibility
+    (clauses 6, 7).
+  - **Open regulatory questions preserved:** R1-Q1b (AIX's Exchange approval scope), R3-Q2b
+    (execution against displayed depth), R3-Q3 (order-type approval), R3-Q6 (acceptability of any
+    specific venue), R4-Q1…Q7 (RWA/securities), A2-Q1/Q2 (subaccount treatment).
+- **Supersedes / Related:** None superseded. Related: `DEC-011` (institutional account
+  hierarchy — orders and fills attribute to a subaccount), `STR-01` §5 (liquidity/execution
+  gap), decision pack §2 (full analysis), §0.2 (evidence register). Does not alter Doc 00, the
+  Master Module Index, the SRS, the workflow map, the system rules, `TRD-01` or `LED-01` — each
+  is a separate controlled revision (decision pack §7.1).
+- **Baseline commit:** `5747367` (institutional account hierarchy — the last commit before this
+  decision; no implementation commit exists for it).

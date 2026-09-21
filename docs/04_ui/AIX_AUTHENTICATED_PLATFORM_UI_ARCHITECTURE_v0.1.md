@@ -338,7 +338,7 @@ Same rule as §8: **no page below is `A`**.
 | AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** **UI Phase 2P, §51: implemented at `/admin/aml-transaction-monitoring`; transaction monitoring itself is not implemented anywhere in the backend (§51.2).** |
 | EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** **UI Phase 2Q, §52: implemented at `/admin/edd-review`; EDD re-verified NOT IMPLEMENTED (§52.1) — the page is review attention over KYC/KYB and AML states, not EDD cases.** |
 | Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8 — **which are three `POST` routes only (`request`, `:id/approve`, `:id/reject`); no list, get or search route exists (§47.1). UI Phase 2R, §53: implemented at `/admin/approval-queue` as an oversight register — not a second queue (§53.1).** |
-| Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** |
+| Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** **Built, UI Phase 2S (§54): a read-only view of the authorization model — `IAM-02` has no list route for roles, permissions, grants or assignments, so it states seeded state and never fabricates membership or grants.** |
 | Feature Flags / Configuration | Kept, mapped to `CFG-01` | **B** | `POST /internal/cfg1/features/evaluate`, `/internal/cfg1/feature-changes/request`\|`/apply`, `/internal/cfg1/kill-switches/activate` — real, partial (through Phase 3B). |
 | Audit / Sensitive Access | Kept, mapped to `SEC-01` | **B** | `GET /internal/sec1/audit-events/*`, `/internal/sec1/security-alerts/*` — real, accepted through Phase 5. **Correction, UI Phase 2N (§49.2, `UI-04` §48.1): these are `POST` (`search`/`read`).** |
 | Reporting | **Removed from initial IA, kept as future item** | **C** | No `RPT-xx` module appears in the 17-module implementation-delivery list; no reporting route exists anywhere. |
@@ -6304,3 +6304,291 @@ visual-QA program); no decision control, link, policy/role/rule editor, approval
 mutation; no change to `IAM-02`, any backend service, `platform/perf/**`, the accepted `IMP02-MA-HARDEN-001`
 records, the conductor history, the public homepage, any Ops or Client page or shared module, packages or
 lockfile — **verified against baseline `697417b`**, not `ae3322e`.
+
+## 54. UI Phase 2S — Admin / Users / Roles / Permissions (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The sixth real page on the Admin / Compliance surface, at
+`/admin/users-roles-permissions` (the nav label's slug — the convention every Ops and Admin route set). Baseline
+**`c04d5bd`** (`main` = `origin/main`, working tree clean before). A **read-only view of the current IAM authorization
+model**, not a user-management console: no Create User, Disable User, Assign Role, Grant Permission, Reset MFA,
+Approve or Edit control exists, disabled or otherwise, and no link. Admin visibility does not grant mutation authority.
+
+### 54.1 Governed findings preserved (not fixed, not reclassified)
+
+| Finding | Severity / status | Blocks | This page |
+|---|---|---|---|
+| `IAM2-FIND-002` — approver authorization / required-role enforcement gap | HIGH / OPEN | Browser or real-actor approval integration; maker-checker UAT with real actors; production | Referenced in the control table (approval permissions, required approver roles), the membership mechanics, the grants block and the findings pointer. **Does not block this read-only prototype** |
+| `IAM2-FIND-003` — approval policy table unseeded | MEDIUM / OPEN | Production; UAT evidencing n-of-m or step-up | Referenced in the control table (approval policy) and the findings pointer |
+| `IAM2-FIND-004` — no expiry audit event on the reject expiry path | LOW / OPEN | Nothing | Findings pointer only |
+
+`docs/OPEN_FINDINGS.md` and the adjudication (`IAM-02_Approval_Control_Adjudication_Opus_v1.0.md`) were read; neither was
+changed. The page states each finding in text (identifier, title, severity and status as words), never by colour, and
+never reproduces the register.
+
+### 54.2 IAM model map (mandatory — every row re-verified from source this turn, not carried forward)
+
+`CONCEPT → SOURCE → SEEDED? → READABLE? → EFFECTIVE? → UI TREATMENT`
+
+| Concept | Source (table / model / route) | Seeded? | Readable? | Effective? | UI treatment |
+|---|---|---|---|---|---|
+| **User / identity** | `iam.user_identity` (IAM-01, migration 002): `user_id` (`user_<uuid>`), `user_type`, `user_class`, `status`, `mfa_required`, `privileged_mfa_required`, `is_interim_admin`, normalised login identifier | **No row.** The only inserter is the env-gated first-admin bootstrap (`services/iam/src/lib/bootstrap.ts`), which runs only when the table is empty and creates one interim admin | **No.** IAM-01 has no list/get/create-identity route; its only user-facing read is the caller's own sessions | Not applicable | Vocabulary and creation facts only. **No identity list, no fixture** (§54.9) |
+| **User status** | `user_identity.status` CHECK: `active` / `locked` / `suspended` / `deactivated` | Per identity — none seeded | No | The guard's account-freeze step (3) is a documented no-op | The four states named as vocabulary; **no status is attached to any identity** |
+| **Identity type / class** | `user_type` CHECK `client`/`staff`/`admin`/`service`; `user_class` CHECK `admin`/`staff`/`client`/`client_approver`/`service` (two independent CHECKs — no constraint pairs them) | — | No | — | Two vocabularies, not a universal user type |
+| **Service identity** | `iam.service_account` (`service_account_id`, `service_name`, `status` `active`/`disabled`/`rotating`, `scope`, `credential_ref` hash) — a **separate** record | **None; no service code inserts one** | No list route; only `POST /internal/auth/service-account/validate` | — | Described as a separate record, "not user identities"; credential material never shown |
+| **Role** | `iam2.role` (006): `role_code`, `role_name`, `role_type`, `sensitivity`, `status`, `owner_team`, `description` | **Yes — exactly 4** (§54.3) | No route (`GET /iam2/roles` is specified, unbuilt) | A role confers nothing by itself | All four listed, exact names and codes |
+| **User-role assignment** | `iam2.user_role` (RLS `FORCE`, ownership `user_id = aix.user_id`): `user_id`, `role_id`, `client_id`, `status`, `assigned_by`, `approval_id`, `effective_from_utc`, `expires_at_utc`, `revoked_at_utc`. Writers: `POST /iam2/users/:user_id/roles` and the one-time bootstrap route. Runtime role: `SELECT, INSERT` — no `UPDATE`/`DELETE` | **None** | **No** — RLS scopes a read to one user and no route lists them; the only cross-user read is `fn_count_active_role_assignments` (a count) | Only through a role grant (below) | "None seeded"; mechanics as text |
+| **Permission definition** | `iam2.permission` (006 + 18 `iam2_register_*` migrations): code, resource, action, `sensitivity`, `licence_locked`, `prohibited`, `requires_step_up`, `requires_approval`, `status`, `owner_module` | **Yes — 99, all `active`** (§54.4) | No route (`GET /iam2/permissions` is specified, unbuilt) | Defined ≠ granted | Counts by domain; only the approval and read permissions are named |
+| **Role-permission assignment** | `iam2.role_permission` (`role_id`, `permission_id`, `status`, `approval_id`, …) | **0 rows.** No migration inserts one; runtime role holds `SELECT` only; no route writes one (`POST /iam2/roles/{role_id}/permissions` is specified, unbuilt) | No route | **The only path to `allow`** | "None currently seeded." |
+| **Effective permission evaluation** | `evaluatePermission` (`services/iam2/src/lib/guard.ts`), `POST /internal/iam2/permission/check`: unknown → deny; licence-lock / prohibited → `licence_locked`; explicit **deny** override; step-up → `step_up_required`; approval → `approval_required`; **step 10: active user-role ⨝ active role-permission → `allow`**; else default deny | — | `POST`, service-token; writes a decision-log row and an audit event per call | **Empty under the seeded data** — allow exists only at step 10 | The empty effective set, stated as derived |
+| **Explicit permission override** | `iam2.user_permission_override` (`effect` `allow`/`deny`, `scope` jsonb) | None; no writer; runtime `SELECT` only | No | **`deny` rows only** are read; `allow` rows are stored and never read (documented judgment call) | One control-table row |
+| **Approval required roles** | `approval_policy.required_approver_roles` (jsonb) | No policy row exists | No | **Read by no code** (`grep` of `services/iam2/src`: zero consumers) | Never shown as checker eligibility; "No — read by no code (IAM2-FIND-002)" |
+| **Approval policy** | `iam2.approval_policy`; runtime `SELECT` only; no `INSERT` anywhere | **0** | No | Defaults apply: one approval, no step-up, 24 h | Control-table row; `IAM2-FIND-003` |
+| **SoD rule** | `iam2.sod_rule` (007): two `permission_permission` rows — `iam2.sod.manage` ↔ `iam2.role.assign_user` and ↔ `iam2.permission.assign_role`; `critical`, `block`, `risk_acceptance_allowed = false`, `active` | **Yes — exactly 2** | No route (`GET /iam2/sod/matrix` is specified, unbuilt) | See §54.6 | Both rules listed, with the coverage caveat |
+| **SoD conflict / check** | `iam2.sod_check`, event `iam2.sod_conflict_detected`; evaluated in `lib/sod.ts` at role assignment and approval decision | Rows only as a side effect of an evaluation | `INSERT`-only, "never read back" | **Cannot match while no role grants exist** (§54.6) | Text only; no per-user or per-role result |
+| **Client membership link** | `clt1.authorised_user.iam_user_id` (migration 067, optional, no FK) | — | — | Establishes client **membership**, not an IAM-02 role or permission | One line under Identities |
+| **Role scope** | `user_role.client_id` (nullable); roles have no scope column | Never written by the assign route | — | **Not read** by `lookupActiveRoleGrants` (only `evaluatePermission`'s log context receives a client id) | "No client or tenant scope applies to a grant today" |
+
+### 54.3 The mandatory role/permission state decision (eight questions, each answered from source)
+
+1. **Seeded roles — four**, migration 006, the only role seed: `security_admin` (Security Admin), `tech_admin` (Tech
+   Admin), `compliance_officer` (Compliance Officer / MLRO), `auditor` (Auditor). All `active`; `admin`/`admin`/`staff`/
+   `staff`; `privileged`/`privileged`/`sensitive`/`sensitive`. **Each row's own description reads "Provisional bootstrap
+   role … final canonical role list is an open item (blueprint §13)"**, and 006 records that the blueprint's other actors
+   (client user, client approver, staff user, finance user, operations manager, super admin, system job, service account)
+   are deliberately not seeded. **No "Super Admin", "Compliance Manager" or "Operations Manager" role exists, and none is
+   shown.** The exact `role_name` is displayed, so no humanised mapping was needed; `role_code` sits beside it.
+2. **Seeded permissions — 99, all `active`** (§54.4). 24 are IAM-02's own (006); the rest are registered by 18 later
+   migrations owned by SEC-01, CFG-01, CLT-01, AML-01, KYC-01 and WLT-01; **7** are marked `prohibited` and
+   `licence_locked`.
+3. **Seeded user-role bindings — none.** No migration, seed or demo assigns a role to a user. Production code writes an
+   assignment in exactly two places: the assign route (needs an approved decision token, then an SoD check) and the
+   config-sealed, one-time, off-by-default bootstrap route (only `security_admin` or `tech_admin`, only for one
+   pre-configured identity). Integration tests create roles, grants and assignments as temporary fixtures on a privileged
+   connection and delete them; they are not seed data.
+4. **`role_permission` seeded rows — zero.** Reconfirmed: no migration inserts one; 006's own comment explains that a raw
+   seed would violate the rule that role-permission assignment happens only through an approved workflow; the runtime role
+   holds `SELECT` only (`iam2_runtime_grants.sql`); and no route writes one.
+5. **Routes exposing user/role/permission lists — none.** IAM-02 registers seven routes, all `POST`:
+   `/internal/iam2/permission/check`, `/internal/iam2/permission/execute-verify`, `/internal/iam2/bootstrap/first-assignment`,
+   `/iam2/users/:user_id/roles`, `/iam2/approvals/request`, `/iam2/approvals/:id/approve`, `/iam2/approvals/:id/reject`.
+   IAM-01 has no identity list; its one user-scoped `GET` returns the caller's own sessions. **The blueprint specifies
+   `GET /iam2/roles`, `GET /iam2/permissions` and `GET /iam2/sod/matrix`; none is built.**
+6. **`evaluatePermission` depends on `role_permission`** — its single allow path (step 10) is
+   `user_role ⨝ role ⨝ role_permission`, all active and unexpired.
+7. **Any other grant mechanism — none.** `allow` overrides are stored and never read; delegation, temporary permission
+   and break-glass tables were deliberately not created (006 header, IAM-02 notes §7); the bootstrap route grants a *role*,
+   not a permission; and no permission is hard-coded in the guard. So with the seeded data **every known permission ends
+   in a non-allow decision** — deny by default, a blocking step-up or approval requirement, or a licence lock.
+8. **Approver roles enforced — no.** `required_approver_roles` is read by no code; the approval routes never call
+   `evaluatePermission` and never consult `iam2.approval.*` (`IAM2-FIND-002`); "a different user with no SoD conflict"
+   is the entire approver test.
+
+### 54.4 Permission catalogue (counted per seed tuple, programmatically cross-checked against the page's constants)
+
+| Domain (`owner_module`) | Defined | Requires approval | Requires step-up |
+|---|---|---|---|
+| CLT-01 | 33 | 19 | 0 |
+| IAM-02 | 24 | 9 | 5 |
+| AML-01 | 11 | 2 | 0 |
+| CFG-01 | 11 | 6 | 1 |
+| SEC-01 | 6 | 0 | 0 |
+| WLT-01 | 5 | 2 | 0 |
+| KYC-01 | 2 | 1 | 0 |
+| Licence-locked (`prohibited` + `licence_locked`) | 7 | — | — |
+| **Total** | **99** | **39** | **6** |
+
+Sensitivity: 36 normal · 52 sensitive · 4 privileged · 7 prohibited. The three `iam2.approval.*` permissions are
+`create` (normal), `approve` (sensitive, `requires_step_up`) and `reject` (normal), all `active`, **none evaluated by any
+approval route**. `iam2.role.read`, `iam2.permission.read` and `iam2.sod.read` are defined and **checked by no route**
+(no read route exists). The seven licence-locked permissions are shown as a count and a fact **without their codes** —
+naming them would present licence-gated functionality on an access-control page (§54.13).
+
+### 54.5 DEFINED / ASSIGNED / EFFECTIVE / ENFORCED — the page's language rule
+
+The four words are defined once at the top of the page and applied per control in the Authorization Control Boundary
+(nine rows). They are never used interchangeably:
+
+| Control | Defined | Assigned | Effective | Enforced |
+|---|---|---|---|---|
+| Roles | 4 | No user assignment | None — a role confers nothing until it holds grants | Indirectly — only through role grants |
+| Permissions | 99 | No role grant | None — none can resolve to allow | Yes — the check consults it; with no grants nothing resolves to allow |
+| Approval permissions | 3 | No role grant | None | **No** — the approval routes never evaluate them (`IAM2-FIND-002`) |
+| Required approver roles | A policy field | No policy row | None — not a checker-eligibility rule | **No** — read by no code (`IAM2-FIND-002`) |
+| Approval policy | Table exists | None; no route can create one | Defaults: one approval, no step-up, 24 h | Defaults only — a missing policy does not fail closed (`IAM2-FIND-003`) |
+| SoD rules | 2, permission-level | Not applicable | Cannot match while no role grants exist | Yes — at role assignment and approval decision; narrow |
+| Explicit deny override | Table exists | None; no writer | None | Deny rows only — allow rows never read |
+| Licence-locked permissions | 7 | No role grant | Never allowed | Yes — before any override or role lookup |
+| Delegation / temporary permission / break-glass | Permissions only; tables not built | Nothing to assign | None | No — deferred (IAM-02 §7) |
+
+The page **never** says a role grants effective permissions merely because it exists, a permission is effective because
+it is defined, required approver roles are enforced, seeded roles have grants, Admin visibility grants mutation
+authority, or IAM-02 approval authorization is complete. **Effective** is qualified everywhere as "from the seeded data
+alone" — no route reads the live database, so a privileged write after the migrations would not appear.
+
+### 54.6 SoD treatment, and one derived observation (recorded, not registered, not fixed)
+
+Two rules are seeded (migration 007), both `permission_permission`, both between `iam2.sod.manage` and a role- or
+permission-assigning permission. `lib/sod.ts` evaluates `role_role` and `permission_permission` rules and ignores
+`action_action`; a `permission_permission` rule is tested against **each side's effective permission set, which is built
+only from `role_permission`**. **Observation:** with no role grants, every effective set is empty, so **neither seeded
+rule can match today** — the SoD check is structurally inert until grants exist. This follows directly from
+`effectiveGrants` / `rolePermissionCodes` and is consistent with the adjudication's "a recorded pass means only that no
+seeded rule matched" (§5 E), but the adjudication did not draw the inert-rule inference and **no finding was created**
+(the brief forbids one this turn). The page states it plainly and never uses "SoD compliant", "passed" or
+"segregated" for any user or role — at most "a recorded result of no seeded rule matched is not a compliance result".
+Coverage is stated as narrow (no `role_role` rule, no `action_action` evaluation). `UI Phase 2R`'s "Enforced. A conflict
+blocks the request." is literally true of the code path and is **not contradicted**; the inert-in-seeded-state qualifier
+is added here, and a wording alignment on `2R` is a consolidated-QA candidate, not done now.
+
+A second derived point, also not registered: the role-assignment route is authorised by an approved decision token,
+and an approval decision checks no role or permission — so **role assignment inherits `IAM2-FIND-002`**. The page says
+so in one clause of the membership mechanics.
+
+### 54.7 Composition — section-based, not List + Detail
+
+Every Admin page since `2O` is a workspace over a record list. This one is **five plain sections**, because the source has
+no useful list: no identity list exists, no assignment is seeded, no grant exists, and the four seeded roles are a
+short, complete set that reads better as a divided list than as a workspace with a detail panel over four near-identical
+rows. All Server Components; no client state, no `Sheet`, no filter (four roles do not justify one; no search).
+
+1. **Reading This Page** — the four words, one line of seeded-state counts (`4 defined roles · 99 defined permissions · 0
+   seeded role-permission grants · 0 seeded user-role assignments · 2 seeded SoD rules · 0 seeded approval policies` — plain
+   text, no score, percentage or health mark), and the provenance sentence.
+2. **Identities** — vocabulary (type, class, status), how identities and links exist today, and the factual empty state
+   "No identities are represented in this demo view."
+3. **Roles & Membership** — four role rows (name, code, type · sensitivity · status · team, recorded intent; Members "None
+   seeded", Permission grants "None seeded", Effective permissions "None") and the membership mechanics.
+4. **Permission Model** — counts by domain (a table at `md:`, a list below), then **Role-permission grants: None
+   currently seeded.**, Effective permissions, and the notable defined permissions.
+5. **Authorization Control Boundary** — the authority statement, the nine-row control table (§54.5), the two SoD rules,
+   and the three finding pointers.
+
+**No permission matrix** — a role × permission grid would be four rows of empty cells (no grant exists) and any
+checkmark would be fabricated. **No inherited permissions**, and no permission is derived from a role name.
+
+### 54.8 Demo scope and what is deliberately absent
+
+The brief allowed 3–5 fictitious identities "only if source concepts support them". **What the source supports is a
+vocabulary, not any identity**: no route lists identities, the login identifier is personal data, and a fixture list of
+"Active" staff and admin users would invent both existence and status. So **the demo contains no identity fixture**; the
+roles, permission counts, rules and findings are seeded-state facts from source, not fixtures. The page therefore
+carries the required demo disclosure (the brief's wording, unchanged) but states its own provenance in text.
+
+Never shown: email or login identifier, phone, password state, MFA material, sessions, tokens, API keys, service
+credentials, identity documents, raw audit payloads; any balance, PnL, trading, order-book, market-data or settlement
+figure; any licence-gated functionality by name.
+
+### 54.9 Formal-finding and cross-page consistency
+
+Consistent with `UI Phase 2R` (`/admin/approval-queue`): **no enforced approver role, no seeded policy, no fake checker
+eligibility, no seeded grant** — every statement on the two pages agrees, including "two SoD rules seeded", "no
+policy seeded; defaults one approval / no step-up / 24 h" and "neither approval route checks a role or permission".
+The Compliance Overview's Review Areas row is the one existing surface changed: **Users / Roles / Permissions is now a
+link labelled "Interface preview"** (was "Interface planned"), with no access-health count added. The nav row
+`Users / Roles / Permissions` is now a real link (label unchanged); **Feature Flags / Configuration** and **Audit /
+Sensitive Access** remain inert `aria-disabled` rows and are not absorbed. The Approval Queue, Ops pages and public
+homepage are unchanged.
+
+### 54.10 Backend gaps for a live Users / Roles / Permissions page (each confirmed in source; none fixed)
+
+1. **An Admin-safe identity list projection** — IAM-01 has no list/get identity route.
+2. **User provisioning** — the only identity creation is the one-time interim-admin bootstrap; no create/update route.
+3. **A role list projection** — `GET /iam2/roles` (blueprint v1.2 §3.1) is specified and unbuilt; `SELECT` is already granted.
+4. **A permission catalogue projection** — `GET /iam2/permissions` (§3.5) specified, unbuilt; `SELECT` granted.
+5. **A role-membership projection** — a new route **and** a way past row-level security: `iam2.user_role` is `FORCE RLS` by
+   `aix.user_id`, and the only cross-user read is a count-returning `SECURITY DEFINER` function.
+6. **A `role_permission` read projection** — no route; `SELECT` granted.
+7. **`role_permission` provisioning** — `POST /iam2/roles/{role_id}/permissions` (§3.3) unbuilt; the runtime role is
+   `SELECT`-only, so a grant change is also required; assignment is meant to go through an approved workflow
+   (`iam2.permission.assign_role`, privileged, requires approval and step-up) — **a precondition for any enforcement**.
+8. **A safe effective-permission projection** — only `POST /internal/iam2/permission/check` exists: one permission per
+   call, and it writes a decision-log row and an audit event (and may mint a decision token) on every call, so it is not a
+   read-only projection.
+9. **A service-identity projection** — `iam.service_account` has no list route and no writer.
+10. **Role-assignment history** — no revoke route (IAM-02 §7) and an `INSERT`-only runtime grant on `user_role`, so nothing
+    ends or updates an assignment; `permission_decision_log` is `INSERT`-only.
+11. **An SoD rules read projection** — `GET /iam2/sod/matrix` (§5.2) specified, unbuilt; `SELECT` granted.
+12. **SoD conflict visibility** — `sod_check` is `INSERT`-only ("never read back").
+13. **Role-aware Admin read authorization** — IAM-02 routes are service-token only and take the acting user in the
+    request body (carry-forward L3); there is no browser session on IAM-02.
+14. **Approval required-role enforcement** — none (`IAM2-FIND-002`).
+15. **Approval permission enforcement** — none (`IAM2-FIND-002`); enabling it before grants exist would deny every approval.
+16. **Approval-policy seeding and a read projection** — none (`IAM2-FIND-003`).
+17. **A scope model** — `user_role.client_id` is never written and never read by the guard; whether grants are client-scoped
+    is an undecided design point.
+18. **An identity ↔ role link check** — IAM-02 stores `user_id` with no foreign key into `iam.*` (by design), so a
+    directory projection must join through IAM-01's API.
+19. **Delegation, temporary permission and break-glass** — tables not created (Phase 6/7).
+20. **Explicit `allow` overrides** — stored, never read, no writer.
+
+### 54.11 Register-visibility gap — pointer only, carried forward
+
+The adjudication (§8) recorded that carry-forwards **L1**, **L2** and **L3**, and the `IAM-02` §7 deferrals, are tracked
+only in `IAM-02_Security_Review_Opus_v0.1.md` / `v0.2_reverify.md` and the IAM-02 implementation notes — not in
+`OPEN_FINDINGS.md`, whose header says it is the single register. **Not fixed and no finding created in this phase.** It is
+recorded in `PROJECT_HANDOVER.md` as a governance question for a separate decision. This page cites L3 (caller-asserted
+identity) only in backend-gap terms.
+
+### 54.12 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width is the viewport minus the shell gutters (`px-4 sm:px-6 xl:px-8`) and, from `1280px`, the 240px sidebar:
+**~1136px at 1440, ~976px at 1280 and at 1024, ~720px at 768, ~398px at 430, ~288px at 320.** Every section is a single
+column of text (`max-w-prose`) or a full-width list/table; nothing needs a horizontal scroll at any width.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Four-across "Reading This Page" terms (~220px each, three lines). Role rows two-column (name/meta left, three facts right). Permission-domain table (`max-w-2xl`, ~455px of content in ~672px). **Control table with five auto-sized columns in ~976px** — wrapped text, roughly three lines in the widest ("Enforced") cell |
+| `1024–1279px` | Identical: content width is the same ~976px, and the control table already appears at `lg:` |
+| `768–1023px` | Terms two-across; role rows two-column (~344px each); permission-domain table still a table (`md:`); **control table becomes stacked blocks** (a 5.5rem label column and a ~620px value column) |
+| `<768px` | Terms single column; role rows stacked; permission-domain list (domain + count, then flags); control blocks with a 88px label and ~188px value column (~30 characters per line at 288px, so the longest cell wraps to three lines) |
+
+Table cells use `whitespace-normal` because the shared `Table` defaults to `nowrap`; its scroll-region wrapper is kept,
+so each table is a labelled, focusable region — **the only two tab stops in `<main>`**, and neither scrolls at the width
+it is shown. **Visual risks for the consolidated pass (estimates, not measurements):** the control table's five-column
+proportions are auto-layout, not set; the `lg:` threshold leaves the 768–1023 blocks sparse (one column of ~620px);
+`max-w-prose` at `text-xs` is ~430px, leaving the right of each text section empty on wide desktop (as `2R`'s boundary
+does); and the identity section is text-heavy for a page with no records.
+
+### 54.13 Accessibility
+
+One `<h1>`; five `<h2>`; fourteen `<h3>`; the stacked control blocks add nine `<h4>` (in the accessibility tree only
+below `lg:`, since the table variant is `display:none` there and the reverse above it). Real `<table>`s with labels and
+column headers (`scope="row"` on the control name); real `<ul>`/`<dl>` for lists; **no colour-only state** — every
+status, severity and enforcement outcome is a word, and "Enforced" cells open with Yes / No / Indirectly / Defaults only /
+Deny rows only; findings are communicated as `HIGH · OPEN`-style text. **Zero buttons, inputs, selects, forms, links
+and `disabled`/`aria-disabled` attributes in `<main>`** (a first check found one `disabled` hit — the *word* in "active,
+disabled or rotating"; a second was "sepa**rate**" matching a `rate` pattern; both were checked and are false positives).
+Logical DOM order: terms, identities, roles, permissions, boundary. **Rendered focus and keyboard behaviour was not
+exercised** (visual QA deferred).
+
+### 54.14 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `IamModelKey`, `IamIdentityModel`, `IamRolesMembership`,
+  `IamPermissionModel`, `IamAuthorizationBoundary` and `iam-model-data.ts` (the seeded-state constants and the nine
+  control rows). All are Server Components.
+- **Reused:** `PageHeader`, `DemoDisclosure` and the existing shadcn `Table`. **No primitive added, regenerated or
+  modified**; `Select`/`Sheet` (REVIEW LATER) are not used. The official MCP was not needed. **No package or lockfile change.**
+- **Modified (three existing files, narrowly):** `nav-data.ts` (one `href` and a comment), `admin-compliance-data.ts` (one
+  Review Areas `href`) and `app/admin/layout.tsx` (its comment and the `<meta>` description, kept in step with the built
+  pages as `2R` did).
+
+### 54.15 Boundaries, verification and what this phase did not do
+
+**Not C-classified:** no Reporting, no Incidents / Exceptions. **No financial or Exchange content** — no balance,
+amount, trading, order-book, market-data or settlement figure, and the licence-locked permissions are counted, not named.
+**Not absorbed:** Feature Flags / Configuration (inert), Audit / Sensitive Access (inert). No fetch, server action, auth,
+permission or mutation code anywhere.
+
+**Verified:** `typecheck:web`, `lint:web` (no output) and `build:web` pass; **18** static pages (17 + the new route).
+The page's hard-coded counts were **cross-checked programmatically** against the seed tuples in the migrations (99
+permissions, every per-domain count and both flag totals, the sensitivity split, the seven prohibited rows, the four
+role rows). Rendered-HTML inspection confirmed one `<h1>`, the five `<h2>` and 14 `<h3>`, two labelled tables, zero
+controls/links, the active nav item, the two remaining inert nav rows, and Review Areas showing Users / Roles /
+Permissions as an "Interface preview" link. A scan of the rendered text found none of: "compliant", "only authorised
+approvers", a mutation verb as a control, a credential or address, an Exchange or financial term, a score, percentage or
+health word, "all permissions", or a checkmark. **Regression:** all 15 other page routes return 200 over HTTP against the production build (`next start`), and the Admin `<meta>` description names the new page.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the consolidated visual-QA
+program); no identity fixture, permission matrix, inherited permission, mutation control, score or filter; no fetch, auth
+or mutation; **no change to any backend service, migration, grant, `OPEN_FINDINGS.md`, the adjudication, the public
+homepage, the Approval Queue or any Ops or Client page**. Verified against baseline `c04d5bd`.

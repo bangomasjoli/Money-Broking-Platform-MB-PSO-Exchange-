@@ -125,6 +125,12 @@ export const OPS_NAV: NavItem[] = [
  * queue** (`UI-04` §53.1): every state by default, control evidence first, zero decision controls. The three
  * remaining rows (Users / Roles / Permissions, Feature Flags / Configuration, Audit / Sensitive Access) stay
  * inert. Label preserved exactly.
+ *
+ * `UI Phase 2S`: "Users / Roles / Permissions" gains a real `href` (`/admin/users-roles-permissions` — the label's
+ * slug) — `B`-classified (real `IAM-01` identity and `IAM-02` role, permission and SoD models; no route lists any
+ * of them). A read-only view of the authorization model that keeps DEFINED, ASSIGNED, EFFECTIVE and ENFORCED
+ * apart (`UI-04` §54), not a user-management console. The two remaining rows (Feature Flags / Configuration,
+ * Audit / Sensitive Access) stay inert. Label preserved exactly.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
@@ -132,7 +138,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "AML / Transaction Monitoring", href: "/admin/aml-transaction-monitoring", icon: "activity" },
   { label: "EDD / Review", href: "/admin/edd-review", icon: "search-check" },
   { label: "Approval Queue", href: "/admin/approval-queue", icon: "list-checks" },
-  { label: "Users / Roles / Permissions", icon: "users" },
+  { label: "Users / Roles / Permissions", href: "/admin/users-roles-permissions", icon: "users" },
   { label: "Feature Flags / Configuration", icon: "sliders-horizontal" },
   { label: "Audit / Sensitive Access", icon: "history" },
 ];

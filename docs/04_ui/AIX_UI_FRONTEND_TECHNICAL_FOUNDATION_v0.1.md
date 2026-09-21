@@ -2178,3 +2178,53 @@ exercised** — filtering, selection and the Sheet are reasoned from source.
 `/admin`, `/admin/client-risk-kyc-kyb`, `/admin/aml-transaction-monitoring` and `/admin/edd-review` all return 200.
 Backend regression not required — **zero** `platform/services/**`, `packages/**`, `edge/**`, `infra/**`,
 `perf/**` or `tests/**` change relative to `697417b`. Public homepage unaffected.
+
+## 55. Phase 2S — Admin / Users / Roles / Permissions (sixth Admin page, visual QA deferred)
+
+`/admin/users-roles-permissions` (`UI-04` §54): a **read-only view of the current IAM authorization model**, not a
+user-management console. `B`-classified; **section-based, not List + Detail**, because the source has no useful list — no
+identity list, no seeded assignment, no seeded grant. Its organising rule is that **DEFINED, ASSIGNED, EFFECTIVE and ENFORCED
+are not interchangeable**: 4 roles and 99 permissions are seeded, **0 role-permission grants**, so no identity holds an
+effective permission; approval permissions and required approver roles are defined or stored but enforced by no route
+(`IAM2-FIND-002`); the two seeded SoD rules have nothing to match while no grant exists. No fetch, server action, auth,
+permission check, mutation or local state — every component is a Server Component. **Baseline `c04d5bd`** (`main` =
+`origin/main`, tree clean before).
+
+**Files created (7):** `app/admin/users-roles-permissions/page.tsx`; `components/admin/{iam-model-data.ts,
+iam-model-key.tsx, iam-identity-model.tsx, iam-roles-membership.tsx, iam-permission-model.tsx,
+iam-authorization-boundary.tsx}`.
+**Files modified (3):** `components/shell/nav-data.ts` (the "Users / Roles / Permissions" row gains `href`; Feature Flags /
+Configuration and Audit / Sensitive Access stay inert); `components/admin/admin-compliance-data.ts` (Review Areas' row
+gains `href`); `app/admin/layout.tsx` (comment and `<meta>` description). `review-areas.tsx` needed no change. **No Ops or
+Client page, no other shared data module, no backend service, migration or grant, no `OPEN_FINDINGS.md`, no package and no
+lockfile was modified.**
+
+**Client/server boundary:** none — there is no `"use client"` anywhere in the phase. The seeded-state constants live in
+`iam-model-data.ts`; the derived totals (`DEFINED_PERMISSION_COUNT`, the approval and step-up flag totals and the counts inside
+the control rows) are computed from the per-domain rows, so the page cannot disagree with itself.
+
+**Data provenance (differs from every earlier authenticated page):** the roles, permission counts, SoD rules and findings are
+**seeded-state facts read from source, not demo fixtures** — the roles are the four real `iam2.role` rows, the permission
+counts were taken from the seed tuples in 19 migrations, and the SoD rules from migration 007. **No identity fixture exists**
+(no identity list exists in the backend). The page therefore states in text that it describes seeded state and that live
+database contents cannot be read; the disclosure is the brief's wording, unchanged.
+
+**shadcn impact: none.** The existing `Table` was reused with per-cell `whitespace-normal` (its default is `nowrap`);
+`Select`/`Sheet` (REVIEW LATER) are not used; the official MCP was not needed. **No package or lockfile change.**
+
+**Quality gates:** `typecheck:web` (exit 0), `lint:web` (exit 0, no output) and `build:web` (exit 0) all pass; **18** static
+pages generated (17 + the new route).
+
+**Verification method (screenshot tooling unavailable; unchanged):** rendered-HTML inspection of the production build, a
+programmatic cross-check of the page's counts against the migrations' seed tuples, a forbidden-claim scan of the rendered
+text, and an HTTP check of every route. Confirmed: one `<h1>`, five `<h2>`, fourteen `<h3>`, nine `<h4>` (stacked variant), two
+labelled tables; **zero buttons, inputs, selects, forms, links and `disabled` attributes in `<main>`** (the only two tab stops
+are the shared `Table`'s scroll-region wrappers); the active nav item; the two remaining inert nav rows; Review Areas showing
+the row as an "Interface preview" link; counts matching the migrations exactly (99 permissions, per-domain counts, 39 / 6 flag
+totals, the 36 / 52 / 4 / 7 sensitivity split, 7 prohibited, 4 roles). **Two false positives in my own checks were caught and
+corrected** (a `disabled` pattern matched the *word* in "active, disabled or rotating"; a `rate` pattern matched inside
+"sepa**rate**"). **No interaction, focus order or rendering was exercised** — the page has no interactive element to exercise.
+
+**Regression:** all 15 prior page routes return 200 over HTTP against the production build (`next start`), as does the new route. Backend regression not required — **zero**
+`platform/services/**`, `packages/**`, `edge/**`, `infra/**`, `perf/**` or `tests/**` change relative to `c04d5bd`. Public
+homepage unaffected.

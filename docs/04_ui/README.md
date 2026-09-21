@@ -946,6 +946,31 @@ claim.** Public homepage unaffected.
   `typecheck:web`/`lint:web`/`build:web` all pass (17 static pages); verified via rendered-HTML inspection and
   a scratch server-side render — nothing was rendered. Full record: `UI-04` §53, `UI-02`'s new "UI Phase 2R"
   section, `UI-03` §54.
+- **Phase 2S:** Admin / Users / Roles / Permissions (`/admin/users-roles-permissions`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** The **sixth real Admin page**, `B`-classified: a **read-only view of the current IAM authorization model**, not a
+  user-management console — no Create/Disable/Assign/Grant/Reset/Approve/Edit control, disabled or otherwise, and no link.
+  Baseline `c04d5bd`. **The rule the page is built around: DEFINED, ASSIGNED, EFFECTIVE and ENFORCED are not
+  interchangeable**, stated once at the top and applied per control in a nine-row table. **IAM-01 / IAM-02 re-verified from
+  source, not carried forward:** exactly **4 roles** are seeded (`security_admin`, `tech_admin`, `compliance_officer`,
+  `auditor`, all described as a *provisional bootstrap* set) and **99 permissions** (24 IAM-02, 68 across six other modules, 7
+  licence-locked); **`role_permission` holds zero rows** — no migration inserts one, the runtime role is `SELECT`-only and no
+  route writes one — and `evaluatePermission` reaches `allow` only through it, so **no identity holds an effective
+  permission**; no user-role assignment is seeded; no route lists an identity, role, permission, grant, assignment or rule
+  (the blueprint's `GET /iam2/roles`, `/permissions` and `/sod/matrix` are unbuilt); `allow` overrides are stored and never
+  read; delegation, temporary permission and break-glass tables do not exist. **Approval permissions and required approver
+  roles are not enforced** (`IAM2-FIND-002`), **no approval policy is seeded** (`IAM2-FIND-003`), and the reject-expiry
+  audit gap stands (`IAM2-FIND-004`) — all three **preserved as OPEN and not fixed**, referenced by identifier, severity and
+  status in text. **Section-based, not List + Detail** (no useful list exists), and **no identity fixture and no permission
+  matrix** — the source supports an identity *vocabulary*, not any identity, and a grid of checkmarks would be fabricated.
+  **Derived observation, recorded and not registered:** both seeded SoD rules are permission-level and match against
+  permission sets built only from role grants, so **neither can match while no grants exist**; the page says so and never
+  uses "SoD compliant". Consistent with `UI Phase 2R` (no enforced approver role, no seeded policy, no seeded grant). Users /
+  Roles / Permissions is now a real nav row and an "Interface preview" link in Review Areas; **Feature Flags /
+  Configuration and Audit / Sensitive Access stay inert.** Twenty confirmed backend gaps for a live page are recorded
+  (`UI-04` §54.10), and the IAM-02 register-visibility question from the adjudication is carried as a pointer only. **No
+  shadcn primitive added or changed; all Server Components.** `typecheck:web`/`lint:web`/`build:web` all pass (18 static
+  pages); verified via rendered-HTML inspection and a programmatic cross-check of every count against the migrations —
+  nothing was rendered. Full record: `UI-04` §54, `UI-02`'s new "UI Phase 2S" section, `UI-03` §55.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -953,9 +978,9 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring, EDD / Review and
-  Approval Queue are the five real Admin pages; the three other Admin areas remain unimplemented. No API/auth integration exists on any of
-  them.
+  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring, EDD / Review,
+  Approval Queue and Users / Roles / Permissions are the six real Admin pages; the two other Admin areas remain unimplemented.
+  No API/auth integration exists on any of them.
 
 ## Contents
 

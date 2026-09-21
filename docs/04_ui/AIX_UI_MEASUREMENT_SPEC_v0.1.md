@@ -2834,3 +2834,35 @@ Expires (~90px) from **56rem (896px)** (~748px) — thresholds a full-width list
 queue's `64rem` Expires threshold. The `@3xl`/`@4xl` rules are confirmed in the compiled CSS. **The widths are
 estimates of glyph widths, not measurements** — the tightest fit on the page and the first visual-QA check. No
 shadcn primitive was added or changed.
+
+
+## UI Phase 2S — Users / Roles / Permissions Geometry
+
+Values used by `/admin/users-roles-permissions` (`UI-04` §54). The page is **section-based, not List + Detail**, so it has no
+split, detail panel or filter; **every value is a reuse of an existing token or of `UI Phase 2P`/`2Q`/`2R`'s boundary
+values**, and the only new measurements are the four-across terms grid, the role-row split and the stacked control
+block. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Section rhythm | `gap-8` = 32px between sections; every section after the first carries `border-t` + `pt-8` (1px + 32px) | Reuse of `UI Phase 2P`/`2Q`/`2R` boundary sections |
+| Section heading (`h2`) | `text-lg font-semibold tracking-tight` | Reuse |
+| Sub-heading (`h3`) | `text-sm font-semibold`, `mt-6` = 24px above | Reuse |
+| Control block heading (`h4`) | `text-sm font-medium` | New (in the stacked variant only) |
+| Prose | `max-w-prose`, `text-xs text-muted-foreground`, `mt-2` = 8px under a heading | Reuse — ~430px at `text-xs` |
+| Definition rows | `gap-3` = 12px, `border-t` + `pt-3` (1px + 12px) | Reuse |
+| Terms grid ("Reading This Page") | `gap-x-8` = 32px, `gap-y-3` = 12px; `md:grid-cols-2`, `lg:grid-cols-4` | New — ~220px per term at ~976px with three 32px gaps |
+| Role row | `py-4` = 16px, hairline `border-t`; `md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]`, `md:gap-8` | New — ~344px per column at 768px (720px content) |
+| Role fact rows | `gap-2` = 8px, `pt-2`; label `text-xs`, value `text-sm` | New |
+| Permission-domain table | `max-w-2xl` = 672px, rows `h-10` = 40px `COMPACT`, numeric columns right-aligned with `tabular-nums` | Reuse of the `COMPACT` tier; ~455px of content estimated |
+| Permission-domain list (`<768px`) | `py-3` = 12px, hairline dividers, two lines | Reuse |
+| Control table (`≥1024px`) | `py-3` = 12px cell padding, `align-top`, `whitespace-normal`, `text-xs` cells; five auto-sized columns, **no set widths** | New. The shared `Table` defaults to `nowrap`, overridden per cell |
+| Control block (`<1024px`) | `py-4` = 16px; `grid-cols-[5.5rem_minmax(0,1fr)]` = 88px label, `gap-x-3` = 12px, `gap-y-1.5` = 6px | New — value column ~620px at 768px, ~188px at 320px |
+| Empty state | `rounded-lg border border-dashed`, `px-6 py-6` | Reuse of the existing empty-state treatment |
+
+**Content widths** (viewport minus `px-4 sm:px-6 xl:px-8` and, from 1280px, the 240px sidebar): ~1136px at 1440,
+~976px at 1280 and 1024, ~720px at 768, ~398px at 430, ~288px at 320. **The control table is the tightest fit:** five
+columns share ~976px, with the longest unbreakable strings ("Segregation-of-duties" ~157px, "iam2.approval.create," ~137px,
+"IAM2-FIND-002)" ~90px) well inside any column's floor; the widest text cell is estimated at three lines. **These are
+glyph-width estimates, not measurements** — the first visual-QA check, together with the sparse 768–1023px stacked blocks
+and the ~430px prose measure beside a ~976px content width. No shadcn primitive was added or changed.

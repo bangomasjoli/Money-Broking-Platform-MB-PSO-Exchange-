@@ -32,6 +32,7 @@ baseline_commit: 780e116
 
 - [IAM-02_Security_Review_Opus_v0.1.md](acceptance/IAM-02_Security_Review_Opus_v0.1.md)
 - [IAM-02_Security_Review_Opus_v0.2_reverify.md](acceptance/IAM-02_Security_Review_Opus_v0.2_reverify.md)
+- [IAM-02_Approval_Control_Adjudication_Opus_v1.0.md](acceptance/IAM-02_Approval_Control_Adjudication_Opus_v1.0.md) — adjudication of the UI Phase 2L/2R approval-control observations
 
 ## Implementation notes / plans
 
@@ -40,4 +41,8 @@ baseline_commit: 780e116
 
 ## Open findings
 
-IAM2-FIND-001 (double-consume triage required — see [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md)).
+IAM2-FIND-001 (double-consume triage required), IAM2-FIND-002 (HIGH — approval endpoints enforce no permission
+authorization), IAM2-FIND-003 (MEDIUM — absent approval policy silently yields the weakest control) and
+IAM2-FIND-004 (LOW — `iam2.approval_expired` not emitted on the reject path) — see
+[OPEN_FINDINGS.md](../../OPEN_FINDINGS.md). Carry-forwards L1/L2/L3 remain tracked in
+[IAM-02_Security_Review_Opus_v0.1.md](acceptance/IAM-02_Security_Review_Opus_v0.1.md).

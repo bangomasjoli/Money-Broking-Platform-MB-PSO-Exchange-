@@ -42,9 +42,10 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 
 ## 6. Open findings (IDs only — details and state in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md))
 - **HIGH:** `FND-FIND-001` — pre-authentication abuse control; trigger: before any WLT-01 public route is internet-exposed; resolved via IMP-02.
+- **HIGH:** `IAM2-FIND-002` — IAM-02 approval endpoints evaluate no permission entitlement for create/approve/reject; trigger: before real-actor approval integration, UAT of maker-checker, or production exposure. Does not block UI Phase 2S (`IAM-02-ACC-003`).
 - **BLOCKED:** `WDR-FIND-001` — WDR-01 implementation blocked on KMS as a platform prerequisite.
-- **OPEN, above LOW:** `IAM1-FIND-003` (MEDIUM), `IAM2-FIND-001` (severity recorded as "Requires triage"), `WLT-FIND-004` (prerequisites and implementation complete; see register).
-- **OPEN, LOW/INFORMATIONAL:** all remaining OPEN rows (CLT, FND, IAM1, IMP-02, WLT families).
+- **OPEN, above LOW:** `IAM1-FIND-003` (MEDIUM), `IAM2-FIND-001` (severity recorded as "Requires triage"), `IAM2-FIND-003` (MEDIUM — no approval policy seeded; weakest control applied silently), `WLT-FIND-004` (prerequisites and implementation complete; see register).
+- **OPEN, LOW/INFORMATIONAL:** all remaining OPEN rows (CLT, FND, IAM1, IAM2, IMP-02, WLT families).
 - **Closed:** `IMP-02-FIND-010` and `IMP-02-FIND-011` (`IMP02-MA-HARDEN-001`, commit `9b0bab7`); the Turn M-B gate on them is satisfied. Turn M-B has not started.
 - **Deferred / environment:** `IAM1-FIND-002`, `WLT-FIND-002`, `WLT-FIND-003` (deferred), `ENV-FIND-001` (shared test-DB grant drift, local state).
 - No other row in the register carries HIGH or BLOCKER severity at this baseline.

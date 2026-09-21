@@ -337,7 +337,7 @@ Same rule as §8: **no page below is `A`**.
 | Client Risk / KYC-KYB | Kept, mapped to `KYC-01` | **B** | `GET /internal/kyc1/cases`, `/internal/kyc1/cases/:id`, `/internal/kyc1/cases/:id/outcome` — real, partial (through Phase 4B). **UI Phase 2N, §49.2: the list requires `application_id` or `client_id` — no cross-client read.** **UI Phase 2O, §50: implemented at `/admin/client-risk-kyc-kyb`; adds `GET .../cases/:id/checklist`, and `completed` covers both `pass` and `fail`.** |
 | AML / Transaction Monitoring | Kept, mapped to `AML-01` | **B** | `GET /internal/aml1/monitoring-runs`, `/internal/aml1/risk-signals`, `/internal/aml1/screening-requests` — real, partial (through Phase 3E). **Correction, UI Phase 2N (§49.2): `monitoring-runs` and `screening-requests` are `POST` only (plus `GET .../:id`); `risk-signals` requires `subject_type` + `subject_ref`; "monitoring" is periodic rescreening, not transaction monitoring.** **UI Phase 2P, §51: implemented at `/admin/aml-transaction-monitoring`; transaction monitoring itself is not implemented anywhere in the backend (§51.2).** |
 | EDD / Review | Kept, mapped to `KYC-01` outcome-override | **B** | `POST /internal/kyc1/cases/:id/outcome-override/request`\|`/apply` — real. **UI Phase 2N, §49.2: no EDD model exists in code; outcome override is the nearest manual-review flow.** **UI Phase 2Q, §52: implemented at `/admin/edd-review`; EDD re-verified NOT IMPLEMENTED (§52.1) — the page is review attention over KYC/KYB and AML states, not EDD cases.** |
-| Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8. |
+| Approval Queue | Kept, mapped to `IAM-02` (same capability as Staff/Ops Maker-Checker Queue, admin-scoped view) | **B** | Same `iam2/approvals/*` routes as §8 — **which are three `POST` routes only (`request`, `:id/approve`, `:id/reject`); no list, get or search route exists (§47.1). UI Phase 2R, §53: implemented at `/admin/approval-queue` as an oversight register — not a second queue (§53.1).** |
 | Users / Roles / Permissions | Kept, mapped to `IAM-02` roles | **B** | `GET /iam2/users/:user_id/roles`, plus `IAM-01`'s session/account surface — real, `requireInternal`-guarded. **Correction, UI Phase 2N (§49.2): that route is `POST` (assign a role) only — no read.** |
 | Feature Flags / Configuration | Kept, mapped to `CFG-01` | **B** | `POST /internal/cfg1/features/evaluate`, `/internal/cfg1/feature-changes/request`\|`/apply`, `/internal/cfg1/kill-switches/activate` — real, partial (through Phase 3B). |
 | Audit / Sensitive Access | Kept, mapped to `SEC-01` | **B** | `GET /internal/sec1/audit-events/*`, `/internal/sec1/security-alerts/*` — real, accepted through Phase 5. **Correction, UI Phase 2N (§49.2, `UI-04` §48.1): these are `POST` (`search`/`read`).** |
@@ -3989,7 +3989,9 @@ callable from a staff browser session. Three findings shape the page:
 
 Each is the exact `(action, resource)` a consumer passes to
 `verifyDecisionToken` (verified at the call sites; **22 call sites across 7
-modules exist**). No invented type. Four are represented; the mapping is
+modules exist** — **corrected, `UI Phase 2R` §53.3: 24 approval-token call sites in 6
+modules, because CFG-01 also verifies IAM-02 approvals in three routes through an import
+alias the earlier search missed**). No invented type. Four are represented; the mapping is
 data-driven, so another is one entry.
 
 | Action | Resource | Module | Entity bound | Client bound | Originating page |
@@ -4004,7 +4006,9 @@ add/update/remove/activate, related-party add/update/remove, authorised-user
 add/remove, duplicate-candidate create/update/confirm/dismiss and mandate
 create; KYC-01 `kyc1.outcome.override`; SEC-01 `sec1.security_alert.close`;
 AML-01 screening-match decisions. CFG-01 uses its own decision-token library
-rather than `IAM-02`'s. KYC/AML/SEC subjects were left out deliberately —
+rather than `IAM-02`'s. **[Corrected, `UI Phase 2R` §53.3: CFG-01 has its own
+feature-decision token AND verifies IAM-02 approvals for `cfg1.kill_switch.deactivate`,
+`cfg1.feature.enable|disable` and `cfg1.licence_profile.activate|suspend|revoke`.]** KYC/AML/SEC subjects were left out deliberately —
 their subjects are compliance-portal domain.
 
 ### 47.3 Route and navigation
@@ -4273,7 +4277,9 @@ nothing is fetched.
   shape. This is that screen, but it is the only full maker-checker
   presentation — the originating pages show a single line and a link — so
   there is no repetition to consolidate. Revisit if a second full approval
-  presentation (e.g. the Admin "Approval Queue") is built.
+  presentation (e.g. the Admin "Approval Queue") is built. **[`UI Phase 2R` built it,
+  and decided against a shared panel: the Admin detail is deliberately a different
+  reading (control evidence, no Checker Action) — §53.15.]**
 - **Status presentation:** three status-line components now exist
   (`RequestStatusLine`, `DestinationStatusLine`, `ApprovalStatusLine`) — each
   over a different governed enum with its own icon set, so a generic wrapper
@@ -4911,6 +4917,14 @@ or lockfile.
 > EDD backend not implemented" (`REVIEW_AREAS` gained an optional `note`). The Overview
 > therefore still has six attention rows, and it still claims no live EDD, AML or KYC
 > integration.
+
+> **Amended by `UI Phase 2R` (§53.10) — one change to the Compliance Overview, nothing
+> else.** Review Areas' "Approval Queue" is now a link marked "Interface preview" (it was
+> "Interface planned"). No count changed: the Overview's "Independent approvals — 2
+> requests" and its Approval / Control Dependencies already derive from the shared `UI
+> Phase 2L` approval data, which the new page reads unmodified, so the two cannot
+> disagree (verified: 2 pending on both). The three remaining Review Areas rows stay
+> "Interface planned".
 
 ## 50. UI Phase 2O — Admin / Client Risk / KYC-KYB (`B`-classified Admin page)
 
@@ -5645,7 +5659,7 @@ it (every route is `requireInternal`-guarded). **No row is an EDD case.**
 | Client lifecycle suspended / closed | CLT-01 | `client_profile.status` | Status yes; **the reason is stored and returned by no read** | **Not an item** — the result of a decision already made, not a pending assessment, and its reason is unreadable (§52.3) | **NO** |
 | Held application | CLT-01 | `client_application.status = held`, `hold_reason` | Yes | Not aggregated — **Ops Client Requests** owns it | **NO** |
 | Wallet destination `pending_review` | WLT-01 | `destination.status` | Internal | Not aggregated — **Ops Wallet Destination Review** owns it | **NO** |
-| Pending independent approval | IAM-02 | `approval_request.status = pending` | **No list route** | Not absorbed — the future **Approval Queue** owns it | **NO** |
+| Pending independent approval | IAM-02 | `approval_request.status = pending` | **No list route** | Not absorbed — the future **Approval Queue** owns it (**built in `UI Phase 2R`, §53**) | **NO** |
 | CLT-01 rollups (`aml_sanctions_status = hit` …) | CLT-01 | application columns | Application-scoped | Not shown (the `UI Phase 2N`/`2O`/`2P` decision) | **NO** |
 | Risk rating high | CLT-01 | `cdd_outcome.risk_rating` | **No read returns it** | Not shown, inferred or derived | **NO** |
 | Security alert | SEC-01 | `security_alert` | — | Different domain; the future Audit / Sensitive Access page | **NO** |
@@ -5769,7 +5783,7 @@ rows plus its "4 subjects".
 - **Timeline / history:** none. Source timestamps appear only where the source has one (an AML
   screening's last-screened or requested time, a signal's raised/acknowledged time); the detail
   explains the *current condition* and manufactures no history.
-- **Approval Queue:** not absorbed. No maker-checker approval is shown — even AML match disposition
+- **Approval Queue:** not absorbed (**the page now exists — `UI Phase 2R`, §53**). No maker-checker approval is shown — even AML match disposition
   (which is independently approved) is mentioned only as "a separate, independently approved step
   and is not represented".
 
@@ -5941,3 +5955,352 @@ consolidated visual-QA program); no EDD case, status, trigger, owner, due date, 
 or SOF/SOW content; no risk rating or priority; no action control; no fetch, auth or mutation; no change
 to any backend service, the public homepage, any Ops or Client page, `UI Phase 2O`/`2P`'s modules,
 packages or lockfile.
+
+## 53. UI Phase 2R — Admin / Approval Queue (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The fifth real page on the Admin / Compliance
+surface, at `/admin/approval-queue` (the nav label's slug — the convention every Ops and Admin
+route set). Baseline **`697417b`** — the brief was re-issued after a publication step (below), so
+every "backend unchanged" check in this phase compares against `697417b`, never `ae3322e`.
+
+**Pre-existing conductor / perf history (`7b5ce3d`, `fd2a1af`, `9b0bab7`, `d5e48b0`, `697417b`)** was
+independently reviewed, accepted and published *before* this phase. It is authoritative history and
+is not attributed to the UI programme: this phase does not modify those commits, their accepted task
+records, `platform/perf/**` or the `IMP02-MA-HARDEN-001` acceptance evidence, and does not reopen the
+task.
+
+### 53.1 Admin vs Ops — the mandatory differentiation (source-justified)
+
+A second Maker-Checker Queue under a different route would be a duplicate. The two pages read the
+same approval records but answer different questions, so the Admin page has a different information
+hierarchy, default view, ordering and action posture. **Source justification:** IAM-02 stores
+maker-checker *evidence* (requests, decisions, SoD checks, policies) alongside the request state, and
+a compliance oversight reader needs the *control facts* — what is enforced, what is not — which an
+Ops checker acting on a queue does not.
+
+| Concern | Ops Maker-Checker Queue (`/ops/maker-checker-queue`) | Admin Approval Queue (`/admin/approval-queue`) | Source justification |
+|---|---|---|---|
+| **Primary user intent** | Handle requests waiting on a checker | Oversee whether the approval control operates and what evidence exists | The Admin authority boundary: visibility is not authority (`UI-04` §10) |
+| **Queue scope** | Work queue — pending first, soonest expiry first | **Register — every state, newest first** | An oversight page answers "what has happened", not "what is next" |
+| **Default view** | **Pending** (the Overview's "N items") | **All** — states and domains | History is the evidence; terminal requests are its substance |
+| **Action controls** | Disabled `Approve Request` / `Reject Request` display | **None — zero controls** | Admin holds no established approval authority; even a disabled pair would make it look like the checker surface |
+| **Maker identity** | "Requested By" section | "Initiator" row — a class label, with the opaque-id note | `maker_user_id` is opaque; no name exists |
+| **Checker identity** | Not shown | Not shown — "Decided by: an opaque user id, not shown" | `approver_user_id` is opaque and unreadable (`approval_decision` is INSERT-only) |
+| **Approval evidence** | Decision state and a two-line history | **Decision Evidence** — recorded/not, time, count, reason present/absent, and the SoD check's result for that status | `approval_decision` and `sod_check` are what IAM-02 stores as evidence |
+| **Policy information** | One line ("Default — no approval policy configured") | A boundary statement, plus per-request "Policy: None — defaults apply" | No `approval_policy` row is seeded and no route can create one |
+| **Authorization information** | One sentence about who cannot approve | **Approval Control Boundary** — what is enforced and what is not, approve vs reject | The approve route checks no role or permission; reject checks nothing |
+| **Originating-workflow links** | Links to Ops pages | **No links** — domain, workflow name, action and resource type as text | IAM-02 stores `action`/`resource`/`entity_id`, not an originating page; the brief prefers labels over an Ops hub |
+| **Sensitive fields** | None shown | None shown; the omissions are listed (payload, hash, token, deciding user, matched rules) | Payload hash and token are security material |
+| **Terminal history** | Hidden by the default filter | Visible by default | See "Default view" |
+
+### 53.2 IAM-02 capability map (re-verified from source this turn, not carried forward)
+
+IAM-02 registers exactly **three** approval routes — `POST /iam2/approvals/request`,
+`POST /iam2/approvals/:id/approve` and `POST /iam2/approvals/:id/reject` — all `requireInternal`, all
+`POST`. **No list, get or search route exists.** The acting user is a request-body field
+(`maker_user_id` / `approver_user_id`); IAM-02 has no session surface.
+
+| UI element / field | IAM-02 route / model | Safe Admin visibility | Real vs demo | Status |
+|---|---|---|---|---|
+| Request id | `approval_request.approval_id` (`appr_<uuid>`, opaque) | Safe | Identifier real; a `DEMO-APR-nnn` reference stands in | **PARTIAL/B** |
+| Action | `approval_request.action` (free string, no allowlist) | Safe | Real vocabulary (§53.3) | **PARTIAL/B** |
+| Resource type | `approval_request.resource` | Safe | Real | **PARTIAL/B** |
+| Subject / resource id | `approval_request.entity_id`; `client_id` for client-scoped requests | Safe (opaque ids; a reference label is shown) | Real fields; labels demo | **PARTIAL/B** |
+| Maker identity | `maker_user_id` — **opaque; IAM-02 holds no name** | Unsafe as-is | A demo class label only | **DEMO-ONLY** |
+| Status | `approval_request.status` — five writable (§53.4) | Safe | Vocabulary real; values demo | **PARTIAL/B** |
+| Created | `created_at_utc` | Safe | Real field | **PARTIAL/B** |
+| Expiry | `expires_at_utc` (policy `expiry_minutes`, default 1440) | Safe | Real | **PARTIAL/B** |
+| Completed | `completed_at_utc` — set only on `approved`/`rejected` | Safe | Real | **PARTIAL/B** |
+| Required approval count | `required_count` (policy `required_approval_count`, default 1) | Safe | Real | **PARTIAL/B** |
+| Decision count | `approved_count` | Safe | Real | **PARTIAL/B** |
+| Decision reason | `approval_decision.decision_reason` — optional free text ≤512 | **Free text — could hold anything**; shown only as "No reason recorded" or omitted | Real, optional | **PARTIAL/B** |
+| Decision actor | `approval_decision.approver_user_id` — opaque; **INSERT-only grant, never read back** | Unsafe | — | **OMITTED** |
+| Decision time | `approval_decision.decided_at_utc` (the request's `completed_at_utc` carries it) | Safe | Real | **PARTIAL/B** |
+| Required approver roles | `approval_policy.required_approver_roles` — **stored, read by no code** | Would claim an unenforced control | — | **OMITTED** (stated as not enforced) |
+| SoD state | `sod_check.result` (`pass`/`block`) linked by `approval_decision.sod_check_id`; `blocked` on the request | Result safe; matched rule ids not | Derived from status (§53.5) | **PARTIAL/B** |
+| Policy | `approval_policy` — **no row seeded; the runtime role holds `SELECT` only** | Nothing to show | — | **OMITTED** (stated) |
+| Step-up requirement | `approval_policy.requires_step_up`; `step_up_assertion_ref` on a decision | Requirement safe; evidence unreadable | "Not required" — no policy | **PARTIAL/B** |
+| Originating module / workflow | **Not stored** — no service code creates requests; derivable only from the `action` prefix | Derived | Derived label | **DEMO-ONLY** |
+| Payload, payload hash, decision token | `payload_ref`, `payload_hash`; `permission_decision_token` | **Security material** | — | **OMITTED** |
+| List / detail read route | **None** | — | — | **Gap** (§53.11) |
+
+### 53.3 Real approval types (re-verified at every call site)
+
+**24 approval-token verification call sites in six modules** consume IAM-02 decision tokens —
+CLT-01 16, CFG-01 3, WLT-01 2, AML-01 1, KYC-01 1, SEC-01 1 — plus IAM-02's own in-process gate for
+`iam2.role.assign_user`. **Corrections to `UI-04` §47.2 (pointer added there):** (a) §47.2 said "22
+call sites across 7 modules" and that "CFG-01 uses its own decision-token library rather than
+IAM-02's". CFG-01 does have its own feature-decision token (`features.ts`), but it **also** verifies
+IAM-02 approvals in three routes — `feature-changes.ts`, `kill-switches.ts`, `licence-changes.ts` —
+through an import alias (`verifyIam2DecisionToken`) that the earlier search missed. (b) **No service
+code ever calls `POST /iam2/approvals/request`**: every mention is a comment ("run by an operator
+OUTSIDE…", "WLT never calls … itself"). Requests are raised by operators or orchestrators calling
+IAM-02 directly, and creation accepts **any** `action`/`resource` string. So the originating module is
+never *stored* — it is read off the action prefix.
+
+**32 distinct gated `(action, resource)` pairs** exist: CLT-01 — `clt1.application.approve`
+(`application`), `clt1.authorised_party.add|update|remove|activate` (`authorised_party`),
+`clt1.related_party.add|update|remove` (`related_party_edge`),
+`clt1.duplicate_candidate.create|update|confirm|dismiss` (`duplicate_candidate`),
+`clt1.client_mandate.create|update` (`client_mandate`),
+`clt1.client_profile.suspend|reactivate|close` (`client_profile`),
+`clt1.authorised_user.add|remove` (`authorised_user`); AML-01 — `aml1.match.confirm|dismiss`
+(`screening_match`); KYC-01 — `kyc1.outcome.override` (`cdd_outcome`); SEC-01 —
+`sec1.security_alert.close` (`security_alert`); WLT-01 — `wlt1.destination.approve_apply`
+(`destination`), `wlt1.evidence_export.apply` (`evidence_export`); CFG-01 —
+`cfg1.kill_switch.deactivate` and `cfg1.feature.enable|disable` (`feature`),
+`cfg1.licence_profile.activate|suspend|revoke` (`licence_profile`); IAM-02 —
+`iam2.role.assign_user`.
+
+**Represented on the page: the same four `UI Phase 2L` established** (`wlt1.destination.approve_apply`,
+`clt1.application.approve`, `clt1.client_mandate.update`, `wlt1.evidence_export.apply`). **No request type
+was added.** Widening the page to KYC/AML/SEC/CFG actions would have needed new requests, and an
+Admin-only request cannot be added without contradicting the Ops queue (a pending Admin-only request
+would be missing from Ops's Pending view; a terminal one from its "All requests"). Reusing the six shared
+requests exactly makes a cross-page contradiction impossible.
+
+### 53.4 Status model (reconfirmed)
+
+`approval_request.status` has six CHECK values; **five are writable**, and the sixth, `cancelled`, is
+**never written** — zero mentions in `services/iam2/src`, no writer in any service — so it is not
+modelled or offered in the filter. `expired` is written **lazily**, only when a decision is attempted
+on a pending, past-expiry request; there is no sweeper, so a request past its expiry can still read
+`pending`. `blocked` is written when an approve attempt finds a role/permission SoD conflict between
+maker and approver; **it is not a self-approval failure** (approver = maker is refused with an audit
+event and leaves the request `pending`). `blocked`, `rejected` and `expired` are three distinct terminal
+states and are never collapsed. **New this turn:** a `blocked` request is final *for every approver* — any
+later approve or reject sees a non-pending request and is refused (`IAM2_APPROVAL_ALREADY_DECIDED`) — so a
+single conflicting attempt permanently blocks a request another eligible approver could have decided.
+
+### 53.5 Maker/checker, segregation of duties, self-approval and the authorization boundary
+
+**The asymmetry is the finding, so the page shows it** — as a per-control comparison in the Approval
+Control Boundary, not a sentence that could be read as symmetric enforcement:
+
+| Control | `approve` | `reject` |
+|---|---|---|
+| Requester and deciding user must differ | **Enforced** — `IAM2_SELF_APPROVAL_BLOCKED`, audited, **request stays `pending`** | **Not checked** |
+| Segregation-of-duties conflict check | **Enforced** — a conflict sets `blocked` | **Not checked** |
+| Step-up verification | Only when a policy requires it (**none exists**) | Not checked |
+| Deciding user holds a role or permission | **Not checked** | **Not checked** |
+| One decision per user per request | Enforced (DB `UNIQUE`) | Enforced |
+| Expiry | Recorded on an attempt after expiry, **audited** (`iam2.approval_expired`) | Recorded on an attempt after expiry, **not audited** |
+
+- **Self-approval is described exactly:** the attempt is refused and audited, and the request stays
+  `pending`. The page never says self-approval "blocks the request".
+- **`blocked`** is a role/permission SoD conflict between requester and approver, distinct from the
+  self-approval refusal and from `rejected` and `expired`. Its detail says the matched rule is not shown and
+  that no approval decision was recorded (a conflict returns before the decision row is written; the
+  evidence is the `sod_check` row and an audit event). **New this turn:** it is final for *every* approver.
+- **The SoD result shown per request follows from its status**, by invariants of `routes/approvals.ts`, not
+  by fixture: `approved` → "Passed" (a conflict sets `blocked` before any decision is written); `blocked` →
+  "Conflict detected"; `pending` → "Not yet evaluated"; `rejected` and `expired` → "Not evaluated". A pass is
+  described as "no seeded conflict rule matched" — **only two rules are seeded**, both "meta" rules between
+  managing conflict rules and assigning roles/permissions, and `crossMatches` evaluates only `role_role` and
+  `permission_permission` (the `action_action` type in the CHECK is never evaluated). So a recorded pass is
+  weak evidence, and the page says so rather than presenting it as proof of independence.
+- **Authorization boundary — factual, not aspirational.** The page states that IAM-02 does not check that
+  the deciding user holds any role or permission, that `required_approver_roles` is stored and read by no
+  code, and that the deciding user is asserted by the caller (IAM-02 has no session of its own). It **never**
+  says "only authorised approvers can approve". **The gap is recorded, not patched in the frontend** — no
+  fake eligibility check, no disabled-for-you logic, no signed-in user.
+
+### 53.6 Policy, step-up and required roles
+
+`approval_policy` has **no seeded row** (no `INSERT` anywhere in migrations, seeds or source), and IAM-02's
+runtime role holds `SELECT` only on it, so **no route can create one**. Every request therefore takes the
+route's defaults — 1 approval, no step-up, 24-hour expiry (`DEFAULT_APPROVAL_POLICY`). The page shows
+"Policy: None — defaults apply", never a fabricated "Dual approval" or "Compliance L2", and states this as a
+configuration fact, not an error. **Step-up** is enforced only when a policy demands it, so it reads "Not
+required"; the `step_up_assertion_ref` a decision would carry is unreadable, so no "step-up complete" state
+is invented. **`required_approver_roles`** is not shown as a requirement (that would claim an unenforced
+control); it is stated as stored-and-unread. n-of-m exists in the model (`required_count`/`approved_count`)
+and shows as "0 of 1 required"; with no policy, every request needs exactly one.
+
+### 53.7 Decision evidence, actors and rejection reason
+
+Shown: whether a decision is recorded (approval / rejection / none), the decision time (the request's
+`completed_at_utc`), the approval count, and the reason as **"No reason recorded"** for a decided request —
+the reason is optional free text (≤512), so it can hold anything and is never given an invented value (a
+non-null fixture value would render verbatim; none is used). **Never shown:** the deciding user (an opaque id,
+and `approval_decision` is INSERT-only for IAM-02's runtime role — never read back), the decision token, the
+payload, the payload hash, matched SoD rule ids. The initiator is a demo *class* label ("Operations Maker
+(demo)"), with the note that IAM-02 records an opaque user id and holds no name. **Decision evidence is
+write-only today** — IAM-02 writes decision and conflict-check rows it cannot read back — so the evidence on
+the page is demonstrative, and the boundary section says so.
+
+### 53.8 Composition
+
+`/admin/approval-queue`. Header **"Approval Queue"** — "Review governed approval requests and maker-checker
+control evidence across AIX workflows." (no "approve requests": Admin authority is not established).
+`DemoDisclosure`: "Interface preview — approval records are demonstrative until the required Admin-safe IAM-02
+projections and authorization controls are integrated." Then **Approval Requests** — the List + Detail
+workspace (§35.16) — and the **Approval Control Boundary** section. No KPI card, pie chart or approval-rate
+chart.
+
+**List columns** (`COMPACT` 40px): **Request**, **Domain**, **Action** (the type label; the exact governed
+string is in the detail), **Status**, and **Created** and **Expires** as room allows. **No Approver Role,
+Policy, Amount, Priority or Risk column** — the approve route reads no role, no policy is seeded, and IAM-02
+has no amount. **Detail sections, in an oversight order:** Request Summary; Originating Control (domain,
+workflow, exact action, resource type, subject, client); Initiator; Approval Requirement; Decision Evidence;
+Segregation of Duties; Authorization Boundary. **No Checker Action section, no button, no link** — not even a
+disabled Approve/Reject pair, which would make this page look like the surface that decides. The originating
+workflow appears as text (domain, workflow name, action, resource type), not as an Ops link: IAM-02 stores
+`action`/`resource`/`entity_id`, not an originating page, and the page is not an Ops navigation hub.
+
+### 53.9 Filters, default view, counts and empty states
+
+**Default view: ALL, not Pending** — the deliberate difference from the Ops queue. Ops is a work queue whose
+Overview count is "N pending", so it opens on what a checker must act on; this is an oversight register whose
+substance is the terminal requests, and hiding them by default would present the control as a queue. The
+"Showing N of M" live region and a one-line count state the composition either way. **Two filters, both
+justified:** **Status** — the exact IAM-02 model, derived from the same enum and labels as Ops (so "Rejected"
+is offered though no demo request has it, and the empty state is the honest answer; **`cancelled` is not
+offered**, nothing writes it) — and **Domain**, useful here because the page spans workflows, offering only
+modules that have a request (CLT-01, WLT-01). **No search** (IAM-02 has none; six records). **Counts** are one
+understated line derived from the shared requests — "2 Pending · 2 Approved · 1 Expired · 1 Blocked ·
+Newest first" — never an approval rate, average time or control-effectiveness score. **Order is newest
+first** (register), where Ops lists pending first by soonest expiry (work). Empty states: filtered "No approval
+requests match the current view." with a "Show all requests" button; global "No approval requests are
+represented in this demo view." Never "No approval issues", "Controls satisfied" or "All approvals
+compliant" (scanned).
+
+### 53.10 Cross-page consistency, the Ops page and the Compliance Overview
+
+**Zero Admin-only requests; the page owns no approval facts.** It reads the six `DEMO_APPROVAL_REQUESTS_ALL`
+objects that `/ops/maker-checker-queue`, the Operational Overview, Wallet Destination Review, Client Requests
+and the Compliance Overview already read. Verified by a scratch render: the Admin table rows agree with the Ops
+table on **status, action, module, created and expires for all six requests (0 mismatches)**; the Ops default
+(Pending) shows the same 2 requests the Admin page counts as pending; the Overview's "Independent approvals —
+2 requests" equals the Admin "2 Pending". Differences are only those the brief permits: hierarchy, default
+filter, order, control explanations, links and action presentation. `UI Phase 2N`'s Overview changed **once**
+(pointer at §49.15): Review Areas' "Approval Queue" links this page as "Interface preview". No count changed,
+and the Overview is not a dashboard. **No Ops page, Client page or shared module was modified.**
+
+### 53.11 Backend gaps for a real Admin approval-oversight system
+
+Each confirmed in source this turn (not assumed); none was fixed.
+
+1. **An Admin-safe approval list projection** — IAM-02 has three `POST` routes and no list/get/search; no
+   paging or filter exposure.
+2. **A request detail projection with decision history** — `approval_decision` and `sod_check` are
+   **INSERT-only** for the runtime role and "never read back"; a read needs a grant change *and* a route.
+3. **A safe actor display projection** — `maker_user_id`/`approver_user_id` are opaque; IAM-02 holds no names
+   (an IAM-01 directory projection would be needed).
+4. **Originating-workflow labels** — not stored; **no service code creates an approval request** (operators
+   call IAM-02 directly) and creation accepts any `action`/`resource` string with no allowlist, so the
+   domain can only be inferred from an action prefix.
+5. **A policy read projection and seeded policies** — none seeded; the runtime role is `SELECT`-only on
+   `approval_policy`, so no route can create one.
+6. **Approver authorization enforcement** — `approve` checks no role or permission.
+7. **Reject-side maker/SoD enforcement** — `reject` checks nothing (a governance decision: intended
+   withdrawal, or a gap).
+8. **Required-role enforcement** — `required_approver_roles` is stored and read by no code.
+9. **A checker-eligibility projection** — none.
+10. **A step-up evidence projection** — `step_up_assertion_ref` is stored on a decision and unreadable.
+11. **A subject-to-pending-approval lookup** — none; the originating modules do not record which approval is
+    pending.
+12. **Role-aware Admin read authorization** — IAM-02's routes are service-token only and take the acting user in
+    the body.
+13. **Broader SoD coverage** — two seeded rules; `action_action` conflicts are never evaluated.
+14. **Expiry** — lazy (no sweeper); `reject`'s expiry path is unaudited.
+15. **A cancel/withdraw route** — `cancelled` is in the CHECK and never written.
+16. **`blocked` semantics** — one conflicting attempt blocks the request for every approver (a design decision).
+17. **An audit trail** — no relay carries module events into SEC-01 (carried finding).
+
+**Carried open observations (recorded, not fixed):** IAM-02 `approve` checks no approver role, `reject` has no
+maker/SoD check, no approval policy is seeded (all three re-confirmed above); no role holds the SEC-01 read
+permissions and no relay carries module events into SEC-01.
+
+### 53.12 Read-only, authority and the neighbouring pages
+
+**Zero decision controls** — no Approve, Reject, Reassign, Escalate, Cancel, Block or Override, disabled or
+otherwise, and no link. **Admin visibility does not grant approval authority.** The page is not a role, permission,
+policy, n-of-m or conflict-rule editor, and shows no permission matrix, grant control or user-role membership —
+those belong to **Users / Roles / Permissions**, and configuration to **Feature Flags / Configuration**; both stay
+inert. **History and SEC-01:** the register is the request history; the detail shows IAM-02's own request and
+decision timestamps only. There is no cross-system audit timeline and SEC-01's event model is not merged in —
+**Audit / Sensitive Access** stays a separate future page.
+
+### 53.13 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width is ~976px at 1024px (no sidebar) and ~975px at 1280px (240px sidebar appears), so `lg:` is the
+split breakpoint — the same figure at both ends, so the brief's `≥1280` and `1024–1279` cases resolve
+identically, as in `UI Phase 2J`, `2O`, `2P` and `2Q`.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Workspace as a persistent split — list (~623px) + 320px detail panel, single leading `border-l`. Four base columns fit (~568px including cell padding: reference ~108 + domain ~76 + action ~156 + status ~228); Created and Expires do not appear. The Approval Control Boundary stacks full-width below |
+| `1024–1279px` | The same split, same ~623px list |
+| `768–1023px` | List full width (~720–975px); a request opens a `Sheet`. Created appears at ≥768px of table width (~658px in all), Expires at ≥896px (~748px) |
+| `<768px` | Compact separated list (reference and created date; domain · action; status), no rounded cards; a request opens a `Sheet` |
+
+Columns hide by **container query** (`@container`, `@3xl`/`@4xl`), confirmed in the compiled CSS at 48rem/56rem.
+`<768px` uses a list, so no horizontal scroll is forced. **The thresholds are ones a full-width list can reach**
+— unlike the Ops queue, whose Expires threshold (64rem) is above any width its list can have. **Not rendered:**
+the ~568px total is an estimate of glyph widths; the widest cell is the status "Blocked — Segregation of
+Duties" (~228px), and it is the tightest fit on the page and the first visual-QA check. The boundary section is
+single-column at every width (`max-w-prose`).
+
+### 53.14 Accessibility
+
+One `<h1>`; three `<h2>` (Approval Requests, the desktop detail's request, Approval Control Boundary) with
+`<h3>` sections inside the detail; a real `<table>` with a label and column headers; selection is a real
+`<button>` per row (one tab stop, native Enter/Space) whose accessible name begins with the visible reference
+("DEMO-APR-006, Mandate update" — label-in-name, checked for all six); `aria-current` marks the open request;
+both filters are labelled `Select`s; the "Showing N of M" count is `aria-live="polite"`; status is icon +
+governed text, never colour, and `blocked`, `rejected` and `expired` keep distinct icons and words; **control
+gaps are conveyed in text** in the boundary section and the per-request Authorization Boundary, never by colour;
+the `Sheet` keeps its own title/description; DOM order is filters, count line, list, detail, boundary. **No fake
+action control** — zero buttons, inputs or links in any detail or the boundary section, and no `disabled`
+attribute anywhere in `<main>` (the Ops page's default detail, by contrast, carries the disabled Approve Request /
+Reject Request pair). **Rendered focus/keyboard behaviour was not exercised**
+(visual QA deferred).
+
+### 53.15 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `AdminApprovalWorkspace`, `AdminApprovalTable`,
+  `AdminApprovalDetail`, `ApprovalControlBoundary`, and `approval-oversight-data.ts`. Only the workspace and
+  table are Client Components (local UI state only); the detail carries no directive but is imported into
+  that client subtree, and the boundary section renders on the server only.
+- **Reused:** `PageHeader`, `DemoDisclosure`, `useIsLgUp`, `ApprovalStatusLine` (the Ops status line — same
+  icons and words, so a status reads identically on both pages), the shared `approval-request-data` module and
+  its UTC-pinned formatters, and the existing shadcn `Table`, `Select`, `Sheet`, `Button`, `Label`. **No
+  primitive was added, regenerated or modified**; the REVIEW LATER `Select`/`Sheet`/`Table` were used
+  unchanged. The official MCP was not needed. **No package or lockfile change.**
+- **No shared `AixApprovalPanel`.** `UI-04` §27 said to revisit it if a second full approval presentation was
+  built. This is that second presentation — and it is deliberately a *different reading* (control evidence, no
+  Checker Action, no links), so what the two would share is a status line, which already is shared. A generic
+  panel would have pulled the Admin page toward the checker surface it must not resemble.
+- **Consolidation candidates recorded for the visual-QA pass, not refactored:** the generic
+  `ListDetailWorkspace` (now nine near-identical workspaces) and the shared `Row`/`Section` helpers (duplicated
+  across the detail components).
+
+### 53.16 Boundaries, verification and what this phase did not do
+
+No `C`-classified Admin element (Reporting, Incidents / Exceptions). No balance, transaction amount, trade
+data, PnL, order book, market data, settlement amount or Exchange operation (IAM-02 has no amount concept and
+none appears). No fetch, server action, auth or permission code and no mutation. The three other Admin areas
+(Users / Roles / Permissions, Feature Flags / Configuration, Audit / Sensitive Access) stay inert.
+
+**Verified:** `typecheck:web`, `lint:web` (warning-free) and `build:web` pass; **17** static pages (16 + the new
+route). Dev server + `curl` + rendered-HTML inspection confirmed one `<h1>`, three `<h2>`, one labelled table
+with six rows and the exact cells, the default detail (newest request, `DEMO-APR-002`), the active nav item, the
+count line, and **zero controls, links and `disabled` attributes** in the page's `<main>`; and — cell by cell —
+agreement with the Ops queue, the Ops default view and the Overview. A scratch server-side render (deleted
+afterwards) verified: shared-object identity with the Ops module; strictly newest-first ordering; the five
+statuses' SoD and decision evidence; the detail for a `rejected` request (no fixture exists), a `blocked`
+request, an `approved` request and an `expired` request; that a non-null decision reason would render
+verbatim; that `cancelled` is not offered; label-in-name for all six buttons; and **a scan for forbidden
+claims** (Approve/Reject Request controls, "only authorised approvers", "compliant", "controls satisfied",
+approval rate, score, percentage, role/policy editors, any amount, `cancelled`, payload hash) — none present.
+**A verification correction:** two of my own checks first reported false positives (a regex matched the status
+word "Approved", and matched Tailwind's `disabled:` class names as if they were the `disabled` attribute); both
+were re-checked properly and the results above are the corrected ones. **Regression:** all other routes return
+200.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the consolidated
+visual-QA program); no decision control, link, policy/role/rule editor, approval rate or score; no fetch, auth or
+mutation; no change to `IAM-02`, any backend service, `platform/perf/**`, the accepted `IMP02-MA-HARDEN-001`
+records, the conductor history, the public homepage, any Ops or Client page or shared module, packages or
+lockfile — **verified against baseline `697417b`**, not `ae3322e`.

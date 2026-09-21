@@ -923,6 +923,29 @@ claim.** Public homepage unaffected.
   all pass (16 static pages); verified via rendered-HTML inspection and a scratch server-side
   render — nothing was rendered. Full record: `UI-04` §52, `UI-02`'s new "UI Phase 2Q" section,
   `UI-03` §53.
+- **Phase 2R:** Admin / Approval Queue (`/admin/approval-queue`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** The **fifth real Admin page**, `B`-classified, and deliberately **not a second
+  Maker-Checker Queue**: it reads the *same six approval requests* the Ops page shows (no request of its
+  own; checked cell by cell against the Ops table, 0 mismatches) but as an **oversight register** — every
+  state by default and newest first (Ops opens on Pending, soonest expiry first), control evidence before
+  anything else, **zero decision controls** (not even a disabled Approve/Reject pair) and no links.
+  Baseline `697417b`: the conductor / perf history is authoritative pre-existing history and untouched.
+  **IAM-02 re-verified from source:** three `POST` routes only, no list/get/search; `cancelled` never
+  written; **no service code ever creates an approval request** (operators call IAM-02 directly, and creation
+  accepts any action/resource string); **the approve/reject asymmetry is the centre of the page** — `approve`
+  refuses the requester (audited; the request stays `pending`), runs a SoD check and enforces step-up only if a
+  policy demands it, while `reject` checks none of that and its expiry path is unaudited, and **neither checks
+  that the deciding user holds any role or permission**; `required_approver_roles` is stored and read by no
+  code; no approval policy is seeded and no route can create one; only two SoD rules are seeded; a `blocked`
+  request is final for every approver; and `approval_decision` is INSERT-only, so decision evidence is
+  write-only today. **Corrections to earlier docs:** CFG-01 *does* verify IAM-02 approvals (three routes,
+  through an import alias the earlier search missed), so the real count is 24 call sites in six modules, not
+  22 in seven. The page states the boundary as fact — it never says only authorised approvers can approve —
+  and shows no fabricated policy, required role or step-up state. Two filters (status, domain); no search; a
+  one-line count, no rate or score. Review Areas now links it. **No shadcn primitive added or changed.**
+  `typecheck:web`/`lint:web`/`build:web` all pass (17 static pages); verified via rendered-HTML inspection and
+  a scratch server-side render — nothing was rendered. Full record: `UI-04` §53, `UI-02`'s new "UI Phase 2R"
+  section, `UI-03` §54.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -930,8 +953,8 @@ claim.** Public homepage unaffected.
   item now has one. Operational Overview, Client Requests, Wallet
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
-  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring and EDD / Review
-  are the four real Admin pages; the four other Admin areas remain unimplemented. No API/auth integration exists on any of
+  Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring, EDD / Review and
+  Approval Queue are the five real Admin pages; the three other Admin areas remain unimplemented. No API/auth integration exists on any of
   them.
 
 ## Contents

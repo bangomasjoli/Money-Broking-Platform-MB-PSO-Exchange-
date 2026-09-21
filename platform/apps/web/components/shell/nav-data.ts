@@ -118,13 +118,20 @@ export const OPS_NAV: NavItem[] = [
  * **The label is governed and kept, but the capability behind it is review attention: a dedicated EDD
  * workflow is NOT implemented in the current backend** (`UI-04` §52.1), and the page says so. The four
  * remaining rows stay inert.
+ *
+ * `UI Phase 2R`: "Approval Queue" gains a real `href` (`/admin/approval-queue` — the label's slug) —
+ * `B`-classified (real `IAM-02` approval model, every route `requireInternal`-guarded, no list/get/search route).
+ * It is an **oversight register over the same requests the Ops Maker-Checker Queue shows, not a second
+ * queue** (`UI-04` §53.1): every state by default, control evidence first, zero decision controls. The three
+ * remaining rows (Users / Roles / Permissions, Feature Flags / Configuration, Audit / Sensitive Access) stay
+ * inert. Label preserved exactly.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
   { label: "Client Risk / KYC-KYB", href: "/admin/client-risk-kyc-kyb", icon: "shield-alert" },
   { label: "AML / Transaction Monitoring", href: "/admin/aml-transaction-monitoring", icon: "activity" },
   { label: "EDD / Review", href: "/admin/edd-review", icon: "search-check" },
-  { label: "Approval Queue", icon: "list-checks" },
+  { label: "Approval Queue", href: "/admin/approval-queue", icon: "list-checks" },
   { label: "Users / Roles / Permissions", icon: "users" },
   { label: "Feature Flags / Configuration", icon: "sliders-horizontal" },
   { label: "Audit / Sensitive Access", icon: "history" },

@@ -2126,3 +2126,55 @@ interaction was exercised** — filtering, selection and the Sheet are reasoned 
 `/admin`, `/admin/client-risk-kyc-kyb` and `/admin/aml-transaction-monitoring` all return 200. Backend regression
 not required — zero `platform/services/**`, `packages/**`, `edge/**`, `infra/**` change. Public homepage
 unaffected.
+
+## 54. Phase 2R — Admin / Approval Queue (fifth Admin page, visual QA deferred)
+
+`/admin/approval-queue` (`UI-04` §53): an **oversight register** over the same approval requests the Ops
+Maker-Checker Queue shows — every state by default, control evidence first, zero decision controls. `B`-classified;
+**no request of its own** (the six `UI Phase 2L` requests are reused unmodified); no fetch, server action, auth,
+permission check, mutation or local state transition. Read-only, with no links. **Baseline `697417b`**: the
+conductor / perf history (`7b5ce3d`…`697417b`) is authoritative pre-existing history, not attributed to the UI
+programme, and every "unchanged" check below is against it, not `ae3322e`.
+
+**Files created (6):** `app/admin/approval-queue/page.tsx`; `components/admin/{approval-oversight-data.ts,
+admin-approval-table.tsx, admin-approval-detail.tsx, admin-approval-workspace.tsx,
+approval-control-boundary.tsx}`.
+**Files modified:** `components/shell/nav-data.ts` (the "Approval Queue" row gains `href`; the three other Admin
+rows stay inert); `app/admin/layout.tsx` (comment and metadata); and — the one Compliance Overview change,
+recorded at `UI-04` §49.15/§53.10 — `components/admin/admin-compliance-data.ts` (Review Areas' "Approval Queue"
+gains `href`). `review-areas.tsx` needed no change. **No Ops or Client page, no shared data module, no backend
+service, no `platform/perf/**`, no accepted conductor record, no package and no lockfile was modified.**
+
+**Client/server boundary:** the page is a Server Component; `AdminApprovalWorkspace` and `AdminApprovalTable` are the
+only Client Components (`"use client"`), holding only local UI state — `statusFilter`, `domainFilter`,
+`selectedId`, `mobileDetailOpen`. `AdminApprovalDetail` carries no directive and is stateless (imported into the
+client subtree); `ApprovalControlBoundary` renders on the server only. The status line is the Ops
+`ApprovalStatusLine`, imported unchanged.
+
+**Data:** `approval-oversight-data.ts` is a projection over `DEMO_APPROVAL_REQUESTS_ALL`: newest-first ordering
+(Ops lists pending first), domain read off the action, a one-line status count, and two pure functions —
+`sodCheckEvidence` and `decisionEvidence` — that follow from what `routes/approvals.ts` writes for each status
+(an `approved` request can only have passed the SoD check; a `blocked` request has no decision row; `reject`
+runs no check). No request was added, because an Admin-only request would contradict the Ops queue.
+
+**shadcn impact: none.** Existing `Table`, `Select`, `Sheet`, `Button`, `Label` used unchanged; the REVIEW LATER
+primitives were not touched; the official MCP was not needed. **No package or lockfile change.**
+
+**Quality gates:** `typecheck:web`, `lint:web` (warning-free) and `build:web` all pass; **17** static pages generated
+(16 + the new route). No lint finding.
+
+**Verification method (screenshot tooling unavailable; unchanged):** dev server + `curl` + rendered-HTML
+inspection, and a scratch server-side render (deleted afterwards). Confirmed: one `<h1>` and three `<h2>`; one
+labelled table, six rows and their cells; the default detail; the active nav item; the count line; **zero buttons,
+links and `disabled` attributes in `<main>`**; cell-by-cell agreement with the Ops table (0 mismatches over six
+requests), the Ops default view and the Overview; the per-status evidence; the `rejected` branch that has no
+fixture; that `cancelled` is not offered; and a forbidden-claim scan that found nothing. **Two false positives in
+my own checks were caught and corrected** (a regex matched the status word "Approved"; another matched Tailwind's
+`disabled:` class names as the attribute) — the recorded results are the corrected ones. **No interaction was
+exercised** — filtering, selection and the Sheet are reasoned from source.
+
+**Regression:** `/`, `/app`, `/app/wallet-destinations`, `/app/profile`, `/app/compliance-status`, `/ops`,
+`/ops/client-requests`, `/ops/wallet-destination-review`, `/ops/maker-checker-queue`, `/ops/audit-activity`,
+`/admin`, `/admin/client-risk-kyc-kyb`, `/admin/aml-transaction-monitoring` and `/admin/edd-review` all return 200.
+Backend regression not required — **zero** `platform/services/**`, `packages/**`, `edge/**`, `infra/**`,
+`perf/**` or `tests/**` change relative to `697417b`. Public homepage unaffected.

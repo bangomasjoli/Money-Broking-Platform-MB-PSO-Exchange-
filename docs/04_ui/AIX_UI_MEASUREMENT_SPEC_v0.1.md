@@ -2804,3 +2804,33 @@ only new measurements are the column budget and one caption line. Reasoned by ar
 three base columns only and a full-width list at 768–1023px shows four or five. The `@3xl`/`@4xl` rules are
 confirmed in the compiled CSS. **The widths are estimates of glyph widths, not measurements** — the first
 visual-QA check is the widest reason. No shadcn primitive was added or changed.
+
+## UI Phase 2R — Approval Queue Geometry
+
+Values used by `/admin/approval-queue` (`UI-04` §53). The workspace **reuses `UI Phase 2J`/`2L`/`2O`/`2P`/`2Q`'s
+List + Detail values exactly**, and the boundary section reuses `UI Phase 2P`/`2Q`'s; the only new measurements
+are the second filter and the column budget. Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Split layout (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px) | Reuse — the persistent panel at `lg:` |
+| Detail panel | `lg:border-l lg:pl-8` (1px + 32px), 320px | Reuse; single leading `border-l` |
+| Table row | `h-10` = **40px** `COMPACT` | Reuse; `UI-04` §35.14 names the admin Approval Queue `COMPACT` |
+| Selected-row marker | `border-l-2` on the first cell | Reuse |
+| Status filter trigger | `h-10` (40px), `w-72` (288px, `max-w-full`) | Reuse of the Ops queue's value — the widest option, "Blocked — Segregation of Duties", is ~217px of text plus ~40px of trigger padding and chevron, which would not fit 256px (`w-64`); a first draft used `w-64` and was corrected before commit |
+| Domain filter trigger | `h-10` (40px), `w-40` (160px, `max-w-full`) | New — labels are module codes ("CLT-01"), so a narrower control suffices |
+| Filter group | `gap-x-4` = 16px between the two filters, `gap-y-2` = 8px when they wrap | New use of existing steps |
+| Filter row → count line | `mb-2` = 8px; count line → list `mb-4` = 16px | Reuse of `UI Phase 2Q` |
+| Mobile record | `py-3` = 12px, `gap-1` = 4px, hairline `border-t`, three lines | Reuse |
+| Detail sections | `gap-6` = 24px between; rows `gap-3` = 12px | Reuse |
+| Page sections (workspace / boundary) | `gap-8` = 32px; boundary `border-t` + `pt-8` (1px + 32px) | Reuse of `UI Phase 2P`/`2Q` |
+| Prose measure | `max-w-prose` on the boundary paragraphs and lists | Same as `2P`/`2Q` |
+
+**Column budget** (content width ~976px at 1024px, ~975px at 1280px; the persistent split leaves the list ~623px at
+both). Estimated cell widths *including* 16px padding: reference ~108 + domain ~76 + action ~156 + status ~228 =
+**~568px**, leaving ~55px. The widest cell is the status **"Blocked — Segregation of Duties"** (~31 characters at
+6.2px plus a 20px icon). Created (~90px) is shown from a container width of **48rem (768px)** (~658px in all) and
+Expires (~90px) from **56rem (896px)** (~748px) — thresholds a full-width list can actually reach, unlike the Ops
+queue's `64rem` Expires threshold. The `@3xl`/`@4xl` rules are confirmed in the compiled CSS. **The widths are
+estimates of glyph widths, not measurements** — the tightest fit on the page and the first visual-QA check. No
+shadcn primitive was added or changed.

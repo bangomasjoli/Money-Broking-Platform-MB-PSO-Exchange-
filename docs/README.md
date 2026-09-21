@@ -77,6 +77,10 @@ remediation, acceptance, `task.json`) for conductor-managed work going forward. 
 `01_masters/` — the current authoritative master SDLC documents (00–11) plus
 `01_masters/reviews/` for their review and delta-note evidence.
 
+**Doc 00 candidate:** [`00_Licence_Scope_And_Feature_Lock_v1.4.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md)
+is a **PROPOSED** re-baseline for the institutional four-pillar direction. **`v1.3` remains the
+authoritative Doc 00** until v1.4 is certified — see [DOCUMENT_REGISTER.md](DOCUMENT_REGISTER.md) §1.
+
 ## Where archives live
 
 `90_archive/masters/` — superseded master document versions.

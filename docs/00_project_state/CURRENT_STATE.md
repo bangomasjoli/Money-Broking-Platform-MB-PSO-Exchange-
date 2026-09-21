@@ -7,10 +7,10 @@ implementation_status: N/A
 module: N/A
 control: Compact navigation / current-state record
 owner: Unassigned
-effective_date: 2026-09-20
-last_reviewed: 2026-09-20
+effective_date: 2026-09-21
+last_reviewed: 2026-09-21
 supersedes: none
-baseline_commit: 9b0bab7
+baseline_commit: bff15e8
 ---
 
 # AIX Platform — Current State
@@ -22,19 +22,19 @@ Keep this file to ~120 lines. Current state only: no history, no narrative, no c
 ## 1. Identity
 AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange application pending). Documentation in `docs/`, code in `platform/` (npm workspaces: `packages/*`, `services/*`, `apps/*`). Docs entry point: [../README.md](../README.md).
 
-## 2. Baseline (verified against the repository, 2026-09-20)
-- Last accepted implementation commit: `9b0bab7` — `fix(perf): harden IMP-02 measurement evidence validation` (fast-forwarded from `fd2a1af`). This is the front matter `baseline_commit`: the newest non-governance commit this file was verified against. It is not the repository HEAD, which this file never records; the conductor reads HEAD from Git. Only control-layer records (this file, the registers, `tasks/**`) follow it.
+## 2. Baseline (verified against the repository, 2026-09-21)
+- Baseline commit: `bff15e8` — `feat(ui): add admin approval queue` (UI Phase 2R; parent `697417b`). This is the front matter `baseline_commit`: the newest non-governance commit this file was verified against, and the current accepted baseline. It is not the repository HEAD, which this file never records; the conductor reads HEAD from Git. Only control-layer records (this file, the registers, `tasks/**`) follow it. The last accepted **backend** implementation commit is unchanged: `9b0bab7` — `fix(perf): harden IMP-02 measurement evidence validation` (fast-forwarded from `fd2a1af`; see §4).
 - Migration head **070** (`platform/infra/migrations/070_fnd_rate_limit_policy_privilege_hardening.cjs`, 70 migrations); also stated in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) (FND-01 Shared Rate-Limit Engine).
 - Checks (from `platform/package.json`): `npm test` (vitest), `npm run typecheck` (`tsc -b`), `npm run lint:web`, `npm run typecheck:web`, `npm run build:web`. Test totals live in the acceptance records, not here.
 
 ## 3. Current phase
 - **Backend:** module implementation is recorded per module in [MODULE_STATUS.md](MODULE_STATUS.md) (Implementation status table). Deployment/perimeter pack **IMP-02 is IN_PROGRESS** ([IMP-02 README](../03_implementation/IMP-02/README.md)); internet exposure is prohibited there.
-- **UI:** public homepage **VISUALLY ACCEPTED / CLOSED** (UI Phase 1R). Authenticated platform: Phases 2A–2Q recorded in [04_ui/README.md](../04_ui/README.md) — 4 Client, 5 Staff/Ops and 4 Admin pages **IMPLEMENTED / VISUAL QA DEFERRED** by an explicit program decision; no API/auth integration on any page; four Admin areas remain unimplemented.
+- **UI:** public homepage **VISUALLY ACCEPTED / CLOSED** (UI Phase 1R). Authenticated platform: Phases 2A–2R recorded in [04_ui/README.md](../04_ui/README.md) — 4 Client, 5 Staff/Ops and 5 Admin pages **IMPLEMENTED / VISUAL QA DEFERRED** by an explicit program decision; no API/auth integration on any page; three Admin areas remain unimplemented (Users / Roles / Permissions, Feature Flags / Configuration, Audit / Sensitive Access).
 
 ## 4. Most recently accepted
 - **Backend:** `IMP02-MA-HARDEN-001` (closes `IMP-02-FIND-010` and `IMP-02-FIND-011`), commit `9b0bab7` — [06-acceptance.md](../03_implementation/tasks/IMP02-MA-HARDEN-001/06-acceptance.md). Before it: IMP-02 Measurement Harness Turn M-A, commit `d57b436` — record `IMP-02-ACC-004` ([DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) §4b).
 - **Modules:** accepted baselines and phases are in [MODULE_STATUS.md](MODULE_STATUS.md); per-module acceptance records are under `02_modules/<MODULE>/acceptance/` (indexed in DOCUMENT_REGISTER §4a).
-- **UI:** the most recent commits (Phases 2N–2Q) are implementations, not acceptances. `AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded anywhere (04_ui README).
+- **UI:** the most recent commits (Phases 2N–2R) are implementations, not acceptances. `AUTHENTICATED SHELL: VISUALLY ACCEPTED` is not recorded anywhere (04_ui README).
 
 ## 5. Active task
 
@@ -55,7 +55,7 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 
 ## 8. Next intended work (only what the repository states)
 - IMP-02: the Turn M-B gate findings (`IMP-02-FIND-010`/`IMP-02-FIND-011`) are closed. Turn M-B is not started, and whether it proceeds is not stated in a single authoritative place. Next work is to be determined by the planner, with a human deciding.
-- UI: build out the four remaining Admin areas, then one consolidated visual QA pass (04_ui README, Phase 2D/2E program decision).
+- UI: three Admin areas remain. Planned order, as set by the human at the Phase 2R checkpoint: **2S** Users / Roles / Permissions → **2T** Feature Flags / Configuration → **2U** Audit / Sensitive Access. After 2U the planned authenticated UI build is complete; then a controlled SHADCN CONSISTENCY / UPGRADE AUDIT if still warranted (04_ui `UI-03` §46), then one consolidated Client / Ops / Admin visual QA and remediation pass (04_ui README, Phase 2D/2E program decision). None is started.
 - Anything else is not stated in a single authoritative place. A human decides; do not infer it from this file.
 
 ## 9. Operating constraints

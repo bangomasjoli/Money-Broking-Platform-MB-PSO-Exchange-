@@ -10,7 +10,7 @@ owner: Unassigned
 effective_date: UNKNOWN
 last_reviewed: UNKNOWN
 supersedes: none
-baseline_commit: 780e116
+baseline_commit: b62ed89
 ---
 
 # AIX Full Compliance — Decision Log
@@ -1081,3 +1081,153 @@ Future decisions should be appended below this line, oldest first, using the sam
   is a separate controlled revision (decision pack §7.1).
 - **Baseline commit:** `5747367` (institutional account hierarchy — the last commit before this
   decision; no implementation commit exists for it).
+
+### DEC-013 — Build-unlocked / production-gated capability model: confirmed target capabilities may be fully developed before production regulatory activation
+
+- **Date:** 2026-09-22 — owner platform-development decision
+- **Scope:** Platform-wide. Binding on every master document, module blueprint, capability
+  control and runtime guard.
+- **Problem this decides.** Every lock in this repository was drafted against a single implicit
+  question — *"may AIX do this?"* — answered with a single implicit state, *locked*. That state
+  conflates five independent facts: whether a capability is architected; whether it is
+  implemented; whether it is available in a given environment; whether it is permitted to
+  operate in production; and whether a specific product, asset, client or counterparty is
+  eligible for it. Where those collapse into one boolean, an unresolved regulatory question
+  about production silently blocks architecture and implementation. `STR-03` classifies all 72
+  identified locks against this defect.
+
+- **Decision — clause 1: confirmed target-product capabilities may be fully developed before
+  production regulatory activation.** A capability belonging to a confirmed target product may
+  be architected, specified, implemented, tested, and made available in development, automated
+  testing, UAT and controlled demo, while its production activation remains gated.
+
+- **Decision — clause 2: development, test, UAT and controlled-demo availability are separated
+  from production activation.** Four distinct states are established and must never be
+  collapsed into one boolean named `enabled`:
+
+  | State | Values |
+  |---|---|
+  | `CAPABILITY_BUILD_STATE` | `NOT_SPECIFIED` / `SPECIFIED` / `IMPLEMENTED` / `TESTED` |
+  | `ENVIRONMENT_AVAILABILITY` | per environment: `ENABLED` / `DISABLED` / `NOT_APPLICABLE` |
+  | `PRODUCTION_ACTIVATION_STATE` | `DISABLED_PENDING_REGULATORY_ACTIVATION` / `DISABLED_PENDING_GOVERNANCE` / `DISABLED_BY_POLICY` / `PROHIBITED_PERMANENT` / `ACTIVE` |
+  | `PRODUCT_ASSET_ELIGIBILITY_STATE` | `NOT_ASSESSED` / `INELIGIBLE` / `ELIGIBLE` |
+
+  Five canonical environments are established: **DEVELOPMENT, TEST, UAT, DEMO, PRODUCTION**.
+  **DEMO is not public production**: a controlled demo must use mock, synthetic or otherwise
+  non-live regulated execution unless the applicable environment design explicitly permits
+  otherwise. Unknown environment is treated as PRODUCTION and fails closed.
+
+- **Decision — clause 3: production activation remains fail-closed.** Doc 00 §21's thirteen
+  activation conditions are preserved in full and are re-scoped as the **production** gate.
+  Unknown, unresolved, unreadable or absent state denies. Absence of a decision is never
+  permission. Nothing in this decision weakens any fail-closed control.
+
+- **Decision — clause 4: regulatory uncertainty blocks production activation, not architecture,
+  specification or implementation.** The unresolved regulatory questions in Doc 00 §23 continue
+  to hold their capabilities' `PRODUCTION_ACTIVATION_STATE` at
+  `DISABLED_PENDING_REGULATORY_ACTIVATION`. They no longer hold `CAPABILITY_BUILD_STATE` at
+  `NOT_SPECIFIED`. **This decision answers none of them.**
+
+- **Decision — clause 5: permanent product boundaries are not affected.** The following remain
+  prohibited in **every** environment, including local development, and their
+  `CAPABILITY_BUILD_STATE` must remain `NOT_SPECIFIED` permanently:
+  1. **MB Spot internal client-to-client matching** — Model C (`DEC-012` clause 3, Doc 00 §7.7);
+  2. an AIX-operated central order book for Money Broking Spot;
+  3. crossing, netting or internalising one AIX client's order against another's;
+  4. AIX principal dealing;
+  5. AIX proprietary market making;
+  6. AIX providing its own principal liquidity.
+
+  **No environment value, capability state, feature flag, permission grant, service domain or
+  future Exchange approval may permit any of them.**
+
+- **Decision — clause 6: no scope expansion.** Derivatives, perpetual futures, futures, margin
+  trading, leveraged trading, lending, staking, yield/earn products, DeFi yield, privacy coins,
+  algorithmic stablecoins where currently prohibited and MYR trading pairs where currently
+  prohibited remain **out of scope**. No development effort is authorised on any of them.
+
+- **Decision — clause 7: AIX Exchange and AIX RWA securities capabilities may be developed
+  now.** The securities / financial-instrument / security-token market capability (**AIX
+  Exchange**) and the full AIX RWA asset-lifecycle platform are confirmed target capabilities
+  under clause 1. Their architecture, specification, implementation and testing are authorised;
+  their production activation remains gated on `R1-Q1b`, `R4-Q1`…`R4-Q7` and the §21 conditions.
+
+  **The Exchange matching engine belongs to the securities Exchange domain only.** It must never
+  be reused, reachable or callable as an MB Spot client-matching engine (clause 5).
+
+- **Decision — clause 8: `assertNoExchangeRuntime` is retained and not deleted.** Its migration
+  to a domain- and environment-aware boundary guard is specified in `STR-03` §5 as **`MIG-001`**
+  and is **not authorised for implementation by this decision**. Until it lands, the guard
+  remains active and unweakened, and every existing call site remains `MB_PRODUCT` domain with
+  the fragment list enforced unconditionally in all five environments.
+
+- **Decision — clause 9: `securities.token_trading` is not renamed or deleted.** Its
+  compatibility meaning becomes *live securities / security-token trading in the AIX production
+  environment*. It may be enabled in DEVELOPMENT, TEST, UAT and DEMO against **synthetic
+  instruments only**; it **fails closed in PRODUCTION** pending `R4-Q2` and `R1-Q1b`. **This is
+  not permission for securities in MB Spot** — Doc 00 §12A's exclusion of securities-featured
+  assets from the Money Broking route stands in every environment. Migration **`MIG-003`**,
+  held behind `R1-Q4`.
+
+- **Decision — clause 10: the `exchange.*` namespace is frozen as the MB-boundary prohibition
+  namespace, permanently, and is not reused for the securities Exchange.** Every `exchange.*`
+  identifier in this repository refers to the old MB client-matching concept; none refers to the
+  securities Exchange (`STR-02` §1.5 classified 315 "Exchange" occurrences and found **zero**
+  carrying the securities meaning). Silently reinterpreting a sealed identifier whose seeded
+  meaning is *"the thing AIX may never build"* into *"the thing AIX is now building"* is
+  rejected as an unacceptable regulatory risk. A new namespace **`securities_market.*`** is
+  reserved for AIX Exchange capabilities (**`MIG-007`**), chosen so that CFG-01's structural
+  `exchange.` prefix mutation block stays unconditional and untouched. The five codes carrying
+  `applies_until: "until_formal_exchange_licence_approval"` are corrected to `permanent`
+  (**`MIG-006`**), because Doc 00 v1.4 §6 already reclassified all five as standing MB-boundary
+  prohibitions that no Exchange approval lifts.
+
+- **Decision — clause 11: permissions never activate a production capability.** Holding a
+  permission is one input among several. Access to a regulated capability requires
+  **permission AND environment availability AND product activation AND asset/instrument
+  eligibility AND the production regulatory gate**. An Exchange Trader permission does not mean
+  Exchange is production-enabled, in any environment.
+
+- **Decision — clause 12: new Exchange-domain modules are authorised.** The 33-module set
+  contains no owner for instrument admission, a central order book, a matching engine, market
+  operations or a clearing/settlement interface; `OMS-01`/`MKD-01`/`LQD-01`/`EXE-01`/`TRD-01`
+  are the external-routing architecture and must not absorb a venue capability. Four modules are
+  added through governed versioning of the Master Module Index: **`EXM-01`** Exchange Market &
+  Instrument Administration, **`EXO-01`** Exchange Order Book & Matching Engine, **`EXC-01`**
+  Exchange Clearing & Settlement Interface, **`EXP-01`** Exchange Participation & Eligibility.
+  Module count becomes **37**. MODULE ≠ SERVICE; no unnecessary microservice is implied.
+
+- **Rationale:** regulatory permission governs what AIX may *operate*, not what AIX may *build*.
+  Holding architecture hostage to an unresolved licensing question produces a platform that is
+  unbuilt when the answer arrives, and produces documentation that records `NOT DESIGNED` as a
+  status — which forbids designing. Separating the four states preserves every existing control
+  while removing the accidental development blockade. The states are kept apart deliberately
+  because collapsing them is exactly how a production capability gets switched on by an absent
+  decision. Clause 5 is stated separately and unconditionally because "unlock Exchange
+  development" is the single most plausible route by which Model C could be built by accident.
+
+- **Status:** **ACCEPTED** — architecture, specification and governance semantics only.
+  **Not** an approval of: any live regulated activity; any regulatory approval AIX has not
+  received; the scope of AIX's Exchange approval (`R1-Q1b`); any securities listing or trading in
+  production; any RWA issuance, offering or secondary market in production; any specific venue,
+  counterparty, order type or asset; Model C in any form; or any code, migration, test, seeded
+  identifier or runtime-guard change. **No existing runtime guard, seeded identifier, sealed
+  hash, migration or test is modified by this decision.**
+  - **Consuming work:** Doc 00 `v1.5`; Charter `v1.5`; Master Module Index `v1.4`; SRS `v1.3`;
+    Role & Permission Matrix `v1.3`; Master Workflow Map `v1.3`; Master System Rules `v1.3`;
+    then the `EXM-01`/`EXO-01`/`EXC-01`/`EXP-01` blueprints and the `MIG-001`…`MIG-010`
+    controlled implementation tasks.
+  - **Migration requirements recorded, none authorised:** `MIG-001`…`MIG-010` (`STR-03` §4).
+  - **Open regulatory questions preserved unchanged:** `R1-Q1b`, `R1-Q2`, `R1-Q3`, `R1-Q4`,
+    `R3-Q1b`, `R3-Q2b`, `R3-Q3`, `R3-Q6`, `R4-Q1`…`R4-Q7`, `R5-Q1`, `R5-Q2`, `A2-Q1`, `A2-Q2`,
+    `R-MODEL-C`. **New, recorded not answered:** `R6-Q1` — whether a controlled demo of a
+    production-gated regulated capability to an external audience constitutes holding out an
+    unapproved activity.
+- **Supersedes / Related:** None superseded. `DEC-012` clause 3 (Model C blocked) is
+  **reaffirmed and strengthened** — clause 5 above extends it to every environment explicitly.
+  `DEC-012` clause 5 (AIX Exchange reserved terminology) is **extended**: the terminology now
+  has a real target product behind it, with production activation still unapproved. Related:
+  `DEC-011` (account hierarchy), `STR-03` (lock review and migration register), `STR-02`
+  (regulatory evidence register §0.2, Exchange-occurrence classification §1.5).
+- **Baseline commit:** `b62ed89` (master module index v1.3 — the last commit before this
+  decision).

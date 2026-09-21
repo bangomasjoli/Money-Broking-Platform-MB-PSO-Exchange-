@@ -47,8 +47,7 @@ Current authoritative versions live in `01_masters/`; superseded versions live i
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| ARC-00-v1.3 | Licence Scope & Feature Lock | Platform-wide | Licence scope / feature-lock governance | v1.3 | APPROVED | N/A (governance doc) | `01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md` | Unassigned | N/A | See `01_masters/reviews/00_Licence_Scope_And_Feature_Lock_v1.2_Review.md` + `00-01_v1.2_to_v1.3_Delta_Note.md` | v1.0, v1.1, v1.2 (archived) | c1765f5 |
-| ARC-00-v1.4 | Licence Scope & Feature Lock | Platform-wide | Licence scope / feature-lock governance — **candidate re-baseline** for the AIX Institutional Digital Asset & Tokenized Securities Platform (four pillars; product-architecture vs regulatory-permission separation; Model A/B/C execution architecture; provider-neutral counterparty model; Asset & Instrument classification gate; capability matrix; fail-closed feature-lock model; 1 Jan 2027 temporal rule). Derives from `DEC-011`, `DEC-012` and `STR-02`. **NOT AUTHORITATIVE — present, not promoted, not archived** (§3 precedent). Approves no securities, RWA, venue, order type or asset; changes no code, migration, seeded identifier or runtime guard | v1.4 | **PROPOSED / DRAFT_FOR_GOVERNANCE_APPROVAL** | N/A (governance doc) | `01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md` | Unassigned | N/A | No review/certification evidence yet — promotion prerequisites in its own §26 | none (supersedes v1.3 **prospectively on approval**) | f9cfe02 |
+| ARC-00 | Licence Scope & Feature Lock | Platform-wide | Licence scope / feature-lock governance — AIX Institutional Digital Asset & Tokenized Securities Platform: four product pillars (Spot / OTC / Pay / RWA), product-architecture vs regulatory-permission separation, Model A/B/C execution architecture with internal client-to-client matching as a standing prohibition, provider-neutral counterparty model, platform-wide Asset & Instrument classification gate, capability matrix, fail-closed feature-lock model, 1 Jan 2027 temporal rule, 20 preserved regulatory questions | v1.4 | APPROVED | N/A (governance doc) | `01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md` | Unassigned | N/A | [`01_masters/reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md`](01_masters/reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md) (independent adversarial review, ACCEPT, 5 findings corrected) | v1.0, v1.1, v1.2, v1.3 (archived) | 1ad3cf3 |
 | ARC-01 | Project Charter | Platform-wide | Project charter / scope | v1.3 | APPROVED | N/A (governance doc) | `01_masters/01_Project_Charter_v1.3.md` | Unassigned | N/A | See `01_masters/reviews/01_Project_Charter_v1.2_Review.md` + `00-01_v1.2_to_v1.3_Delta_Note.md` | v1.1, v1.2 (archived) | c1765f5 |
 | ARC-02 | Software Requirement Specification | Platform-wide | Platform-wide SRS | v1.2 | APPROVED | N/A (governance doc) | `01_masters/02_Software_Requirement_Specification_v1.2.md` | Unassigned | N/A | See `01_masters/reviews/02_Software_Requirement_Specification_v1.1_Review.md` (v1.2 = clean rollup) | v1.0, v1.1 (archived) | c1765f5 |
 | ARC-03 | Master Module Index | Platform-wide | Module index / build order | v1.2 | APPROVED | N/A (governance doc) | `01_masters/03_Master_Module_Index_v1.2.md` | Unassigned | N/A | See `01_masters/reviews/03_Master_Module_Index_v1.1_Review.md` (v1.2 = clean rollup) | v1.0, v1.1 (archived) | c1765f5 |
@@ -61,12 +60,12 @@ Current authoritative versions live in `01_masters/`; superseded versions live i
 | ARC-10 | Master Testing Strategy | Platform-wide | Testing strategy | v1.2 | APPROVED | N/A (governance doc) | `01_masters/10_Master_Testing_Strategy_v1.2.md` | Unassigned | N/A | See `01_masters/reviews/10_Master_Testing_Strategy_v1.1_Review.md` (v1.2 = clean rollup) | v1.0, v1.1 (archived) | c1765f5 |
 | ARC-11 | Master Deployment Strategy | Platform-wide | Deployment strategy | v1.2 | APPROVED | N/A (governance doc) | `01_masters/11_Master_Deployment_Strategy_v1.2.md` | Unassigned | N/A | See `01_masters/reviews/11_Master_Deployment_Strategy_v1.1_Review.md` + `11_..._v1.1_to_v1.2_Delta_Note.md` | v1.0, v1.1 (archived) | c1765f5 |
 
-**ARC-00 candidate v1.4.** `v1.3` remains the **authoritative** Doc 00. `v1.4` is a candidate
-re-baseline registered here under the same rule §3 applies to uncertified newer versions —
-**present, not promoted, not archived**. Per the authority rule above, a version number and
-presence on disk confer no authority; `v1.4` becomes authoritative only on review/certification
-evidence plus the promotion prerequisites in its own §26 (which include re-deriving CFG-01's
-vendored Doc 00 baseline if promotion changes licence status or prohibited-feature scope).
+**ARC-00 promoted to v1.4.** `v1.4` is the authoritative Doc 00, promoted on independent
+adversarial review evidence (five material findings raised and corrected before promotion).
+`v1.3` is superseded and archived at `90_archive/masters/`, unmodified. CFG-01's vendored Doc 00
+baseline and its sealed hash remain valid — v1.4 changed neither the licence status nor the
+seeded prohibited-feature registry; only the constant's version label is stale, recorded as a
+downstream code requirement in Doc 00 §25.3.
 
 **Base-version traceability:** `00–07` chain verified end-to-end via
 `01_masters/reviews/00-07_Base_Version_Delta_Review.md`. `08–11` each carry a v1.1

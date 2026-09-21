@@ -55,9 +55,9 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 - Architecture: **DEC-008** IAM-01 internal session-introspection seam; **DEC-009** shared rate-limit engine; **DEC-010** public perimeter / pre-auth abuse control (four layers); **DEC-011** institutional account hierarchy (Legal Entity → Master Account → Subaccount → Ledger Account, extending CLT-01) — **`LED-01` may not freeze its schema design until it consumes DEC-011**; **DEC-012** AIX Spot execution architecture (Model A external-venue routing ACCEPTED; Model B multi-venue routing accepted as a PRODUCTION-GATED capability; **Model C internal client-to-client matching BLOCKED**; market-depth vs client-order-store vs internal-matching-book terminology; AIX Spot / AIX Exchange product terminology direction; securities-feature gate at the Asset & Instrument Registry). **DEC-012 approves no venue, no production order type and no asset**, and modifies no runtime guard.
 
 ## 7A. Master re-baseline in progress
-- **Doc 00 `v1.4` is a CANDIDATE** (`PROPOSED / DRAFT_FOR_GOVERNANCE_APPROVAL`), derived from `DEC-011`/`DEC-012`. **`v1.3` remains authoritative**; v1.4 is present, not promoted, not archived. Promotion prerequisites: its own §26.
-- Downstream masters and modules it marks **MUST REBASELINE BEFORE IMPLEMENTATION**: Charter, Module Index, SRS, Role & Permission Matrix, Workflow Map, System Rules; `TRD-01`, `LED-01`, `DEP-01`, `PRT-01`. **`LED-01` may not freeze its schema design until it consumes `DEC-011`.** See Doc 00 v1.4 §25.
-- **No code, migration, test, seeded identifier or runtime guard was changed** by the re-baseline.
+- **Doc 00 `v1.4` is APPROVED and authoritative** (four pillars: AIX Spot / OTC / Pay / RWA; Model A accepted, Model B gated, Model C standing prohibition). `v1.3` archived. Review evidence: [`00_..._v1.4_Review.md`](../01_masters/reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md).
+- Downstream **MUST REBASELINE BEFORE IMPLEMENTATION** (Doc 00 §25): Charter, Module Index, SRS, Role & Permission Matrix, Workflow Map, System Rules; `TRD-01`, `LED-01`, `DEP-01`, `PRT-01`. **`LED-01` may not freeze its schema design until it consumes `DEC-011`.**
+- **No code, migration, test, seeded identifier or runtime guard changed.** Deferred code requirement: CFG-01 `DOC00_SOURCE_VERSION` label bump + reseal (Doc 00 §25.3); the sealed hash itself remains valid.
 
 ## 8. Next intended work (only what the repository states)
 - IMP-02: the Turn M-B gate findings (`IMP-02-FIND-010`/`IMP-02-FIND-011`) are closed. Turn M-B is not started, and whether it proceeds is not stated in a single authoritative place. Next work is to be determined by the planner, with a human deciding.
@@ -83,7 +83,6 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 | Deployment / perimeter | [IMP-02 README](../03_implementation/IMP-02/README.md) |
 | UI governance | [04_ui/README.md](../04_ui/README.md) |
 | Conductor task records | [tasks/README.md](../03_implementation/tasks/README.md) |
-| Doc 00 candidate re-baseline (**not authoritative**) | [`00_..._v1.4.md`](../01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md) — PROPOSED; `v1.3` remains authoritative |
 | Platform strategy analysis (no authority over masters) | [05_strategy/](../05_strategy/) — `STR-01` re-baseline analysis and `STR-02` decision pack, both DRAFT. `STR-02`'s `DEC-REQ-A2` → `DEC-011` and its R3/terminology/asset-gate decisions → `DEC-012`; the scope of AIX's Exchange approval, Model C and the R4 securities route remain unapproved |
 
 ## 11. Do not load whole (size guard)

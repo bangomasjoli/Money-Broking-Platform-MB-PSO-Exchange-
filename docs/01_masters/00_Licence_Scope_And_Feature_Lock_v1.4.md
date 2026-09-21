@@ -2,31 +2,32 @@
 document_id: ARC-00
 title: Licence Scope & Feature Lock
 version: v1.4
-document_status: PROPOSED / DRAFT_FOR_GOVERNANCE_APPROVAL
+document_status: APPROVED
 implementation_status: N/A
 module: N/A
 control: Licence scope / feature-lock governance
 owner: Unassigned
 effective_date: UNKNOWN
 last_reviewed: UNKNOWN
-supersedes: prospectively supersedes v1.3 on approval — NOT YET AUTHORITATIVE
+supersedes: v1.0, v1.1, v1.2, v1.3 (archived)
 baseline_commit: f9cfe02
 ---
 
 # 00 Licence Scope and Feature Lock  
 # AIX Institutional Digital Asset & Tokenized Securities Platform
 
-> ## CANDIDATE VERSION — NOT YET AUTHORITATIVE
+> ## APPROVED — AUTHORITATIVE
 >
-> **`v1.3` remains the approved, authoritative Doc 00.** This `v1.4` is a candidate
-> re-baseline, present on disk and **not promoted**, following the register's own precedent for
-> an uncertified newer version (`DOCUMENT_REGISTER.md` §3: *present, not promoted, not
-> archived*). Per the register's authority rule, a version becomes authoritative only when
-> review/certification evidence exists — a version number and presence on disk confer nothing.
+> **This is the authoritative Doc 00.** Promoted following independent adversarial review
+> ([`reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md`](reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md),
+> verdict ACCEPT), which raised five material findings — two capable of unlocking a prohibited
+> capability by implication, one understating a confirmed product pillar, two terminology
+> defects — **all corrected before promotion**.
 >
-> **On approval this document supersedes v1.3 prospectively.** It does **not** rewrite
-> historical facts: statements of what was decided, approved or locked at a past time remain as
-> v1.3 recorded them.
+> **`v1.3` is superseded prospectively and archived intact** at
+> `90_archive/masters/00_Licence_Scope_And_Feature_Lock_v1.3.md`. It is not rewritten: its
+> statements of what was decided, approved or locked at a past time remain accurate for the
+> period they describe.
 >
 > **Derivation.** `v1.4` is derived from `v1.3` by controlled, section-by-section revision — not
 > rewritten from scratch — so **every protection in v1.3 is retained unless this document
@@ -45,11 +46,12 @@ baseline_commit: f9cfe02
 >
 > **Integrity note.** CFG-01 vendors a Doc 00 baseline
 > (`services/cfg1/src/lib/doc00-baseline.ts`, `DOC00_SOURCE_VERSION = "v1.3"`) whose hash is
-> sealed into the database. That seal correctly continues to reference **v1.3**, which remains
-> authoritative — **no integrity break occurs while v1.4 is a candidate.** Re-deriving that
-> constant becomes a mandatory prerequisite **at promotion**, and only if promotion changes
-> licence status or prohibited-feature scope. See §25. **No code, migration, seeded identifier
-> or runtime guard is changed by this document.**
+> sealed into the database. **The seal remains valid after this promotion**: v1.4 changes
+> neither the licence status nor the seeded prohibited-feature registry, so both hash inputs are
+> unchanged. The constant's *version label* is now stale; bumping it would itself change the
+> computed hash and require a reseal migration, so it is recorded as a downstream code
+> requirement (§25.3) rather than actioned here. **No code, migration, seeded identifier or
+> runtime guard is changed by this document.**
 
 ## Document Control
 
@@ -58,8 +60,8 @@ baseline_commit: f9cfe02
 | Document name | 00_Licence_Scope_And_Feature_Lock_v1.4.md |
 | Platform | AIX Institutional Digital Asset & Tokenized Securities Platform |
 | Document type | SDLC Phase 0 / Licence Scope Control |
-| Version | v1.4 — **CANDIDATE** |
-| Status | **PROPOSED / DRAFT_FOR_GOVERNANCE_APPROVAL.** Not accepted; `v1.3` remains authoritative until this version is certified |
+| Version | v1.4 |
+| Status | **APPROVED / AUTHORITATIVE.** Promoted after independent review; supersedes v1.3, which is archived |
 | Prepared for | Development, architecture, compliance, product, and system design |
 | Primary purpose | Lock approved licence scope; separate **product architecture** from **regulatory permission**; enforce agency/intermediary execution through approved external counterparties; prohibit internal client-to-client matching; and define capability gates before SRS or coding |
 | Derived from | `v1.3`; `DEC-011`; `DEC-012`; `STR-01`; `STR-02` (evidence register §0.2) |
@@ -316,9 +318,9 @@ Allowed modules:
 3. Beneficial ownership collection.
 4. AML risk profile.
 5. Source of funds / source of wealth.
-6. OTC/RFQ broking.
-7. MB Spot Broking Terminal.
-8. LP-backed quote request.
+6. **AIX OTC** — institutional RFQ / block broking.
+7. **AIX Spot** — externally-routed agency execution (Model A, §7.3). *(v1.4: renamed from "MB Spot Broking Terminal" per §2A; same regulatory route.)*
+8. Quote and order request to approved external counterparties.
 9. Agency/back-to-back trade booking.
 10. Disclosed brokerage fee calculation.
 11. Client trade history.
@@ -890,11 +892,11 @@ Several seeded feature-lock and configuration identifiers now carry names that r
 ### 10.1 Licence Boundary Rules
 
 1. The platform must operate within approved MB and PSO scope.
-2. Exchange features must remain disabled until Exchange approval is granted.
+2. **Securities / financial-instrument Exchange capability must remain disabled pending the applicable approval** (§12C). **Internal client-to-client matching for Money Broking products is a standing prohibition and is NOT unlocked by any Exchange approval** (§7.7). *(v1.4 correction: v1.3 read "Exchange features must remain disabled until Exchange approval is granted", which conflated the two and implied approval would unlock internal matching — §4.1, §8A.)*
 3. AIX acts as broker/intermediary under the MB module.
 4. AIX must not act as principal, market maker, or proprietary trader under the MB module.
-5. The system must not allow exchange-style order matching before approval.
-6. Spot broking must remain quote-and-confirm, LP-backed, and brokered.
+5. **The system must not allow AIX-operated order matching. Standing prohibition — not conditional on any approval** (§7.7). *(v1.4 correction: v1.3 read "before approval".)*
+6. **Spot must operate as externally-routed agency execution under Model A** (§7.3): client orders recorded in the AIX OMS, pre-trade controlled, and routed to approved external counterparties/venues for execution. *(v1.4 correction: v1.3 mandated quote-and-confirm as the only flow; that predates `DEC-012` and LFSA-DMB-2025 ¶5.5/¶6.4(i), which contemplate recorded, unexecuted, cancellable client orders. Quote-and-confirm remains valid for OTC/RFQ — §10.5.)*
 7. Payment and settlement features must not become custody service unless separately approved.
 8. LP market data must be labelled as external LP market depth, not AIX order book.
 9. AIX revenue must be disclosed brokerage fee, not principal spread.
@@ -990,12 +992,14 @@ Rules:
 13. For executable quote, LP leg must be firm or secured first.
 14. LP failure must not create AIX principal exposure.
 
-### 10.6 MB Spot Broking Rules
+### 10.6 AIX Spot Rules
 
-1. Spot broking MVP must use brokered quote-and-confirm flow.
-2. Spot broking must not operate as a full public exchange.
-3. Client must confirm before trade booking.
-4. Price, fee, and settlement details must be shown before confirmation.
+> **v1.4:** retitled from "MB Spot Broking Rules" (§2A terminology). Rules below are retained from v1.3 except items 1 and 3, corrected for Model A. **No rule is weakened** — items 10, 11 and 13 remain and are reinforced by §7.7.
+
+1. **Spot must use externally-routed agency execution (Model A, §7.3).** Client orders are recorded in the AIX OMS, pass pre-trade controls, and are routed externally for execution. *(v1.4 correction: v1.3 mandated brokered quote-and-confirm as the only flow.)*
+2. Spot must not operate as a full public exchange.
+3. **The client instruction must be affirmative and recorded** before any execution is sought (LFSA-DMB-2025 ¶5.5). Where a quote-and-confirm flow is used, the client must confirm before trade booking. *(v1.4: generalised from v1.3's confirm-only wording to cover a recorded client order.)*
+4. Price, fee, and settlement details must be shown before confirmation or order submission.
 5. Trade confirmation must be generated after booking.
 6. Spot broking request must create audit log.
 7. Spot broking trade must use ledger entries.
@@ -1004,7 +1008,7 @@ Rules:
 10. Client order must not rest inside an AIX order book.
 11. Client order must not match against another AIX client.
 12. LP execution reference must be recorded where applicable.
-13. LP depth must be non-executable and non-clickable.
+13. **External market depth must be non-executable and non-clickable** while `R3-Q2b` is unresolved (§7.2, §23) — fail closed.
 14. Quote expiry must use server-authoritative UTC time.
 15. Quote acceptance after expiry must be blocked.
 16. LP outage disables quoting and execution.
@@ -1327,7 +1331,39 @@ Asset / Instrument Proposed
 
 ---
 
-## 12B. RWA Classification Boundary
+## 12B. AIX RWA — Asset Lifecycle Platform and Classification Boundary
+
+**AIX RWA is a confirmed target product pillar, not a hypothetical feature.** It is a full real-world-asset **tokenisation and asset-lifecycle platform** (§2B). Its *architecture* is in scope for design now; its *capabilities* are individually gated by classification and applicable regulatory approval (§1.A). Treating RWA as a single feature, or as merely a classification gate, would understate it and produce the wrong module architecture downstream.
+
+### 12B.1 Scope — the asset lifecycle AIX RWA must be able to support
+
+Recorded so that downstream documents size the domain correctly. **Architectural scope; not an activation list. No stage is enabled by this document.**
+
+| Stage | Scope |
+|---|---|
+| **Issuer management** | Issuer onboarding; issuer due diligence (KYB / UBO), reusing the shared compliance core |
+| **Asset onboarding** | Asset intake, asset verification and supporting evidence |
+| **Regulatory classification** | The mandatory gate (§12B.2) — **precedes everything downstream** |
+| **Structuring** | Asset/offering structuring within the classified route |
+| **Token configuration** | Token parameters, supply model, transfer-restriction configuration |
+| **Smart-contract orchestration** | Deployment and lifecycle control of the on-chain representation, within the custody constraint below |
+| **Offering** | Offering setup and terms |
+| **Subscription** | Investor subscription intake |
+| **Investor eligibility** | Eligibility determination, reusing client classification and compliance status |
+| **Allocation** | Allocation of subscribed amounts |
+| **Issuance** | Issuance and initial holder recording |
+| **Holder registry** | Holder / investor records over the asset's life |
+| **Transfers and restrictions** | Transfer processing with enforced transfer restrictions |
+| **Servicing** | Ongoing asset servicing |
+| **Corporate actions** | Corporate-action processing |
+| **Distributions** | Distributions to holders |
+| **Redemption** | Redemption and retirement |
+| **Reporting** | Issuer, holder and regulatory reporting |
+| **Secondary-market eligibility** | Whether, and by which route, secondary trading is permitted — **gated, see §12B.2** |
+
+**Shared-core reuse is mandatory.** RWA must not re-implement identity, KYB/UBO, AML, the account hierarchy (§2C), the Asset & Instrument Registry (§12A), ledger, settlement, reconciliation or audit. It consumes them.
+
+### 12B.2 Classification boundary
 
 **`RWA` does not mean `security`.** Asserting that equivalence would be wrong in both directions: it would block legitimate non-security tokenisation, and it would obscure the cases that genuinely are securities.
 
@@ -1350,7 +1386,9 @@ RWA Proposal
 | **Non-security** | **Architecturally in scope; not activated.** Whether non-security RWA tokens may be issued under existing licences is unresolved — `R4-Q6`; whether their secondary trading falls under MB, Exchange or neither is unresolved — `R4-Q7` |
 | **Unresolved classification** | **HOLD / DISABLED** — fail closed (§21) |
 
-**`R4-Q1` … `R4-Q7` remain unresolved** (§23). This document establishes the **lock architecture** without pretending those questions are answered. AIX RWA is a strategic pillar whose architecture may be designed; **no RWA issuance, listing or trading capability is activated by this document.**
+**`R4-Q1` … `R4-Q7` remain unresolved** (§23). This document establishes the **lock architecture** without pretending those questions are answered.
+
+**The distinction that matters:** AIX RWA's **scope is confirmed** (§12B.1) and its architecture is to be designed and owned by real modules. **No RWA issuance, offering, holder-registry, distribution, redemption, listing or trading capability is activated by this document** — each passes classification (§12B.2) and the §21 gates. Designing the lifecycle is not operating it.
 
 **Custody constraint carried forward:** self-custody remains prohibited and third-party custody required (§8.2), which constrains any future RWA token custody design (`R4-Q5`).
 
@@ -1999,17 +2037,17 @@ No capability reaches production until its own gates pass. These are in addition
 
 ## 26. Change Control
 
-**Status of this document: PROPOSED / DRAFT_FOR_GOVERNANCE_APPROVAL. `v1.3` remains authoritative.**
+**Status of this document: APPROVED / AUTHORITATIVE.** `v1.3` is superseded and archived.
 
-**Promotion prerequisites** — all must be satisfied before `v1.4` becomes authoritative:
+**Promotion record** — all prerequisites satisfied:
 
-| # | Prerequisite |
-|---|---|
-| 1 | Governance review and approval of this candidate |
-| 2 | Review/certification evidence recorded per the register's authority rule (a `*_Review.md` or `*_Delta_Note.md`) |
-| 3 | `DOCUMENT_REGISTER.md` updated to promote `v1.4` and archive `v1.3` to `90_archive/masters/` |
-| 4 | **CFG-01 vendored Doc 00 baseline re-derived** — `DOC00_SOURCE_VERSION` bumped and the seal recomputed — **if and only if** promotion changes licence status or prohibited-feature scope. A seeded-registry migration may be required |
-| 5 | Downstream `MUST REBASELINE` documents scheduled (§25) |
+| # | Prerequisite | Status |
+|---|---|---|
+| 1 | Governance review and approval | **DONE** — independent adversarial review, verdict ACCEPT, five findings corrected |
+| 2 | Review/certification evidence per the register's authority rule | **DONE** — `reviews/00_Licence_Scope_And_Feature_Lock_v1.4_Review.md` |
+| 3 | `DOCUMENT_REGISTER.md` updated; `v1.3` archived to `90_archive/masters/` | **DONE** |
+| 4 | CFG-01 vendored Doc 00 baseline re-derived **if** licence status or prohibited-feature scope changed | **NOT REQUIRED** — neither changed; the sealed hash remains correct. Version-label bump deferred as a code requirement (§25.3) |
+| 5 | Downstream `MUST REBASELINE` documents scheduled (§25) | **IN PROGRESS** — Charter and Module Index follow immediately |
 
 **On approval this version supersedes v1.3 prospectively.** It does not rewrite historical facts: prior statements of what was approved or locked at a past time remain accurate for the period they describe.
 

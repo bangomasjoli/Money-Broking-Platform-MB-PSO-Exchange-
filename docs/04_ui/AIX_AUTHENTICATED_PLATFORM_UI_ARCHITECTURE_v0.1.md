@@ -6592,3 +6592,244 @@ health word, "all permissions", or a checkmark. **Regression:** all 15 other pag
 program); no identity fixture, permission matrix, inherited permission, mutation control, score or filter; no fetch, auth
 or mutation; **no change to any backend service, migration, grant, `OPEN_FINDINGS.md`, the adjudication, the public
 homepage, the Approval Queue or any Ops or Client page**. Verified against baseline `c04d5bd`.
+
+## 55. UI Phase 2T — Admin / Feature Flags / Configuration (`B`-classified Admin page)
+
+**Status: IMPLEMENTED / VISUAL QA DEFERRED.** The seventh real page on the Admin / Compliance surface, at
+`/admin/feature-flags-configuration` (the nav label's slug — the convention every Ops and Admin route set). Baseline
+**`994c845`** (`main` = `origin/main`, working tree clean before). A **read-only view of the governed configuration and
+feature-flag model**, not a feature-toggle console: no Enable, Disable, Change value, Override or Save control, **no switch — not
+even a disabled one, because a disabled switch still implies an editable control model** — no input, no JSON editor, no link.
+Configuration controls availability, not authority.
+
+### 55.1 Sources inspected (CFG-01 first, then every place a flag or setting actually lives)
+
+`services/cfg1` (all routes, `lib/decision.ts`, `lib/integrity-seal.ts`, `lib/doc00-baseline.ts`, `lib/iam2-client.ts`,
+`lib/kill-switch.ts`, `config.ts`); migrations 014–019 and 066–070; `infra/grants/cfg1_runtime_grants.sql`;
+`packages/foundation/src/no-exchange.ts`; CLT-01's `cfg1-client.ts`; every boolean environment switch across
+`services/**`; WLT-01's config loader (DEC-010 L3); `docs/DECISION_LOG.md` DEC-009/DEC-010; `docs/OPEN_FINDINGS.md`; the CFG-01
+implementation notes (§12–§16) and blueprint v1.1 API specification; `docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.3.md`
+§3/§9. Earlier UI notes were used as pointers only.
+
+### 55.2 Configuration model map (mandatory — every row re-verified from source this turn)
+
+`CONCEPT → SOURCE → READABLE? → SAFE FOR ADMIN? → MUTABLE? → APPROVAL REQUIRED? → UI TREATMENT`
+
+| Concept | Source (model / route) | Readable? | Safe for Admin? | Mutable? | Approval required? | UI treatment |
+|---|---|---|---|---|---|---|
+| **Feature flag definition** | `cfg1.feature` (`feature_code`, `feature_name`, `current_state` CHECK `enabled`/`disabled`/`locked`/`prohibited`, soft `licence_profile_id`, `version`). **Created empty; no migration seeds a row** (approved decision #5; 014, 015 headers) | **No route** — `GET /cfg1/features` and `/{code}` are specified and unbuilt; `SELECT` is granted | Code, name and state are safe | **Yes, internally**: `feature-changes/request` then `/apply` (only `enabled`/`disabled` reachable; `locked`/`prohibited` are reserved values no code sets) | Apply needs an approved IAM-02 decision token (`cfg1.feature.enable`/`disable`, `requires_approval`); the request step needs `cfg1.feature.change_request` (unflagged, so it needs a real role grant) | **None seeded, stated.** Three referenced keys shown as "Not defined" |
+| **Feature flag current / effective state** | `feature.current_state`, applied by `evaluateFeature` (`lib/decision.ts`): integrity check → prohibited registry → kill switch → feature row (absent = `unknown_fail_closed`) → stale version → state | Only `POST /internal/cfg1/features/evaluate`, which **writes a decision-log row and audit event on every call** and may issue a token — not a read | Decision and reason code are safe | Not directly | n/a | Effective shown only where the source decides it: locks → denied (step 1); the referenced keys → denied (unknown, fails closed) |
+| **Feature flag default** | `feature.current_state DEFAULT 'disabled'`; Doc 00 §9.3 rules 11–12 (default disabled; unknown fails closed) | n/a | Yes | n/a | n/a | Stated in the state vocabulary. **"Default Off" is used only for the environment switches**, where a default is real |
+| **Licence-bound feature** | `feature.licence_profile_id` (soft reference, no FK); `cfg1.licence_profile` (3 rows); `cfg1.prohibited_feature` (30 rows) | **No route** (`GET /cfg1/licence-profiles`, `/prohibited-features` specified, unbuilt) | Codes, statuses, reasons safe; `config_hash`, `evidence_ref` and seal hashes are Restricted (`16_Data_Classification`) | Licence status: yes, via `licence-profile-changes` (`approved`/`suspended`/`revoked`). **Registry: no** — runtime role is `SELECT`-only and no route writes it | Licence: request then apply with an approved decision token; `activate` also flagged for step-up | 3 licence profiles + 30 locks, shown as governed controls |
+| **Configuration key / value** | **No generic key/value store exists in CFG-01** — no config table, no setting column | n/a | n/a | n/a | n/a | **No key/value browser** is possible or shown; "configuration" means the nine real domains |
+| **Configuration scope** | `config_integrity_seal.config_scope` (`licence_profile` / `prohibited_registry` / `feature`) is an **integrity** scope, not a client or tenant scope. `evaluate` accepts environment / client id / client class as *context*, but `feature` has **no environment-scope, client-class or dependency column** — decision steps 4, 5, 7 are documented "STRUCTURALLY N/A" | n/a | n/a | n/a | n/a | **No scope is invented**; no per-client or per-environment flag state appears |
+| **Environment-derived setting** | Service config loaders (`config.ts`), read at process start | **No route** | Mostly not (tokens, URLs, keys) | Deployment change only | Not IAM-02 | One domain row, "Environment", never presented as database configuration; three capability switches by key and default only |
+| **Secret / sensitive configuration** | `CFG1_INTERNAL_SERVICE_TOKEN`, `IAM02_INTERNAL_SERVICE_TOKEN`, `IAM02_BASE_URL`, `DATABASE_URL`, WLT-01's perimeter token / provider-receipt secrets / fiat encryption key, seal and config hashes, decision tokens | No | **Never** | No | No | **Omitted, not masked** — a single generic "Not listed — includes credentials, keys and endpoints" row; no name, value or "value withheld" placeholder |
+| **Change approval** | IAM-02 approval + decision token bound to requester and exact payload (feature apply, licence apply, kill-switch deactivation); **kill-switch activation is one permission-gated step** | No route | Facts are safe | — | See §55.7 | Read-only change-control facts; no button |
+| **Change history / version** | `feature_state_change`, `licence_profile_change`, `feature_version` (append-only snapshots), `kill_switch_event`, superseded `config_integrity_seal` rows | **No route lists or returns them** (`cfg1.config_change.read` is defined and consumed by no code) | Would need a projection | No (append-only) | — | **None shown; no audit timeline.** Stated as unreadable; audit belongs to Audit / Sensitive Access |
+| **Perimeter / public-surface flag** | `WLT1_PUBLIC_SURFACE_ENABLED` (environment; DEC-010 L3): default off, enabled only by exact `"true"`; when off the six public routes are **not registered at all**; when on, a separate perimeter credential is required | No route | Key, default and meaning are safe; value unreadable | Deployment change | No | Shown by key: **Default Off, configured / effective "Not readable"**; "controls exposure, not authorization"; not production readiness |
+| **Kill switch** | `cfg1.kill_switch` (feature-scoped; no global kill switch) | No route (`cfg1.kill_switch.read` deferred) | Safe | Activate (one step) / deactivate (request + apply) | Deactivation only | "None seeded"; effect stated |
+| **Integrity seal** | `cfg1.config_integrity_seal`: two rows seeded; verified before every decision (licence + registry scopes) | Readiness route returns scope pass/fail only, by design | Hashes never | Reseal on apply | — | Stated as a lock mechanism; hashes never shown |
+| **Rate-limit policy** | `foundation.rate_limit_policy`: 4 WLT-01 rows (069, DEC-009); runtime role **cannot** write | No route | Numeric thresholds are security-control parameters | Governance migration only | — | Domain row; **limits withheld** |
+| **Wallet limit policy** | `wlt1.destination_limit_profile` (066): immutable versioned; runtime `SELECT`-only; none seeded | No route | Amount thresholds | Schema-owner provisioning only | — | Domain row; thresholds withheld; no amount shown |
+| **Code guards** | `assertNoExchangeRuntime` (run at boot by all nine services); vendored Doc 00 v1.3 baseline (`doc00-baseline.ts`) | n/a | Yes | Code change and release | — | Domain row + "startup route scan" lock |
+
+### 55.3 The mandatory scope decision (nine questions, each answered from source)
+
+1. **Feature flags that exist — none as ordinary flags.** `cfg1.feature` is empty. The real identifiers are: the **30**
+   prohibited-registry keys (governed locks), the **three** ordinary keys CLT-01's onboarding gate evaluates
+   (`onboarding.institutional`, `.hnwi`, `.professional` — no record, so denied), `onboarding.retail_default` (which *is* a registry
+   lock and is where CLT-01 maps retail and unknown), and **three** environment switches. **Doc 00 §9.1/§9.2's `feature_*` names are
+   documentation identifiers, not implemented keys, and are not shown as flags.**
+2. **Persisted vs environment-derived:** licence profile, registry, feature registry, kill switches, rate-limit policy and wallet
+   limit policy are database; the three capability switches and all service settings are environment; the route scan and the Doc 00
+   baseline are code.
+3. **Safe to show:** registry keys, reasons and references; licence statuses; the switch keys and defaults; domain facts.
+4. **Secret / sensitive, never shown:** credentials, tokens, keys, endpoints, connection strings, seal / config hashes, decision
+   tokens, numeric rate-limit thresholds, wallet limit amounts, and every environment *value*.
+5. **Changes that require IAM-02 approval:** feature enable / disable (apply), licence-profile activate / suspend / revoke (apply),
+   kill-switch deactivation (apply). **Not** the request steps and **not** kill-switch activation, which are permission-gated only.
+6. **A route that lists flags / config — none.** CFG-01 has nine `POST` routes and two `GET`s (health, readiness — scope pass/fail
+   only). The specified `GET /cfg1/features`, `/features/{code}`, `/licence-profiles`, `/prohibited-features` are unbuilt.
+7. **A writable configuration route — yes, internal only:** `feature-changes` (request / apply), `licence-profile-changes`
+   (request / apply), `kill-switches` (activate / deactivation request / deactivation apply). All are `requireInternal`-guarded,
+   take the acting user in the request body, and are not callable from an admin browser session.
+8. **Can flags broaden licence scope — no, by four independent mechanisms.** The registry is `SELECT`-only to the runtime and no
+   route clears an entry; the change-request guard refuses any registry key and any `exchange.`-prefixed key at request *and* apply;
+   every service refuses to boot if a route path matches a prohibited Exchange fragment, whatever the database holds; and the
+   integrity seal denies every decision if the registry or licence rows drift from the vendored baseline. **Setting the EXCHANGE
+   licence status to `approved` through the governed workflow does not enable any `exchange.*` feature** (`licence-changes.ts`
+   header; a dedicated integration test).
+9. **Hard locks vs toggles — both exist.** The 30 registry entries are hard locks (25 permanent; **5** "until formal Exchange
+   licence approval" — the five Exchange-pending codes, whereas `exchange.market_maker` and `exchange.principal_dealing` are
+   permanent by design). Ordinary `feature` rows are the only toggles, and none exists.
+
+### 55.4 State semantics — DEFINED / DEFAULT / CONFIGURED / EFFECTIVE / LOCKED
+
+The five words are defined once at the top of the page and applied per item; they are never collapsed:
+
+| Item | Defined | Default | Configured | Effective | Locked |
+|---|---|---|---|---|---|
+| Governance lock (×30) | Yes — active registry entry | Not applicable (not a toggle) | No — no route writes the registry | **Denied**, reason `prohibited` or `exchange_pending_locked` | **Governance Locked** — permanent, or until Exchange approval |
+| Referenced onboarding feature (×3) | **No** — no record | (a feature would default to disabled) | No | **Denied — unknown feature, fails closed** | No — an ordinary flag |
+| Capability switch (×3) | Yes — read by a config loader | **Default Off** | **Not readable** | **Not readable** | No — set by the deployment |
+
+State labels used are only those the source backs: **Governance Locked**, **Default Off**, **Not defined**, **Not readable**,
+**Denied**. "Enabled", "Disabled" and "Unavailable in Current Scope" are not used because no ordinary flag exists to carry them, and
+"Safe", "Compliant" and "Approved" are used only where they are an actual state (the licence profiles' `approved`).
+
+### 55.5 Composition — four sections, one workspace
+
+Section-based, in the brief's order, with **List + Detail only where it earns its place**:
+
+1. **Feature Availability** — the state vocabulary; one line of counts (`0 ordinary feature records seeded · 30 governance locks ·
+   3 licence profiles (2 approved, 1 pending) · 0 kill switches seeded · 3 capability switches, all off by default` — plain text, no
+   score or health mark); the provenance sentence; and the three referenced ordinary keys (a table at `lg:`, blocks below).
+2. **Configuration Domains** — nine domains × owner, **source class** (database / environment / code), how it changes, what is
+   seeded; then the three capability switches.
+3. **Licence / Governance Locks** — the three licence profiles, the four layered locks, and the **List + Detail workspace over the 30
+   locks** (§55.6).
+4. **Configuration Control Boundary** — availability-not-authority statements, change control, and the `IAM2-FIND-002` / `003`
+   pointers.
+
+### 55.6 The governance-lock workspace
+
+A `COMPACT` 40px table (`≥768px`) with columns **Feature · Governance lock · Reference** — the human-readable name, the real
+`applies_until` (permanent / until Exchange approval), and the governing Doc 00 / Master System Rule reference. **There is no State
+or Source column: both are identical on all 30 rows** (every entry is Governance Locked; every source is the sealed registry), and
+30 identical cells would be noise, so the state is carried by the column header, a lock icon on every row, the count line ("Every
+entry is Governance Locked") and the detail's State section. One filter — **Lock** (all / permanent / until Exchange approval) —
+because it is the only real field that varies; **no topic filter** (the registry has no category field and a UI-invented taxonomy would
+pose as backend truth); **no search**. Detail: Feature Summary, State (the five words), Configuration Source, Scope / Licence Boundary
+(the registry's own statement and reference), Change Control, Control Notes. `label` is the only authored field; statement and
+reference are the registry's `prohibition_reason` split at its trailing parenthetical, **checked programmatically to rejoin
+byte-for-byte for all 30** and to agree in key, order and duration with both `doc00-baseline.ts` and migration 014 (the two copies
+agree with each other too).
+
+### 55.7 Change control, and the IAM2-FIND-002 / 003 boundary
+
+Stated as read-only facts, re-verified from `feature-changes.ts`, `licence-changes.ts` and `kill-switches.ts`: feature and licence
+changes are a request then an apply bound to an approved IAM-02 decision token; a kill switch activates in one permission-gated
+step and deactivates through a request and an approval. **The page does not claim that only authorized approvers approve a change** —
+`IAM2-FIND-002`: the approval routes check no role or permission for the approver — **and does not claim approval is dual or
+stepped-up** — `IAM2-FIND-003`: no approval policy is seeded, so each approval takes the defaults (one approval, no step-up, 24 h);
+`cfg1.licence_profile.activate`'s step-up flag is a catalogue flag, not a policy. Both findings are shown by identifier, severity and
+status **in text**, unchanged and unfixed. **Consistent with `UI Phase 2R` and `2S`**: no enforced approver role, no seeded policy, no
+seeded grant.
+
+### 55.8 Observations (recorded, not registered as findings, not fixed — no severity assigned)
+
+1. **REVIEW REQUIRED — flag coverage vs Doc 00 §9.3.** Doc 00 §9.3 requires flags to be stored in the database and enforced by a
+   backend guard. Implemented: the licence-lock baseline and one consumer — **only CLT-01 calls CFG-01's `evaluate`** (KYC-01 and AML-01
+   mention the client only in comments). `cfg1.feature` is empty, `feature_gate_mapping` and the ~25 ordinary MVP flags Doc 00 §9.1
+   lists are deferred, and until an operator runs the governed workflow CLT-01's institutional / HNWI / professional onboarding gates
+   return `unknown_fail_closed` (CLT-01 notes confirm this). This is a documented deferral in module notes, not a register entry — the
+   same visibility question `UI Phase 2S` carried (`UI-04` §54.11).
+2. **REVIEW REQUIRED — operational readiness dependency (derived).** With no `role_permission` rows, none of the four *starting*
+   steps — `cfg1.feature.change_request`, `cfg1.licence_profile.change_request`, `cfg1.kill_switch.activate`,
+   `cfg1.kill_switch.deactivate_request` — can pass its own permission check (all four are unflagged, so each needs a real `allow`), and
+   the apply routes are unreachable without a change row. **So no configuration change, including an emergency kill-switch activation,
+   can currently be started.** This is the fail-closed consequence of the role-grant provisioning that remediating `IAM2-FIND-002`
+   already requires; it is recorded so that provisioning is not sequenced without it. Conversely, the *apply* routes' baseline check
+   passes `approval_required` / `step_up_required` for any actor (by design, documented in `lib/iam2-client.ts`), leaving the approved
+   decision token as the sole gate — which is `IAM2-FIND-002`'s own subject.
+3. **OBSERVATION — deny-list model.** Structural blocks are registry membership plus the `exchange.` prefix. A prohibited-scope concept
+   under a key that is neither in the 30-code registry nor Exchange-prefixed could be created through the approval-bound workflow;
+   `lib/decision.ts` states the prefix guard is a backstop against a *future Exchange-shaped* code. By design, and mitigated by the
+   approval step, but a property of a deny list rather than an allow list.
+4. **CONTEXT (existing carry-forward, not new).** A licence-profile status change away from the Doc 00 baseline halts **all** feature
+   decisions until the vendored baseline is updated and redeployed (CFG-01 notes §14.15) — so flipping EXCHANGE to `approved` enables
+   nothing and instead trips the integrity check. The notes already ask for an operator runbook.
+
+### 55.9 Backend gaps for a live Admin configuration page (each confirmed in source; none fixed)
+
+1. **A safe flag-list projection** — `GET /cfg1/features` (spec §3.1) unbuilt; `SELECT` already granted.
+2. **A feature detail projection** — `GET /cfg1/features/{feature_code}` (§3.2) unbuilt.
+3. **A prohibited-registry projection** — `GET /cfg1/prohibited-features` (§6.1) unbuilt; `SELECT` granted.
+4. **A licence-profile projection** — `GET /cfg1/licence-profiles` (§5.1) unbuilt; the row carries Restricted fields, so it needs a
+   read guard — `cfg1.config_change.read` is defined and **consumed by no code**.
+5. **An effective-value projection** — only `POST evaluate` exists (a decision-log write and audit event per call, possibly a token).
+6. **A configuration-source projection** — none; source classes exist only in code and comments.
+7. **A safe configuration-detail projection** — none.
+8. **A change-history projection** — `feature_state_change`, `licence_profile_change`, `feature_version`, `kill_switch_event` and
+   superseded seals are written, and no route lists or returns them (the apply routes read one change row by its own id, nothing more); blueprint evidence exports (§9) unbuilt.
+9. **Role-aware Admin read authorization** — routes are internal-token only, `caller_module` is declared not authenticated
+   (carry-forward), and `requested_by` is a body field; there is no browser session.
+10. **A governed config-write API for a browser** — the internal routes exist but would need a session-to-actor binding.
+11. **Approval-bound mutation that is actually enforced** — exists, but rests on `IAM2-FIND-002` / `003`, and needs `role_permission`
+    provisioning before any starting step can pass (§55.8 #2).
+12. **Feature-lock enforcement visibility** — `feature_decision_log` is written on every evaluation, and no route returns it.
+13. **Scope-lock metadata** — `feature` has no environment, client-class or dependency columns (decision steps 4, 5, 7 structurally N/A).
+14. **Configuration versioning read** — `feature.version` and seal `config_version` exist; no route reads them.
+15. **Environment-value visibility** — no route reports effective environment values; any such endpoint would have to exclude secrets.
+16. **Kill-switch read** (`cfg1.kill_switch.read`) — deferred per CFG-01 notes.
+17. **Ordinary-feature catalogue seeding and `feature_gate_mapping`** — deferred; only CLT-01 consumes `evaluate`.
+18. **Exchange activation ceremony, deployment gate and reconciliation** — spec §5.4–5.7, §7, §8; none built.
+19. **Rate-limit and wallet-limit policy reads** — no route for either.
+20. **Safe secret metadata** — none, and not wanted: the page omits sensitive configuration rather than describing it.
+
+### 55.10 Density, layout and responsive reasoning (structural, not rendered)
+
+Content width: **~976px at 1280 and at 1024, ~720px at 768, ~398px at 430, ~288px at 320** (~1136px at 1440). The workspace
+splits at `lg:` — the same ~976px at both ends, so the brief's `≥1280` and `1024–1279` cases resolve identically, as in `2J`/`2O`–`2R`.
+
+| Viewport | Layout |
+|---|---|
+| `≥1280px` | Five-across state vocabulary (~176px each). Referenced-feature and domain tables (five auto-sized columns in ~976px, wrapped text). **Workspace: persistent split — list (~623px) + 320px detail panel**, single leading `border-l`. Feature ~230px + Governance lock ~200px fit ~623px; Reference does not appear (it is in the detail) |
+| `1024–1279px` | Identical (same ~976px content width) |
+| `768–1023px` | Vocabulary two-across; **tables become stacked blocks** below `lg:` (a 6.5rem label column and a ~600px value column); the workspace list is **full width with a `Sheet` detail**; Reference appears from a 896px container |
+| `<768px` | Vocabulary single column; blocks with a 104px label and ~170px value column at 288px (~28 characters per line, so the longest cell wraps to three or four lines); the lock list is a compact separated list (name; "Governance Locked · duration") with a `Sheet` detail |
+
+No horizontal scroll at any width; no configuration matrix. **Visual risks for the consolidated pass (estimates, not measurements):**
+the domain table's five auto-sized columns are the tightest fit; the page is long (four sections, 30 rows) and the tablet stacked blocks are
+sparse; `max-w-prose` at `text-xs` (~430px) leaves the right of each text section empty on wide desktop; and the "Feature" column's
+longest name ("AIX market depth as an exchange") is the width assumption behind the two-column list.
+
+### 55.11 Accessibility
+
+One `<h1>`; five `<h2>` (four sections plus the desktop detail's lock name, as in `2R`); `<h3>` sections inside the detail and each
+section; `<h4>` on stacked blocks (in the accessibility tree only below `lg:`). Real `<table>`s with labels and column headers
+(`scope="row"` on the row header); real `<ul>`/`<dl>`. **No colour-only state** — every state is a word (Governance Locked, Not defined,
+Not readable, Default Off, Denied), a lock icon accompanies the lock column and is `aria-hidden`, and findings read `HIGH · OPEN`.
+Selection is a real `<button>` per row whose accessible name begins with the visible label (label-in-name, checked for all 30);
+`aria-current` marks the open lock; the filter is a labelled `Select`; the count is `aria-live="polite"`; the `Sheet` keeps its title and
+description; DOM order is availability, domains, locks (filter, count, list, detail), boundary. **No fake control** — no switch, toggle,
+input, form, save, or link in `<main>`; the buttons are the row-selection buttons and the filter's `Select`. **Rendered focus and keyboard
+behaviour was not exercised** (visual QA deferred).
+
+### 55.12 Shared components, shadcn and MCP
+
+- **Created (page-specific, named by role):** `FeatureAvailability`, `ConfigDomains`, `GovernanceLocksSection`,
+  `GovernanceLockWorkspace`, `GovernanceLockTable`, `GovernanceLockDetail`, `ConfigControlBoundary`, `feature-config-data.ts`. Only the
+  workspace and table are Client Components (local UI state only); the detail carries no directive and is imported into that subtree;
+  everything else renders on the server.
+- **Reused:** `PageHeader`, `DemoDisclosure`, `useIsLgUp`, and the existing shadcn `Table`, `Select`, `Sheet`, `Button`, `Label`. **No
+  primitive was added, regenerated or modified**; the REVIEW LATER `Select` / `Sheet` / `Table` were used unchanged. The official MCP was
+  not needed. **No package or lockfile change.** `lucide-react`'s `Lock` icon is already a dependency.
+- **Modified (three existing code files, narrowly):** `nav-data.ts` (one `href` and a comment), `admin-compliance-data.ts` (one Review Areas
+  `href`), and `app/admin/layout.tsx` (comment and `<meta>` description) — plus the five documentation records.
+
+### 55.13 Boundaries, verification and what this phase did not do
+
+**Not C-classified:** no Reporting, no Incidents / Exceptions. **Financial / Exchange boundary:** no balance, PnL, market data, trading
+figure, order-book depth or settlement amount. Exchange-related entries appear **only as locked scope boundaries** — "Until Exchange
+approval" — and are never described as available or operational; no rate threshold or limit amount is shown. **Not absorbed:** Audit /
+Sensitive Access (inert; no audit history shown). **Phase 2N:** Review Areas' Feature Flags / Configuration is now an "Interface preview"
+link, with no configuration-health count. **Phase 2S:** configuration is not authorization; visible navigation is not a permission grant;
+an enabled feature is not an authorized user. No fetch, server action, auth, permission or mutation code anywhere.
+
+**Verified:** `typecheck:web`, `lint:web` (no output) and `build:web` pass; **19** static pages (18 + the new route). Programmatic
+cross-checks: the page's 30 locks against `doc00-baseline.ts` **and** migration 014 (keys, order, statement + reference rejoin, duration
+mapping — all match, and the two source copies agree); the three referenced keys against CLT-01's class mapping; the three switch keys
+and their exact-`"true"` parsing against the three config loaders; the licence seeds. Rendered-HTML inspection: one `<h1>`, the sections,
+three labelled tables, **zero switches, inputs, forms and links**, the active nav item, Review Areas' new link. A scratch server-side render
+(deleted afterwards) confirmed the detail for an Exchange-pending lock, a permanent Exchange-namespace lock and an ordinary permanent lock.
+A forbidden-claim scan found none of: a toggle or edit control, "only authorised approvers", asserted dual approval, a secret or URL value, a
+score or percentage, an "operational" implication, a checkmark. **Two of my own checks first reported false positives** (a `disabled` pattern
+matched the *words* "enabled and disabled"; broad `secret`/`balance` patterns matched lock names such as "Direct balance edit") — re-checked
+and recorded as corrected. **Regression:** all 16 other page routes return 200 over HTTP against the production build.
+
+**Not done, by design:** no rendered inspection, screenshot or interaction (deferred to the consolidated visual-QA program); no switch,
+toggle, editor, value, history, score or search; no fetch, auth or mutation; **no change to any backend service, migration, grant,
+`OPEN_FINDINGS.md`, the adjudication, the public homepage, the Approval Queue, Users / Roles / Permissions, or any Ops or Client page**.
+Verified against baseline `994c845`.

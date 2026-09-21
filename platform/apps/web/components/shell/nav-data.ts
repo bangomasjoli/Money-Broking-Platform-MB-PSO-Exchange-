@@ -131,6 +131,12 @@ export const OPS_NAV: NavItem[] = [
  * of them). A read-only view of the authorization model that keeps DEFINED, ASSIGNED, EFFECTIVE and ENFORCED
  * apart (`UI-04` §54), not a user-management console. The two remaining rows (Feature Flags / Configuration,
  * Audit / Sensitive Access) stay inert. Label preserved exactly.
+ *
+ * `UI Phase 2T`: "Feature Flags / Configuration" gains a real `href` (`/admin/feature-flags-configuration` — the label's
+ * slug) — `B`-classified (real `CFG-01` licence-profile, prohibited-feature, feature and kill-switch models; every route
+ * `requireInternal`-guarded, no list or read route). A read-only view of governed availability and configuration
+ * boundaries that keeps DEFINED, DEFAULT, CONFIGURED, EFFECTIVE and LOCKED apart and never presents a flag as a way around the
+ * licence scope (`UI-04` §55) — not a toggle console. Only "Audit / Sensitive Access" remains inert. Label preserved exactly.
  */
 export const ADMIN_NAV: NavItem[] = [
   { label: "Compliance Overview", href: "/admin", icon: "layout-grid" },
@@ -139,7 +145,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "EDD / Review", href: "/admin/edd-review", icon: "search-check" },
   { label: "Approval Queue", href: "/admin/approval-queue", icon: "list-checks" },
   { label: "Users / Roles / Permissions", href: "/admin/users-roles-permissions", icon: "users" },
-  { label: "Feature Flags / Configuration", icon: "sliders-horizontal" },
+  { label: "Feature Flags / Configuration", href: "/admin/feature-flags-configuration", icon: "sliders-horizontal" },
   { label: "Audit / Sensitive Access", icon: "history" },
 ];
 

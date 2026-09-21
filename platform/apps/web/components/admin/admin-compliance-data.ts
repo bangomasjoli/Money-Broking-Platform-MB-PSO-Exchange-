@@ -1,6 +1,7 @@
 import { AML_MONITORING_HREF, subjectsNeedingAttention } from "@/components/admin/aml-monitoring-data";
 import { APPROVAL_QUEUE_HREF } from "@/components/admin/approval-oversight-data";
 import { EDD_REVIEW_HREF, REVIEW_ITEMS } from "@/components/admin/edd-review-data";
+import { FEATURE_FLAGS_CONFIGURATION_HREF } from "@/components/admin/feature-config-data";
 import { USERS_ROLES_PERMISSIONS_HREF } from "@/components/admin/iam-model-data";
 import {
   CHECKLIST_STAFF_LABELS,
@@ -277,7 +278,7 @@ export interface ReviewArea {
   /** Exact governed label — identical to `ADMIN_NAV`. */
   label: string;
   owner: string;
-  /** Present only once the area's page exists (`UI Phase 2O` was the first, `2P` the second, `2Q` the third, `2R` the fourth, `2S` the fifth) — otherwise "planned". */
+  /** Present only once the area's page exists (`UI Phase 2O` was the first, `2P` the second, `2Q` the third, `2R` the fourth, `2S` the fifth, `2T` the sixth) — otherwise "planned". */
   href?: string;
   /** A capability caveat shown beside the status, for a page whose backend is only partly there. */
   note?: string;
@@ -289,6 +290,6 @@ export const REVIEW_AREAS: ReviewArea[] = [
   { label: "EDD / Review", owner: "KYC-01", href: EDD_REVIEW_HREF, note: "EDD backend not implemented" },
   { label: "Approval Queue", owner: "IAM-02", href: APPROVAL_QUEUE_HREF },
   { label: "Users / Roles / Permissions", owner: "IAM-02 / IAM-01", href: USERS_ROLES_PERMISSIONS_HREF },
-  { label: "Feature Flags / Configuration", owner: "CFG-01" },
+  { label: "Feature Flags / Configuration", owner: "CFG-01", href: FEATURE_FLAGS_CONFIGURATION_HREF },
   { label: "Audit / Sensitive Access", owner: "SEC-01" },
 ];

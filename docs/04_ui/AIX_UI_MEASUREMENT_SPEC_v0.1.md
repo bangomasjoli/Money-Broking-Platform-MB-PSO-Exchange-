@@ -2866,3 +2866,36 @@ columns share ~976px, with the longest unbreakable strings ("Segregation-of-duti
 "IAM2-FIND-002)" ~90px) well inside any column's floor; the widest text cell is estimated at three lines. **These are
 glyph-width estimates, not measurements** — the first visual-QA check, together with the sparse 768–1023px stacked blocks
 and the ~430px prose measure beside a ~976px content width. No shadcn primitive was added or changed.
+
+
+## UI Phase 2T — Feature Flags / Configuration Geometry
+
+Values used by `/admin/feature-flags-configuration` (`UI-04` §55). Four sections, one of which is a List + Detail workspace (over the 30
+governance locks); **every value is a reuse of an existing token or of `UI Phase 2P`/`2Q`/`2R`/`2S`'s boundary and workspace values**, and
+the only new measurements are the five-across vocabulary grid, the label column of the stacked blocks, and the lock table's column budget.
+Reasoned by arithmetic; **not rendered**.
+
+| Element | Value | Note |
+|---|---|---|
+| Section rhythm | `gap-8` = 32px between sections; every section after the first carries `border-t` + `pt-8` (1px + 32px) | Reuse of `UI Phase 2S` |
+| Section heading (`h2`) / sub-heading (`h3`) / block heading (`h4`) | `text-lg font-semibold tracking-tight` / `text-sm font-semibold`, `mt-6` above / `text-sm font-medium` | Reuse |
+| Prose | `max-w-prose`, `text-xs text-muted-foreground`, `mt-2` under a heading | Reuse — ~430px at `text-xs` |
+| Definition rows | `gap-3` = 12px, `border-t` + `pt-3` | Reuse |
+| State vocabulary grid | `gap-x-6` = 24px, `gap-y-3` = 12px; `md:grid-cols-2`, `lg:grid-cols-5` | New — ~176px per term at ~976px with four 24px gaps (`UI Phase 2S`'s four-term grid used `gap-x-8`) |
+| Referenced-feature / domain table (`≥1024px`) | `py-3` = 12px cell padding, `align-top`, `whitespace-normal`, `text-xs`; auto-sized columns, **no set widths** | Reuse of `UI Phase 2S`'s control-table treatment |
+| Stacked block (`<1024px`) | `py-4` = 16px; `grid-cols-[6.5rem_minmax(0,1fr)]` = 104px label, `gap-x-3` = 12px, `gap-y-1.5` = 6px | New — the label column is 16px wider than `2S`'s 5.5rem because "How it changes" and "Referenced by" do not fit 88px at `text-xs` |
+| Capability-switch facts | `grid-cols-[7.5rem_minmax(0,1fr)]` = 120px label ("Configured value"), `max-w-prose` | New |
+| Lock workspace split (`≥1024px`) | `lg:grid-cols-[1fr_320px]`, `lg:gap-8` (32px); detail `lg:border-l lg:pl-8` (1px + 32px), 320px | Reuse — the persistent panel at `lg:` |
+| Lock table row | `h-10` = **40px** `COMPACT`; selected-row marker `border-l-2` on the first cell | Reuse |
+| Lock filter trigger | `h-10` (40px), `w-64` (256px, `max-w-full`) | New — the longest option is "Until Exchange approval" (~23 characters, ~165px plus ~40px of padding and chevron) |
+| Lock icon | `size-3.5` = 14px, `gap-1.5` = 6px to its label | Reuse of the status-line icon size |
+| Mobile lock record | `py-3` = 12px, `gap-1` = 4px, hairline `border-t`, two lines | Reuse |
+| Empty state | `rounded-lg border border-dashed`, `px-6 py-10` (workspace) | Reuse |
+
+**Lock table column budget** (list ~623px in the persistent split at both 1024px and 1280px). Estimated cell widths *including* 16px
+padding: Feature ~230 (the longest name, "AIX market depth as an exchange", ~31 characters at 6.2px plus the selected-row marker) + Governance
+lock ~200 (14px icon + 6px gap + "Until Exchange approval" ~145px) = **~430px**, leaving ~190px. Reference (~190px, "Doc00 §4.1/§8.1, MSR
+LIC-RULE-003" is the longest) would exactly consume it, so it is shown only from a container width of **56rem (896px)** — reachable by a
+full-width list at 768–1023px (720–975px of content) only above 896px. The `@4xl` rule is a container query on the wrapper. **All widths
+are glyph-width estimates, not measurements** — with the five-column domain table, the first visual-QA check. No shadcn primitive was
+added or changed.

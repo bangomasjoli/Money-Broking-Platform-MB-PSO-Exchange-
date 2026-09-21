@@ -2228,3 +2228,51 @@ corrected** (a `disabled` pattern matched the *word* in "active, disabled or rot
 **Regression:** all 15 prior page routes return 200 over HTTP against the production build (`next start`), as does the new route. Backend regression not required — **zero**
 `platform/services/**`, `packages/**`, `edge/**`, `infra/**`, `perf/**` or `tests/**` change relative to `c04d5bd`. Public
 homepage unaffected.
+
+## 56. Phase 2T — Admin / Feature Flags / Configuration (seventh Admin page, visual QA deferred)
+
+`/admin/feature-flags-configuration` (`UI-04` §55): a **read-only view of the governed configuration and feature-flag model**, not a
+feature-toggle console. `B`-classified; four sections in the brief's order, with one List + Detail workspace — over the **30
+governance locks** (the sealed prohibited-feature registry), the only place a keyed, explained list earns a detail panel. **The decisive
+findings, re-verified from source:** `cfg1.feature` is **empty** (no ordinary feature flag is defined anywhere), so the three onboarding
+keys CLT-01 evaluates are "Not defined" and denied; the 30 registry entries are hard locks (25 permanent, 5 until Exchange approval) that
+the runtime role cannot write; **no flag can widen the licence scope**, and setting the EXCHANGE licence status to `approved` enables no
+`exchange.*` feature; and **no route lists or reads any configuration** — CFG-01's only `GET`s are health and readiness. No fetch, server
+action, auth, permission check, mutation or local state transition. **No switch of any kind — a disabled switch still implies an editable
+control model.** **Baseline `994c845`** (`main` = `origin/main`, tree clean before).
+
+**Files created (9):** `app/admin/feature-flags-configuration/page.tsx`; `components/admin/{feature-config-data.ts,
+feature-availability.tsx, config-domains.tsx, governance-locks-section.tsx, governance-lock-workspace.tsx,
+governance-lock-table.tsx, governance-lock-detail.tsx, config-control-boundary.tsx}`.
+**Files modified (3):** `components/shell/nav-data.ts` (the "Feature Flags / Configuration" row gains `href`; "Audit / Sensitive Access"
+stays inert), `components/admin/admin-compliance-data.ts` (Review Areas' row gains `href`), `app/admin/layout.tsx` (comment and `<meta>`
+description). `review-areas.tsx` needed no change. **No Ops or Client page, no other shared data module, no backend service, migration or
+grant, no `OPEN_FINDINGS.md`, no package and no lockfile was modified.**
+
+**Client/server boundary:** the page and four of the five sections are Server Components. `GovernanceLockWorkspace` and
+`GovernanceLockTable` are the only Client Components (`"use client"`), holding only local UI state — `lockFilter`, `storedSelectedKey`,
+`mobileDetailOpen`. `GovernanceLockDetail` carries no directive and is stateless (imported into the client subtree).
+
+**Data:** `feature-config-data.ts` holds seeded-state facts read from source, not demo fixtures. The 30 locks are generated from
+`doc00-baseline.ts` by a scratch script (each `prohibition_reason` split at its trailing parenthetical into a statement and a reference, then
+**verified to rejoin byte-for-byte**); the only authored field on a lock is the human-readable `label`. Derived totals (`GOVERNANCE_LOCKS.length`,
+the permanent / until-approval split, the licence approved / pending counts) are computed from the rows, so the page cannot disagree with
+itself. **No sensitive value exists in the module** — no credential, token, key, endpoint, hash, numeric threshold or environment value.
+
+**shadcn impact: none.** Existing `Table`, `Select`, `Sheet`, `Button`, `Label` used unchanged (the shared `Table` defaults to `nowrap`,
+overridden per cell); the REVIEW LATER primitives were not touched; the official MCP was not needed. **No package or lockfile change.**
+
+**Quality gates:** `typecheck:web` (exit 0), `lint:web` (exit 0, no output) and `build:web` (exit 0) all pass; **19** static pages
+generated (18 + the new route).
+
+**Verification method (screenshot tooling unavailable; unchanged):** rendered-HTML inspection of the production build; programmatic
+cross-checks of the page's data against the CFG-01 source **and** migration 014 (all 30 rows — and the two source copies agree with each
+other), CLT-01's class mapping, the three environment keys and their exact-`"true"` parsing, and the licence seeds; a scratch server-side
+render of the lock detail for three representative locks (deleted afterwards); a forbidden-claim scan; and an HTTP check of every route.
+Confirmed: one `<h1>`, five `<h2>`, three labelled tables, **zero switches, inputs, forms and links in `<main>`** (the buttons are the 30
+row-selection buttons, duplicated for the two CSS-switched presentations, and the filter's `Select`). **Two false positives in my own checks
+were caught and corrected** (a `disabled` pattern matched the words "enabled and disabled"; broad `secret`/`balance` patterns matched lock
+names). **No interaction was exercised** — filtering, selection and the Sheet are reasoned from source.
+
+**Regression:** all 16 other page routes return 200 over HTTP against the production build. Backend regression not required — **zero**
+`platform/services/**`, `packages/**`, `edge/**`, `infra/**`, `perf/**` or `tests/**` change relative to `994c845`. Public homepage unaffected.

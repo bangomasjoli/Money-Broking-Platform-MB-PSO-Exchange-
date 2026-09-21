@@ -971,6 +971,30 @@ claim.** Public homepage unaffected.
   shadcn primitive added or changed; all Server Components.** `typecheck:web`/`lint:web`/`build:web` all pass (18 static
   pages); verified via rendered-HTML inspection and a programmatic cross-check of every count against the migrations —
   nothing was rendered. Full record: `UI-04` §54, `UI-02`'s new "UI Phase 2S" section, `UI-03` §55.
+- **Phase 2T:** Admin / Feature Flags / Configuration (`/admin/feature-flags-configuration`) — **IMPLEMENTED / VISUAL QA
+  DEFERRED.** The **seventh real Admin page**, `B`-classified: a **read-only view of the governed configuration and feature-flag
+  model**, not a feature-toggle console — no Enable/Disable/Change/Override/Save control, **no switch (not even a disabled one)**, no
+  input, no link. Baseline `994c845`. **Feature availability is not authority, and no flag can widen the licence scope.** CFG-01,
+  FND-01, WLT-01, IAM-01 and IAM-02 were re-inspected from source: **`cfg1.feature` is empty** — no ordinary feature flag is defined —
+  so the three onboarding keys CLT-01 evaluates are "Not defined" and denied (unknown fails closed); the **30 prohibited-registry entries
+  are hard locks** (25 permanent, 5 until Exchange approval) that the runtime role cannot write and no route can clear, shown as governed
+  controls and never as toggles; a change-request guard, a boot-time route scan in all nine services and a hash seal are separate locks;
+  and **setting the EXCHANGE licence status to `approved` enables no `exchange.*` feature**. **DEFINED, DEFAULT, CONFIGURED, EFFECTIVE and
+  LOCKED are kept apart**, and only backed labels are used (Governance Locked, Default Off, Not defined, Not readable, Denied). Nine
+  configuration domains are stated with their **source class — database, environment or code — so an environment-derived setting is
+  never presented as a database one**; the three default-off capability switches (`WLT1_PUBLIC_SURFACE_ENABLED` — exposure, not
+  authorization, and not production readiness — `IAM_BOOTSTRAP_ENABLED`, `IAM2_BOOTSTRAP_TRANSITION_ENABLED`) are shown by key with
+  their configured and effective values marked unreadable. **Sensitive configuration is omitted, not masked** — no credential, token, key,
+  endpoint, hash, rate-limit threshold, limit amount or environment value. Change control is stated as read-only fact and **preserves
+  `IAM2-FIND-002` and `IAM2-FIND-003`** (no approver-authorization or dual-approval claim); no history is shown, because no route lists
+  or returns any. **No route lists any configuration** (CFG-01's only `GET`s are health and readiness). **Three observations are
+  recorded, not registered and not fixed:** flag coverage against Doc 00 §9.3 (only CLT-01 consumes `evaluate`; the ordinary flag
+  catalogue is deferred) and the fact that, with no role grants seeded, **no configuration change — including an emergency kill-switch
+  activation — can currently be started**, both marked REVIEW REQUIRED with no severity, plus a deny-list-model note. Twenty confirmed
+  backend gaps are recorded (`UI-04` §55.9). Feature Flags / Configuration is now a real nav row and an "Interface preview" link in Review
+  Areas; **Audit / Sensitive Access stays inert.** **No shadcn primitive added or changed.** `typecheck:web`/`lint:web`/`build:web` all
+  pass (19 static pages); the 30 locks were cross-checked byte-for-byte against the CFG-01 source and migration — nothing was rendered.
+  Full record: `UI-04` §55, `UI-02`'s new "UI Phase 2T" section, `UI-03` §56.
 - **First real pages: IMPLEMENTED.** Wallet & Payout Destinations
   (`A`-classified), Client Overview, Profile / Organisation, and KYC /
   KYB Compliance Status (all three `B`-classified) are the four real
@@ -979,8 +1003,8 @@ claim.** Public homepage unaffected.
   Destination Review, Maker-Checker Queue and Audit / Activity (all
   `B`-classified) are the five real Staff/Operations pages — **the initial
   Ops set is complete**. Compliance Overview, Client Risk / KYC-KYB, AML / Transaction Monitoring, EDD / Review,
-  Approval Queue and Users / Roles / Permissions are the six real Admin pages; the two other Admin areas remain unimplemented.
-  No API/auth integration exists on any of them.
+  Approval Queue, Users / Roles / Permissions and Feature Flags / Configuration are the seven real Admin pages; one Admin area
+  (Audit / Sensitive Access) remains unimplemented. No API/auth integration exists on any of them.
 
 ## Contents
 

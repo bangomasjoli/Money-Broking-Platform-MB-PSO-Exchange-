@@ -27,6 +27,13 @@ below for current state.
 | What's currently unresolved / blocked / deferred | [OPEN_FINDINGS.md](OPEN_FINDINGS.md) |
 | Why a governance decision was made | [DECISION_LOG.md](DECISION_LOG.md) |
 
+## Where platform strategy analysis lives
+
+`05_strategy/` — platform-wide product/architecture strategy analysis
+(`DOCUMENT_REGISTER.md` §4d). **Analysis only — these documents carry no authority over the
+masters in `01_masters/`.** Current: [`AIX Institutional Platform Strategic Re-Baseline v0.1`](05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md)
+(DRAFT — four-pillar direction gap analysis; supersedes nothing, approves no scope).
+
 ## Where current project state lives
 
 | What you need | Where |

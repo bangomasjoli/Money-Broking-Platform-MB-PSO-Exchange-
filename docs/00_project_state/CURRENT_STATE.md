@@ -78,6 +78,7 @@ None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independ
 | Deployment / perimeter | [IMP-02 README](../03_implementation/IMP-02/README.md) |
 | UI governance | [04_ui/README.md](../04_ui/README.md) |
 | Conductor task records | [tasks/README.md](../03_implementation/tasks/README.md) |
+| Platform strategy analysis (no authority over masters) | [05_strategy/](../05_strategy/) — `STR-01` re-baseline is DRAFT analysis only |
 
 ## 11. Do not load whole (size guard)
 `SESSION_START_PROMPT.md` (~3,800 lines), `PROJECT_HANDOVER.md` (~1,270), `04_ui/README.md` (~1,000), `DECISION_LOG.md` (~840). Reference by ID or section; load an excerpt only when a task needs it.

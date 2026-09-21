@@ -180,6 +180,23 @@ every `02_modules/<MODULE>/README.md`.
 
 ---
 
+## 4d. Platform Strategy
+
+A governed tier for platform-wide product/architecture strategy analysis —
+registered here rather than under §1 because these documents are **not** master
+SDLC documents and carry **no** authority over scope, licence or architecture.
+They analyse the current baseline and propose controlled updates to the §1
+masters; the masters themselves remain the authority until separately revised.
+Placing a DRAFT analysis inside `01_masters/` (whose convention is the numbered,
+APPROVED `00`–`11` pack) would misrepresent its status. This follows §4c's own
+precedent for creating a governed tier when a subject fits no existing one.
+
+| Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| STR-01 | AIX Institutional Platform Strategic Re-Baseline | N/A (platform-wide) | Strategic product/architecture re-baseline — non-destructive gap analysis of the proposed four-pillar direction (AIX Spot / OTC / Pay / RWA over a shared institutional core) against the current accepted Money Broking + PSO baseline. Records current state, target state, a KEEP/EXTEND/REFACTOR/DEFER/NEW matrix, regulatory terminology conflicts, liquidity/execution, institutional account, RWA and payments gaps, module and governance-document impact, migration sequence, risks and unresolved decisions. **ANALYSIS ONLY — supersedes nothing, approves no scope, creates no finding, authorises no implementation** | v0.1 | DRAFT | N/A | [`05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md`](05_strategy/AIX_Institutional_Platform_Strategic_Re-Baseline_v0.1.md) | Unassigned | N/A | N/A | none | 48b9478 |
+
+---
+
 ## 5. Cross-Module Documents
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
@@ -201,6 +218,7 @@ This document applies to two modules and is deliberately **not duplicated**. Bot
 | `02_modules/_cross_module/` | Documents that genuinely span more than one module |
 | `04_ui/` | AIX UI design governance: direction, visual references, measurement discipline, token policy — see §4c |
 | `03_implementation/` | Master implementation handover pack(s); `tasks/` holds canonical conductor-managed task records (see `03_implementation/tasks/README.md`) |
+| `05_strategy/` | Platform-wide product/architecture strategy analysis — see §4d. Analysis only; carries no authority over the §1 masters |
 | `90_archive/masters/` | Superseded master document versions |
 | `90_archive/modules/<MODULE>/v1.0/` | Superseded v1.0 blueprint packs |
 

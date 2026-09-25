@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "MIG-004",
   "title": "CFG-01 environment_scope and live decision-chain step 4 (ENVIRONMENT_AVAILABILITY)",
-  "state": "PLANNED",
+  "state": "APPROVED",
   "risk": "CRITICAL",
   "category": "Phase A capability-control plane (DEC-013)",
   "baselineCommit": "6d2e4fe",
@@ -18,16 +18,47 @@
   "selectedEfforts": {
     "planner": "HIGH"
   },
-  "roundCounts": { "planning": 1, "architecture": 0, "review": 0, "remediation": 0, "escalation": 0 },
+  "roundCounts": {
+    "planning": 1,
+    "architecture": 0,
+    "review": 0,
+    "remediation": 0,
+    "escalation": 0
+  },
   "findingsSummary": {
-    "open": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
     "openFindingIds": [],
     "carryForwardIds": []
   },
-  "targetFindings": ["CFG-FIND-001", "FND-FIND-013 (CFG-01 portion)"],
-  "pendingHumanDecisions": ["HD-1", "HD-2", "HD-3", "HD-4"],
+  "targetFindings": [
+    "CFG-FIND-001",
+    "FND-FIND-013 (CFG-01 portion)"
+  ],
+  "pendingHumanDecisions": [],
   "acceptanceStatus": "NOT_ACCEPTED",
-  "relevantRecordPaths": ["docs/03_implementation/tasks/MIG-004/01-plan.md"],
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/MIG-004/01-plan.md"
+  ],
   "createdAt": "2026-09-25T17:31:09.000Z",
-  "updatedAt": "2026-09-25T17:31:09.000Z"
+  "updatedAt": "2026-09-25T18:16:18.000Z",
+  "decidedHumanDecisions": {
+    "HD-1": "APPROVED \u2014 current_state = product/operational activation conjunct; recorded as DEC-014",
+    "HD-2": "APPROVED \u2014 production hold, reason code corrected to production_activation_absent",
+    "HD-3": "APPROVED as separate control task CFG-FIND-002; MIG-004 feature-scope seal hash unchanged",
+    "HD-4": "APPROVED \u2014 structural exchange. prefix deny, deny-only"
+  },
+  "approval": {
+    "approvedBy": "Aiman",
+    "approvedAt": "2026-09-25T18:16:18.000Z",
+    "decision": "APPROVED FOR IMPLEMENTATION",
+    "note": "Precedence corrected (prohibited before environment-mismatch), reason code corrected (production_activation_absent), feature-scope seal hash left unchanged in MIG-004 (deferred to CFG-FIND-002)."
+  },
+  "raisedFindings": [
+    "CFG-FIND-002"
+  ]
 }

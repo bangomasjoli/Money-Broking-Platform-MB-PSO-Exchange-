@@ -1231,3 +1231,43 @@ Future decisions should be appended below this line, oldest first, using the sam
   (regulatory evidence register §0.2, Exchange-occurrence classification §1.5).
 - **Baseline commit:** `b62ed89` (master module index v1.3 — the last commit before this
   decision).
+
+### DEC-014 — `cfg1.feature.current_state` is the local product/operational feature-activation conjunct, separate from environment availability, production activation and asset eligibility
+
+- **Date:** 2026-09-25 — owner platform-development decision, made at `MIG-004` plan approval.
+- **Scope:** CFG-01 (`cfg1.feature.current_state`) and every document or task that reads it.
+  Binding on `MIG-004` and its implementation.
+- **Problem this decides.** `DEC-013`'s four-state model (`CAPABILITY_BUILD_STATE`,
+  `ENVIRONMENT_AVAILABILITY`, `PRODUCTION_ACTIVATION_STATE`, `PRODUCT_ASSET_ELIGIBILITY_STATE`,
+  Doc 00 §1.D) does not itself say what the pre-existing `cfg1.feature.current_state` column
+  means under that model. Left undecided, `current_state = 'enabled'` could be read — wrongly —
+  as evidence toward the production regulatory activation gate, which `STATE-SRS-003` and Doc 00
+  §21A rule 3 forbid.
+- **Decision.** `cfg1.feature.current_state` (`enabled`/`disabled`/`locked`/`prohibited`) is the
+  **local product / operational feature-activation conjunct** of the access formula in Doc 00
+  §21A rule 2, `SYS-RULE-011` and Role Matrix §3.7 (`permission AND environment availability AND
+  product activation AND asset eligibility AND, in PRODUCTION, the regulatory gate`). It is
+  evaluated identically in every environment (`SYS-RULE-007A`), governed by the existing
+  feature-changes maker-checker workflow, and kept structurally separate from:
+  - **`ENVIRONMENT_AVAILABILITY`** — `cfg1.feature.environment_scope` (`MIG-004`);
+  - **`PRODUCTION_ACTIVATION_STATE`** — not yet represented in the schema (`MIG-004` §8, §14 HD-2);
+  - **`PRODUCT_ASSET_ELIGIBILITY_STATE`** — `AST-01`/CFG-01 (not built).
+
+  **`current_state = 'enabled'` is never evidence that the production regulatory activation gate
+  has passed**, in any environment, including PRODUCTION. It formalises the "product activation"
+  conjunct that `DEC-013` names but does not bind to a concrete column.
+- **Status:** **ACCEPTED** — a naming/semantic decision only. Not an approval of any capability,
+  live regulated activity, or production activation. Changes no runtime guard, migration, seeded
+  identifier or sealed hash by itself; `MIG-004` implements the consequence (the `current_state`
+  read stays exactly where it already was in `evaluateFeature`, now understood as one of several
+  required conjuncts rather than the whole decision).
+  - **Consuming work:** `MIG-004` (`cfg1.feature.environment_scope`, decision-chain step 4;
+    `docs/03_implementation/tasks/MIG-004/01-plan.md` §8, §14).
+  - **Open item preserved:** `PRODUCTION_ACTIVATION_STATE` remains unbuilt in code; `MIG-004`'s
+    approved plan holds canonical PRODUCTION closed (`production_activation_absent`) until a
+    later migration represents it (`SYS-RULE-010`).
+- **Supersedes / Related:** None superseded. Extends `DEC-013` clause 2 (the four-state model)
+  by binding one of its states to an existing column. Related: `MIG-004` plan and its `CFG-FIND-001`
+  closure (`OPEN_FINDINGS.md`).
+- **Baseline commit:** `399ef7f` (MIG-004 plan, pre-approval — the last commit before this
+  decision).

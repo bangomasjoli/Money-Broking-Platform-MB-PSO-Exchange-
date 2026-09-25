@@ -5,7 +5,7 @@
 - **Implementation model / effort:** claude-opus-5-5 / HIGH
 - **Round:** 1
 - **Baseline commit:** `bdc5dfc` (approved plan: `01-plan.md`, HD-1…HD-4 decided, DEC-014 recorded)
-- **Resulting commit:** see `03-evidence.md`
+- **Resulting commit:** `5a4f872` (full hash and evidence in `03-evidence.md`)
 
 ## Changed files (summary)
 | File | Purpose |

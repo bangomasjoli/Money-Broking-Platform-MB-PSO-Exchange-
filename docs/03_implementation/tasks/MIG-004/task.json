@@ -6,7 +6,7 @@
   "risk": "CRITICAL",
   "category": "Phase A capability-control plane (DEC-013)",
   "baselineCommit": "6d2e4fe",
-  "resultingCommit": null,
+  "resultingCommit": "5a4f8728684f1f8ee34b6b56b48eb49780aa5263",
   "planner": {
     "role": "architecture_security_planner",
     "provider": "claude_code",
@@ -60,7 +60,7 @@
     "docs/03_implementation/tasks/MIG-004/03-evidence.md"
   ],
   "createdAt": "2026-09-25T17:31:09.000Z",
-  "updatedAt": "2026-09-25T19:30:00.000Z",
+  "updatedAt": "2026-09-25T18:48:23.000Z",
   "decidedHumanDecisions": {
     "HD-1": "APPROVED \u2014 current_state = product/operational activation conjunct; recorded as DEC-014",
     "HD-2": "APPROVED \u2014 production hold, reason code corrected to production_activation_absent",

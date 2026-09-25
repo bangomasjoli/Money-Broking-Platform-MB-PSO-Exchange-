@@ -2,26 +2,27 @@
  * CFG-01 Phase 2 — runtime feature decision precedence chain (blueprint
  * `07_Permission_Rules.md` §6), adapted honestly to what this codebase actually has:
  *
- *   1. Prohibited feature deny            — LIVE, checked against cfg1.prohibited_feature.
+ *   1. Prohibited feature deny            — LIVE, checked against cfg1.prohibited_feature, plus
+ *                                            (MIG-004, HD-4) a structural `exchange.` prefix deny
+ *                                            that holds even for a code absent from the registry.
  *   2. Licence lock deny                  — would fire via feature.licence_profile_id, but no
  *                                            `feature` row exists yet to declare one.
  *   3. Suspended/revoked licence deny     — same as #2; dormant, not faked.
- *   4. Environment constraint deny        — STRUCTURALLY N/A: cfg1.feature (migration 014) has
- *                                            no environment_scope column at all yet, not merely
- *                                            unpopulated data.
- *   5. Client-class constraint deny       — STRUCTURALLY N/A, same reason as #4.
+ *   4. Environment constraint deny        — LIVE as of MIG-004 (migration 071's
+ *                                            cfg1.feature.environment_scope, lib/environment-
+ *                                            availability.ts). Only an explicit `ENABLED` entry
+ *                                            for CFG-01's OWN canonical environment passes.
+ *   5. Client-class constraint deny       — STRUCTURALLY N/A: no client_class_scope column yet.
  *   6. Kill-switch deny                   — LIVE as of Phase 3B (migration 018's
  *                                            cfg1.kill_switch, lib/kill-switch.ts's
  *                                            isKillSwitchActiveForFeature) — a direct, unversioned,
- *                                            unsealed read, checked immediately after the
- *                                            prohibited-feature check and before the feature-row
- *                                            lookup (a feature_code can be kill-switched even with
- *                                            no cfg1.feature row yet).
- *   7. Dependency not ready deny          — STRUCTURALLY N/A, same reason as #4.
- *   8. Feature state disabled/locked deny — LIVE, via cfg1.feature.current_state, but only
- *                                            reachable through a synthetic test-fixture row
- *                                            (approved decision #6) — production cfg1.feature
- *                                            stays empty (approved decision #5).
+ *                                            unsealed read, checked before the feature-row lookup
+ *                                            (a feature_code can be kill-switched even with no
+ *                                            cfg1.feature row yet).
+ *   7. Dependency not ready deny          — STRUCTURALLY N/A, same reason as #5.
+ *   8. Feature state disabled/locked deny — LIVE, via cfg1.feature.current_state — the local
+ *                                            product/operational activation conjunct (DEC-014),
+ *                                            never evidence of production activation.
  *   9. Config integrity mismatch deny     — LIVE, and runs FIRST, not ninth. See the
  *                                            deliberate-reordering note in lib/errors.ts's
  *                                            header comment: nothing below this point can be
@@ -29,22 +30,45 @@
  *                                            passed decision-time integrity verification.
  *  10. Stale version deny/revalidate      — LIVE, interpreted against `prohibited_registry_
  *                                            version` (the only real, security-critical version
- *                                            number Phase 2 has) — `feature_config_version` has
- *                                            no real per-feature data yet to compare against.
- *  11. Explicit feature allow             — only reachable via a synthetic test-fixture row.
+ *                                            number Phase 2 has).
+ *  11. Explicit feature allow             — only reachable via a synthetic test-fixture row, and
+ *                                            never in canonical PRODUCTION (production hold below).
  *  12. Default deny                       — LIVE, `unknown_fail_closed` catches everything else.
+ *
+ * MIG-004 additions and the resulting order in code (01-plan.md §5, §7, §8, §14):
+ *
+ *   integrity → prohibited registry + structural `exchange.` (1) → caller-environment mismatch
+ *   → kill switch (6) → feature lookup / unknown (12) → environment availability (4)
+ *   → stale (10) → current_state (8) → PRODUCTION hold → allow (11).
+ *
+ *   - Authoritative environment (CFG-FIND-001): `input.environment` is ALWAYS CFG-01's own
+ *     bootstrap-validated `ENVIRONMENT`, supplied by the route from `app.config`. The caller's
+ *     value arrives separately as `input.assertedEnvironment` and is used ONLY for an equality
+ *     check (mismatch → `environment_mismatch`) and audit metadata. It never selects which
+ *     environment is evaluated, and it never reaches the payload hash, decision log or token.
+ *   - Permanent prohibition keeps primary attribution: the mismatch check runs AFTER step 1, so
+ *     a prohibited request with a mismatched environment still decides `prohibited`.
+ *   - PRODUCTION hold (HD-2): `PRODUCTION_ACTIVATION_STATE` (Doc 00 §1.D state 3) is not yet
+ *     represented, and an absent state denies (`SYS-RULE-010`). In canonical PRODUCTION (`prod`
+ *     and `staging`) a request that clears every other step is denied
+ *     `production_activation_absent`. MIG-004 makes nothing production-operational.
  */
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
-import { publishAudit, query } from "@aix/foundation";
+import { canonicalEnvironment, publishAudit, query } from "@aix/foundation";
 import { canonicalJson, sha256Prefixed } from "./canonical.js";
+import { readEnvironmentAvailability } from "./environment-availability.js";
 import { verifyDecisionTimeIntegrity, type DecisionIntegrityScopeResult } from "./integrity-seal.js";
 import { isKillSwitchActiveForFeature } from "./kill-switch.js";
 
 export type DecisionReasonCode =
   | "prohibited"
   | "exchange_pending_locked"
+  | "environment_mismatch"
   | "kill_switch_active"
+  | "environment_scope_invalid"
+  | "environment_not_available"
+  | "production_activation_absent"
   | "stale_revalidate"
   | "unknown_fail_closed"
   | "feature_disabled"
@@ -54,7 +78,12 @@ export interface EvaluateFeatureInput {
   featureCode: string;
   action: string;
   resource?: string | null;
+  /** CFG-01's OWN bootstrap-validated environment identifier (`app.config.environment`) — the
+   * only environment ever evaluated, logged, hashed or bound into a token (CFG-FIND-001). */
   environment: string;
+  /** The caller's asserted `environment` from the request body — a routing-consistency
+   * assertion only, compared for equality with `environment` and recorded in audit metadata. */
+  assertedEnvironment: string;
   clientId?: string | null;
   clientClass?: string | null;
   callerModule: string;
@@ -145,6 +174,8 @@ export async function isFeatureMutationBlocked(
 interface FeatureLookupRow {
   current_state: string;
   version: number;
+  /** jsonb — parsed by `pg`, validated in full by `readEnvironmentAvailability`. */
+  environment_scope: unknown;
 }
 
 /**
@@ -180,7 +211,8 @@ export async function evaluateFeature(client: PoolClient, input: EvaluateFeature
   }
 
   // Step 1 — prohibited feature deny (highest precedence; checked before anything else that
-  // could allow).
+  // could allow, including the caller-environment check below, so permanent prohibition always
+  // keeps primary denial attribution).
   const prohibitedRows = await query<ProhibitedFeatureLookupRow>(
     client,
     `SELECT applies_until FROM cfg1.prohibited_feature WHERE feature_code = $1 AND status = 'active'`,
@@ -190,24 +222,35 @@ export async function evaluateFeature(client: PoolClient, input: EvaluateFeature
     const row = prohibitedRows[0]!;
     return deny(row.applies_until === "until_formal_exchange_licence_approval" ? "exchange_pending_locked" : "prohibited");
   }
+  // Step 1, structural (MIG-004 HD-4) — the frozen `exchange.` MB-prohibition namespace denies
+  // even for a code the registry does not list (e.g. an out-of-band `cfg1.feature` row), the
+  // evaluation-side counterpart of `isFeatureMutationBlocked`'s identical prefix guard. Scoped to
+  // `exchange.` only; `securities_market.*` is a different namespace and is not affected.
+  if (input.featureCode.startsWith("exchange.")) {
+    return deny("prohibited");
+  }
+
+  // CFG-FIND-001 — the caller's asserted environment must equal CFG-01's own. It is never used
+  // to choose what is evaluated; a mismatch denies (and is separately audited as Critical in
+  // logFeatureEvaluation).
+  if (input.assertedEnvironment !== input.environment) {
+    return deny("environment_mismatch");
+  }
 
   // Step 6 (Phase 3B) — kill-switch deny. Live, unversioned, no seal — see lib/kill-switch.ts's
-  // own header comment for why. Checked here, BEFORE the feature-row lookup (same reasoning as
-  // the prohibited-feature check immediately above it): a feature_code can be kill-switched
-  // even if no cfg1.feature row exists for it yet (a pre-emptive emergency block), so this must
-  // not be gated behind "does a feature row exist". Prohibited/licence restrictions still
-  // outrank kill-switch (checked first, above); kill-switch outranks ordinary feature-state
-  // allow (checked below).
+  // own header comment for why. Checked BEFORE the feature-row lookup: a feature_code can be
+  // kill-switched even if no cfg1.feature row exists for it yet (a pre-emptive emergency block).
+  // Prohibited restrictions still outrank kill-switch (checked first, above); kill-switch
+  // outranks ordinary feature-state allow (checked below).
   if (await isKillSwitchActiveForFeature(client, input.featureCode)) {
     return deny("kill_switch_active");
   }
 
-  // Steps 2-8 — feature lookup. See class-level comment: steps 2/3/8 are live mechanisms with
-  // no real data outside test fixtures this phase; steps 4/5/6/7 have no schema support at all
-  // yet. A feature_code with no prohibited_feature row and no feature row is simply unknown.
+  // Feature lookup. A feature_code with no prohibited_feature row and no feature row is simply
+  // unknown.
   const featureRows = await query<FeatureLookupRow>(
     client,
-    `SELECT current_state, version FROM cfg1.feature WHERE feature_code = $1`,
+    `SELECT current_state, version, environment_scope FROM cfg1.feature WHERE feature_code = $1`,
     [input.featureCode],
   );
   if (featureRows.length === 0) {
@@ -215,6 +258,18 @@ export async function evaluateFeature(client: PoolClient, input: EvaluateFeature
     return deny("unknown_fail_closed");
   }
   const feature = featureRows[0]!;
+
+  // Step 4 (MIG-004) — ENVIRONMENT_AVAILABILITY for CFG-01's OWN canonical environment. `staging`
+  // canonicalizes to PRODUCTION and so reads the PRODUCTION entry; there is no STAGING entry.
+  // Only an explicit ENABLED passes — never inferred from the environment being non-production.
+  const canonical = canonicalEnvironment(input.environment);
+  const availability = readEnvironmentAvailability(feature.environment_scope, canonical);
+  if (availability === "INVALID") {
+    return deny("environment_scope_invalid", feature.version);
+  }
+  if (availability !== "ENABLED") {
+    return deny("environment_not_available", feature.version);
+  }
 
   // Step 10 — stale requested version, interpreted against prohibited_registry_version (see
   // class-level comment for why).
@@ -226,9 +281,16 @@ export async function evaluateFeature(client: PoolClient, input: EvaluateFeature
     return deny("stale_revalidate", feature.version);
   }
 
-  // Step 8 / Step 11 — feature state.
+  // Step 8 — current_state, the local product/operational activation conjunct (DEC-014).
   if (feature.current_state !== "enabled") {
     return deny("feature_disabled", feature.version);
+  }
+
+  // PRODUCTION hold (MIG-004 HD-2) — PRODUCTION_ACTIVATION_STATE is not represented, and an
+  // absent state denies (SYS-RULE-010). Applies to `prod` and `staging` alike, after every
+  // other check has passed, whatever environment_scope.PRODUCTION and current_state say.
+  if (canonical === "PRODUCTION") {
+    return deny("production_activation_absent", feature.version);
   }
 
   return {
@@ -396,6 +458,34 @@ export async function logFeatureEvaluation(
       client_id: input.clientId ?? undefined,
       reason_code: result.reasonCode,
       metadata: { decision_id: decisionId },
+    });
+  }
+
+  if (input.assertedEnvironment !== input.environment) {
+    // CFG-FIND-001 — additional Critical event whenever the caller's asserted environment differs
+    // from CFG-01's own, on the SAME transaction as the decision log above (so it can never exist
+    // without its decision, or the reverse). Emitted for an `environment_mismatch` deny AND for a
+    // prohibited request that also carried a mismatch — the latter keeps `prohibited` as its
+    // decision and its own Critical prohibited audit; this event is layered on, never a substitute.
+    // `asserted_environment` is schema-bounded to the foundation ENVIRONMENTS vocabulary.
+    await publishAudit(client, {
+      event_type: "cfg1.feature_decision.environment_mismatch",
+      source_module: "CFG-01",
+      actor_id: input.callerModule,
+      actor_type: "service",
+      entity_type: "feature",
+      entity_id: input.featureCode,
+      severity: "critical",
+      action: input.action,
+      result: "blocked",
+      client_id: input.clientId ?? undefined,
+      reason_code: "environment_mismatch",
+      metadata: {
+        decision_id: decisionId,
+        environment: input.environment,
+        canonical_environment: canonicalEnvironment(input.environment),
+        asserted_environment: input.assertedEnvironment,
+      },
     });
   }
 

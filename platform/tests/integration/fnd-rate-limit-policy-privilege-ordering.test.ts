@@ -172,8 +172,11 @@ describe("Shared Rate-Limit Engine — NEW-1: policy immutability is deployment-
     // Migrate straight to head (068, 069, 070 all apply in one pass — no explicit count means
     // "everything pending", matching a real fresh deployment).
     await runner({ databaseUrl: dbUrlA, dir: MIGRATIONS_DIR, direction: "up", checkOrder: false, migrationsTable: "pgmigrations", log: silentLog });
-    const head = await verifyPoolA.query(`SELECT name FROM pgmigrations ORDER BY id DESC LIMIT 1`);
-    expect(head.rows[0]?.name).toBe("070_fnd_rate_limit_policy_privilege_hardening");
+    // Presence check scoped to this file's own migration, NOT a pin on the platform-wide global
+    // head — a global-head pin breaks whenever any later migration (any module) lands. Same fix
+    // pattern as CLT-FIND-004 (commit e6cf4c7); first tripped by MIG-004's migration 071.
+    const head = await verifyPoolA.query(`SELECT count(*)::int AS n FROM pgmigrations WHERE name = '070_fnd_rate_limit_policy_privilege_hardening'`);
+    expect(head.rows[0]?.n).toBe(1);
 
     // NOTE: roles are CLUSTER-global in PostgreSQL, not per-database — role_fnd_runtime may
     // already exist here (e.g. created by another database's grants file in the same shared
@@ -231,8 +234,9 @@ describe("Shared Rate-Limit Engine — NEW-1: policy immutability is deployment-
     // automatically; 069 seeds; 070 must independently REVOKE INSERT/UPDATE/DELETE since
     // role_fnd_runtime already exists at this point).
     await runner({ databaseUrl: dbUrlB, dir: MIGRATIONS_DIR, direction: "up", checkOrder: false, migrationsTable: "pgmigrations", log: silentLog });
-    const headFinal = await verifyPoolB.query(`SELECT name FROM pgmigrations ORDER BY id DESC LIMIT 1`);
-    expect(headFinal.rows[0]?.name).toBe("070_fnd_rate_limit_policy_privilege_hardening");
+    // Presence check scoped to 070 (not a global-head pin) — see SEQUENCE A's note.
+    const headFinal = await verifyPoolB.query(`SELECT count(*)::int AS n FROM pgmigrations WHERE name = '070_fnd_rate_limit_policy_privilege_hardening'`);
+    expect(headFinal.rows[0]?.n).toBe(1);
 
     // 4. Deliberately do NOT re-apply grants. This is the exact sequence independent
     // acceptance proved broken pre-070: without this step, INSERT/UPDATE would still be granted.

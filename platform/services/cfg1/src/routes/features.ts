@@ -36,19 +36,28 @@
  * kill-switch activation would keep verifying successfully. See `lib/decision-token.ts`'s own
  * header comment for why this is a plain live check rather than folded into the existing
  * version-comparison mechanism.
+ *
+ * MIG-004 (CFG-FIND-001, FND-FIND-013 CFG-01 part): the environment vocabulary is the
+ * foundation's `ENVIRONMENTS` (so `demo` is accepted), not a CFG-01 copy. The `environment`
+ * body field stays REQUIRED on both routes but is only a routing-consistency ASSERTION: CFG-01
+ * evaluates, logs, hashes and binds its OWN bootstrap-validated `app.config.environment`, never
+ * the caller's value. A mismatch denies on evaluate (`environment_mismatch`, Critical audit, no
+ * token) and revokes on verify. `verify-decision` additionally re-reads the feature's LIVE
+ * `environment_scope` for CFG-01's own canonical environment on every call, like the kill
+ * switch, and revokes (`environment_unavailable`) unless it is exactly `ENABLED`.
  */
 import { Type } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
-import { getPool, publishAudit, query, successEnvelope, withTransaction } from "@aix/foundation";
+import { canonicalEnvironment, ENVIRONMENTS, getPool, publishAudit, query, successEnvelope, withTransaction, type Environment } from "@aix/foundation";
 import { meta } from "../plugins/request-context.js";
 import { makeCfg1InternalIdentityGuard } from "../plugins/internal-identity.js";
 import { evaluateFeature, logFeatureEvaluation, type EvaluateFeatureInput, type EvaluateOutcome } from "../lib/decision.js";
 import { issueDecisionToken, verifyDecisionToken, type IssuedDecisionToken } from "../lib/decision-token.js";
 import { verifyDecisionTimeIntegrity } from "../lib/integrity-seal.js";
 import { isKillSwitchActiveForFeature } from "../lib/kill-switch.js";
+import { readEnvironmentAvailability } from "../lib/environment-availability.js";
 import { Cfg1Error } from "../lib/errors.js";
 
-const ENVIRONMENTS = ["dev", "qa", "uat", "staging", "prod"] as const;
 const EnvironmentSchema = Type.Union(ENVIRONMENTS.map((e) => Type.Literal(e)));
 
 const EvaluateBody = Type.Object(
@@ -84,7 +93,7 @@ interface EvaluateBodyType {
   feature_code: string;
   action: string;
   resource?: string;
-  environment: (typeof ENVIRONMENTS)[number];
+  environment: Environment;
   client_id?: string;
   client_class?: string;
   caller_module: string;
@@ -100,7 +109,7 @@ interface VerifyDecisionBodyType {
   caller_module: string;
   client_id?: string;
   client_class?: string;
-  environment: (typeof ENVIRONMENTS)[number];
+  environment: Environment;
 }
 
 /** Probe the pool eagerly so an unreachable/uninitialised DB is reported as
@@ -130,7 +139,8 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
         featureCode: body.feature_code,
         action: body.action,
         resource: body.resource ?? null,
-        environment: body.environment,
+        environment: app.config.environment,
+        assertedEnvironment: body.environment,
         clientId: body.client_id ?? null,
         clientClass: body.client_class ?? null,
         callerModule: body.caller_module,
@@ -215,7 +225,7 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
         callerModule: body.caller_module,
         clientId: body.client_id ?? null,
         clientClass: body.client_class ?? null,
-        environment: body.environment,
+        environment: app.config.environment,
       };
 
       let txResult: { kind: "integrity_failed" } | { kind: "verified"; ok: boolean; reasonCode?: string; tokenId?: string; decisionId?: string; featureCode?: string };
@@ -232,11 +242,16 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
           // here, same transaction) — a licence-profile or feature-state mutation since
           // issuance now invalidates the token on this call, the same guarantee Phase 2 already
           // gave the prohibited registry.
-          const currentFeatureRow = await query<{ version: number }>(
+          const currentFeatureRow = await query<{ version: number; environment_scope: unknown }>(
             client,
-            `SELECT version FROM cfg1.feature WHERE feature_code = $1`,
+            `SELECT version, environment_scope FROM cfg1.feature WHERE feature_code = $1`,
             [body.feature_code],
           );
+          // MIG-004 — live ENVIRONMENT_AVAILABILITY for CFG-01's OWN canonical environment, read
+          // on the same transaction. A missing row or an invalid scope is not available.
+          const environmentAvailable =
+            currentFeatureRow.length > 0 &&
+            readEnvironmentAvailability(currentFeatureRow[0]!.environment_scope, canonicalEnvironment(app.config.environment)) === "ENABLED";
           // Phase 3B (approved decision #13): verify-decision does NOT re-run evaluateFeature(),
           // so an active kill-switch would otherwise go undetected here — a live, fresh,
           // unversioned check for the PRESENTED feature_code, computed on the same transaction,
@@ -245,7 +260,7 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
           const killSwitchActive = await isKillSwitchActiveForFeature(client, body.feature_code);
           const verifyResult = await verifyDecisionToken(
             client,
-            { ...bindingInput, tokenRaw: body.decision_token },
+            { ...bindingInput, tokenRaw: body.decision_token, assertedEnvironment: body.environment },
             {
               prohibitedRegistryVersion: integrity.prohibitedRegistryVersion,
               prohibitedRegistryHash: integrity.prohibitedRegistryHash,
@@ -253,6 +268,7 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
               featureConfigVersion: currentFeatureRow[0]?.version ?? null,
             },
             killSwitchActive,
+            environmentAvailable,
           );
 
           await publishAudit(client, {
@@ -267,7 +283,12 @@ export async function registerFeatureRoutes(app: FastifyInstance): Promise<void>
             result: verifyResult.ok ? "success" : "failure",
             ...(body.client_id !== undefined ? { client_id: body.client_id } : {}),
             ...(!verifyResult.ok ? { reason_code: verifyResult.reasonCode } : {}),
-            metadata: { decision_id: body.decision_id },
+            metadata: {
+              decision_id: body.decision_id,
+              environment: app.config.environment,
+              ...(body.environment !== app.config.environment ? { asserted_environment: body.environment } : {}),
+              ...(!verifyResult.ok && verifyResult.revokedReason ? { revoked_reason: verifyResult.revokedReason } : {}),
+            },
           });
 
           return verifyResult.ok

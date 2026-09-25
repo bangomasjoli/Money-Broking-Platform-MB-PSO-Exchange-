@@ -111,7 +111,16 @@ GRANT UPDATE (status, approval_id, decision_token_hash, previous_version, new_ve
 -- approved apply changes. feature_name/licence_profile_id/feature_code are never updated by any
 -- Phase 3A code path (feature_name/licence_profile_id are only ever set at INSERT time) and are
 -- deliberately NOT included in the UPDATE grant.
-GRANT INSERT ON cfg1.feature TO role_cfg1_runtime;
+--
+-- MIG-004 (migration 071): INSERT is COLUMN-scoped, not table-scoped. A table-level INSERT
+-- privilege extends to every column, including `environment_scope` (ENVIRONMENT_AVAILABILITY),
+-- which the runtime role must never be able to set. The REVOKE removes any table-level INSERT
+-- left by an earlier run of this file, and the column list below excludes `environment_scope`,
+-- so new rows always take the all-DISABLED column default. The UPDATE grant below also
+-- excludes it. Together these mean no runtime environment-scope write path exists.
+REVOKE INSERT ON cfg1.feature FROM role_cfg1_runtime;
+GRANT INSERT (feature_id, feature_code, feature_name, current_state, licence_profile_id, version, created_at_utc, updated_at_utc)
+  ON cfg1.feature TO role_cfg1_runtime;
 GRANT UPDATE (current_state, version, updated_at_utc) ON cfg1.feature TO role_cfg1_runtime;
 
 -- cfg1.feature_version — SELECT (unchanged), INSERT only. Append-only per-feature version

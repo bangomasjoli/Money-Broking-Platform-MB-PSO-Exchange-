@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "MIG-004",
   "title": "CFG-01 environment_scope and live decision-chain step 4 (ENVIRONMENT_AVAILABILITY)",
-  "state": "APPROVED",
+  "state": "IMPLEMENTED",
   "risk": "CRITICAL",
   "category": "Phase A capability-control plane (DEC-013)",
   "baselineCommit": "6d2e4fe",
@@ -13,10 +13,16 @@
     "model": "claude-opus-5-5",
     "effort": "HIGH"
   },
-  "implementer": null,
+  "implementer": {
+    "role": "implementer",
+    "provider": "claude_code",
+    "model": "claude-opus-5-5",
+    "effort": "HIGH"
+  },
   "reviewer": null,
   "selectedEfforts": {
-    "planner": "HIGH"
+    "planner": "HIGH",
+    "implementer": "HIGH"
   },
   "roundCounts": {
     "planning": 1,
@@ -28,12 +34,19 @@
   "findingsSummary": {
     "open": {
       "BLOCKER": 0,
-      "HIGH": 0,
-      "MEDIUM": 0,
-      "LOW": 0
+      "HIGH": 1,
+      "MEDIUM": 1,
+      "LOW": 1
     },
-    "openFindingIds": [],
-    "carryForwardIds": []
+    "openFindingIds": [
+      "CFG-FIND-001",
+      "CFG-FIND-002",
+      "FND-FIND-013"
+    ],
+    "carryForwardIds": [
+      "CFG-FIND-002",
+      "FND-FIND-013"
+    ]
   },
   "targetFindings": [
     "CFG-FIND-001",
@@ -42,10 +55,12 @@
   "pendingHumanDecisions": [],
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
-    "docs/03_implementation/tasks/MIG-004/01-plan.md"
+    "docs/03_implementation/tasks/MIG-004/01-plan.md",
+    "docs/03_implementation/tasks/MIG-004/02-implementation-report.md",
+    "docs/03_implementation/tasks/MIG-004/03-evidence.md"
   ],
   "createdAt": "2026-09-25T17:31:09.000Z",
-  "updatedAt": "2026-09-25T18:16:18.000Z",
+  "updatedAt": "2026-09-25T19:30:00.000Z",
   "decidedHumanDecisions": {
     "HD-1": "APPROVED \u2014 current_state = product/operational activation conjunct; recorded as DEC-014",
     "HD-2": "APPROVED \u2014 production hold, reason code corrected to production_activation_absent",
@@ -60,5 +75,15 @@
   },
   "raisedFindings": [
     "CFG-FIND-002"
-  ]
+  ],
+  "findingsStatus": {
+    "CFG-FIND-001": "OPEN \u2014 implemented pending independent acceptance (HIGH)",
+    "FND-FIND-013": "OPEN \u2014 CFG-01 portion implemented pending acceptance; WLT-01 portion and migrations 001/053 remain (LOW)",
+    "CFG-FIND-002": "OPEN / MEDIUM \u2014 untouched; separate control task (raised at plan approval)"
+  },
+  "observations": [
+    "MIG-004-O1 (pre-existing CLT-01 test isolation race, reproduced at baseline)",
+    "MIG-004-O2 (all features deny until environment_scope set; by design)"
+  ],
+  "implementationBaselineCommit": "bdc5dfc"
 }

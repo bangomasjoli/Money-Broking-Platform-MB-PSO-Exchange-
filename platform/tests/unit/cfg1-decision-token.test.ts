@@ -108,6 +108,7 @@ describe("verifyDecisionToken", () => {
     action: "execute",
     callerModule: "TRD-01",
     environment: "prod",
+    assertedEnvironment: "prod",
     tokenRaw: "raw-token-value",
   };
 
@@ -154,26 +155,26 @@ describe("verifyDecisionToken", () => {
 
   it("rejects with CFG1_DECISION_TOKEN_INVALID when no row is found", async () => {
     const { client } = fakeClient([{ rows: [] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
     expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_TOKEN_INVALID" });
   });
 
   it("rejects with CFG1_DECISION_TOKEN_REVOKED when the token was already revoked", async () => {
     const { client } = fakeClient([{ rows: [tokenRow({ status: "revoked" })] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
     expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_TOKEN_REVOKED" });
   });
 
   it("rejects with CFG1_DECISION_TOKEN_EXPIRED when expires_at_utc has passed", async () => {
     const { client } = fakeClient([{ rows: [tokenRow({ expires_at_utc: new Date(Date.now() - 1000).toISOString() })] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
     expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_TOKEN_EXPIRED" });
   });
 
   it("rejects with CFG1_DECISION_BINDING_MISMATCH and revokes the token when a bound field differs from what was presented", async () => {
     const { calls, client } = fakeClient([{ rows: [tokenRow({ feature_code: "different.feature" })] }, { rows: [] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false);
-    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" });
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "binding_mismatch" });
     // Second call must be the revoke UPDATE.
     expect(calls).toHaveLength(2);
     expect(calls[1]!.sql).toMatch(/UPDATE cfg1\.feature_decision_token SET status = 'revoked'/);
@@ -183,15 +184,15 @@ describe("verifyDecisionToken", () => {
   it("rejects with CFG1_DECISION_BINDING_MISMATCH and revokes the token when the prohibited-registry version/hash has changed since issuance", async () => {
     const { calls, client } = fakeClient([{ rows: [tokenRow({ prohibited_registry_version: 1, prohibited_registry_hash: "sha256:old" })] }, { rows: [] }]);
     // currentIntegrity reflects a NEWER prohibited_registry_hash than what the token was bound to.
-    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, prohibitedRegistryHash: "sha256:new" }, false);
-    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" });
+    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, prohibitedRegistryHash: "sha256:new" }, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "config_changed" });
     expect(calls[1]!.params).toContain("config_changed");
   });
 
   it("never accepts a null-bound field as a wildcard for a presented value", async () => {
     // Token bound with client_id = null; caller presents a real client_id — must NOT match.
     const { client } = fakeClient([{ rows: [tokenRow({ client_id: null })] }, { rows: [] }]);
-    const result = await verifyDecisionToken(client, { ...bindingInput, clientId: "client_1" }, currentIntegrity, false);
+    const result = await verifyDecisionToken(client, { ...bindingInput, clientId: "client_1" }, currentIntegrity, false, true);
     expect(result.ok).toBe(false);
   });
 
@@ -202,15 +203,15 @@ describe("verifyDecisionToken", () => {
   // -----------------------------------------------------------------------------------------
   it("rejects with CFG1_DECISION_BINDING_MISMATCH and revokes the token when licence_profile_version has changed since issuance (Phase 3A licence-profile mutation)", async () => {
     const { calls, client } = fakeClient([{ rows: [tokenRow({ licence_profile_version: 1 })] }, { rows: [] }]);
-    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, licenceProfileVersion: 2 }, false);
-    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" });
+    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, licenceProfileVersion: 2 }, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "config_changed" });
     expect(calls[1]!.params).toContain("config_changed");
   });
 
   it("rejects with CFG1_DECISION_BINDING_MISMATCH and revokes the token when feature_config_version has changed since issuance (Phase 3A feature-state mutation)", async () => {
     const { calls, client } = fakeClient([{ rows: [tokenRow({ feature_config_version: 1 })] }, { rows: [] }]);
-    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, featureConfigVersion: 2 }, false);
-    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" });
+    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, featureConfigVersion: 2 }, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "config_changed" });
     expect(calls[1]!.params).toContain("config_changed");
   });
 
@@ -218,7 +219,7 @@ describe("verifyDecisionToken", () => {
     const { client } = fakeClient([{ rows: [tokenRow({ feature_config_version: null })] }]);
     // currentIntegrity's featureConfigVersion is deliberately different from anything meaningful
     // — must be ignored entirely since the token's own bound value is null.
-    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, featureConfigVersion: 99 }, false);
+    const result = await verifyDecisionToken(client, bindingInput, { ...currentIntegrity, featureConfigVersion: 99 }, false, true);
     expect(result.ok).toBe(true);
   });
 
@@ -229,8 +230,8 @@ describe("verifyDecisionToken", () => {
   // -----------------------------------------------------------------------------------------
   it("rejects with CFG1_TOKEN_REVOKED_BY_KILL_SWITCH and revokes the token when killSwitchActive is true, even though every other field matches", async () => {
     const { calls, client } = fakeClient([{ rows: [tokenRow()] }, { rows: [] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, true);
-    expect(result).toEqual({ ok: false, reasonCode: "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH" });
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, true, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH", revokedReason: "kill_switch_active" });
     expect(calls).toHaveLength(2);
     expect(calls[1]!.sql).toMatch(/UPDATE cfg1\.feature_decision_token SET status = 'revoked'/);
     expect(calls[1]!.params).toContain("kill_switch_active");
@@ -238,7 +239,56 @@ describe("verifyDecisionToken", () => {
 
   it("succeeds normally when killSwitchActive is false and nothing else has changed", async () => {
     const { client } = fakeClient([{ rows: [tokenRow()] }]);
-    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
     expect(result.ok).toBe(true);
+  });
+
+  // -----------------------------------------------------------------------------------------
+  // MIG-004 (CFG-FIND-001) — `environment` is CFG-01's OWN environment; `assertedEnvironment` is
+  // the caller's routing assertion; `environmentAvailable` is the live ENVIRONMENT_AVAILABILITY
+  // read supplied by the route.
+  // -----------------------------------------------------------------------------------------
+  it("revokes with environment_mismatch when the caller's asserted environment differs from CFG-01's own", async () => {
+    const { calls, client } = fakeClient([{ rows: [tokenRow()] }, { rows: [] }]);
+    const result = await verifyDecisionToken(client, { ...bindingInput, assertedEnvironment: "dev" }, currentIntegrity, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "environment_mismatch" });
+    expect(calls).toHaveLength(2);
+    expect(calls[1]!.sql).toMatch(/UPDATE cfg1\.feature_decision_token SET status = 'revoked'/);
+    expect(calls[1]!.params).toContain("environment_mismatch");
+  });
+
+  it("a token bound to one environment never verifies under a CFG-01 configured for another, even when the caller asserts consistently", async () => {
+    // Token issued under dev; this CFG-01 is prod and the caller asserts prod.
+    const { calls, client } = fakeClient([{ rows: [tokenRow({ environment: "dev" })] }, { rows: [] }]);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "binding_mismatch" });
+    expect(calls[1]!.params).toContain("binding_mismatch");
+  });
+
+  it("revokes with environment_unavailable when live environment availability is not ENABLED, even though every version matches", async () => {
+    const { calls, client } = fakeClient([{ rows: [tokenRow()] }, { rows: [] }]);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, false, false);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "environment_unavailable" });
+    expect(calls[1]!.params).toContain("environment_unavailable");
+  });
+
+  it("kill-switch revocation still outranks environment unavailability", async () => {
+    const { calls, client } = fakeClient([{ rows: [tokenRow()] }, { rows: [] }]);
+    const result = await verifyDecisionToken(client, bindingInput, currentIntegrity, true, false);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH", revokedReason: "kill_switch_active" });
+    expect(calls[1]!.params).toContain("kill_switch_active");
+  });
+
+  it("does not re-revoke an already-expired token on an environment mismatch (terminal-state checks come first)", async () => {
+    const { calls, client } = fakeClient([{ rows: [tokenRow({ expires_at_utc: new Date(Date.now() - 1_000).toISOString() })] }]);
+    const result = await verifyDecisionToken(client, { ...bindingInput, assertedEnvironment: "dev" }, currentIntegrity, false, true);
+    expect(result).toEqual({ ok: false, reasonCode: "CFG1_DECISION_TOKEN_EXPIRED" });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("every revocation reason fits cfg1.feature_decision_token.revoked_reason varchar(32)", () => {
+    for (const reason of ["environment_mismatch", "environment_unavailable", "binding_mismatch", "config_changed", "kill_switch_active"]) {
+      expect(reason.length).toBeLessThanOrEqual(32);
+    }
   });
 });

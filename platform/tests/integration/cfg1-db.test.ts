@@ -164,13 +164,29 @@ const EVALUATE_URL = "/internal/cfg1/features/evaluate";
 const VERIFY_DECISION_URL = "/internal/cfg1/features/verify-decision";
 const internalHeaders = { "x-internal-service-token": "test-cfg1-internal-token-it" };
 
-async function insertSyntheticFeature(featureCode: string, currentState: string): Promise<void> {
+/** MIG-004 — a complete, valid `environment_scope` (all DISABLED unless overridden). */
+function environmentScope(overrides: Partial<Record<"DEVELOPMENT" | "TEST" | "UAT" | "DEMO" | "PRODUCTION", string>> = {}): Record<string, string> {
+  return { DEVELOPMENT: "DISABLED", TEST: "DISABLED", UAT: "DISABLED", DEMO: "DISABLED", PRODUCTION: "DISABLED", ...overrides };
+}
+
+/** MIG-004 — this suite's app runs as `dev` (DEVELOPMENT), so pre-existing allow-path fixtures
+ * are made available in DEVELOPMENT only. Test-controlled superuser fixture — there is no
+ * runtime environment-scope write path. */
+const DEV_AVAILABLE_SCOPE = environmentScope({ DEVELOPMENT: "ENABLED" });
+
+async function insertSyntheticFeature(featureCode: string, currentState: string, scope: Record<string, string> = DEV_AVAILABLE_SCOPE): Promise<void> {
   await verifyPool.query(
-    `INSERT INTO cfg1.feature (feature_id, feature_code, feature_name, current_state, version, created_at_utc, updated_at_utc)
-     VALUES ($1, $2, 'Test Synthetic Feature (never real seed data)', $3, 1, now(), now())
-     ON CONFLICT (feature_code) DO UPDATE SET current_state = EXCLUDED.current_state`,
-    [`feat_test_${featureCode.replace(/\./g, "_")}`, featureCode, currentState],
+    `INSERT INTO cfg1.feature (feature_id, feature_code, feature_name, current_state, version, environment_scope, created_at_utc, updated_at_utc)
+     VALUES ($1, $2, 'Test Synthetic Feature (never real seed data)', $3, 1, $4::jsonb, now(), now())
+     ON CONFLICT (feature_code) DO UPDATE SET current_state = EXCLUDED.current_state, environment_scope = EXCLUDED.environment_scope`,
+    [`feat_test_${featureCode.replace(/\./g, "_")}`, featureCode, currentState, JSON.stringify(scope)],
   );
+}
+
+/** MIG-004 — out-of-band (superuser) environment_scope write, standing in for the future governed
+ * environment-scope workflow that MIG-004 deliberately does not implement. */
+async function setEnvironmentScope(featureCode: string, scope: Record<string, string>): Promise<void> {
+  await verifyPool.query(`UPDATE cfg1.feature SET environment_scope = $2::jsonb WHERE feature_code = $1`, [featureCode, JSON.stringify(scope)]);
 }
 
 async function deleteSyntheticFeature(featureCode: string): Promise<void> {
@@ -520,7 +536,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(res.statusCode).toBe(200);
       const body = res.json();
@@ -536,7 +552,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(res.statusCode).toBe(200);
       const body = res.json();
@@ -551,7 +567,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "totally.unknown.feature", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "totally.unknown.feature", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(res.statusCode).toBe(200);
       const body = res.json();
@@ -565,7 +581,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       const body = res.json();
       expect(body.data.prohibited_registry_hash).toMatch(/^sha256:/);
@@ -578,7 +594,7 @@ describe("CFG-01 Phase 1 integration", () => {
       const res = await app.inject({
         method: "POST",
         url: EVALUATE_URL,
-        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(res.statusCode).toBe(401);
       expect(res.json().error.code).toBe("SERVICE_IDENTITY_REQUIRED");
@@ -590,7 +606,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "x", action: "execute", environment: "prod", caller_module: "TRD-01", not_a_real_field: true },
+        payload: { feature_code: "x", action: "execute", environment: "dev", caller_module: "TRD-01", not_a_real_field: true },
       });
       expect(res.statusCode).toBe(400);
       expect(res.json().error.code).toBe("VALIDATION_ERROR");
@@ -612,7 +628,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(res.statusCode).toBe(200);
       const body = res.json();
@@ -630,7 +646,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       const body = res.json();
       expect(body.data.decision).toBe("deny");
@@ -645,7 +661,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01", requested_config_version: 999 },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01", requested_config_version: 999 },
       });
       const body = res.json();
       expect(body.data.decision).toBe("deny");
@@ -663,7 +679,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         const decisionId = res.json().data.decision_id;
 
@@ -687,7 +703,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: "kyc.bypass", action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: "kyc.bypass", action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       const decisionId = res.json().data.decision_id;
       const outboxRows = await verifyPool.query("SELECT event_type FROM foundation.outbox_event WHERE payload_ref LIKE $1", [
@@ -706,7 +722,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: "pricing.aix_spread_markup", action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         expect(res.statusCode).toBe(503);
         expect(res.json().error.code).toBe("CFG1_CONFIG_INTEGRITY_FAILED");
@@ -735,7 +751,7 @@ describe("CFG-01 Phase 1 integration", () => {
             method: "POST",
             url: EVALUATE_URL,
             headers: internalHeaders,
-            payload: { feature_code: "kyc.bypass", action: "execute", environment: "prod", caller_module: "TRD-01" },
+            payload: { feature_code: "kyc.bypass", action: "execute", environment: "dev", caller_module: "TRD-01" },
           });
           expect(res.statusCode).toBe(503);
           expect(res.json().error.code).toBe("CFG1_AUDIT_REQUIRED");
@@ -764,7 +780,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       const body = res.json();
       return { token: body.data.decision_token, decisionId: body.data.decision_id, featureCode: FEATURE_CODE, callerModule: "TRD-01" };
@@ -773,7 +789,7 @@ describe("CFG-01 Phase 1 integration", () => {
     it("verifies successfully TWICE within the TTL while nothing has changed (bounded reuse, not single-use)", async () => {
       if (!schemaReady) return;
       const { token, decisionId, featureCode, callerModule } = await issueTestToken();
-      const payload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "prod" };
+      const payload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "dev" };
 
       const first = await app.inject({ method: "POST", url: VERIFY_DECISION_URL, headers: internalHeaders, payload });
       expect(first.statusCode).toBe(200);
@@ -787,14 +803,14 @@ describe("CFG-01 Phase 1 integration", () => {
     it("fails with 409 CFG1_DECISION_BINDING_MISMATCH and revokes the token when a bound field is presented differently", async () => {
       if (!schemaReady) return;
       const { token, decisionId, featureCode, callerModule } = await issueTestToken();
-      const wrongAction = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "a_different_action", caller_module: callerModule, environment: "prod" };
+      const wrongAction = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "a_different_action", caller_module: callerModule, environment: "dev" };
 
       const res = await app.inject({ method: "POST", url: VERIFY_DECISION_URL, headers: internalHeaders, payload: wrongAction });
       expect(res.statusCode).toBe(409);
       expect(res.json().error.code).toBe("CFG1_DECISION_BINDING_MISMATCH");
 
       // Same token, now with the CORRECT fields — must still fail, because it was revoked.
-      const correctPayload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "prod" };
+      const correctPayload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "dev" };
       const retry = await app.inject({ method: "POST", url: VERIFY_DECISION_URL, headers: internalHeaders, payload: correctPayload });
       expect(retry.statusCode).toBe(409);
       expect(retry.json().error.code).toBe("CFG1_DECISION_TOKEN_REVOKED");
@@ -806,7 +822,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: VERIFY_DECISION_URL,
         headers: internalHeaders,
-        payload: { decision_token: "not-a-real-token", decision_id: "cfgdec_fake", feature_code: "x", action: "execute", caller_module: "TRD-01", environment: "prod" },
+        payload: { decision_token: "not-a-real-token", decision_id: "cfgdec_fake", feature_code: "x", action: "execute", caller_module: "TRD-01", environment: "dev" },
       });
       expect(res.statusCode).toBe(409);
       expect(res.json().error.code).toBe("CFG1_DECISION_TOKEN_INVALID");
@@ -815,7 +831,7 @@ describe("CFG-01 Phase 1 integration", () => {
     it("a registry change since issuance invalidates the token on its NEXT verify, even though it has not nominally expired", async () => {
       if (!schemaReady) return;
       const { token, decisionId, featureCode, callerModule } = await issueTestToken();
-      const payload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "prod" };
+      const payload = { decision_token: token, decision_id: decisionId, feature_code: featureCode, action: "execute", caller_module: callerModule, environment: "dev" };
 
       // First verify succeeds while nothing has changed.
       const first = await app.inject({ method: "POST", url: VERIFY_DECISION_URL, headers: internalHeaders, payload });
@@ -840,7 +856,7 @@ describe("CFG-01 Phase 1 integration", () => {
       const res = await app.inject({
         method: "POST",
         url: VERIFY_DECISION_URL,
-        payload: { decision_token: "x", decision_id: "x", feature_code: "x", action: "execute", caller_module: "TRD-01", environment: "prod" },
+        payload: { decision_token: "x", decision_id: "x", feature_code: "x", action: "execute", caller_module: "TRD-01", environment: "dev" },
       });
       expect(res.statusCode).toBe(401);
     });
@@ -856,7 +872,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         const rawToken = res.json().data.decision_token as string;
         expect(rawToken).toBeTruthy();
@@ -1154,13 +1170,30 @@ describe("CFG-01 Phase 1 integration", () => {
       expect(changeRows.rows[0].approval_id).toBe("appr_1");
       expect(changeRows.rows[0].decision_token_hash).not.toBe("tok_valid_1"); // hash, never raw
 
+      // MIG-004 — the governed feature-STATE workflow creates the row all-DISABLED in every
+      // environment (migration 071 default; the runtime role cannot write environment_scope), and
+      // the version snapshot records both conjuncts from the authoritative row.
+      const scopeRows = await verifyPool.query(`SELECT environment_scope FROM cfg1.feature WHERE feature_code = $1`, [FEATURE_CODE]);
+      expect(scopeRows.rows[0].environment_scope).toEqual(environmentScope());
+      expect(versionRows.rows[0].state_snapshot).toEqual({ current_state: "enabled", environment_scope: environmentScope() });
+
+      const deniedRes = await app.inject({
+        method: "POST",
+        url: EVALUATE_URL,
+        headers: internalHeaders,
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
+      });
+      expect(deniedRes.json().data.decision).toBe("deny");
+      expect(deniedRes.json().data.reason_code).toBe("environment_not_available"); // current_state=enabled is not availability (DEC-014)
+
+      await setEnvironmentScope(FEATURE_CODE, DEV_AVAILABLE_SCOPE);
       const evalRes = await app.inject({
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
-      expect(evalRes.json().data.decision).toBe("allow"); // only reachable AFTER the approved apply
+      expect(evalRes.json().data.decision).toBe("allow"); // only reachable AFTER the approved apply AND explicit DEVELOPMENT availability
     });
 
     it("applying an already-applied change_id -> CFG1_CHANGE_REQUEST_INVALID_STATE", async () => {
@@ -1194,13 +1227,15 @@ describe("CFG-01 Phase 1 integration", () => {
         headers: internalHeaders,
         payload: { change_id: enableId, approval_id: "appr_1", decision_token: "tok_valid_1" },
       });
+      // MIG-004 — make it available in this suite's own environment (test-controlled fixture).
+      await setEnvironmentScope(FEATURE_CODE, DEV_AVAILABLE_SCOPE);
 
       // 2. Issue a Phase 2 decision token against the now-enabled feature.
       const evalRes = await app.inject({
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       const oldToken = evalRes.json().data.decision_token as string;
       const oldDecisionId = evalRes.json().data.decision_id as string;
@@ -1220,7 +1255,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: VERIFY_DECISION_URL,
         headers: internalHeaders,
-        payload: { decision_token: oldToken, decision_id: oldDecisionId, feature_code: FEATURE_CODE, action: "execute", caller_module: "TRD-01", environment: "prod" },
+        payload: { decision_token: oldToken, decision_id: oldDecisionId, feature_code: FEATURE_CODE, action: "execute", caller_module: "TRD-01", environment: "dev" },
       });
       expect(verifyRes.statusCode).toBe(409);
       expect(["CFG1_DECISION_BINDING_MISMATCH", "CFG1_DECISION_TOKEN_REVOKED"]).toContain(verifyRes.json().error.code);
@@ -1247,7 +1282,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: "test.p3a_pso_bound_feature", action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: "test.p3a_pso_bound_feature", action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         const oldToken = evalRes.json().data.decision_token as string;
         const oldDecisionId = evalRes.json().data.decision_id as string;
@@ -1296,7 +1331,7 @@ describe("CFG-01 Phase 1 integration", () => {
             feature_code: "test.p3a_pso_bound_feature",
             action: "execute",
             caller_module: "TRD-01",
-            environment: "prod",
+            environment: "dev",
           },
         });
         expect(verifyRes.statusCode).toBe(503);
@@ -1356,7 +1391,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         expect(evalRes.statusCode).toBe(503);
         expect(evalRes.json().error.code).toBe("CFG1_CONFIG_INTEGRITY_FAILED");
@@ -1648,7 +1683,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: "exchange.matching_engine", action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         expect(evalRes.json().data.decision).toBe("deny");
         expect(evalRes.json().data.reason_code).toBe("exchange_pending_locked");
@@ -1683,7 +1718,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(evalRes.statusCode).toBe(200);
       expect(evalRes.json().data.decision).toBe("deny");
@@ -1705,7 +1740,7 @@ describe("CFG-01 Phase 1 integration", () => {
           method: "POST",
           url: EVALUATE_URL,
           headers: internalHeaders,
-          payload: { feature_code: NO_ROW_FEATURE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+          payload: { feature_code: NO_ROW_FEATURE, action: "execute", environment: "dev", caller_module: "TRD-01" },
         });
         expect(evalRes.json().data.decision).toBe("deny");
         expect(evalRes.json().data.reason_code).toBe("kill_switch_active");
@@ -1728,7 +1763,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(denied.json().data.reason_code).toBe("kill_switch_active");
 
@@ -1754,7 +1789,7 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(allowed.json().data.decision).toBe("allow");
     });
@@ -1779,12 +1814,12 @@ describe("CFG-01 Phase 1 integration", () => {
         method: "POST",
         url: EVALUATE_URL,
         headers: internalHeaders,
-        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "prod", caller_module: "TRD-01" },
+        payload: { feature_code: FEATURE_CODE, action: "execute", environment: "dev", caller_module: "TRD-01" },
       });
       expect(evalRes.json().data.decision).toBe("allow");
       const token = evalRes.json().data.decision_token as string;
       const decisionId = evalRes.json().data.decision_id as string;
-      const verifyPayload = { decision_token: token, decision_id: decisionId, feature_code: FEATURE_CODE, action: "execute", caller_module: "TRD-01", environment: "prod" };
+      const verifyPayload = { decision_token: token, decision_id: decisionId, feature_code: FEATURE_CODE, action: "execute", caller_module: "TRD-01", environment: "dev" };
 
       // 2. Confirm it verifies fine before activation.
       const before = await app.inject({ method: "POST", url: VERIFY_DECISION_URL, headers: internalHeaders, payload: verifyPayload });

@@ -389,11 +389,22 @@ export async function registerFeatureChangeRoutes(app: FastifyInstance): Promise
             ]);
           }
 
-          await client.query(
+          // MIG-004 — the snapshot records BOTH current_state (DEC-014 product activation) and
+          // environment_scope (ENVIRONMENT_AVAILABILITY), read from the row just written, in this
+          // same transaction. This is version history, not the integrity seal: the feature-scope
+          // seal hash is deliberately unchanged here (CFG-FIND-002 owns that change).
+          const versionInsert = await client.query(
             `INSERT INTO cfg1.feature_version (feature_version_id, feature_id, feature_code, version, state_snapshot, created_at_utc)
-             VALUES ($1,(SELECT feature_id FROM cfg1.feature WHERE feature_code = $2),$2,$3,$4, now())`,
-            ["featver_" + randomUUID(), changeRow.feature_code, newVersion, JSON.stringify({ current_state: changeRow.to_state })],
+             SELECT $1, feature_id, feature_code, $3,
+                    jsonb_build_object('current_state', current_state, 'environment_scope', environment_scope), now()
+               FROM cfg1.feature WHERE feature_code = $2`,
+            ["featver_" + randomUUID(), changeRow.feature_code, newVersion],
           );
+          // Fail closed exactly as the previous VALUES form did (NOT NULL feature_id): never apply
+          // a change without its version-history row.
+          if (versionInsert.rowCount !== 1) {
+            throw new Error("CFG-01 feature_version snapshot insert did not write exactly one row");
+          }
 
           const seal = await resealScope(client, "feature", { approvalId: body.approval_id });
 

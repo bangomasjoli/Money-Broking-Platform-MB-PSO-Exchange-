@@ -118,12 +118,18 @@ export type VerifyDecisionTokenReasonCode =
   | "CFG1_DECISION_BINDING_MISMATCH"
   | "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH";
 
+/** `revokedReason` is set when THIS call revoked the token — the value written to
+ * `cfg1.feature_decision_token.revoked_reason` (varchar(32)), surfaced for audit attribution. */
 export type VerifyDecisionTokenResult =
   | { ok: true; tokenId: string; decisionId: string; featureCode: string }
-  | { ok: false; reasonCode: VerifyDecisionTokenReasonCode };
+  | { ok: false; reasonCode: VerifyDecisionTokenReasonCode; revokedReason?: string };
 
+/** `environment` (from `DecisionTokenBindingInput`) is CFG-01's OWN environment identifier —
+ * the value the token is bound against. `assertedEnvironment` is the caller's request-body
+ * value, a routing-consistency assertion only (MIG-004, CFG-FIND-001). */
 export interface VerifyDecisionTokenInput extends DecisionTokenBindingInput {
   tokenRaw: string;
+  assertedEnvironment: string;
 }
 
 /** The fresh integrity/version state to re-check the token's BOUND values against — supplied
@@ -183,9 +189,21 @@ async function revoke(client: PoolClient, tokenId: string, reason: string): Prom
  * null-safe — a token bound to e.g. client_id = null only matches a presented value that is
  * ALSO null/undefined, never a wildcard) -> recomputed payload_hash (redundant with the field
  * checks by design — defence in depth, catches any field the individual comparisons might
- * miss) -> kill-switch (Phase 3B) -> current prohibited-registry version/hash re-check. ANY
- * failure from the binding check onward revokes the token (approved decision #3);
- * existence/already-revoked/expiry checks do not re-revoke an already-terminal token.
+ * miss) -> kill-switch (Phase 3B) -> environment availability (MIG-004) -> current
+ * prohibited-registry version/hash re-check. ANY failure from the binding check onward revokes
+ * the token (approved decision #3); existence/already-revoked/expiry checks do not re-revoke an
+ * already-terminal token.
+ *
+ * MIG-004 (CFG-FIND-001): immediately after expiry, the caller's `assertedEnvironment` must
+ * equal `input.environment` (CFG-01's own); a mismatch revokes with `environment_mismatch`.
+ * The binding comparison then checks the token's bound environment against CFG-01's OWN value,
+ * so a token issued under one CFG-01 environment never verifies under another.
+ *
+ * `environmentAvailable` (MIG-004) is supplied by the caller: whether the feature's LIVE
+ * `environment_scope` entry for CFG-01's own canonical environment is exactly `ENABLED`, read
+ * fresh on every call. Anything else revokes with `environment_unavailable` — this catches an
+ * availability change even when `cfg1.feature.version` did not change (e.g. an out-of-band
+ * write), which the version comparison alone would miss.
  *
  * `killSwitchActive` (Phase 3B, approved decisions #13/#14) is supplied by the CALLER
  * (`routes/features.ts`), computed via `lib/kill-switch.ts`'s `isKillSwitchActiveForFeature`
@@ -202,6 +220,7 @@ export async function verifyDecisionToken(
   input: VerifyDecisionTokenInput,
   currentIntegrity: CurrentIntegrityState,
   killSwitchActive: boolean,
+  environmentAvailable: boolean,
 ): Promise<VerifyDecisionTokenResult> {
   const tokenHash = sha256HexRaw(input.tokenRaw);
   const rows = await query<DecisionTokenRow>(
@@ -217,6 +236,11 @@ export async function verifyDecisionToken(
   if (!row) return { ok: false, reasonCode: "CFG1_DECISION_TOKEN_INVALID" };
   if (row.status === "revoked") return { ok: false, reasonCode: "CFG1_DECISION_TOKEN_REVOKED" };
   if (new Date(row.expires_at_utc).getTime() <= Date.now()) return { ok: false, reasonCode: "CFG1_DECISION_TOKEN_EXPIRED" };
+
+  if (input.assertedEnvironment !== input.environment) {
+    await revoke(client, row.token_id, "environment_mismatch");
+    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "environment_mismatch" };
+  }
 
   const presentedResource = input.resource ?? null;
   const presentedClientId = input.clientId ?? null;
@@ -236,7 +260,7 @@ export async function verifyDecisionToken(
 
   if (bindingMismatch) {
     await revoke(client, row.token_id, "binding_mismatch");
-    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" };
+    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "binding_mismatch" };
   }
 
   // Phase 3B (approved decisions #13/#14): an active kill-switch revokes the token immediately,
@@ -245,7 +269,12 @@ export async function verifyDecisionToken(
   // lib/decision.ts's own evaluateFeature() gives it relative to ordinary feature-state checks.
   if (killSwitchActive) {
     await revoke(client, row.token_id, "kill_switch_active");
-    return { ok: false, reasonCode: "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH" };
+    return { ok: false, reasonCode: "CFG1_TOKEN_REVOKED_BY_KILL_SWITCH", revokedReason: "kill_switch_active" };
+  }
+
+  if (!environmentAvailable) {
+    await revoke(client, row.token_id, "environment_unavailable");
+    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "environment_unavailable" };
   }
 
   // Approved decision #2: re-check current config/version/hash state on EVERY call, not just
@@ -263,7 +292,7 @@ export async function verifyDecisionToken(
 
   if (configChanged) {
     await revoke(client, row.token_id, "config_changed");
-    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH" };
+    return { ok: false, reasonCode: "CFG1_DECISION_BINDING_MISMATCH", revokedReason: "config_changed" };
   }
 
   await client.query(`UPDATE cfg1.feature_decision_token SET last_verified_at_utc = now() WHERE token_id = $1`, [row.token_id]);

@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "taskId": "MIG-005",
   "title": "Canonical five-environment model in the Foundation Environment type",
-  "state": "IMPLEMENTED",
+  "state": "ACCEPTED",
   "risk": "HIGH",
   "category": "Phase A foundation migration (DEC-013 capability-control plane)",
   "baselineCommit": "9bc49aa",
-  "resultingCommit": null,
+  "resultingCommit": "5f78a0b45c24a4eba1db1c257a4839d56375588f",
   "planner": null,
   "implementer": {
     "role": "implementer",
@@ -14,22 +14,57 @@
     "model": "claude-opus-5-5",
     "effort": "HIGH"
   },
-  "reviewer": null,
+  "reviewer": {
+    "role": "architecture_security_reviewer",
+    "provider": "claude_code",
+    "model": "claude-opus-5-5",
+    "effort": "HIGH"
+  },
   "selectedEfforts": {
-    "implementer": "HIGH"
+    "implementer": "HIGH",
+    "reviewer": "HIGH"
   },
-  "roundCounts": { "planning": 0, "architecture": 0, "review": 0, "remediation": 0, "escalation": 0 },
+  "roundCounts": {
+    "planning": 0,
+    "architecture": 0,
+    "review": 1,
+    "remediation": 0,
+    "escalation": 0
+  },
   "findingsSummary": {
-    "open": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
-    "openFindingIds": ["MIG-005-F01", "MIG-005-F02", "MIG-005-F03", "MIG-005-F04"],
-    "carryForwardIds": []
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 1,
+      "MEDIUM": 0,
+      "LOW": 2
+    },
+    "openFindingIds": [
+      "CFG-FIND-001",
+      "FND-FIND-012",
+      "FND-FIND-013",
+      "WLT-FIND-016"
+    ],
+    "carryForwardIds": [
+      "CFG-FIND-001",
+      "FND-FIND-012",
+      "FND-FIND-013",
+      "WLT-FIND-016"
+    ]
   },
-  "acceptanceStatus": "NOT_ACCEPTED",
+  "acceptanceStatus": "ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/MIG-005/01-plan.md",
     "docs/03_implementation/tasks/MIG-005/02-implementation-report.md",
-    "docs/03_implementation/tasks/MIG-005/03-evidence.md"
+    "docs/03_implementation/tasks/MIG-005/03-evidence.md",
+    "docs/03_implementation/tasks/MIG-005/04-review.md",
+    "docs/03_implementation/tasks/MIG-005/06-acceptance.md"
   ],
-  "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-09-26T00:00:00.000Z"
+  "createdAt": "2026-09-25T16:25:18.000Z",
+  "updatedAt": "2026-09-25T16:39:58.000Z",
+  "acceptance": {
+    "acceptedBy": "Aiman",
+    "acceptedAt": "2026-09-25T16:39:58.000Z",
+    "acceptedCommit": "5f78a0b45c24a4eba1db1c257a4839d56375588f",
+    "reviewExecutionId": null
+  }
 }

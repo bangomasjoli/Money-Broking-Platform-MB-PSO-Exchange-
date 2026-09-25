@@ -5,7 +5,7 @@
 - **Implementation model / effort:** claude-opus-5-5 / HIGH
 - **Round:** 1
 - **Baseline commit:** `9bc49aa`
-- **Resulting commit:** the commit that adds this record (`feat(foundation): add governed environment capability model`)
+- **Resulting commit:** `5f78a0b`
 
 ## Changed files (summary)
 - `platform/packages/foundation/src/environment.ts` — **new.** Canonical environment model.

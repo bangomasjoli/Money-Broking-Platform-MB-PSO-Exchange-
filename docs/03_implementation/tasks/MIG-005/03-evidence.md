@@ -4,7 +4,7 @@
 
 - **Collected:** 2026-09-26
 - **Baseline commit:** `9bc49aa` (main = origin/main, tree clean before editing)
-- **Resulting commit:** the commit adding this record
+- **Resulting commit:** `5f78a0b`
 - **Branch:** main
 
 ## Checks

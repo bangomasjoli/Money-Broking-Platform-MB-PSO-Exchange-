@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ACC-01",
+  "title": "ACC-01 Account Structure (Master Account & Subaccount) — blueprint and implementation planning",
+  "state": "PLANNED",
+  "statusNote": "PLANNED / AWAITING REVIEW — planning only; no code, no migration; nothing approved or accepted. The state string 'PLANNED' is not one of the conductor states shown in tasks/README.md (IDLE … ACCEPTED, FAILED); confirm the mapping before conductor ingestion.",
+  "risk": "MODERATE",
+  "category": "Phase C institutional foundation (DEC-011) — planning",
+  "baselineCommit": "43f2f34",
+  "resultingCommit": null,
+  "planner": {
+    "role": "blueprint_planner",
+    "provider": "claude_code",
+    "model": "claude-sonnet-5",
+    "effort": null
+  },
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": { "planning": 1, "architecture": 0, "review": 0, "remediation": 0, "escalation": 0 },
+  "findingsSummary": {
+    "open": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "openFindingIds": [],
+    "carryForwardIds": []
+  },
+  "proposedFindings": [
+    "ACC-PROP-001 (INFO)",
+    "ACC-PROP-002 (INFO)",
+    "ACC-PROP-003 (LOW)",
+    "ACC-PROP-004 (MEDIUM)"
+  ],
+  "pendingHumanDecisions": [
+    "HD-1", "HD-2", "HD-3", "HD-4", "HD-5", "HD-6", "HD-7", "HD-8", "HD-9", "HD-10"
+  ],
+  "dependencyChangeRequests": [
+    "DCR-ACC-LED-01", "DCR-ACC-CLT-01", "DCR-ACC-CLT-02", "DCR-ACC-IAM-01", "DCR-ACC-IAM-02",
+    "DCR-ACC-IAM-03", "DCR-ACC-CFG-01", "DCR-ACC-FND-01", "DCR-ACC-WLT-01", "DCR-ACC-GOV-01",
+    "DCR-ACC-GOV-02", "DCR-ACC-GOV-03", "DCR-ACC-REC-01"
+  ],
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/ACC-01/01-plan.md",
+    "docs/02_modules/ACC-01/README.md",
+    "docs/02_modules/ACC-01/blueprint/v0.1/README.md",
+    "docs/02_modules/ACC-01/blueprint/v0.1/17_Dependency_Change_Requests_And_Open_Questions.md"
+  ],
+  "createdAt": "2026-09-26T00:00:00.000Z",
+  "updatedAt": "2026-09-26T00:00:00.000Z"
+}

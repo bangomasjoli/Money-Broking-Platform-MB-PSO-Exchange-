@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "taskId": "MIG-005",
+  "title": "Canonical five-environment model in the Foundation Environment type",
+  "state": "IMPLEMENTED",
+  "risk": "HIGH",
+  "category": "Phase A foundation migration (DEC-013 capability-control plane)",
+  "baselineCommit": "9bc49aa",
+  "resultingCommit": null,
+  "planner": null,
+  "implementer": {
+    "role": "implementer",
+    "provider": "claude_code",
+    "model": "claude-opus-5-5",
+    "effort": "HIGH"
+  },
+  "reviewer": null,
+  "selectedEfforts": {
+    "implementer": "HIGH"
+  },
+  "roundCounts": { "planning": 0, "architecture": 0, "review": 0, "remediation": 0, "escalation": 0 },
+  "findingsSummary": {
+    "open": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "openFindingIds": ["MIG-005-F01", "MIG-005-F02", "MIG-005-F03", "MIG-005-F04"],
+    "carryForwardIds": []
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/MIG-005/01-plan.md",
+    "docs/03_implementation/tasks/MIG-005/02-implementation-report.md",
+    "docs/03_implementation/tasks/MIG-005/03-evidence.md"
+  ],
+  "createdAt": "2026-09-26T00:00:00.000Z",
+  "updatedAt": "2026-09-26T00:00:00.000Z"
+}

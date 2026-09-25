@@ -38,7 +38,9 @@ AIX Full Compliance — Labuan FSA **Money Broking + PSO** platform (Exchange ap
 
 ## 5. Active task
 
-None. The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independent GPT review `ACCEPT` (no findings), then human acceptance. Records: [tasks/IMP02-MA-HARDEN-001/](../03_implementation/tasks/IMP02-MA-HARDEN-001/). One residual behaviour was accepted by the human: `writeEvidenceAtomic` creates the target directory before its realpath containment check, so a symlink escape may create an empty directory outside `perf/evidence/` before the write is refused; no evidence file is written outside the root (`REVIEW_CONCERN-001`, see [04-review.md](../03_implementation/tasks/IMP02-MA-HARDEN-001/04-review.md)).
+**MIG-005** — canonical five-environment model in `@aix/foundation` (`demo` added; `staging` and unknown → PRODUCTION). **IMPLEMENTED, NOT ACCEPTED**: awaiting independent review and human acceptance. Records: [tasks/MIG-005/](../03_implementation/tasks/MIG-005/). Review-required observations `MIG-005-F01`…`F04` (F03 must be resolved in the `MIG-004` plan). **`MIG-004` NOT STARTED.** No capability enabled, no migration added.
+
+The previous active task **IMP02-MA-HARDEN-001** is **ACCEPTED**: independent GPT review `ACCEPT` (no findings), then human acceptance. Records: [tasks/IMP02-MA-HARDEN-001/](../03_implementation/tasks/IMP02-MA-HARDEN-001/). One residual behaviour was accepted by the human: `writeEvidenceAtomic` creates the target directory before its realpath containment check, so a symlink escape may create an empty directory outside `perf/evidence/` before the write is refused; no evidence file is written outside the root (`REVIEW_CONCERN-001`, see [04-review.md](../03_implementation/tasks/IMP02-MA-HARDEN-001/04-review.md)).
 
 ## 6. Open findings (IDs only — details and state in [OPEN_FINDINGS.md](../OPEN_FINDINGS.md))
 - **HIGH:** `FND-FIND-001` — pre-authentication abuse control; trigger: before any WLT-01 public route is internet-exposed; resolved via IMP-02.

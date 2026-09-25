@@ -5,9 +5,7 @@
  * loader never logs their values.
  */
 import { AppError } from "./errors.js";
-
-export type Environment = "dev" | "qa" | "uat" | "staging" | "prod";
-const ENVIRONMENTS: readonly Environment[] = ["dev", "qa", "uat", "staging", "prod"];
+import { ENVIRONMENTS, isEnvironment, type Environment } from "./environment.js";
 
 export interface AppConfig {
   environment: Environment;
@@ -30,8 +28,8 @@ export interface RawEnv {
 export function loadConfig(env: RawEnv = process.env): AppConfig {
   const problems: string[] = [];
 
-  const environment = env.ENVIRONMENT?.trim() as Environment | undefined;
-  if (!environment || !ENVIRONMENTS.includes(environment)) {
+  const environment = env.ENVIRONMENT?.trim();
+  if (!isEnvironment(environment)) {
     problems.push(`ENVIRONMENT must be one of ${ENVIRONMENTS.join("/")}`);
   }
 

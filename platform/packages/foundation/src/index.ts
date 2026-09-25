@@ -11,4 +11,5 @@ export * from "./outbox.js";
 export * from "./audit.js";
 export * from "./idempotency.js";
 export * from "./no-exchange.js";
+export * from "./environment.js";
 export * from "./config.js";

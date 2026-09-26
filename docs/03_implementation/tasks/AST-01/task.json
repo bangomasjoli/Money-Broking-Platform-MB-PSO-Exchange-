@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "AST-01",
-  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification: blueprint v1.2 REMEDIATED / AWAITING RE-REVIEW (v1.0, v1.1 REVIEWED / REMEDIATE); implementation not authorised",
+  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification: blueprint v1.3 REMEDIATED / AWAITING RE-REVIEW (v1.0, v1.1, v1.2 REVIEWED / REMEDIATE); implementation not authorised",
   "state": "IDLE",
   "risk": "CRITICAL",
   "category": "Module blueprint and implementation planning (DEC-013)",
@@ -28,25 +28,18 @@
   "findingsSummary": {
     "open": {
       "BLOCKER": 0,
-      "HIGH": 7,
-      "MEDIUM": 4,
-      "LOW": 3
+      "HIGH": 3,
+      "MEDIUM": 3,
+      "LOW": 1
     },
     "openFindingIds": [
-      "AST-01-F01",
       "AST-01-F02",
-      "AST-01-F04",
       "AST-01-F05",
-      "AST-01-F06",
-      "AST-01-F08",
       "AST-01-F17",
-      "AST-01-F18",
-      "AST-01-F19",
-      "AST-01-F20",
       "AST-01-F21",
-      "AST-01-F22",
-      "AST-01-F23",
-      "AST-01-F24"
+      "AST-01-F26",
+      "AST-01-F27",
+      "AST-01-F28"
     ],
     "carryForwardIds": []
   },
@@ -55,9 +48,11 @@
     "docs/03_implementation/tasks/AST-01/01-plan.md",
     "docs/03_implementation/tasks/AST-01/04-review.md",
     "docs/03_implementation/tasks/AST-01/04-review-r2.md",
+    "docs/03_implementation/tasks/AST-01/04-review-r3.md",
     "docs/03_implementation/tasks/AST-01/05-remediation.md",
-    "docs/03_implementation/tasks/AST-01/05-remediation-r2.md"
+    "docs/03_implementation/tasks/AST-01/05-remediation-r2.md",
+    "docs/03_implementation/tasks/AST-01/05-remediation-r3.md"
   ],
   "createdAt": "2026-09-25T19:27:22.000Z",
-  "updatedAt": "2026-09-26T07:30:00.000Z"
+  "updatedAt": "2026-09-26T12:00:00.000Z"
 }

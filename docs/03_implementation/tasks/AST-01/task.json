@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "AST-01",
-  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification: blueprint / implementation planning. PLANNED / AWAITING REVIEW. Review: REMEDIATE (04-review.md)",
+  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification: blueprint v1.1 REMEDIATED / AWAITING RE-REVIEW (v1.0 REVIEWED / REMEDIATE); implementation not authorised",
   "state": "IDLE",
   "risk": "CRITICAL",
   "category": "Module blueprint and implementation planning (DEC-013)",
@@ -18,7 +18,7 @@
   "selectedEfforts": {
     "high_risk_reviewer": "HIGH"
   },
-  "roundCounts": { "planning": 1, "architecture": 0, "review": 1, "remediation": 0, "escalation": 0 },
+  "roundCounts": { "planning": 1, "architecture": 0, "review": 1, "remediation": 1, "escalation": 0 },
   "findingsSummary": {
     "open": { "BLOCKER": 0, "HIGH": 6, "MEDIUM": 4, "LOW": 5 },
     "openFindingIds": [
@@ -43,8 +43,9 @@
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/AST-01/01-plan.md",
-    "docs/03_implementation/tasks/AST-01/04-review.md"
+    "docs/03_implementation/tasks/AST-01/04-review.md",
+    "docs/03_implementation/tasks/AST-01/05-remediation.md"
   ],
   "createdAt": "2026-09-25T19:27:22.000Z",
-  "updatedAt": "2026-09-26T05:31:54.000Z"
+  "updatedAt": "2026-09-26T06:30:00.000Z"
 }

@@ -1,57 +1,50 @@
 {
   "schemaVersion": 1,
   "taskId": "AST-01",
-  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification — blueprint / implementation planning",
-  "state": "PLANNED",
-  "statusLabel": "PLANNED / AWAITING REVIEW",
+  "title": "AST-01 Asset & Instrument Registry + Regulatory Classification: blueprint / implementation planning. PLANNED / AWAITING REVIEW. Review: REMEDIATE (04-review.md)",
+  "state": "IDLE",
   "risk": "CRITICAL",
   "category": "Module blueprint and implementation planning (DEC-013)",
   "baselineCommit": "43f2f34",
   "resultingCommit": null,
-  "planner": {
-    "role": "blueprint_author",
-    "provider": "claude_code",
-    "model": "claude-sonnet-5",
-    "effort": null
-  },
+  "planner": null,
   "implementer": null,
-  "reviewer": null,
-  "selectedEfforts": {},
-  "roundCounts": { "planning": 1, "architecture": 0, "review": 0, "remediation": 0, "escalation": 0 },
+  "reviewer": {
+    "role": "high_risk_reviewer",
+    "provider": "claude_code",
+    "model": "claude-opus-5-5",
+    "effort": "HIGH"
+  },
+  "selectedEfforts": {
+    "high_risk_reviewer": "HIGH"
+  },
+  "roundCounts": { "planning": 1, "architecture": 0, "review": 1, "remediation": 0, "escalation": 0 },
   "findingsSummary": {
-    "open": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
-    "openFindingIds": [],
+    "open": { "BLOCKER": 0, "HIGH": 6, "MEDIUM": 4, "LOW": 5 },
+    "openFindingIds": [
+      "AST-01-F01",
+      "AST-01-F02",
+      "AST-01-F03",
+      "AST-01-F04",
+      "AST-01-F05",
+      "AST-01-F06",
+      "AST-01-F07",
+      "AST-01-F08",
+      "AST-01-F09",
+      "AST-01-F10",
+      "AST-01-F11",
+      "AST-01-F12",
+      "AST-01-F13",
+      "AST-01-F14",
+      "AST-01-F15"
+    ],
     "carryForwardIds": []
   },
-  "pendingHumanDecisions": [
-    "HD-1 fiat treatment",
-    "HD-2 product_admission as conjunct-only",
-    "HD-3 synthetic_emulates",
-    "HD-4 presumptive securities classes",
-    "HD-5 Pay for security outcomes",
-    "HD-6 hold authority",
-    "HD-7 meaning of RWA eligibility",
-    "HD-8 elevated approval SECURITY to NON_SECURITY",
-    "HD-9 per-instrument classification",
-    "HD-10 token TTL and log-every-decision"
-  ],
-  "dependencyChangeRequests": [
-    "DCR-AST1-001 IAM-02 permissions/approval policy",
-    "DCR-AST1-002 WLT-01/LED-01 registry reconciliation and consumption",
-    "DCR-AST1-003 CFG-01 feature codes and asset-eligibility conjunct",
-    "DCR-AST1-004 consumer contract (OMS-01, TRD-01, PAY-01, RWA, EXM-01, EXP-01, CLT-01/KYC-01)",
-    "DCR-AST1-005 evidence document store ownership",
-    "DCR-AST1-006 Role Matrix hold authority",
-    "DCR-AST1-007 FND-01/MIG-001 exchange route-fragment guard",
-    "DCR-AST1-008 masters clarifications",
-    "DCR-AST1-009 control-layer record checkpoint"
-  ],
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/AST-01/01-plan.md",
-    "docs/02_modules/AST-01/README.md",
-    "docs/02_modules/AST-01/blueprint/v1.0/README.md"
+    "docs/03_implementation/tasks/AST-01/04-review.md"
   ],
-  "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-09-26T00:00:00.000Z"
+  "createdAt": "2026-09-25T19:27:22.000Z",
+  "updatedAt": "2026-09-26T05:31:54.000Z"
 }

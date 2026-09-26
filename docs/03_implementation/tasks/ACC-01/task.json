@@ -19,7 +19,7 @@
     "high_risk_reviewer": "HIGH"
   },
   "roundCounts": {
-    "planning": 2,
+    "planning": 3,
     "architecture": 0,
     "review": 0,
     "remediation": 0,
@@ -28,27 +28,28 @@
   "findingsSummary": {
     "open": {
       "BLOCKER": 0,
-      "HIGH": 1,
-      "MEDIUM": 4,
+      "HIGH": 2,
+      "MEDIUM": 5,
       "LOW": 5
     },
     "openFindingIds": [
       "ACC-01-RF-01",
       "ACC-01-RF-02",
-      "ACC-01-RF-03",
-      "ACC-01-RF-04",
       "ACC-01-RF-05",
-      "ACC-01-RF-06",
-      "ACC-01-RF-07",
-      "ACC-01-RF-08",
       "ACC-01-RF-09",
-      "ACC-01-RF-10",
-      "ACC-01-RF-11"
+      "ACC-01-R2-F01",
+      "ACC-01-R2-F02",
+      "ACC-01-R2-F03",
+      "ACC-01-R2-F04",
+      "ACC-01-R2-F05",
+      "ACC-01-R2-F06",
+      "ACC-01-R2-F07",
+      "ACC-01-R2-F08",
+      "ACC-01-R2-F09"
     ],
     "carryForwardIds": [
       "ACC-01-RF-01",
       "ACC-01-RF-02",
-      "ACC-01-RF-03",
       "ACC-01-RF-05",
       "ACC-01-RF-09"
     ]
@@ -57,8 +58,10 @@
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/ACC-01/01-plan.md",
     "docs/03_implementation/tasks/ACC-01/04-review.md",
-    "docs/03_implementation/tasks/ACC-01/05-remediation.md"
+    "docs/03_implementation/tasks/ACC-01/05-remediation.md",
+    "docs/03_implementation/tasks/ACC-01/04-review-r2.md",
+    "docs/03_implementation/tasks/ACC-01/05-remediation-r2.md"
   ],
   "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-09-26T18:00:00.000Z"
+  "updatedAt": "2026-09-26T21:00:00.000Z"
 }

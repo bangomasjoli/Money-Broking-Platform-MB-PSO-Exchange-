@@ -18,14 +18,15 @@ baseline_commit: 5a4f872
 **Module ID:** ACC-01
 **Module name:** Account Structure — Master Account & Subaccount
 **Master Module Index status:** NEW (Phase C — institutional foundations; Module Index §7, §18, §19)
-**Available blueprint versions:** v0.1, v0.2
-**Authoritative blueprint version:** none — v0.1 and v0.2 are **planning packs**, not certified. [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md) is the sole authority for blueprint version and status; this README does not decide it, and no register row has been added (out of this task's ownership — see dependency request DCR-ACC-GOV-01).
+**Available blueprint versions:** v0.1, v0.2, v0.3
+**Authoritative blueprint version:** none — v0.1, v0.2 and v0.3 are **planning packs**, not certified. [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md) is the sole authority for blueprint version and status; this README does not decide it, and no register row has been added (out of this task's ownership — see dependency request DCR-ACC-GOV-01).
 **Blueprint status:**
 
 | Version | Status |
 |---|---|
 | **v0.1** | **REVIEWED / REMEDIATE** — independent review at `42316fe`, verdict REMEDIATE ([`04-review.md`](../../03_implementation/tasks/ACC-01/04-review.md)). Preserved unchanged as the reviewed historical pack |
-| **v0.2** | **REMEDIATED / AWAITING RE-REVIEW** — remediates every finding RF-01…RF-11 ([`05-remediation.md`](../../03_implementation/tasks/ACC-01/05-remediation.md)); **not yet re-reviewed — separate-context re-review required** |
+| **v0.2** | **REVIEWED / REMEDIATE** — separate-context re-review verdict REMEDIATE ([`04-review-r2.md`](../../03_implementation/tasks/ACC-01/04-review-r2.md)); remediation record [`05-remediation.md`](../../03_implementation/tasks/ACC-01/05-remediation.md). Preserved unchanged as reviewed historical evidence |
+| **v0.3** | **REMEDIATED / AWAITING RE-REVIEW** — remediates R2-F01…R2-F09 and records ACC-R2-HD-01…08 ([`05-remediation-r2.md`](../../03_implementation/tasks/ACC-01/05-remediation-r2.md)); **not yet re-reviewed — separate-context re-review required** |
 
 **Nothing is accepted. Implementation is not authorised.**
 
@@ -44,14 +45,15 @@ CLT-01 Legal Entity            (sole owner: legal entity, client identity, membe
 
 ## Blueprint pack
 
-Current pack: [`blueprint/v0.2/`](blueprint/v0.2/) — start at its [README](blueprint/v0.2/README.md). Historical (reviewed, REMEDIATE): [`blueprint/v0.1/`](blueprint/v0.1/).
+Current pack: [`blueprint/v0.3/`](blueprint/v0.3/) — start at its [README](blueprint/v0.3/README.md). Historical (reviewed, REMEDIATE, unchanged): [`blueprint/v0.2/`](blueprint/v0.2/) and [`blueprint/v0.1/`](blueprint/v0.1/).
 
-Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/tasks/ACC-01/) (`01-plan.md`, `04-review.md`, `05-remediation.md`, `task.json`).
+Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/tasks/ACC-01/) (`01-plan.md`, `04-review.md`, `05-remediation.md`, `04-review-r2.md`, `05-remediation-r2.md`, `task.json`).
 
 ## Reviews
 
 - [`04-review.md`](../../03_implementation/tasks/ACC-01/04-review.md) — v0.1, verdict **REMEDIATE** (independent architecture/compliance review; same-session, model-level independence only).
-- v0.2 — **awaiting separate-context re-review**.
+- [`04-review-r2.md`](../../03_implementation/tasks/ACC-01/04-review-r2.md) — v0.2 (separate-context), verdict **REMEDIATE**.
+- v0.3 — **awaiting separate-context re-review**.
 
 ## Acceptance evidence
 
@@ -59,4 +61,4 @@ Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/t
 
 ## Open items
 
-Dependency-change requests (`DCR-ACC-*`, classified ACC-BUILD / ACC-REAL-USE / LED-DESIGN / GO-LIVE / GOV), open questions (`OQ-*`) and human decisions are recorded in [`blueprint/v0.2/17_Dependency_Change_Requests_And_Open_Questions.md`](blueprint/v0.2/17_Dependency_Change_Requests_And_Open_Questions.md). **No dependent module has changed.** Real (non-DEV/TEST) use of ACC-01 is gated (G1–G6) on external prerequisites, headed by `IAM2-FIND-002`. Findings are owned by [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md); this pack raises none itself — a human promotes.
+Dependency-change requests (`DCR-ACC-*`, classified ACC-BUILD / ACC-REAL-USE / LED-DESIGN / GO-LIVE / GOV), open questions (`OQ-*`) and human decisions are recorded in [`blueprint/v0.3/17_Dependency_Change_Requests_And_Open_Questions.md`](blueprint/v0.3/17_Dependency_Change_Requests_And_Open_Questions.md). **No dependent module has changed.** Operation of ACC-01 depends on environment-agnostic `DEP-*` prerequisites (headed by `IAM2-FIND-002` and the IAM-02 actor-binding contract); **environment availability belongs to CFG-01**, not ACC-01. Findings are owned by [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md); this pack raises none itself — a human promotes.

@@ -1,33 +1,27 @@
 {
   "schemaVersion": 1,
   "taskId": "ACC-01",
-  "title": "ACC-01 Account Structure (Master Account & Subaccount) — blueprint and implementation planning",
-  "state": "PLAN_READY",
-  "statusNote": "PLANNED / AWAITING REVIEW — plan reviewed: REMEDIATE (04-review.md). Machine state PLAN_READY per aix-conductor src/state.ts (IDLE is pre-planning only; PLANNED is not a conductor state). The start_implementation gate must NOT be granted while the review verdict is REMEDIATE; plan rework follows PLAN_READY -> PLANNING. roundCounts.review=1 records a plan review; no REVIEWING state was entered. Review ran in the same session as authoring (model-level independence only). Nothing approved or accepted.",
+  "title": "ACC-01 Account Structure (Master Account & Subaccount) - blueprint and implementation planning",
+  "state": "PLANNING",
   "risk": "MODERATE",
-  "category": "Phase C institutional foundation (DEC-011) — planning",
+  "category": "Phase C institutional foundation (DEC-011) - planning",
   "baselineCommit": "43f2f34",
   "resultingCommit": null,
-  "planner": {
-    "role": "blueprint_planner",
-    "provider": "claude_code",
-    "model": "claude-sonnet-5",
-    "effort": null
-  },
+  "planner": null,
   "implementer": null,
   "reviewer": {
-    "role": "independent_reviewer",
+    "role": "high_risk_reviewer",
     "provider": "claude_code",
     "model": "claude-opus-5-5",
     "effort": "HIGH"
   },
   "selectedEfforts": {
-    "reviewer": "HIGH"
+    "high_risk_reviewer": "HIGH"
   },
   "roundCounts": {
-    "planning": 1,
+    "planning": 2,
     "architecture": 0,
-    "review": 1,
+    "review": 0,
     "remediation": 0,
     "escalation": 0
   },
@@ -51,76 +45,20 @@
       "ACC-01-RF-10",
       "ACC-01-RF-11"
     ],
-    "carryForwardIds": []
+    "carryForwardIds": [
+      "ACC-01-RF-01",
+      "ACC-01-RF-02",
+      "ACC-01-RF-03",
+      "ACC-01-RF-05",
+      "ACC-01-RF-09"
+    ]
   },
-  "proposedFindings": [
-    "ACC-PROP-001 (INFO)",
-    "ACC-PROP-002 (INFO)",
-    "ACC-PROP-003 (LOW)",
-    "ACC-PROP-004 (MEDIUM)"
-  ],
-  "pendingHumanDecisions": [
-    "HD-1",
-    "HD-2",
-    "HD-3",
-    "HD-4",
-    "HD-5",
-    "HD-6",
-    "HD-7",
-    "HD-8",
-    "HD-9",
-    "HD-10"
-  ],
-  "dependencyChangeRequests": [
-    "DCR-ACC-LED-01",
-    "DCR-ACC-CLT-01",
-    "DCR-ACC-CLT-02",
-    "DCR-ACC-IAM-01",
-    "DCR-ACC-IAM-02",
-    "DCR-ACC-IAM-03",
-    "DCR-ACC-CFG-01",
-    "DCR-ACC-FND-01",
-    "DCR-ACC-WLT-01",
-    "DCR-ACC-GOV-01",
-    "DCR-ACC-GOV-02",
-    "DCR-ACC-GOV-03",
-    "DCR-ACC-REC-01"
-  ],
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/ACC-01/01-plan.md",
     "docs/03_implementation/tasks/ACC-01/04-review.md",
-    "docs/02_modules/ACC-01/README.md",
-    "docs/02_modules/ACC-01/blueprint/v0.1/README.md",
-    "docs/02_modules/ACC-01/blueprint/v0.1/17_Dependency_Change_Requests_And_Open_Questions.md"
+    "docs/03_implementation/tasks/ACC-01/05-remediation.md"
   ],
   "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-09-26T12:00:00.000Z",
-  "reviewVerdict": "REMEDIATE",
-  "reviewedCommit": "42316fe",
-  "reviewFindings": {
-    "ACC-01-RF-01": "HIGH — default-deny claim false for approval-gated codes; maker/checker not entitlement-checked under IAM-02 (blocks phase 3)",
-    "ACC-01-RF-02": "MEDIUM — mistaken-creation closure deadlock; internal contradiction (blocks phase 3 outside DEV/TEST, phase 5)",
-    "ACC-01-RF-03": "MEDIUM — closure attest-then-close race (blocks phase 5)",
-    "ACC-01-RF-04": "MEDIUM — client-derived blocked_scopes deny-list fails open (blocks phase 2)",
-    "ACC-01-RF-05": "MEDIUM — CLT-01 status seam requires write-capable CLT-01 internal token (blocks phase 2 outside DEV/TEST)",
-    "ACC-01-RF-06": "LOW — restriction not bound to subaccount owner (blocks phase 1)",
-    "ACC-01-RF-07": "LOW — IAM-02 seam mechanics misdescribed (blocks phase 1/3 detail)",
-    "ACC-01-RF-08": "LOW — scheduled-restriction timing and version evidence gaps (blocks phases 2/4)",
-    "ACC-01-RF-09": "LOW — client vs account freeze ownership and login_block owner undecided (blocks phase 4)",
-    "ACC-01-RF-10": "LOW — DCR classification and runtime dependency corrections (non-blocking)",
-    "ACC-01-RF-11": "INFO — client-class check is not an eligibility authority (non-blocking)"
-  },
-  "hdAdjudication": {
-    "HD-1": "SUPPORTED WITH CORRECTION",
-    "HD-2": "HUMAN DECISION REQUIRED",
-    "HD-3": "HUMAN DECISION REQUIRED",
-    "HD-4": "SUPPORTED",
-    "HD-5": "SUPPORTED WITH CORRECTION",
-    "HD-6": "SUPPORTED",
-    "HD-7": "SUPPORTED",
-    "HD-8": "SUPPORTED",
-    "HD-9": "SUPPORTED WITH CORRECTION",
-    "HD-10": "HUMAN DECISION REQUIRED"
-  }
+  "updatedAt": "2026-09-26T18:00:00.000Z"
 }

@@ -1,7 +1,7 @@
 # 01 Plan — ACC-01: Account Structure (Master Account & Subaccount) — blueprint and implementation planning
 
 - **Task ID:** ACC-01
-- **Status:** **PLANNED / AWAITING REVIEW**
+- **Status:** **PLANNED / AWAITING REVIEW** — amended: v0.1 REVIEWED / REMEDIATE (`04-review.md`); v0.2 **REMEDIATED / AWAITING RE-REVIEW** (`05-remediation.md`). Nothing accepted.
 - **Risk:** MODERATE for this task (documentation only). The **module it plans is Money-Critical / Compliance-Critical**; any implementation task derived from it should be classed HIGH–CRITICAL and independently reviewed by an Opus-class reviewer (CLAUDE_CODE_USAGE_RULES: architecture/security/compliance/fund-flow review).
 - **Category:** Phase C institutional foundation (`DEC-011`; Module Index §18)
 - **Planner:** blueprint / implementation planner / claude-sonnet-5 / effort not specified by the assignment
@@ -44,7 +44,7 @@ Reconstruct ACC-01's requirements from `DEC-011`, `DEC-013`, `DEC-014`, CURRENT_
 Pack: `docs/02_modules/ACC-01/blueprint/v0.1/` — 17 files plus README; module index page `docs/02_modules/ACC-01/README.md`.
 
 ## Key design outcomes (all proposals for review)
-1. ACC-01 stores no legal-entity, membership, ledger or balance data; owner is a `client_id` reference validated through CLT-01's **existing** `/internal/clt1/clients/:client_id/status` seam — **no CLT-01 change is needed to build ACC-01**.
+1. ACC-01 stores no legal-entity, membership, ledger or balance data; owner is a `client_id` reference validated through CLT-01's **existing** `/internal/clt1/clients/:client_id/status` seam. **[Corrected in v0.2, review RF-05: that seam sits behind CLT-01's single general internal token, which also guards CLT-01's mutating routes. ACC-01 must never receive it; a dedicated read-scoped credential is required — DCR-ACC-CLT-03 — before use outside DEVELOPMENT/TEST. The v0.1 claim that no CLT-01 change is needed is withdrawn.]**
 2. Cross-client subaccount ownership is unrepresentable (composite FK + trigger); ownership immutable from creation; no transfer path.
 3. Effective status is computed live and fails closed; never cascaded, never cached in v0.1.
 4. All create/close/restrict/lift changes are governed change requests with IAM-02 maker-checker and a crash-window-safe apply.
@@ -67,3 +67,8 @@ Pack: `docs/02_modules/ACC-01/blueprint/v0.1/` — 17 files plus README; module 
 3. Sequence `DCR-ACC-LED-01` ahead of LED-01's design freeze; sequence `DCR-ACC-IAM-02/03` ahead of any governed apply.
 4. On acceptance, governance follow-ups (`DCR-ACC-GOV-01/02/03`) as a separate record checkpoint.
 5. Only then: an approved implementation task per phase (file 11).
+
+## Amendment — v0.2 remediation (2026-09-26)
+- v0.1 was independently reviewed (`04-review.md`, verdict REMEDIATE). The remediated pack is `docs/02_modules/ACC-01/blueprint/v0.2/`; v0.1 is preserved unchanged. Evidence map: `05-remediation.md`.
+- The acceptance criteria above refer to the planning deliverable; the two unchecked criteria remain open — **separate-context re-review of v0.2** and the human decisions still outstanding (file 17 §4.2).
+- Machine state is **not** `PLAN_READY`: the conductor starts implementation only from `PLAN_READY`, and a REMEDIATE verdict must not leave the task implementation-eligible. See `05-remediation.md` §3.

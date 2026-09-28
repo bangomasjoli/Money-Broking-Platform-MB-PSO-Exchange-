@@ -10,34 +10,36 @@ owner: Unassigned
 effective_date: UNKNOWN
 last_reviewed: 2026-09-28
 supersedes: none
-baseline_commit: 3c222f4
+baseline_commit: 32fadb0
 ---
 
 # AST-01 — Asset & Instrument Registry + Regulatory Classification
 
 **Module ID:** AST-01
 **Module name:** Asset & Instrument Registry + Regulatory Classification (Master Module Index v1.4 §9, status `NEW`)
-**Available blueprint versions:** v1.0, v1.1, v1.2, v1.3, v1.4
+**Available blueprint versions:** v1.0, v1.1, v1.2, v1.3, v1.4, v1.5
 **Authoritative blueprint version:** none — no version is promoted. [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md) decides authority; this README does not.
 - **v1.0** = **REVIEWED / REMEDIATE** (independent review `04-review.md` at `45d9a2f`; kept unchanged as historical evidence).
 - **v1.1** = **REVIEWED / REMEDIATE** (separate-context review `04-review-r2.md` at `ccec2ff`; kept unchanged as historical evidence).
 - **v1.2** = **REVIEWED / REMEDIATE** (separate-context review `04-review-r3.md` at `f769689`; kept unchanged as historical evidence).
 - **v1.3** = **REVIEWED / REMEDIATE** (separate-context review `04-review-r4.md` at `b56950f`; kept unchanged as historical evidence).
-- **v1.4** = **REMEDIATED / AWAITING RE-REVIEW** (`05-remediation-r4.md`). Nothing is accepted.
+- **v1.4** = **REVIEWED / REMEDIATE** (separate-context review `04-review-r5.md` at `32fadb0`; kept unchanged as historical evidence).
+- **v1.5** = **REMEDIATED / AWAITING RE-REVIEW** (`05-remediation-r5.md`). Nothing is accepted.
 **Implementation status:** NOT_STARTED. No code, migration or schema exists. This branch (`module/AST-01`) contains documentation only.
 
 ## Status
 
-**v1.4: REMEDIATED / AWAITING RE-REVIEW** (v1.0, v1.1, v1.2 and v1.3: REVIEWED / REMEDIATE). Blueprint and planning task only. Nothing here is accepted, implemented, or approved for production. **Implementation is not authorised.** The register and `CURRENT_STATE.md` have **not** been updated by this branch (outside the AST-01 ownership boundary); the conductor performs that record checkpoint after review.
+**v1.5: REMEDIATED / AWAITING RE-REVIEW** (v1.0, v1.1, v1.2, v1.3 and v1.4: REVIEWED / REMEDIATE). Blueprint and planning task only. Nothing here is accepted, implemented, or approved for production. **Implementation is not authorised.** The register and `CURRENT_STATE.md` have **not** been updated by this branch (outside the AST-01 ownership boundary); the conductor performs that record checkpoint after review.
 
 ## Blueprint
 
-- [blueprint/v1.4/README.md](blueprint/v1.4/README.md) — **current** pack (round-4 remediated: F29, F30, F31, F32, all LOW); what changed from v1.3
+- [blueprint/v1.5/README.md](blueprint/v1.5/README.md) — **current** pack (round-5 remediated: F32(a) mechanism, F33, F34, F35, all LOW); what changed from v1.4
+- [blueprint/v1.4/README.md](blueprint/v1.4/README.md) — reviewed historical version (unchanged)
 - [blueprint/v1.3/README.md](blueprint/v1.3/README.md) — reviewed historical version (unchanged)
 - [blueprint/v1.2/README.md](blueprint/v1.2/README.md) — reviewed historical version (unchanged)
 - [blueprint/v1.1/README.md](blueprint/v1.1/README.md) — reviewed historical version (unchanged)
 - [blueprint/v1.0/README.md](blueprint/v1.0/README.md) — reviewed historical version (unchanged)
-- Planning task: [03_implementation/tasks/AST-01/](../../03_implementation/tasks/AST-01/) (`01-plan.md`, `04-review.md`, `04-review-r2.md`, `04-review-r3.md`, `04-review-r4.md`, `05-remediation.md`, `05-remediation-r2.md`, `05-remediation-r3.md`, `05-remediation-r4.md`, `task.json`)
+- Planning task: [03_implementation/tasks/AST-01/](../../03_implementation/tasks/AST-01/) (`01-plan.md`, `04-review.md`, `04-review-r2.md`, `04-review-r3.md`, `04-review-r4.md`, `04-review-r5.md`, `05-remediation.md`, `05-remediation-r2.md`, `05-remediation-r3.md`, `05-remediation-r4.md`, `05-remediation-r5.md`, `task.json`)
 
 ## The one rule this module exists to enforce
 

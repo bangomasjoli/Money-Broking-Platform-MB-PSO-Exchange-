@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "ACC-01",
   "title": "ACC-01 Account Structure (Master Account & Subaccount) - blueprint and implementation planning",
-  "state": "PLANNING",
+  "state": "HUMAN_DECISION_REQUIRED",
   "risk": "MODERATE",
   "category": "Phase C institutional foundation (DEC-011) - planning",
   "baselineCommit": "43f2f34",
@@ -30,15 +30,14 @@
       "BLOCKER": 0,
       "HIGH": 1,
       "MEDIUM": 3,
-      "LOW": 2
+      "LOW": 1
     },
     "openFindingIds": [
       "ACC-01-RF-01",
       "ACC-01-RF-02",
       "ACC-01-RF-05",
       "ACC-01-RF-09",
-      "ACC-01-R6-F01",
-      "ACC-01-R6-F02"
+      "ACC-01-R7-F01"
     ],
     "carryForwardIds": [
       "ACC-01-RF-01",
@@ -65,8 +64,10 @@
     "docs/03_implementation/tasks/ACC-01/05-remediation-r5.md",
     "docs/03_implementation/tasks/ACC-01/04-review-r6.md",
     "docs/03_implementation/tasks/ACC-01/06-human-decision-r6.md",
-    "docs/03_implementation/tasks/ACC-01/05-remediation-r6.md"
+    "docs/03_implementation/tasks/ACC-01/05-remediation-r6.md",
+    "docs/03_implementation/tasks/ACC-01/04-review-r7.md",
+    "docs/03_implementation/tasks/ACC-01/06-human-decision-r7.md"
   ],
   "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-09-28T19:12:42Z"
+  "updatedAt": "2026-09-29T07:37:10Z"
 }

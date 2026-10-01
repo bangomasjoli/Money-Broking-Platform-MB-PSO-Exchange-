@@ -1,0 +1,55 @@
+# ACC-01 Account Structure
+## 08 Audit Log Events (v0.9)
+
+## 1. Principles
+
+1. Audit goes to SEC-01 through ACC-01's own client (no cross-service import).
+2. **Every state-changing action fails closed if its audit event cannot be recorded** (`ACC1_AUDIT_REQUIRED`, 503) — the mutation and the audit reference commit together or not at all (`sec_audit_ref` is `NOT NULL` on history). **(R8, R8-F04.4)** The audit reference is **pre-allocated before the request is applied** (file 05 §2.4.2), written to the request in the single `requested → applied` `UPDATE`, to the recovery/history rows the transaction writes and used by the later Critical audit write; it is never filled in after the request is `applied`.
+3. Every event carries: `event_type`, `severity`, `actor` (IAM user or `system:acc1`), **`authenticated_actor_id` and `requested_by` where an apply is involved (R2)**, `session_id` where present, `request_id`, `correlation_id`, `environment`, `client_id`, target identifiers, `approval_id` and `change_request_id` where applicable, `version_before/after`, `reason_code`, `caller_module` for internal seams.
+4. **No PII, secrets or free text** in event bodies: identifiers, enumerated codes and references only. `blocked_scopes`, `source_type`, `reason_code` follow the confidentiality rules of file 16 §3.
+5. Environment is recorded identically in all five environments; audit is never reduced for non-production (Doc 00 §21A rule 7).
+
+## 2. Events
+
+| Event type | Trigger | Severity |
+|---|---|---|
+| `acc1.change_requested` | Change request submitted | High |
+| `acc1.change_cancelled` | Maker cancelled | Medium |
+| `acc1.change_expired` | TTL lapsed | Medium |
+| `acc1.change_apply_denied` | Apply refused: verify non-affirmative, attested-fact mismatch, precondition failed, dependency prerequisite unmet, or rolled back after verify (request stays `requested`; best-effort, audit-only when the cause is not itself an audit failure) | High |
+| `acc1.dependency_not_satisfied` | A governed operation refused because a named `DEP-*` prerequisite is not evidenced (`ACC1_DEPENDENCY_NOT_SATISFIED`); records the dependency id, the `evidence_failure` code (`SEAM_ABSENT`, `EVIDENCE_MISSING`, `EVIDENCE_MALFORMED`, `EVIDENCE_MISMATCH`, `SCOPE_NOT_STATED`, `GOVERNANCE_HARD_UNSATISFIED`, **(R5, R5-F04)** `PEER_NOT_AUTHENTICATED`) and the evidence `provider` (`real`/`test_double`) — **never an environment-based decision and never a configuration value** | High |
+| `acc1.actor_binding_mismatch` | Session principal ≠ stored `requested_by` at apply/cancel, or an attested identity did not match (`ACC1_ACTOR_BINDING_MISMATCH`); both identities recorded | Critical |
+| `acc1.master_account_created` | Master account created | High |
+| `acc1.subaccount_created` | Subaccount created (incl. default) | High |
+| `acc1.account_profile_updated` | Name/description changed | Medium |
+| `acc1.account_status_changed` | Any stored-status transition | High (Critical for `frozen`, `suspended`, `closing`, `closure_sealed`, `closed`, and any abort recovery) |
+| `acc1.account_restriction_applied` | Restriction applied | Critical |
+| `acc1.account_restriction_activated` | Scheduled restriction became effective — by housekeeping **or inline inside a governed lift** (cause recorded) | Critical |
+| `acc1.account_restriction_lifted` | Restriction lifted (with `lift_evidence_ref`); records whether an inline activation preceded it | Critical |
+| `acc1.account_restriction_cancelled` | **(R2-F07)** Scheduled, not-yet-effective restriction cancelled (governed) | Critical |
+| `acc1.account_restriction_expired` | Timed restriction lapsed | High |
+| `acc1.account_closure_initiated` | **Maker-only** initiation (ACC-R3-HD-02) → `closing` (master + default + every operational child in one transaction; records `closure_cycle`, `closure_family_id`); records the initiating actor, the `actor_assertion_authority` and the attested entitlement evidence reference. **No approval id — there is no checker.** Initiation is refused if this event cannot be recorded | Critical |
+| `acc1.account_closure_independent_preserved` | **(R3)** At master initiation or master abort: an independently initiated child closure was recorded / left untouched (child id, its own initiation id, status, cycle); at abort also lists the members returned | Critical |
+| `acc1.account_closure_readiness_checked` | **Pre-seal** readiness collected (per attester, `readiness_id`, `closure_cycle_observed`, result, W_pre); **(R3)** also emitted with outcome `refused` when the database refused the insert (target no longer `closing`) | High |
+| `acc1.account_closure_sealed` | → `closure_sealed` on the **final checker approval**: barrier set; records `closure_seal_version`, `closure_sealed_at_version`, approval ids and **the seal pin id with the pinned readiness ids and watermark** (R3); **(R5, R5-F04)** the pinned required attester set — per attester `attester_module`, `authenticated_service_identity`, `attester_contract_id`, `attester_contract_version` — its count and `required_attester_set_hash` | Critical |
+| `acc1.account_closure_attested` | **Post-barrier** attestation collected (per attester, `seal_version_observed`, watermark evidence, status; **(R5)** the responder's `authenticated_service_identity` and contract id/version, and `binding_ok`) | High |
+| `acc1.account_closure_blocked` | Completion refused (per-attester outcome codes) | High |
+| `acc1.account_closure_aborted` | **(R2, ACC-R2-HD-03)** Governed abort/recovery from `closing` or `closure_sealed`: barrier cleared, evidence invalidated, versions bumped, projection restored; records `reason_code`, blocking evidence **and the family member that owns it (R3)**, both approval identities. A master abort lists every returned member (master, default, master-directed children) and every preserved independent closure. **(R4)** Covers every `reason_code` in file 05 §2.8 including `family_completion_unattainable` (R4-F01), and — pre-seal only — `checker_rejected_seal`/`closure_initiation_withdrawn` (ACC-R4-HD-01, R4-F03); no new event type is added, the `reason_code` and cited `evidence_ref` distinguish them. **(R5 — new fields for the v0.6 evidence model; still no new event type):** `abort_target_type`, `abort_target_id` and `abort_target_from_status` (ACC-R5-HD-01: the pre-seal condition is the target's); for each returned member its `from_status`, whether its barrier was cleared, and the **bound** `target_version_approved`, `closure_cycle`, `closure_seal_version` and family role (R5-F03); `evidence_owner_target_id`, and — where the ground is an `independent_preserved` member's evidence or its own pre-seal rejection/withdrawal — that member's id listed as **ground only, not returned** (R5-F02); for `checker_rejected_seal` (possible only once DCR-ACC-IAM-08 exists) the IAM-02 `rejection_approval_request_id`, `rejection_decision_id`, the IAM-02-verified rejecting checker id, `approval_policy_id`, decision sequence/time, `actor_assertion_authority` and evidence `provider` — **never** an approver identity asserted by ACC-01 or a request body (R5-F03). A refused `checker_rejected_seal` request today is audited as `acc1.dependency_not_satisfied` (`DEP-IAM-SEAL-REJECTION-EVIDENCE`), never as an abort | **Critical** |
+| `acc1.account_closed` | → `closed` (independent target) | Critical |
+| `acc1.account_closure_family_completed` | **(R3)** Atomic family completion: master, default and every master-directed child → `closed` in one transaction; lists members, the re-verified set hash and each member's attestation id | Critical |
+| `acc1.ownership_change_blocked` | An attempt to alter owner/identity/purpose was refused | Critical |
+| `acc1.client_lookup_failed` | CLT-01 unreadable during a governed action | High |
+| `acc1.sensitive_account_read` | Cross-client listing or status-history read by staff | High |
+| `acc1.internal_caller_denied` | Internal seam presented an invalid/unknown capability secret | High |
+| `acc1.limit_reached` | Master/subaccount limit refused a creation | Medium |
+| `acc1.reconciliation_finding` | Structural reconciliation break (file 13) | High / Critical |
+
+## 3. Not audited per call (by design)
+
+`resolve` / `resolve-batch` / `scope-validate` / reconciliation extract are read-only hot-path seams: per-call audit would dwarf the platform's audit volume. They emit **metrics** (counts by `caller_module` and outcome, `unknown` rate) and audit only caller-authentication failures. The *decision evidence* for a consumer's action lives in the **consumer's** audit (it stores the `versions` tuple ACC-01 returned), which is the correct owner of that evidence.
+
+## 4. Evidence and retention
+
+Status history (`account_status_history`) is itself an append-only evidence table tied to `sec_audit_ref`. **No hard deletion.** Retention follows the platform/client-record retention policy **once it is formally defined** (DCR-ACC-GOV-06); ACC-01 sets no period and must not introduce one that could conflict. Until then: retain everything.
+
+*v0.9 — REMEDIATED / AWAITING RE-REVIEW. Planning only. Nothing is accepted; implementation is not authorised.*

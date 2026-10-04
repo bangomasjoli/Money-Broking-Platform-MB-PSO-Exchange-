@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "taskId": "DEC-015",
+  "title": "DEC-015 Client Asset, Fiat Banking, Virtual Account, Custody & Settlement Architecture - STR-04 v0.1 drafted (PROPOSED / AWAITING HUMAN ACCEPTANCE); independent review pending; no implementation authorised",
+  "state": "PLANNING",
+  "risk": "CRITICAL",
+  "category": "architecture / fund-flow / governance",
+  "baselineCommit": "43f2f34",
+  "resultingCommit": null,
+  "planner": {
+    "role": "architecture_author",
+    "provider": "claude_code",
+    "model": "claude-opus-5-5",
+    "effort": "HIGH"
+  },
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {
+    "architecture_author": "HIGH"
+  },
+  "roundCounts": {
+    "planning": 0,
+    "architecture": 1,
+    "review": 0,
+    "remediation": 0,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
+    "openFindingIds": [],
+    "carryForwardIds": []
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/DEC-015/01-plan.md",
+    "docs/03_implementation/tasks/DEC-015/03-evidence.md",
+    "docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.1.md",
+    "docs/05_strategy/AIX_Bank_PSP_Settlement_Provider_Requirements_v0.1.md",
+    "docs/05_strategy/AIX_Institutional_Custodian_Requirements_v0.1.md",
+    "docs/05_strategy/AIX_LP_OTC_Counterparty_Requirements_v0.1.md"
+  ],
+  "createdAt": "2026-10-04T00:00:00.000Z",
+  "updatedAt": "2026-10-04T12:00:00.000Z"
+}

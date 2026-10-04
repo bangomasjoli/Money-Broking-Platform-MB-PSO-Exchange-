@@ -29,16 +29,14 @@
     "open": {
       "BLOCKER": 0,
       "HIGH": 1,
-      "MEDIUM": 3,
-      "LOW": 2
+      "MEDIUM": 2,
+      "LOW": 1
     },
     "openFindingIds": [
       "ACC-01-RF-01",
       "ACC-01-RF-02",
       "ACC-01-RF-05",
-      "ACC-01-RF-09",
-      "ACC-01-R9-F01",
-      "ACC-01-R9-F02"
+      "ACC-01-RF-09"
     ],
     "carryForwardIds": [
       "ACC-01-RF-01",
@@ -74,8 +72,9 @@
     "docs/03_implementation/tasks/ACC-01/05-remediation-r8.md",
     "docs/03_implementation/tasks/ACC-01/04-review-r9.md",
     "docs/03_implementation/tasks/ACC-01/06-human-decision-r9.md",
-    "docs/03_implementation/tasks/ACC-01/05-remediation-r9.md"
+    "docs/03_implementation/tasks/ACC-01/05-remediation-r9.md",
+    "docs/03_implementation/tasks/ACC-01/04-review-r10.md"
   ],
   "createdAt": "2026-09-26T00:00:00.000Z",
-  "updatedAt": "2026-10-02T14:39:36Z"
+  "updatedAt": "2026-10-04T09:19:58Z"
 }

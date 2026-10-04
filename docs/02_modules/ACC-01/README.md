@@ -8,7 +8,7 @@ module: ACC-01
 control: Master account and subaccount identity, lifecycle, legal-entity ownership
 owner: Unassigned
 effective_date: 2026-09-26
-last_reviewed: 2026-10-01
+last_reviewed: 2026-10-02
 supersedes: none
 baseline_commit: 5a4f872
 ---
@@ -33,9 +33,23 @@ baseline_commit: 5a4f872
 | **v0.7** | **REVIEWED / REMEDIATE** — separate-context review verdict REMEDIATE ([`04-review-r7.md`](../../03_implementation/tasks/ACC-01/04-review-r7.md)); remediated R6-F01 (MEDIUM), R6-F02 (LOW) and R6-F03 (INFO) as technical corrections within ACC-R3-HD-01, ACC-R4-HD-01 and ACC-R5-HD-01 (no new human design decision), after the conductor's round-6 `HUMAN_DECISION_REQUIRED` procedural checkpoint ([`06-human-decision-r6.md`](../../03_implementation/tasks/ACC-01/06-human-decision-r6.md), [`05-remediation-r6.md`](../../03_implementation/tasks/ACC-01/05-remediation-r6.md)). Preserved unchanged as reviewed historical evidence |
 | **v0.8** | **REVIEWED / REMEDIATE** — separate-context review verdict REMEDIATE ([`04-review-r8.md`](../../03_implementation/tasks/ACC-01/04-review-r8.md)); remediated R7-F01 (MEDIUM) and R7-F02 (INFO) as technical corrections within ACC-R3-HD-01, ACC-R4-HD-01 and ACC-R5-HD-01 (no new human design decision), after the conductor's round-7 procedural checkpoint ([`06-human-decision-r7.md`](../../03_implementation/tasks/ACC-01/06-human-decision-r7.md), [`05-remediation-r7.md`](../../03_implementation/tasks/ACC-01/05-remediation-r7.md)). Preserved unchanged as reviewed historical evidence |
 | **v0.9** | **REVIEWED / REMEDIATE** — separate-context review verdict REMEDIATE ([`04-review-r9.md`](../../03_implementation/tasks/ACC-01/04-review-r9.md)); remediated R8-F01 (MEDIUM), R8-F02 (LOW), R8-F03 (LOW) and R8-F04 (INFO) as technical corrections within ACC-R3-HD-01, ACC-R3-HD-02, ACC-R4-HD-01 and ACC-R5-HD-01 (no new human design decision), after the conductor's round-8 `HUMAN_DECISION_REQUIRED` procedural checkpoint ([`06-human-decision-r8.md`](../../03_implementation/tasks/ACC-01/06-human-decision-r8.md), [`05-remediation-r8.md`](../../03_implementation/tasks/ACC-01/05-remediation-r8.md)). Preserved unchanged as reviewed historical evidence |
-| **v0.10** | **REMEDIATED / AWAITING RE-REVIEW** — remediates R9-F01 (MEDIUM), R9-F02 (LOW) and R9-F03 (INFO, six precision items) as technical corrections within ACC-R3-HD-01, ACC-R3-HD-02, ACC-R4-HD-01 and ACC-R5-HD-01 (no new human design decision), after the conductor's round-9 `HUMAN_DECISION_REQUIRED` procedural checkpoint ([`06-human-decision-r9.md`](../../03_implementation/tasks/ACC-01/06-human-decision-r9.md)) and the human's later procedural approval "approve ACC R9 procedural continuation" ([`05-remediation-r9.md`](../../03_implementation/tasks/ACC-01/05-remediation-r9.md)); **not yet re-reviewed — separate-context re-review required; R9-F01 and R9-F02 are not claimed closed** |
+| **v0.10** | **REVIEWED / ACCEPT — blueprint/architecture review only** — separate-context review verdict ACCEPT ([`04-review-r10.md`](../../03_implementation/tasks/ACC-01/04-review-r10.md)); remediated R9-F01 (MEDIUM), R9-F02 (LOW) and R9-F03 (INFO, six precision items) as technical corrections within ACC-R3-HD-01, ACC-R3-HD-02, ACC-R4-HD-01 and ACC-R5-HD-01 (no new human design decision), after the conductor's round-9 `HUMAN_DECISION_REQUIRED` procedural checkpoint ([`06-human-decision-r9.md`](../../03_implementation/tasks/ACC-01/06-human-decision-r9.md)) and the human's later procedural approval "approve ACC R9 procedural continuation" ([`05-remediation-r9.md`](../../03_implementation/tasks/ACC-01/05-remediation-r9.md)). Round 10 closed R9-F01, R9-F02 and R9-F03 in blueprint. Not human-accepted, authoritative, implemented, production-approved or merged |
 
-**Nothing is accepted. Implementation is not authorised.**
+**Round-10 status (v0.10):**
+
+- Reviewer verdict ([`04-review-r10.md`](../../03_implementation/tasks/ACC-01/04-review-r10.md)): **ACCEPT**
+- Scope: blueprint / architecture only
+- Human acceptance: **NOT RECORDED**
+- Task state: `PLANNING`
+- `PLAN_READY`: **NOT SET**
+- Implementation authorised: **NO**
+- Merged to `main`: **NO**
+
+**Findings after round 10:**
+
+- Closed in blueprint: ACC-01-R9-F01 (MEDIUM), ACC-01-R9-F02 (LOW), ACC-01-R9-F03 (INFO).
+- Open external carry-forward gates: ACC-01-RF-01 (HIGH), ACC-01-RF-02 (MEDIUM), ACC-01-RF-05 (MEDIUM), ACC-01-RF-09 (LOW).
+- Informational, non-blocking: ACC-01-R10-F01 (INFO, four precision items), carried for future implementation review.
 
 **Implementation status:** NOT_STARTED — no application code, no migration, no test exists for this module.
 
@@ -54,7 +68,7 @@ CLT-01 Legal Entity            (sole owner: legal entity, client identity, membe
 
 Current pack: [`blueprint/v0.10/`](blueprint/v0.10/) — start at its [README](blueprint/v0.10/README.md). Historical (reviewed, REMEDIATE, unchanged): [`blueprint/v0.9/`](blueprint/v0.9/), [`blueprint/v0.8/`](blueprint/v0.8/), [`blueprint/v0.7/`](blueprint/v0.7/), [`blueprint/v0.6/`](blueprint/v0.6/), [`blueprint/v0.5/`](blueprint/v0.5/), [`blueprint/v0.4/`](blueprint/v0.4/), [`blueprint/v0.3/`](blueprint/v0.3/), [`blueprint/v0.2/`](blueprint/v0.2/) and [`blueprint/v0.1/`](blueprint/v0.1/).
 
-Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/tasks/ACC-01/) (`01-plan.md`, `04-review.md`, `05-remediation.md`, `04-review-r2.md`, `05-remediation-r2.md`, `04-review-r3.md`, `06-human-decision-r3.md`, `05-remediation-r3.md`, `04-review-r4.md`, `06-human-decision-r4.md`, `05-remediation-r4.md`, `04-review-r5.md`, `06-human-decision-r5.md`, `05-remediation-r5.md`, `04-review-r6.md`, `06-human-decision-r6.md`, `05-remediation-r6.md`, `04-review-r7.md`, `06-human-decision-r7.md`, `05-remediation-r7.md`, `04-review-r8.md`, `06-human-decision-r8.md`, `05-remediation-r8.md`, `04-review-r9.md`, `06-human-decision-r9.md`, `05-remediation-r9.md`, `task.json`).
+Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/tasks/ACC-01/) (`01-plan.md`, `04-review.md`, `05-remediation.md`, `04-review-r2.md`, `05-remediation-r2.md`, `04-review-r3.md`, `06-human-decision-r3.md`, `05-remediation-r3.md`, `04-review-r4.md`, `06-human-decision-r4.md`, `05-remediation-r4.md`, `04-review-r5.md`, `06-human-decision-r5.md`, `05-remediation-r5.md`, `04-review-r6.md`, `06-human-decision-r6.md`, `05-remediation-r6.md`, `04-review-r7.md`, `06-human-decision-r7.md`, `05-remediation-r7.md`, `04-review-r8.md`, `06-human-decision-r8.md`, `05-remediation-r8.md`, `04-review-r9.md`, `06-human-decision-r9.md`, `05-remediation-r9.md`, `04-review-r10.md`, `task.json`).
 
 ## Reviews
 
@@ -67,11 +81,11 @@ Task record: [`../../03_implementation/tasks/ACC-01/`](../../03_implementation/t
 - [`04-review-r7.md`](../../03_implementation/tasks/ACC-01/04-review-r7.md) — v0.7 (separate-context), verdict **REMEDIATE**.
 - [`04-review-r8.md`](../../03_implementation/tasks/ACC-01/04-review-r8.md) — v0.8 (separate-context), verdict **REMEDIATE**.
 - [`04-review-r9.md`](../../03_implementation/tasks/ACC-01/04-review-r9.md) — v0.9 (separate-context), verdict **REMEDIATE**.
-- v0.10 — **awaiting separate-context re-review**.
+- [`04-review-r10.md`](../../03_implementation/tasks/ACC-01/04-review-r10.md) — v0.10 (separate-context), verdict **ACCEPT — blueprint/architecture only; implementation not authorised**.
 
 ## Acceptance evidence
 
-- none — nothing is accepted.
+- No human acceptance record. Round-10 reviewer verdict is ACCEPT for blueprint/architecture only.
 
 ## Open items
 

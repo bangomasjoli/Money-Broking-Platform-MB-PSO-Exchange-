@@ -1,27 +1,24 @@
 # aix-platform
 
-Implementation monorepo for the AIX Money Broking + PSO Platform (Labuan FSA regulated).
-Documentation (blueprints, reviews, governance records) lives in this repository's `../docs/`; start at `../docs/README.md`. Build order and conventions follow `../docs/03_implementation/IMP-01/`. _(Corrected 2026-10-19: the earlier two-repository model below no longer applies — code and docs are one repository.)_
+Implementation monorepo for the AIX Money Broking + PSO platform. Code lives here in `platform/`; the governance record (masters, blueprints, reviews, acceptance records) lives in this same repository under `../docs/`. Start at `../docs/README.md`. Build order and conventions follow `../docs/03_implementation/IMP-01/`.
 
-**Licence lock (non-negotiable):** Money Broking + PSO only. All Exchange runtime is prohibited
-(no order book / matching engine / market making / principal dealing / spread markup). Enforced at
-the foundation by the boot-time no-Exchange guard (`assertNoExchangeRuntime`).
+**Not production-ready. No regulatory approval is claimed.** Current status is in `../docs/00_project_state/CURRENT_STATE.md`.
+
+## Licence boundary and the runtime guard
+
+Authority: `DEC-013`, [Licence Scope v1.5](../docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md) and [Master Module Index v1.4](../docs/01_masters/03_Master_Module_Index_v1.4.md). Three things are kept separate:
+
+- **A. Money Broking Spot (permanent prohibitions, every environment).** Internal client-to-client matching, an AIX order book for MB Spot, crossing or netting between clients, principal dealing, proprietary market making, AIX principal liquidity, spread mark-up and maker/taker fees are permanently prohibited in every environment, including local development. No approval lifts this (`LIC-RULE-002`).
+- **B. AIX Exchange (securities domain).** A different domain from MB Spot. Its architecture and development are authorised (`DEC-013`; modules `EXM-01`, `EXO-01`, `EXC-01`, `EXP-01`), but **production activation remains gated** and fails closed. Authorising Exchange development grants MB Spot nothing (`LIC-RULE-005`).
+- **C. What the code does today.** The boot-time guard `assertNoExchangeRuntime` (`packages/foundation/src/no-exchange.ts`) is **still active and unchanged**. It refuses any registered route path containing a prohibited fragment (including `exchange`, `order-book`, `matching-engine`, `client-to-client`), is called by all nine services, and is blind to domain and environment. `MIG-001`, the controlled migration to a domain-aware guard, is **specified but not authorised and not implemented**. Until it lands, an Exchange-domain service exposing any route that contains a prohibited fragment would be refused at boot, in every environment.
+
+No Exchange-domain module exists in this codebase.
 
 ## Repository model & traceability
 
-**Two sibling repos, kept separate on purpose:**
+Code and documentation are one repository: `platform/` (this directory) and `docs/`. The earlier model of two sibling repositories no longer applies.
 
-```
-aix-platform/        this repo — implementation code
-aix-platform-docs/   sibling   — SDLC masters, module blueprints, reviews, compliance evidence
-```
-
-The blueprints/reviews/evidence are controlled, auditor-facing artifacts with their own
-change-control and retention, so they stay out of the code repo — this preserves a clean audit
-boundary and lets regulators/auditors be granted the docs repo without code access. Code → blueprint
-linkage is made explicit and versioned in [`BLUEPRINT_VERSION`](./BLUEPRINT_VERSION): each module
-slice records the accepted blueprint version it targets. When a blueprint is re-pinned or a module
-is implemented, update that file in the same change.
+Code-to-blueprint linkage is kept in [`BLUEPRINT_VERSION`](./BLUEPRINT_VERSION), which records the master and per-module blueprint versions each module slice targets. **That file has not been re-pinned since the early foundation work and is out of date** (it still names the v1.3 masters and shows most implemented modules as `implemented: false`). Until it is re-pinned by a separate, approved change, treat [`../docs/DOCUMENT_REGISTER.md`](../docs/DOCUMENT_REGISTER.md) as the sole authority for document versions and `../docs/00_project_state/MODULE_STATUS.md` for implementation status.
 
 ## Stack
 
@@ -32,9 +29,12 @@ Vitest · TypeBox validation.
 
 ```
 packages/foundation   @aix/foundation — shared FND-01 contracts (context, envelope, time,
-                      db, idempotency, outbox, audit, no-exchange, config)
-services/fnd          FND-01 Platform Foundation service (Fastify)
-infra/migrations      node-pg-migrate SQL migrations (001_fnd_core = foundation schema)
+                      db, idempotency, outbox, audit, no-exchange, config, environment)
+services/             fnd, iam, iam2, sec1, cfg1, clt1, kyc1, aml1, wlt1 (Fastify)
+apps/web              Next.js UI prototype (no API integration)
+edge/                 UAT trusted-edge reference (IMP-02); not a production deployment
+perf/                 IMP-02 capacity-measurement harness
+infra/migrations      node-pg-migrate SQL migrations (001 … 071)
 infra/grants          per-module DB role / least-privilege / RLS convention SQL
 tests                 unit + app (no-DB) + DB-gated integration
 ```

@@ -26,13 +26,33 @@ What *is* implemented is the **shared control plane and compliance foundation** 
 
 ## Execution and custody model
 
-The execution model is deliberately conservative and is enforced in code and in governance:
+This section separates what is **decided**, what is **implemented**, and what is only **targeted**. Trade execution, ledger, deposits, withdrawals, custody and settlement are **not implemented**, so none of their controls exist in code.
 
-- **Agency, not principal.** Client orders are routed to external venues or approved liquidity providers. AIX does not take principal positions, hold inventory, or make markets.
-- **No internal matching for Spot.** There is no AIX order book, no client-to-client crossing or netting, no proprietary market making and no spread mark-up. These prohibitions apply in **every** environment, including local development (decision [`DEC-012`](docs/DECISION_LOG.md), [Licence Scope v1.5](docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md)).
-- **Disclosed brokerage fee only.**
-- **Third-party custody.** Client assets are intended to be held with third-party custodians and banks, not by the platform. The detailed client-asset, fiat-banking, virtual-account and settlement architecture ([`DEC-015`](docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.4.md)) is a **proposal under review and is not accepted**.
-- **Build-unlocked, production-gated.** Capabilities may be built and tested before they may be activated. Production activation fails closed unless explicitly enabled through governed controls ([`DEC-013`](docs/DECISION_LOG.md)). Unknown state denies.
+### 1. Accepted architectural rules (governance decisions, not code)
+
+Recorded in [Licence Scope v1.5](docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md) and [`DECISION_LOG.md`](docs/DECISION_LOG.md) (`DEC-011`, `DEC-012`, `DEC-013`):
+
+- **Agency, not principal.** Execution is to be agency / back-to-back through external venues or approved liquidity providers (Model A accepted; Model B multi-venue routing accepted as production-gated).
+- **No internal matching for MB Spot.** No AIX order book, client-to-client crossing or netting, proprietary market making, principal dealing, AIX principal liquidity, spread mark-up or maker/taker fees, in **every** environment including local development. Internal matching (Model C) is blocked.
+- **Disclosed brokerage fee only; AIX inventory zero; third-party custody.**
+- **Build-unlocked, production-gated.** Capabilities may be built and tested before activation; production activation fails closed and unknown state denies.
+
+### 2. Safeguards that exist in code today
+
+These are narrow and do not amount to an execution, custody or settlement control set:
+
+- A boot-time route-path guard (`assertNoExchangeRuntime`) in all nine services that refuses prohibited route fragments. It is a string check on route paths, not a business-logic control.
+- A seeded registry of prohibited features in CFG-01 (30 hard locks) that denies on evaluation, with unknown features denied.
+- An environment-availability check in CFG-01 (`MIG-004`): every `environment_scope` entry defaults to disabled and there is no write path to change one.
+- A default-off switch for the WLT-01 public routes.
+
+### 3. Target behaviour (not built)
+
+Order routing to external venues, execution recording, client ledger and balances, deposits, withdrawals, reservations, settlement and reconciliation are specified in blueprints only (`TRD-01`, `LED-01`, `DEP-01`, `WDR-01`, `REC-01` are not started). The client-asset, fiat-banking, virtual-account, custody and settlement architecture ([`DEC-015`](docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.4.md)) is a **proposal under review and is not accepted**; it binds nothing.
+
+### 4. What is not yet enforced end to end
+
+The rules in section 1 are not yet enforced across a complete trade, custody or settlement path, because that path does not exist. No end-to-end proof that a client order cannot be internally matched, that AIX holds no inventory, or that client assets are segregated is claimed or possible until those modules are built, reviewed and accepted.
 
 ## Architecture overview
 

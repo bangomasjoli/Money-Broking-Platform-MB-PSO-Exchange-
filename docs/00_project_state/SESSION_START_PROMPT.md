@@ -91,7 +91,7 @@ Rules for this session:
   NOT_ACCEPTED and is not authoritative.
 - A blueprint is authoritative only when DOCUMENT_REGISTER.md says so. A review ACCEPT of a
   blueprint is not implementation; implementation is not acceptance; nothing is production-ready
-  without evidence. Acceptance requires a human-signed record.
+  without evidence. Acceptance requires explicit, documented human acceptance in the authoritative acceptance record.
 - Use focused diffs. Do not rewrite accepted or historical records.
 - Follow CLAUDE_CODE_USAGE_RULES.md for model selection (Sonnet build, Opus architecture/security/
   compliance/fund-flow review, Fable UX copy).

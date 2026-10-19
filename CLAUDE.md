@@ -23,7 +23,7 @@ Search and list first. Never load very large files whole (sizes are listed in `C
 Three different classes. Do not collapse them, and do not describe every "locked" item as production-gated.
 - **Permanently prohibited, no activation path, every environment including local development:** Money Broking Spot internal client-to-client matching (Model C), an AIX order book or matching engine for MB Spot, crossing or netting clients against each other, proprietary market making, principal dealing, AIX principal liquidity. No approval, flag, permission, environment or future Exchange approval lifts these. MB Spot is external LP routing, agency / back-to-back.
 - **Build-authorised, production-gated:** AIX Exchange (securities domain, including its own order book and matching engine in `EXO-01`), AIX RWA securities capabilities, AIX Pay beyond the baseline, Model B routing. Design, implementation and controlled testing are authorised; production activation fails closed. The Exchange engine must never be reachable from an MB-domain module.
-- **Out of scope, no build:** derivatives, futures, margin, leverage, lending, staking, yield, privacy coins, algorithmic stablecoins, MYR pairs, self-custody wallets.
+- **Out of scope, no build** (Doc 00 v1.5 §20.6 and `DEC-013` clause 6; the prohibitions are listed at §8.1 and §8.2): derivatives, perpetual futures and futures; margin and leveraged trading; lending / borrowing of client assets; staking, yield / earn products and DeFi yield; privacy coins; **algorithmic stablecoins where currently prohibited**; **MYR trading pairs where currently prohibited**; self-custody wallet service. Keep the two "where currently prohibited" qualifications exactly as the master states them; do not widen them into unconditional prohibitions.
 - Existing protective guards stay in place. **`assertNoExchangeRuntime` is active and unweakened; `MIG-001` is specified, not authorised.** Do not weaken, bypass, rename or work around any runtime guard, capability gate, seeded lock or sealed hash unless a separately approved task or migration explicitly authorises that exact change.
 - `DEC-015` (`STR-04` v0.4) is **NOT_ACCEPTED**. Treat it as a proposal, not as architecture. Round-4 review needs explicit authorisation.
 
@@ -35,7 +35,7 @@ Never infer, record or write any of the following:
 - `DEC-015` is accepted;
 - a remediation report, or a model's own statement, closes a finding. Closure needs repository evidence (commit and reproduced result).
 
-Do not mark anything IMPLEMENTED from a blueprint, ACCEPTED without a human-signed record, or PRODUCTION_READY without evidence. Preserve historical and superseded records; do not rewrite them.
+Do not mark anything IMPLEMENTED from a blueprint, ACCEPTED without explicit, documented human acceptance in the authoritative repository acceptance record (for conductor tasks, `06-acceptance.md` and the `acceptance` object in `task.json`; for older modules, the record under `docs/02_modules/<MODULE>/acceptance/`), or PRODUCTION_READY without evidence. Preserve historical and superseded records; do not rewrite them.
 
 ## 5. Work selection and approvals
 - No task is active by default. `CURRENT_STATE.md` §5 and §8 state what the repository records as next; **a human decides.** Report options and wait. One module or task per session.

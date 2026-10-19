@@ -241,7 +241,7 @@ This document applies to two modules and is deliberately **not duplicated**. Bot
 
 ## Regulatory guardrails enforced across all reviews
 
-Money Broking + PSO approved; **Exchange pending — all exchange/order-book/matching/
-market-making/principal-dealing LOCKED**. Agency back-to-back execution; disclosed
-brokerage fee only; AIX inventory = zero. Third-party custody; client-money
-safeguarding (full-backing). Institutional/HNWI only; retail off by default.
+Money Broking + PSO approved; **Exchange pending**. Under `DEC-012` / `DEC-013` / Doc 00 v1.5: **Money Broking Spot** — agency / external LP routing; internal client-to-client matching,
+an AIX order book or matching engine for MB Spot, market making and principal dealing are **permanently prohibited in every environment**. **AIX Exchange (securities)** — architecture and
+development authorised; production activation gated, no regulatory approval implied. `assertNoExchangeRuntime` stays active (`MIG-001` specified, not authorised). Disclosed brokerage
+fee only; AIX inventory = zero. Third-party custody; client-money safeguarding (full-backing). Institutional/HNWI only; retail off by default.

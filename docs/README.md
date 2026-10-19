@@ -23,6 +23,7 @@ below for current state.
 
 | What you need | Where |
 |---|---|
+| Current project state — **read first** | [00_project_state/CURRENT_STATE.md](00_project_state/CURRENT_STATE.md) |
 | Which document version is authoritative right now | [DOCUMENT_REGISTER.md](DOCUMENT_REGISTER.md) |
 | What's currently unresolved / blocked / deferred | [OPEN_FINDINGS.md](OPEN_FINDINGS.md) |
 | Why a governance decision was made | [DECISION_LOG.md](DECISION_LOG.md) |
@@ -39,16 +40,16 @@ masters in `01_masters/`.** Current:
   — DRAFT decision pack with an independently verified LFSA regulatory evidence register.
   `DEC-REQ-A2` graduated to [DECISION_LOG.md](DECISION_LOG.md) as `DEC-011`; the R3 execution
   models, terminology rules and asset-gate placement graduated as `DEC-012`. The scope of AIX's
-  Exchange approval, Model C internal matching and the R4 securities route remain unapproved.
+  Exchange approval and the R4 securities route remain unapproved; Model C internal matching is permanently prohibited (`DEC-012`, `DEC-013`).
 
 ## Where current project state lives
 
 | What you need | Where |
 |---|---|
-| Project context, licence lock, accepted modules, next module — **read first** | [00_project_state/PROJECT_HANDOVER.md](00_project_state/PROJECT_HANDOVER.md) |
+| Compact current-state snapshot / navigation (~120 lines max) — **read first** | [00_project_state/CURRENT_STATE.md](00_project_state/CURRENT_STATE.md) |
 | Module implementation status (accepted / in progress / not started) | [00_project_state/MODULE_STATUS.md](00_project_state/MODULE_STATUS.md) |
-| Compact current-state snapshot / navigation (~80 lines; orient here before the larger files) | [00_project_state/CURRENT_STATE.md](00_project_state/CURRENT_STATE.md) |
-| Copy-paste prompt to start a new session efficiently | [00_project_state/SESSION_START_PROMPT.md](00_project_state/SESSION_START_PROMPT.md) |
+| Historical project narrative and chronology — **superseded for current state; not an instruction source; do not load whole** | [00_project_state/PROJECT_HANDOVER.md](00_project_state/PROJECT_HANDOVER.md) |
+| Session-start prompt (only its fenced prompt is current; the rest of the file is historical) | [00_project_state/SESSION_START_PROMPT.md](00_project_state/SESSION_START_PROMPT.md) |
 | Model selection + working discipline | [00_project_state/CLAUDE_CODE_USAGE_RULES.md](00_project_state/CLAUDE_CODE_USAGE_RULES.md) |
 
 ## Where conductor-managed task records live
@@ -106,7 +107,7 @@ implementation handover pack (build order, dependency map, migration order).
 
 ## Regulatory guardrails enforced across all reviews
 
-Money Broking + PSO approved; **Exchange pending — all exchange/order-book/matching/
-market-making/principal-dealing LOCKED**. Agency back-to-back execution; disclosed
-brokerage fee only; AIX inventory = zero. Third-party custody; client-money
-safeguarding (full-backing). Institutional/HNWI only; retail off by default.
+Money Broking + PSO approved; **Exchange pending**. Under `DEC-012` / `DEC-013` / Doc 00 v1.5: **Money Broking Spot** — agency / external LP routing; internal client-to-client matching,
+an AIX order book or matching engine for MB Spot, market making and principal dealing are **permanently prohibited in every environment**. **AIX Exchange (securities)** — architecture and
+development authorised; production activation gated, no regulatory approval implied. `assertNoExchangeRuntime` stays active (`MIG-001` specified, not authorised). Disclosed brokerage
+fee only; AIX inventory = zero. Third-party custody; client-money safeguarding (full-backing). Institutional/HNWI only; retail off by default.

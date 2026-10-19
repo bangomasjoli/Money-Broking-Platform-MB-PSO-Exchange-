@@ -1,8 +1,13 @@
 # AIX Web — Frontend Technical Foundation
 
-**Status: technical foundation only. No approved UI design has been implemented.**
-See [`docs/04_ui/README.md`](../../../docs/04_ui/README.md) for the current UI
-phase and the authoritative design/measurement governance.
+**Status (verified 2026-10-19): UI prototype, no backend integration.** The public
+homepage and authenticated Client, Staff/Operations and Admin pages exist through
+UI Phase 2T; they are static and read-only with no API or authentication integration,
+and visual acceptance of the authenticated UI is pending. See
+[`docs/04_ui/README.md`](../../../docs/04_ui/README.md) for the phase record and the
+authoritative design/measurement governance, and
+[`docs/00_project_state/CURRENT_STATE.md`](../../../docs/00_project_state/CURRENT_STATE.md) §3 for current status.
+Not production-ready.
 
 An npm workspace member of the `aix-platform` monorepo (`platform/`) — not an
 independent project. Uses the repository's single npm lockfile
@@ -30,6 +35,7 @@ npm run lint:web       # eslint
 
 ## What exists
 
-A minimal technical smoke page (`app/page.tsx`) proving the toolchain
-builds — not a real page, not the Phantom-inspired navigation, not a
-dashboard. No backend API integration, no authentication, no mock data.
+_Historical note:_ the repository began with a minimal technical smoke page
+proving the toolchain builds; that page has since been replaced by the real pages
+recorded in `docs/04_ui/README.md`. There is still no backend API integration and
+no authentication. Check `app/` for the pages that currently exist.

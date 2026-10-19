@@ -13,9 +13,11 @@ supersedes: none
 baseline_commit: 780e116
 ---
 
+> **HISTORICAL NARRATIVE — NOT A CURRENT INSTRUCTION SOURCE (DOC-AUTH-01, 2026-10-19).** This file preserves the project chronology as written at the time and is not maintained. For current state use [CURRENT_STATE.md](CURRENT_STATE.md), [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md), [OPEN_FINDINGS.md](../OPEN_FINDINGS.md), [DECISION_LOG.md](../DECISION_LOG.md) and [MODULE_STATUS.md](MODULE_STATUS.md). **Superseded statements below — do not follow them:** "No git repo" (this is a Git repository containing `docs/` and `platform/`); "all exchange features LOCKED" and the licence-lock bullets (current: MB Spot prohibitions are permanent in every environment; AIX Exchange securities is build-authorised and production-gated; `assertNoExchangeRuntime` stays active and `MIG-001` is not authorised — `DEC-012`, `DEC-013`, Doc 00 v1.5); "00/01 at v1.3; 02–11 at v1.2" (current: Doc 00 v1.5, Charter v1.5, Module Index v1.4, SRS / Role Matrix / Workflow Map / System Rules v1.3, Docs 07–11 v1.2); the "Accepted modules" table and "Implementation phase" section (early snapshots; see MODULE_STATUS.md); and every `aix-platform/docs/...` path.
+
 # AIX Platform — Project Handover
 
-Read this file **first** in any new session, together with [MODULE_STATUS.md](MODULE_STATUS.md). Do not scan the whole repository.
+_Historical wording, superseded (see notice above):_ "Read this file first in any new session". Do **not** read this file first — start at [CURRENT_STATE.md](CURRENT_STATE.md). Do not scan the whole repository.
 
 ## Project context
 AIX Money Broking + PSO (Payment System Operator) platform documentation workspace — Labuan FSA regulated. SDLC master documents + per-module blueprint packs. No git repo. User is product owner; Claude acts as principal fintech platform architect for review, and as engineer for build.

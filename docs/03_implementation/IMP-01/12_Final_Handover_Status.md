@@ -1,6 +1,8 @@
 # IMP-01 AIX Master Implementation Handover
 ## 12 Final Handover Status
 
+> **Historical snapshot — not current authority (DOC-AUTH-01, 2026-10-19).** Version lists and licence wording in this file (e.g. `exchange_runtime = prohibited_until_licensed`, "not an Exchange runtime") predate `DEC-012` / `DEC-013`. Current rules and versions: [CURRENT_STATE.md](../../00_project_state/CURRENT_STATE.md), [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md), and the notice in [README.md](README.md).
+
 ## Status
 
 ```txt

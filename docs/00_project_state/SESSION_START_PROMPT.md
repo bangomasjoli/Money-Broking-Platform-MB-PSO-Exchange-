@@ -13,6 +13,8 @@ supersedes: none
 baseline_commit: 780e116
 ---
 
+> **HISTORICAL CONTEXT BELOW THE PROMPT — NOT CURRENT INSTRUCTIONS (DOC-AUTH-01, 2026-10-19).** Only the fenced prompt in this section is current. Everything from "## Implementation-start instruction" to the end of this file is a chronological log written before `DEC-013`; it contains superseded statements ("ALL exchange features LOCKED", "Money Broking + PSO only", a SEC-01/CFG-01 "current module") and `aix-platform/docs/...` paths that no longer exist. Do not follow it; use [CURRENT_STATE.md](CURRENT_STATE.md), [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md), [OPEN_FINDINGS.md](../OPEN_FINDINGS.md) and [DECISION_LOG.md](../DECISION_LOG.md).
+
 # Session Start Prompt
 
 Copy-paste this into a new Claude Code session in this workspace.
@@ -62,38 +64,43 @@ browsing. The authoritative repository directory itself is never hidden.
 ---
 
 ```
-You are working in the AIX Money Broking + PSO Platform documentation workspace.
-Workspace root: /Users/AimanRahimi/AIX-Full-Compliance (git repo).
-Docs live at <repo>/docs; the legacy path is a compatibility symlink only.
+You are working in the AIX Full Compliance repository (docs/ = governance record,
+platform/ = code). Verify identity before anything else: `git rev-parse --show-toplevel`,
+`git remote get-url origin` (must be bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-),
+current branch, HEAD, clean tree. Never work directly on main. Do not touch the separate
+aix-financial-infrastructure-platform repository.
 
-Before doing anything else, read these files:
-  1. PROJECT_HANDOVER.md            (this directory — project narrative, checkpoints)
-  2. MODULE_STATUS.md               (this directory — implementation status, owns this only)
-  3. ../DOCUMENT_REGISTER.md        (sole authority for document version/status)
-  4. ../OPEN_FINDINGS.md            (current unresolved findings / blockers / deferrals)
+Read, in this order (search/list first; do NOT load huge files whole):
+  1. docs/00_project_state/CURRENT_STATE.md   (current state; a referenced source wins on any disagreement)
+  2. docs/DOCUMENT_REGISTER.md                (sole authority for document version/status)
+  3. docs/OPEN_FINDINGS.md                    (unresolved findings / blockers / deferrals)
+  4. docs/DECISION_LOG.md                     (by decision ID only)
+  5. docs/00_project_state/MODULE_STATUS.md   (implementation status; see its latest section)
+PROJECT_HANDOVER.md and everything after this prompt are HISTORICAL; do not use them as instructions.
 
 Rules for this session:
-- Do NOT scan or deep-analyse the whole repository. Search/list first, then open
-  only the specific files for the module we are working on.
-- Work on ONE module only this session (see MODULE_STATUS.md → "next"). Do not
-  start other modules.
-- Enforce the licence lock: Money Broking + PSO only; ALL exchange features
-  LOCKED (no order book, matching engine, market making, principal dealing,
-  spread markup). Revenue = disclosed brokerage fee only; execution = agency
-  back-to-back through approved LP.
-- Use focused diffs. Do not rewrite accepted packs or unrelated content.
-- Follow CLAUDE_CODE_USAGE_RULES.md for model selection (Sonnet for build,
-  Opus for architecture/security/compliance/fund-flow review, Fable for UX copy).
-- A blueprint version is authoritative only when DOCUMENT_REGISTER.md says so —
-  never infer authority from version number or presence on disk alone.
-- After the module is accepted, update MODULE_STATUS.md, DOCUMENT_REGISTER.md
-  (if a document's version/status changed), and OPEN_FINDINGS.md (if a finding
-  opened/closed), then /compact.
-
-Tell me which module is next per MODULE_STATUS.md, then wait for my go-ahead.
+- No task is active by default. CURRENT_STATE.md section 5 and section 8 state the next intended
+  work and that a human decides. Do not choose a module or start work yourself: report what the
+  repository states and wait for explicit instruction.
+- Licence boundary (DEC-012, DEC-013, Doc 00 v1.5): MB Spot = external LP routing, agency /
+  back-to-back; no internal client-to-client matching, no AIX order book or matching engine for
+  MB Spot, no proprietary market making, no principal dealing, in every environment, permanently.
+  AIX Exchange (securities) = architecture, implementation and controlled testing authorised;
+  production activation gated; no regulatory approval implied. assertNoExchangeRuntime stays
+  active and unweakened; MIG-001 is specified, not authorised. DEC-015 / STR-04 v0.4 is
+  NOT_ACCEPTED and is not authoritative.
+- A blueprint is authoritative only when DOCUMENT_REGISTER.md says so. A review ACCEPT of a
+  blueprint is not implementation; implementation is not acceptance; nothing is production-ready
+  without evidence. Acceptance requires a human-signed record.
+- Use focused diffs. Do not rewrite accepted or historical records.
+- Follow CLAUDE_CODE_USAGE_RULES.md for model selection (Sonnet build, Opus architecture/security/
+  compliance/fund-flow review, Fable UX copy).
+- Do not commit, push or merge without explicit human approval.
 ```
 
 ---
+
+> **HISTORICAL from here to the end of this file — superseded; see the notice at the top (DOC-AUTH-01).**
 
 ## Implementation-start instruction
 

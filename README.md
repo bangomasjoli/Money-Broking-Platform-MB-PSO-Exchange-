@@ -1,0 +1,216 @@
+# AIX Full Compliance
+
+**Governed financial-infrastructure software for institutional digital-asset brokerage, payments and tokenised-asset operations.**
+
+> **Status: in active development. Not production-ready.** No regulatory approval is claimed or implied by this repository. No capability is enabled for production, no deployment is evidenced in this repository, internet exposure of public routes is prohibited by the governance record, and no ledger exists to hold client money or client assets. See [Current status](#current-status) for what exists and what does not.
+
+> **Independent software.** This project is independently developed software. It is separate from AIX Investment Group and from any licence, authorisation or regulatory permission held by AIX Investment Group or any other entity. Nothing in this repository grants, evidences or implies a licence or regulatory approval.
+
+---
+
+## What this is
+
+AIX Full Compliance is an institutional platform design and implementation built around one idea: **in regulated financial infrastructure, controls are part of the product, not an afterthought.** The repository holds both the software (`platform/`) and the governance record that constrains it (`docs/`): requirements, architecture decisions, independent reviews, acceptance records and open findings.
+
+The target is an institution-only (institutional / high-net-worth) platform with one shared core and five product areas:
+
+| Product area | Intended purpose | Implemented today |
+|---|---|---|
+| **AIX Spot** | Client orders executed through external venues and liquidity providers (agency, back-to-back) | **No.** Blueprint only; the trading module (`TRD-01`) is not started |
+| **AIX OTC** | Large-size, counterparty-quoted execution via external liquidity providers | **No.** Blueprint and requirements only |
+| **AIX Pay** | Institutional payments and settlement | **No.** Architecture draft only |
+| **AIX RWA** | Tokenised real-world asset lifecycle | **No.** Architecture and requirements only |
+| **AIX Exchange** | Securities / security-token market capability (a separate domain from Spot) | **No.** Authorised for design and build; production activation is gated |
+
+What *is* implemented is the **shared control plane and compliance foundation** these products would sit on (identity, authorisation, audit, feature and licence locks, client onboarding, KYC/KYB, AML screening and the first wallet-destination controls), a **UAT-only perimeter reference**, and a **UI prototype with no backend integration**. Details below.
+
+## Execution and custody model
+
+The execution model is deliberately conservative and is enforced in code and in governance:
+
+- **Agency, not principal.** Client orders are routed to external venues or approved liquidity providers. AIX does not take principal positions, hold inventory, or make markets.
+- **No internal matching for Spot.** There is no AIX order book, no client-to-client crossing or netting, no proprietary market making and no spread mark-up. These prohibitions apply in **every** environment, including local development (decision [`DEC-012`](docs/DECISION_LOG.md), [Licence Scope v1.5](docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md)).
+- **Disclosed brokerage fee only.**
+- **Third-party custody.** Client assets are intended to be held with third-party custodians and banks, not by the platform. The detailed client-asset, fiat-banking, virtual-account and settlement architecture ([`DEC-015`](docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.4.md)) is a **proposal under review and is not accepted**.
+- **Build-unlocked, production-gated.** Capabilities may be built and tested before they may be activated. Production activation fails closed unless explicitly enabled through governed controls ([`DEC-013`](docs/DECISION_LOG.md)). Unknown state denies.
+
+## Architecture overview
+
+```mermaid
+flowchart TB
+    subgraph Edge["Perimeter (UAT reference only)"]
+        HP["HAProxy trusted edge<br/>TLS, path allowlist, pre-auth throttling"]
+    end
+
+    subgraph Core["Control plane (implemented)"]
+        IAM1["IAM-01<br/>Auth, MFA, sessions"]
+        IAM2["IAM-02<br/>RBAC, approvals, SoD"]
+        SEC["SEC-01<br/>Audit log"]
+        CFG["CFG-01<br/>Feature and licence locks"]
+        FND["FND-01<br/>Foundation, rate limiting"]
+    end
+
+    subgraph Compliance["Compliance and client services (implemented in part)"]
+        CLT["CLT-01<br/>Client onboarding"]
+        KYC["KYC-01<br/>KYC / KYB"]
+        AML["AML-01<br/>Sanctions / PEP screening"]
+        WLT["WLT-01<br/>Wallet destinations"]
+    end
+
+    subgraph Planned["Not started (blueprints only)"]
+        TRD["TRD-01 trading"]
+        LED["LED-01 ledger"]
+        DEP["DEP-01 deposits"]
+        WDR["WDR-01 withdrawals"]
+        REC["REC-01 reconciliation"]
+    end
+
+    DB[("PostgreSQL<br/>schema per module, least-privilege roles")]
+    WEB["Next.js UI prototype<br/>no API integration"]
+
+    HP --> WLT
+    WLT --> IAM1
+    WLT --> FND
+    Compliance --> IAM2
+    Compliance --> SEC
+    CLT --> CFG
+    Core --> DB
+    Compliance --> DB
+    WEB -.->|"static, read-only"| Core
+    Planned -.->|"depends on"| Compliance
+```
+
+**Technology:** TypeScript on Node.js (≥ 20), Fastify services, PostgreSQL with `node-pg-migrate` migrations, per-module database schemas and least-privilege roles, a database-backed audit/outbox pattern, Vitest, and a Next.js 16 / React 19 / Tailwind CSS v4 / shadcn UI prototype. The UAT edge reference uses HAProxy.
+
+**Design principles visible in the code:** fail-closed defaults, module-owned schemas, an explicit import-boundary control between modules, a shared audit trail, environment-aware capability gating across five environments (development, test, UAT, demo, production), and maker-checker approval workflows.
+
+## Current status
+
+State as verified against the repository on **2026-10-19**. The authoritative live record is [`CURRENT_STATE.md`](docs/00_project_state/CURRENT_STATE.md); where this README and that file differ, that file wins.
+
+### Implemented and independently accepted
+
+Each item below has a recorded independent review and acceptance record (recent tasks also record explicit human acceptance). "Accepted" means accepted *for the scope recorded*, not production-ready.
+
+| Area | Scope accepted |
+|---|---|
+| FND-01 Foundation | Foundation baseline, shared rate-limit engine and hardening |
+| IAM-01 | Authentication, MFA, sessions, internal session introspection |
+| IAM-02 | RBAC / permission guard baseline (**approval endpoints do not yet enforce permissions**; see open findings) |
+| SEC-01 | Audit log and security monitoring, through Phase 5 |
+| CFG-01 | Feature and licence locks through Phase 3B, plus environment availability (`MIG-004`) |
+| CLT-01 | Client onboarding core and membership authority |
+| KYC-01, AML-01 | Verification and screening baselines through their recorded phases |
+| WLT-01 | Wallet-destination controls and the public-surface gate (module as a whole is partial) |
+| IMP-02 | UAT trusted edge, network-isolation proof, UAT TLS, measurement-harness foundation, and its hardening |
+
+Most recent accepted work: `IMP02-MA-HARDEN-001` (`9b0bab7`), `MIG-005` canonical environment model (`5f78a0b`), `MIG-004` environment availability (`5a4f872`). The database is at migration **071**.
+
+### Implemented, not accepted
+
+- **UI prototype.** Public homepage plus authenticated Client, Staff/Operations and Admin pages through UI Phase 2T. All pages are static and read-only with **no API or authentication integration**. Visual acceptance of the authenticated UI is **pending**.
+
+### Proposed or under review (nothing here is implemented)
+
+| Item | State |
+|---|---|
+| `DEC-015` client-asset / fiat / custody / settlement architecture (`STR-04` v0.4) | **NOT ACCEPTED.** Three review rounds returned *remediate*; the fourth independent review is pending |
+| `ACC-01` account structure (master account and subaccount) | Blueprint v0.10 passed independent review; **on an unmerged branch**, no human acceptance, not implemented |
+| `AST-01` asset and instrument registry | Blueprint v1.8 passed independent review; **on an unmerged branch**, no human acceptance, not implemented |
+
+### Not started
+
+Trading and execution (`TRD-01`), ledger (`LED-01`), deposits (`DEP-01`), withdrawals (`WDR-01`, blocked on a key-management prerequisite), reconciliation, incident handling, end-to-end fund-flow integration, the AIX Exchange modules, and the Pay and RWA modules.
+
+### Known gaps that matter
+
+| Finding | Why it matters |
+|---|---|
+| `FND-FIND-001` (HIGH) | Pre-authentication abuse control is proven only in a UAT harness. **Internet exposure of any public route remains prohibited** |
+| `IAM2-FIND-002` (HIGH) | Approval endpoints do not yet check permissions; required before real-actor approval flows |
+| `CFG-FIND-002` (MEDIUM) | Configuration integrity seal not verified at decision time for feature records |
+| `WDR-FIND-001` (blocked) | Withdrawals blocked on key management |
+
+The full register is [`OPEN_FINDINGS.md`](docs/OPEN_FINDINGS.md).
+
+## Governance and review process
+
+Software here is built under a documentation-first, review-gated process. The repository is the single source of truth.
+
+```mermaid
+flowchart LR
+    A["Blueprint<br/>or plan"] --> B["Implementation<br/>(bounded task)"]
+    B --> C["Independent<br/>review"]
+    C -->|"remediate"| B
+    C -->|"accept"| D["Human<br/>acceptance record"]
+    D --> E["Register, findings<br/>and state updated"]
+```
+
+- **Review is separated from authorship.** Reviews are run apart from the author and the author's report is treated as an assertion, not evidence. Each record states its level of independence (some are independent in context only, not in model).
+- **Acceptance is a human act.** A model cannot mark work accepted; acceptance needs a recorded human decision and repository evidence (commit and reproduced result).
+- **Findings are closed on evidence only,** never on a report that something was fixed.
+- **Historical records are never rewritten.** Superseded document versions are retained.
+- **Decisions are logged** in [`DECISION_LOG.md`](docs/DECISION_LOG.md); document versions are owned by [`DOCUMENT_REGISTER.md`](docs/DOCUMENT_REGISTER.md); unresolved findings by [`OPEN_FINDINGS.md`](docs/OPEN_FINDINGS.md).
+
+## Roadmap
+
+Only items the repository records as next or open. Priorities and order are decided by the project owner; there are **no dates** because none are committed.
+
+1. **Governance:** independent Round-4 review of the `DEC-015` architecture, then a human acceptance decision.
+2. **Blueprints:** the AIX Exchange modules, then account structure (`ACC-01`) and asset registry (`AST-01`) decisions on merging and acceptance.
+3. **Control hardening:** approval-endpoint authorisation (`IAM2-FIND-002`) and configuration-seal verification (`CFG-FIND-002`).
+4. **Perimeter:** production deployment proof, TLS lifecycle and capacity measurement under IMP-02 before any internet exposure.
+5. **UI:** the remaining Admin area (Audit / Sensitive Access), then a consolidated visual QA pass.
+6. **Money tier:** ledger, deposits, withdrawals, trading and reconciliation, each only after its architecture prerequisites are accepted.
+
+## Repository layout
+
+```text
+docs/                   Governance record (start at docs/README.md)
+  00_project_state/     Current state, module status, handover
+  01_masters/           Authoritative master documents (licence scope, charter, SRS, ...)
+  02_modules/           Per-module blueprints, reviews, acceptance records
+  03_implementation/    Implementation packs and conductor task records
+  04_ui/                UI design governance
+  05_strategy/          Architecture analysis and proposals (no authority over masters)
+  90_archive/           Superseded versions (retained)
+platform/               Implementation monorepo (npm workspaces)
+  packages/foundation   Shared foundation package
+  services/             Nine Fastify services
+  apps/web/             Next.js UI prototype
+  edge/                 UAT trusted-edge reference
+  perf/                 Capacity-measurement harness
+  infra/                Migrations and database grants
+```
+
+## Documentation map
+
+| Need | Document |
+|---|---|
+| Where things stand right now | [`docs/00_project_state/CURRENT_STATE.md`](docs/00_project_state/CURRENT_STATE.md) |
+| Module-by-module implementation status | [`docs/00_project_state/MODULE_STATUS.md`](docs/00_project_state/MODULE_STATUS.md) |
+| Which document versions are authoritative | [`docs/DOCUMENT_REGISTER.md`](docs/DOCUMENT_REGISTER.md) |
+| Unresolved findings and blockers | [`docs/OPEN_FINDINGS.md`](docs/OPEN_FINDINGS.md) |
+| Why decisions were made | [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) |
+| Licence scope and capability model | [`docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md`](docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md) |
+| Module index (37 modules) | [`docs/01_masters/03_Master_Module_Index_v1.4.md`](docs/01_masters/03_Master_Module_Index_v1.4.md) |
+| Task and acceptance records | [`docs/03_implementation/tasks/`](docs/03_implementation/tasks/README.md) |
+| Perimeter / deployment work | [`docs/03_implementation/IMP-02/README.md`](docs/03_implementation/IMP-02/README.md) |
+| Documentation entry point | [`docs/README.md`](docs/README.md) |
+
+## Working with the code
+
+Requires Node.js 20+ and PostgreSQL. From `platform/`:
+
+```bash
+npm install
+npm run typecheck      # tsc -b
+npm test               # vitest; database tests need TEST_DATABASE_URL
+npm run migrate:up     # needs DATABASE_URL
+```
+
+See [`platform/README.md`](platform/README.md) for layout and conventions. Secrets belong in environment variables; use `platform/.env.example` as the template and never commit real credentials.
+
+## Disclaimer
+
+This repository is software and documentation under development. It is not financial, legal, regulatory or investment advice, and it is not an offer of any financial product or service. References to regulatory frameworks describe design intent only. The authors make no claim of licensing, regulatory approval, operational readiness, security certification or production deployment.

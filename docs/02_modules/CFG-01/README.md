@@ -20,7 +20,7 @@ baseline_commit: 780e116
 **Available blueprint versions:** v1.1 (no v1.2 exists)
 **Authoritative blueprint version:** v1.1 (see [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md) — this README does not independently decide authority)
 **Blueprint authority status:** APPROVED — own v1.1 review; no v1.2 pack exists
-**Implementation status:** ACCEPTED (see [00_project_state/MODULE_STATUS.md](../../00_project_state/MODULE_STATUS.md) for detail)
+**Implementation status:** ACCEPTED — accepted implementation baseline through Phase 3B, plus `MIG-004` (migration 071, `environment_scope`; accepted at `5a4f872`). The module is partial, not complete: the `feature` config-integrity seal is not verified at decision time (`CFG-FIND-002`) and no `environment_scope` write path exists (see [00_project_state/MODULE_STATUS.md](../../00_project_state/MODULE_STATUS.md) for detail)
 
 ## Reviews
 
@@ -29,7 +29,7 @@ baseline_commit: 780e116
 
 ## Acceptance evidence
 
-- none recorded under this module yet
+- Conductor-managed task acceptance: [`MIG-004`](../../03_implementation/tasks/MIG-004/06-acceptance.md) (environment availability, `5a4f872`). No module-level record exists under this folder.
 
 ## Implementation notes / plans
 
@@ -37,4 +37,4 @@ baseline_commit: 780e116
 
 ## Open findings
 
-None specific to CFG-01. See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.
+`CFG-FIND-001` (HIGH, CLOSED by `MIG-004` at `5a4f872`); `CFG-FIND-002` (MEDIUM, OPEN — config-integrity seal not verified for the `feature` scope at decision time); and the CFG-01 portion of `FND-FIND-013` (CLOSED; the row stays OPEN for WLT-01). See [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register.

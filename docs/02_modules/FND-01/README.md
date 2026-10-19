@@ -96,3 +96,5 @@ FND-FIND-001's eventual closure remains outstanding. Two INFORMATIONAL
 observations from that review are tracked as **FND-FIND-011**. See
 [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current
 state of each.
+
+Post-`MIG-005` (canonical five-environment model, accepted at `5f78a0b`): `FND-FIND-012` (LOW, OPEN — readiness licence-lock interface) and `FND-FIND-013` (LOW, OPEN for the WLT-01 portion; CFG-01 portion closed by `MIG-004`). Task record: [`MIG-005`](../../03_implementation/tasks/MIG-005/06-acceptance.md).

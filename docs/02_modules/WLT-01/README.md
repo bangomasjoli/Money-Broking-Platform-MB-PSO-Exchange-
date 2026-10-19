@@ -53,6 +53,6 @@ COMPLETE), plus WLT-FIND-005 through WLT-FIND-008 (public-surface MEDIUM/LOW fin
 all CLOSED), WLT-FIND-009 (LOW, OPEN), **WLT-FIND-010 (public-surface enablement gate
 — CLOSED at commit `af52fe8`)**, WLT-FIND-011 through WLT-FIND-013 (non-blocking
 carry-forwards, OPEN), and WLT-FIND-014/WLT-FIND-015 (public-perimeter-gate
-INFORMATIONAL carry-forwards, OPEN, non-blocking) — see
+INFORMATIONAL carry-forwards, OPEN, non-blocking), and WLT-FIND-016 (FUTURE_CONSUMER, raised by `MIG-005`; the WLT-01 portion of `FND-FIND-013` also stays OPEN) — see
 [OPEN_FINDINGS.md](../../OPEN_FINDINGS.md) for the full register and current state of
 each.

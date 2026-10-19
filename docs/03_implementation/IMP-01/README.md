@@ -15,6 +15,8 @@ baseline_commit: 780e116
 
 # IMP-01 AIX Master Implementation Handover Pack v1.0
 
+> **Version-snapshot notice (added 2026-10-19).** The master and module version lists in this pack (e.g. `01_Implementation_Executive_Summary.md`, `12_Final_Handover_Status.md`: Doc 00 / Charter v1.3, masters v1.2, CFG-01 / CLT-01 / KYC-01 / AML-01 "v1.2 — Accepted") record the chain as it stood when the pack was drafted. They are **not** current: [DOCUMENT_REGISTER.md](../../DOCUMENT_REGISTER.md) is the sole version authority (e.g. Doc 00 v1.5; CFG-01 has no v1.2; CLT-01 / KYC-01 / AML-01 v1.2 are REVIEW_REQUIRED and v1.1 is authoritative). The pack is unchanged below this notice.
+
 ## Purpose
 
 This pack converts the accepted AIX Money Broking + PSO blueprint chain into an implementation-ready handover for developers, Claude Code, Codex, QA, compliance, finance, security and management.

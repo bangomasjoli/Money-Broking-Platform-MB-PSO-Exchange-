@@ -1,8 +1,7 @@
 # aix-platform
 
 Implementation monorepo for the AIX Money Broking + PSO Platform (Labuan FSA regulated).
-Blueprints and reviews live separately in `../aix-platform-docs`. Build order and conventions
-follow `../aix-platform-docs/implementation/IMP-01_AIX_Master_Implementation_Handover/`.
+Documentation (blueprints, reviews, governance records) lives in this repository's `../docs/`; start at `../docs/README.md`. Build order and conventions follow `../docs/03_implementation/IMP-01/`. _(Corrected 2026-10-19: the earlier two-repository model below no longer applies — code and docs are one repository.)_
 
 **Licence lock (non-negotiable):** Money Broking + PSO only. All Exchange runtime is prohibited
 (no order book / matching engine / market making / principal dealing / spread markup). Enforced at
@@ -42,9 +41,7 @@ tests                 unit + app (no-DB) + DB-gated integration
 
 ## Status
 
-**FND-01 Platform Foundation — first vertical slice implemented and tested.**
-Later modules (IAM-01 → PRT-01) build on `@aix/foundation` and add their own `services/<code>`
-+ migration `002_...` onward.
+Nine services exist (`fnd`, `iam`, `iam2`, `sec1`, `cfg1`, `clt1`, `kyc1`, `aml1`, `wlt1`), one shared package (`@aix/foundation`), a Next.js UI prototype (`apps/web`), a UAT trusted-edge reference (`edge/`) and a measurement harness (`perf/`); migration head is 071. Per-module acceptance state is in `../docs/00_project_state/MODULE_STATUS.md`; the UI has no API integration. Not production-ready.
 
 ## Commands
 

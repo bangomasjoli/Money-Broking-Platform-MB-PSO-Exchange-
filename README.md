@@ -2,7 +2,7 @@
 
 **Governed financial-infrastructure software for institutional digital-asset brokerage, payments and tokenised-asset operations.**
 
-> **Status: in active development. Not production-ready.** No regulatory approval is claimed or implied by this repository. No capability is enabled for production, no deployment is evidenced in this repository, internet exposure of public routes is prohibited by the governance record, and no ledger exists to hold client money or client assets. See [Current status](#current-status) for what exists and what does not.
+> **Status: in active development. Not production-ready.** No regulatory approval is claimed or implied by this repository. No capability is enabled for production, no deployment is evidenced in this repository, internet exposure of public routes is prohibited by the governance record, and no client-asset ledger and no completed custody, safeguarding or settlement infrastructure has been implemented (`LED-01` is not started; the `DEC-015` architecture is a proposal that is not accepted). See [Current status](#current-status) for what exists and what does not.
 
 > **Independent software.** This project is independently developed software. It is separate from AIX Investment Group and from any licence, authorisation or regulatory permission held by AIX Investment Group or any other entity. Nothing in this repository grants, evidences or implies a licence or regulatory approval.
 
@@ -96,7 +96,7 @@ flowchart TB
     CLT --> CFG
     Core --> DB
     Compliance --> DB
-    WEB -.->|"static, read-only"| Core
+    WEB -.->|"Future integration — NOT IMPLEMENTED"| Core
     Planned -.->|"depends on"| Compliance
 ```
 
@@ -126,9 +126,10 @@ Each item below has a recorded independent review and acceptance record (recent 
 
 Most recent accepted work: `IMP02-MA-HARDEN-001` (`9b0bab7`), `MIG-005` canonical environment model (`5f78a0b`), `MIG-004` environment availability (`5a4f872`). The database is at migration **071**.
 
-### Implemented, not accepted
+### UI prototype (mixed status)
 
-- **UI prototype.** Public homepage plus authenticated Client, Staff/Operations and Admin pages through UI Phase 2T. All pages are static and read-only with **no API or authentication integration**. Visual acceptance of the authenticated UI is **pending**.
+- **Public homepage — visually accepted** (UI Phase 1R, recorded in [`docs/04_ui/README.md`](docs/04_ui/README.md)). A static page with no backend integration; visual acceptance says nothing about production readiness.
+- **Authenticated Client, Staff/Operations and Admin pages (UI Phases 2A–2T) — implemented, not accepted.** Static and read-only with **no API or authentication integration**. Visual QA is deferred by an explicit program decision and **visual acceptance of the authenticated UI is pending**; it is not implied by this README.
 
 ### Proposed or under review (nothing here is implemented)
 

@@ -79,8 +79,8 @@ remediation, acceptance, `task.json`) for conductor-managed work going forward. 
 `01_masters/reviews/` for their review and delta-note evidence.
 
 **Doc 00 is now v1.5** — [`00_Licence_Scope_And_Feature_Lock_v1.5.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md),
-APPROVED: the institutional four-pillar licence-scope baseline (AIX Spot / OTC / Pay / RWA) with the `DEC-013`
-build-unlocked / production-gated capability model. `v1.4` and earlier are superseded and archived. **Charter is v1.5**
+APPROVED: the institutional licence-scope baseline — four strategic product pillars (AIX Spot / OTC / Pay / RWA) plus the separately authorised AIX Exchange securities capability as the fifth target product area (§2B) — with the `DEC-013`
+build-unlocked / production-gated capability model (Exchange and RWA securities capabilities are build-authorised and production-gated; the MB Spot prohibitions remain permanent). `v1.4` and earlier are superseded and archived. **Charter is v1.5**
 and **Master Module Index is v1.4**, both re-baselined on it; SRS, Role Matrix, Workflow Map and System Rules are v1.3
 (see [DOCUMENT_REGISTER.md](DOCUMENT_REGISTER.md) §1, which owns version authority).
 

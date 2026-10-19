@@ -77,9 +77,16 @@ remediation, acceptance, `task.json`) for conductor-managed work going forward. 
 `01_masters/` — the current authoritative master SDLC documents (00–11) plus
 `01_masters/reviews/` for their review and delta-note evidence.
 
-**Doc 00 is now v1.4** — [`00_Licence_Scope_And_Feature_Lock_v1.4.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.4.md),
-APPROVED: the institutional four-pillar licence-scope baseline (AIX Spot / OTC / Pay / RWA).
-`v1.3` is superseded and archived. **Charter is v1.4** and **Master Module Index is v1.3**, both re-baselined on it.
+**Doc 00 is now v1.5** — [`00_Licence_Scope_And_Feature_Lock_v1.5.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md),
+APPROVED: the institutional four-pillar licence-scope baseline (AIX Spot / OTC / Pay / RWA) with the `DEC-013`
+build-unlocked / production-gated capability model. `v1.4` and earlier are superseded and archived. **Charter is v1.5**
+and **Master Module Index is v1.4**, both re-baselined on it; SRS, Role Matrix, Workflow Map and System Rules are v1.3
+(see [DOCUMENT_REGISTER.md](DOCUMENT_REGISTER.md) §1, which owns version authority).
+
+## Where UI governance lives
+
+`04_ui/` — AIX UI design governance and the authenticated-platform UI phase record
+([04_ui/README.md](04_ui/README.md); `DOCUMENT_REGISTER.md` §4c).
 
 ## Where archives live
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "DEC-015",
-  "title": "DEC-015 Client Asset, Fiat Banking, Virtual Account, Custody & Settlement Architecture - STR-04 v0.1 drafted (PROPOSED / AWAITING HUMAN ACCEPTANCE); independent review pending; no implementation authorised",
+  "title": "DEC-015 Client Asset, Fiat Banking, Virtual Account, Custody & Settlement Architecture - STR-04 v0.4 (Round-3 remediated; awaiting Round-4 independent acceptance-gate review); NOT_ACCEPTED; no implementation authorised",
   "state": "PLANNING",
   "risk": "CRITICAL",
   "category": "architecture / fund-flow / governance",
@@ -21,29 +21,47 @@
   "roundCounts": {
     "planning": 0,
     "architecture": 1,
-    "review": 0,
-    "remediation": 0,
+    "review": 3,
+    "remediation": 3,
     "escalation": 0
   },
   "findingsSummary": {
     "open": {
       "BLOCKER": 0,
-      "HIGH": 0,
-      "MEDIUM": 0,
-      "LOW": 0
+      "HIGH": 1,
+      "MEDIUM": 7,
+      "LOW": 3
     },
-    "openFindingIds": [],
+    "openFindingIds": [
+      "DEC015-R3-F01",
+      "DEC015-R3-F02",
+      "DEC015-R3-F03",
+      "DEC015-R3-F04",
+      "DEC015-R3-F05",
+      "DEC015-R3-F06",
+      "DEC015-R3-F07",
+      "DEC015-R3-F08",
+      "DEC015-R3-F09",
+      "DEC015-R3-F10",
+      "DEC015-R3-F11"
+    ],
     "carryForwardIds": []
   },
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/DEC-015/01-plan.md",
     "docs/03_implementation/tasks/DEC-015/03-evidence.md",
-    "docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.1.md",
-    "docs/05_strategy/AIX_Bank_PSP_Settlement_Provider_Requirements_v0.1.md",
-    "docs/05_strategy/AIX_Institutional_Custodian_Requirements_v0.1.md",
-    "docs/05_strategy/AIX_LP_OTC_Counterparty_Requirements_v0.1.md"
+    "docs/03_implementation/tasks/DEC-015/04-review.md",
+    "docs/03_implementation/tasks/DEC-015/05-remediation.md",
+    "docs/03_implementation/tasks/DEC-015/04-review-r2.md",
+    "docs/03_implementation/tasks/DEC-015/05-remediation-r2.md",
+    "docs/03_implementation/tasks/DEC-015/04-review-r3.md",
+    "docs/03_implementation/tasks/DEC-015/05-remediation-r3.md",
+    "docs/05_strategy/AIX_Client_Asset_Fiat_Banking_Virtual_Account_Custody_Settlement_Architecture_v0.4.md",
+    "docs/05_strategy/AIX_Bank_PSP_Settlement_Provider_Requirements_v0.4.md",
+    "docs/05_strategy/AIX_Institutional_Custodian_Requirements_v0.4.md",
+    "docs/05_strategy/AIX_LP_OTC_Counterparty_Requirements_v0.4.md"
   ],
   "createdAt": "2026-10-04T00:00:00.000Z",
-  "updatedAt": "2026-10-04T12:00:00.000Z"
+  "updatedAt": "2026-10-19T00:00:00.000Z"
 }

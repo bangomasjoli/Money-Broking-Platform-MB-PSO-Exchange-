@@ -34,6 +34,7 @@ baseline_commit: 780e116
 - [IAM-01_Final_Review_Opus_v1.0.md](acceptance/IAM-01_Final_Review_Opus_v1.0.md)
 - [IAM-01_Security_Review_Opus_v0.1.md](acceptance/IAM-01_Security_Review_Opus_v0.1.md)
 - [IAM-01_Session_Introspection_Opus_v1.0.md](acceptance/IAM-01_Session_Introspection_Opus_v1.0.md) — Internal Session Introspection seam, independent final acceptance (WLT-01 BLOCKER-1 prerequisite)
+- [IAM-01_T-KEY-001_MFA_Key_Guard_Human_Acceptance_v1.0.md](acceptance/IAM-01_T-KEY-001_MFA_Key_Guard_Human_Acceptance_v1.0.md) — IAM-01-ACC-004, T-KEY-001: human acceptance (21 October 2026) of the approved MFA encryption-key startup guard, implementation commit `e366663`; protected environments `uat`, `demo`, `staging`, `prod`. Accepted with non-blocking findings — NB-01 (`.env.example` guidance) resolved by documentation, NB-02 (negative tests should assert the specific failure reason) carried forward. Implementation acceptance only: not production readiness, no deployment authorised, legacy-key transition caveat applies, and **CAN-KEY-02 remains OPEN**.
 
 ## Implementation notes / plans
 

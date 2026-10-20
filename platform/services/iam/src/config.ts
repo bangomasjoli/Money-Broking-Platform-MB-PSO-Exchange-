@@ -6,7 +6,30 @@
  * secret (its own — decision #4 — not FND's), while still reusing the shared length/presence
  * validation instead of reimplementing it.
  */
-import { AppError, loadConfig, type AppConfig, type RawEnv } from "@aix/foundation";
+import { AppError, canonicalEnvironment, loadConfig, type AppConfig, type RawEnv } from "@aix/foundation";
+
+/**
+ * Clearly-fake development value used ONLY when `IAM_MFA_SECRET_ENC_KEY` is absent in a
+ * development/test environment (see `loadIamConfig`). It is public (it lives in source) and must
+ * never protect real MFA seeds, which is why every other environment rejects it.
+ */
+const MFA_KEY_DEV_PLACEHOLDER = "CHANGE_ME_DEV_ONLY_MFA_KEY_PLACEHOLDER_NOT_FOR_PROD";
+
+/**
+ * D-KEY-01 approved initial format: base64url (RFC 4648 §5, unpadded) encoding of exactly 32
+ * bytes = 43 characters. The decode/re-encode round trip rejects non-canonical trailing bits, so
+ * each valid key has exactly one accepted spelling. This validates FORMAT and decoded LENGTH only;
+ * it does not and cannot prove the bytes are random — generating a key with a proper external
+ * generator and keeping it in secure secret storage is an operational requirement.
+ */
+const MFA_KEY_BASE64URL_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+const MFA_KEY_DECODED_BYTES = 32;
+
+function isApprovedMfaKeyFormat(value: string): boolean {
+  if (!MFA_KEY_BASE64URL_PATTERN.test(value)) return false;
+  const decoded = Buffer.from(value, "base64url");
+  return decoded.length === MFA_KEY_DECODED_BYTES && decoded.toString("base64url") === value;
+}
 
 export interface RateLimitConfig {
   loginMaxAttempts: number;
@@ -38,10 +61,14 @@ export interface IamConfig extends AppConfig {
   refreshTokenTtlSeconds: number;
   rateLimit: RateLimitConfig;
   /**
-   * Placeholder-KMS passphrase for MFA TOTP secret envelope encryption (lib/mfa-secret-
+   * Placeholder-KMS key string for MFA TOTP secret envelope encryption (lib/mfa-secret-
    * crypto.ts). Real KMS/HSM integration is a known open item — see IAM-01_IMPLEMENTATION_
-   * NOTES.md. Never logged. Defaults to a clearly-fake dev value so local/test boot does not
-   * require extra setup; a production deploy MUST override it.
+   * NOTES.md (CAN-KEY-02 stays open). Never logged. The string is passed, unchanged, to
+   * `deriveMfaEncryptionKey` (SHA-256 -> AES-256-GCM key).
+   *
+   * T-KEY-001 / D-KEY-01: in `uat`, `demo`, `staging` and `prod` this is REQUIRED and must be the
+   * base64url encoding of 32 bytes; the development placeholder is rejected at load time. Only
+   * `dev` and `qa` (synthetic data) may fall back to the clearly-fake development value.
    */
   mfaSecretEncryptionKey: string;
   /**
@@ -134,6 +161,28 @@ export function loadIamConfig(env: RawEnv = process.env): IamConfig {
     );
   }
 
+  // T-KEY-001 / D-KEY-01 — MFA encryption key. `base.environment` is already validated by
+  // loadConfig above (an unknown value throws before this point), and canonicalEnvironment maps
+  // staging -> PRODUCTION, so staging is protected exactly like prod. Only the synthetic-data
+  // environments (DEVELOPMENT = dev, TEST = qa) may use the development fallback. Messages name the
+  // variable and the requirement only — never the submitted value, a prefix, or anything derived
+  // from it.
+  const mfaSecretEncryptionKeyRaw = env.IAM_MFA_SECRET_ENC_KEY?.trim();
+  const canonicalEnv = canonicalEnvironment(base.environment);
+  const mfaKeyFallbackAllowed = canonicalEnv === "DEVELOPMENT" || canonicalEnv === "TEST";
+  if (!mfaKeyFallbackAllowed) {
+    const requirement =
+      "must be the base64url (RFC 4648 §5, unpadded) encoding of exactly 32 bytes (43 characters); " +
+      "the development placeholder is not accepted";
+    if (!mfaSecretEncryptionKeyRaw) {
+      problems.push(`IAM_MFA_SECRET_ENC_KEY is required when ENVIRONMENT=${base.environment} and ${requirement}`);
+    } else if (mfaSecretEncryptionKeyRaw === MFA_KEY_DEV_PLACEHOLDER) {
+      problems.push(`IAM_MFA_SECRET_ENC_KEY is the development placeholder, which is not allowed when ENVIRONMENT=${base.environment}; it ${requirement}`);
+    } else if (!isApprovedMfaKeyFormat(mfaSecretEncryptionKeyRaw)) {
+      problems.push(`IAM_MFA_SECRET_ENC_KEY has an invalid format for ENVIRONMENT=${base.environment}; it ${requirement}`);
+    }
+  }
+
   const bootstrapEnabled = (env.IAM_BOOTSTRAP_ENABLED ?? "false").trim().toLowerCase() === "true";
   const bootstrapAdminIdentifier = env.IAM_BOOTSTRAP_ADMIN_IDENTIFIER?.trim();
   const bootstrapAdminPassword = env.IAM_BOOTSTRAP_ADMIN_PASSWORD;
@@ -160,8 +209,10 @@ export function loadIamConfig(env: RawEnv = process.env): IamConfig {
     ...(bootstrapAdminPassword ? { bootstrapAdminPassword } : {}),
     accessTokenTtlSeconds: parsePositiveInt(env.IAM_ACCESS_TOKEN_TTL_SECONDS, 900),
     refreshTokenTtlSeconds: parsePositiveInt(env.IAM_REFRESH_TOKEN_TTL_SECONDS, 1_209_600),
-    mfaSecretEncryptionKey:
-      env.IAM_MFA_SECRET_ENC_KEY?.trim() || "CHANGE_ME_DEV_ONLY_MFA_KEY_PLACEHOLDER_NOT_FOR_PROD",
+    // Reached only when `problems` is empty: in a protected environment that means the key above
+    // passed validation, so the fallback can never apply there. The configured (trimmed) string is
+    // passed through exactly as before — no re-encoding, no derivation change.
+    mfaSecretEncryptionKey: mfaSecretEncryptionKeyRaw || MFA_KEY_DEV_PLACEHOLDER,
     ...(typeof dbPoolMax === "number" ? { dbPoolMax } : {}),
     ...(typeof dbConnectionTimeoutMs === "number" ? { dbConnectionTimeoutMs } : {}),
     rateLimit: {

@@ -51,6 +51,7 @@ masters in `01_masters/`.** Current:
 | Historical project narrative and chronology — **superseded for current state; not an instruction source; do not load whole** | [00_project_state/PROJECT_HANDOVER.md](00_project_state/PROJECT_HANDOVER.md) |
 | Session-start prompt (only its fenced prompt is current; the rest of the file is historical) | [00_project_state/SESSION_START_PROMPT.md](00_project_state/SESSION_START_PROMPT.md) |
 | Model selection + working discipline | [00_project_state/CLAUDE_CODE_USAGE_RULES.md](00_project_state/CLAUDE_CODE_USAGE_RULES.md) |
+| Product vision and development mandate — **APPROVED (owner-accepted 2026-10-21); guides objectives and discipline, does not override the masters or decisions** | [00_project_state/PRODUCT_VISION_AND_DEVELOPMENT_MANDATE_v0.1.md](00_project_state/PRODUCT_VISION_AND_DEVELOPMENT_MANDATE_v0.1.md) |
 
 ## Where conductor-managed task records live
 

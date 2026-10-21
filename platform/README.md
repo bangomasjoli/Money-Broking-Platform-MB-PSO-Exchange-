@@ -6,7 +6,7 @@ Implementation monorepo for the AIX Money Broking + PSO platform. Code lives her
 
 ## Licence boundary and the runtime guard
 
-Authority: `DEC-013`, [Licence Scope v1.5](../docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md) and [Master Module Index v1.4](../docs/01_masters/03_Master_Module_Index_v1.4.md). Three things are kept separate:
+Authority: `DEC-013`, [Licence Scope v1.6](../docs/01_masters/00_Licence_Scope_And_Feature_Lock_v1.6.md) and [Master Module Index v1.4](../docs/01_masters/03_Master_Module_Index_v1.4.md). Three things are kept separate:
 
 - **A. Money Broking Spot (permanent prohibitions, every environment).** Internal client-to-client matching, an AIX order book for MB Spot, crossing or netting between clients, principal dealing, proprietary market making, AIX principal liquidity, spread mark-up and maker/taker fees are permanently prohibited in every environment, including local development. No approval lifts this (`LIC-RULE-002`).
 - **B. AIX Exchange (securities domain).** A different domain from MB Spot. Its architecture and development are authorised (`DEC-013`; modules `EXM-01`, `EXO-01`, `EXC-01`, `EXP-01`), but **production activation remains gated** and fails closed. Authorising Exchange development grants MB Spot nothing (`LIC-RULE-005`).

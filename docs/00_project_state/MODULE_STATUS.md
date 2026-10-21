@@ -18,7 +18,7 @@ baseline_commit: 780e116
 Status legend: ✅ accepted · 🔁 in review · ⬜ next · — not started.
 
 ## Master SDLC pack
-Complete (00 → 11). Current: Doc 00 v1.5, Charter v1.5, Module Index v1.4, SRS / Role Matrix / Workflow Map / System Rules v1.3, Docs 07–11 v1.2 (re-baselined on `DEC-013`; masters 07–11 are knowingly stale, see CURRENT_STATE §7A). See [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) for per-doc version authority and review status (this file no longer tracks blueprint-version authority — see the note below).
+Complete (00 → 11). Current: Doc 00 v1.6, Charter v1.6, Module Index v1.4, SRS / Role Matrix / Workflow Map / System Rules v1.3, Docs 07–11 v1.2 (re-baselined on `DEC-013`; masters 07–11 are knowingly stale, see CURRENT_STATE §7A). See [DOCUMENT_REGISTER.md](../DOCUMENT_REGISTER.md) for per-doc version authority and review status (this file no longer tracks blueprint-version authority — see the note below).
 
 ## Module blueprint packs
 

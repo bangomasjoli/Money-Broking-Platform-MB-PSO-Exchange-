@@ -79,10 +79,10 @@ remediation, acceptance, `task.json`) for conductor-managed work going forward. 
 `01_masters/` — the current authoritative master SDLC documents (00–11) plus
 `01_masters/reviews/` for their review and delta-note evidence.
 
-**Doc 00 is now v1.5** — [`00_Licence_Scope_And_Feature_Lock_v1.5.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.5.md),
+**Doc 00 is now v1.6** — [`00_Licence_Scope_And_Feature_Lock_v1.6.md`](01_masters/00_Licence_Scope_And_Feature_Lock_v1.6.md),
 APPROVED: the institutional licence-scope baseline — four strategic product pillars (AIX Spot / OTC / Pay / RWA) plus the separately authorised AIX Exchange securities capability as the fifth target product area (§2B) — with the `DEC-013`
-build-unlocked / production-gated capability model (Exchange and RWA securities capabilities are build-authorised and production-gated; the MB Spot prohibitions remain permanent). `v1.4` and earlier are superseded and archived. **Charter is v1.5**
-and **Master Module Index is v1.4**, both re-baselined on it; SRS, Role Matrix, Workflow Map and System Rules are v1.3
+build-unlocked / production-gated capability model (Exchange and RWA securities capabilities are build-authorised and production-gated; the MB Spot prohibitions remain permanent). `v1.5` and earlier are superseded and archived (v1.6 is a wording alignment of v1.5, `DOC-ALIGN-001`). **Charter is v1.6** (jointly promoted)
+and **Master Module Index is v1.4** (both re-baselined on Doc 00 v1.5 / Charter v1.5); SRS, Role Matrix, Workflow Map and System Rules are v1.3
 (see [DOCUMENT_REGISTER.md](DOCUMENT_REGISTER.md) §1, which owns version authority).
 
 ## Where UI governance lives
@@ -108,7 +108,7 @@ implementation handover pack (build order, dependency map, migration order).
 
 ## Regulatory guardrails enforced across all reviews
 
-Money Broking + PSO approved; **Exchange pending**. Under `DEC-012` / `DEC-013` / Doc 00 v1.5: **Money Broking Spot** — agency / external LP routing; internal client-to-client matching,
+Money Broking + PSO approved; **Exchange pending**. Under `DEC-012` / `DEC-013` / Doc 00 v1.6: **Money Broking Spot** — agency / external LP routing; internal client-to-client matching,
 an AIX order book or matching engine for MB Spot, market making and principal dealing are **permanently prohibited in every environment**. **AIX Exchange (securities)** — architecture and
 development authorised; production activation gated, no regulatory approval implied. `assertNoExchangeRuntime` stays active (`MIG-001` specified, not authorised). Disclosed brokerage
 fee only; AIX inventory = zero. Third-party custody; client-money safeguarding (full-backing). Institutional/HNWI only; retail off by default.

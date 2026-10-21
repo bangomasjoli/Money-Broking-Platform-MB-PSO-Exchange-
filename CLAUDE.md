@@ -55,3 +55,6 @@ Do not mark anything IMPLEMENTED from a blueprint, ACCEPTED without explicit, do
 
 ## 7. Nested instructions
 `platform/apps/web/CLAUDE.md` (which imports `AGENTS.md`) adds Next.js rules for that directory and does not conflict with this file. UI work also follows [`docs/04_ui/README.md`](docs/04_ui/README.md) and the `aix-ui-design` skill in `.claude/skills/`. Models and working discipline: [`CLAUDE_CODE_USAGE_RULES.md`](docs/00_project_state/CLAUDE_CODE_USAGE_RULES.md).
+
+## 8. Cross-agent accuracy and verification
+For Claude, ChatGPT/Codex and any authorised coding agent, apply the shared [Accuracy & Verification Protocol](docs/00_project_state/CLAUDE_CODE_USAGE_RULES.md#accuracy--verification-protocol). Root [`AGENTS.md`](AGENTS.md) provides a concise entry point for repository-aware agents. This adds no licence permission, implementation authorisation, acceptance, or deviation from §§1–7 or the authoritative masters. A different model or shared-session model switch does not establish independent review.

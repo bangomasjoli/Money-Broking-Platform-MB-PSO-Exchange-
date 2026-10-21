@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "taskId": "IAM02-AUTHZ-REM-001",
+  "title": "IAM-02 approval-authorisation remediation - documentation checkpoint (owner direction per Issue #6 recorded; unimplemented; NOT_ACCEPTED; findings F01-F07 PROPOSED for human triage, none promoted)",
+  "state": "PLANNING",
+  "risk": "CRITICAL",
+  "category": "IAM-02 security remediation / authorisation / maker-checker",
+  "baselineCommit": "effcdf39c6666f014ce7c9776f83903f6263381f",
+  "resultingCommit": null,
+  "planner": {
+    "role": "planner",
+    "provider": "claude_code",
+    "model": "claude-sonnet-5-5",
+    "effort": "HIGH"
+  },
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {
+    "planner": "HIGH"
+  },
+  "roundCounts": {
+    "planning": 1,
+    "architecture": 0,
+    "review": 0,
+    "remediation": 0,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 2,
+      "MEDIUM": 3,
+      "LOW": 2
+    },
+    "openFindingIds": [
+      "IAM02-AUTHZ-REM-001-F01",
+      "IAM02-AUTHZ-REM-001-F02",
+      "IAM02-AUTHZ-REM-001-F03",
+      "IAM02-AUTHZ-REM-001-F04",
+      "IAM02-AUTHZ-REM-001-F05",
+      "IAM02-AUTHZ-REM-001-F06",
+      "IAM02-AUTHZ-REM-001-F07"
+    ],
+    "carryForwardIds": []
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md"
+  ],
+  "createdAt": "2026-10-21T18:46:00.000Z",
+  "updatedAt": "2026-10-21T18:46:00.000Z"
+}

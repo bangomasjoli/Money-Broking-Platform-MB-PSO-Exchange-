@@ -11,8 +11,11 @@
  * PRODUCTION SQL (`insertApprovalDecision`, lib/approval-decision.ts) inside real transactions
  * on a LOGIN role that is a member of `role_iam2_runtime` only.
  *
- * Self-skips unless TEST_DATABASE_URL points at a Postgres with iam2 (006, 072) migrated and the
- * fnd/iam/iam2 grant files applied.
+ * PREREQUISITES ARE NEVER SILENTLY SKIPPED (IMPL-02 / N-1 convention). With TEST_DATABASE_URL unset the
+ * suite is skipped with an explicit, named reason. With it SET, the database must hold foundation, iam
+ * and iam2 (006, 072) migrated and the fnd/iam/iam2 grant files applied; if it does not (or is
+ * unreachable, or the test login role cannot be prepared) EVERY test FAILS with the prerequisite
+ * evidence. There is no early-return that passes.
  */
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -27,7 +30,52 @@ const RUNTIME_ROLE_USER = "iam2_authz_rem_decision_rt";
 
 let verifyPool: Pool;
 let runtimePool: Pool;
-let schemaReady = false;
+/** Set when a prerequisite is unavailable; every test then FAILS with this evidence. */
+let prerequisiteError: Error | undefined;
+
+function assertPrerequisites(): void {
+  if (prerequisiteError) throw prerequisiteError;
+}
+
+const SKIP_REASON =
+  "TEST_DATABASE_URL is not configured: the IAM-02 duplicate-decision / SAVEPOINT database tests are SKIPPED, not passed. " +
+  "Set it to a Postgres superuser URL with foundation, iam and iam2 (incl. migration 072) migrated and the fnd/iam/iam2 grant files applied.";
+
+// Explicit, named skip when the database environment is not configured.
+// Registered ONLY when unconfigured, so a configured run reports no spurious skips.
+if (!TEST_DB) {
+  describe("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOINT (runtime role, database level) (not configured)", () => {
+    it.skip(SKIP_REASON, () => {});
+  });
+}
+
+/** Everything this file needs that a configured TEST_DATABASE_URL must already provide. */
+async function missingPrerequisites(pool: Pool, extraGrants: Array<[table: string, privilege: string]>): Promise<string[]> {
+  const missing: string[] = [];
+  const schemas = await pool.query<{ schema_name: string }>(
+    `SELECT schema_name FROM information_schema.schemata WHERE schema_name IN ('foundation','iam','iam2')`,
+  );
+  const have = new Set(schemas.rows.map((r) => r.schema_name));
+  for (const s of ["foundation", "iam", "iam2"]) if (!have.has(s)) missing.push(`schema ${s} is missing (run migrate:up)`);
+  const role = await pool.query(`SELECT 1 FROM pg_roles WHERE rolname = 'role_iam2_runtime'`);
+  if ((role.rowCount ?? 0) === 0) missing.push("role role_iam2_runtime is missing (create the runtime roles before migrating)");
+  if (have.has("iam2")) {
+    const col = await pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_schema = 'iam2' AND table_name = 'approval_request' AND column_name = 'snapshot_taken_at_utc'`,
+    );
+    if ((col.rowCount ?? 0) === 0) missing.push("migration 072 is not applied (iam2.approval_request.snapshot_taken_at_utc is missing)");
+    if ((role.rowCount ?? 0) > 0) {
+      for (const [table, privilege] of [["iam2.approval_request", "SELECT"], ...extraGrants]) {
+        const grant = await pool.query<{ ok: boolean | null }>(
+          `SELECT to_regclass($1) IS NOT NULL AND has_table_privilege('role_iam2_runtime', $1, $2) AS ok`,
+          [table, privilege],
+        );
+        if (grant.rows[0]?.ok !== true) missing.push(`iam2_runtime_grants.sql is not applied (role_iam2_runtime lacks ${privilege} on ${table})`);
+      }
+    }
+  }
+  return missing;
+}
 
 async function newApproval(): Promise<string> {
   const id = "appr_rem_dec_" + randomUUID();
@@ -66,23 +114,36 @@ async function sodCount(tag: string): Promise<number> {
 
 describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOINT (runtime role, database level)", () => {
   beforeAll(async () => {
-    verifyPool = new Pool({ connectionString: TEST_DB ?? "postgres://unused" });
-    const r = await verifyPool.query(`SELECT count(*) AS n FROM information_schema.schemata WHERE schema_name = 'iam2'`);
-    schemaReady = Number(r.rows[0]?.n) > 0;
-    if (!schemaReady) return;
-    await verifyPool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${RUNTIME_ROLE_USER}') THEN CREATE ROLE ${RUNTIME_ROLE_USER} LOGIN; END IF; END $$;`);
-    await verifyPool.query(`GRANT role_iam2_runtime TO ${RUNTIME_ROLE_USER}`);
-    runtimePool = new Pool({ connectionString: (TEST_DB as string).replace(/^postgres:\/\/[^@]+@/, `postgres://${RUNTIME_ROLE_USER}@`) });
-    const who = await runtimePool.query(`SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user`);
-    expect(who.rows[0]).toMatchObject({ rolsuper: false, rolbypassrls: false });
-  });
+    try {
+      verifyPool = new Pool({ connectionString: TEST_DB ?? "postgres://unused" });
+      const missing = await missingPrerequisites(verifyPool, [["iam2.approval_decision", "INSERT"], ["iam2.sod_check", "INSERT"]]);
+      if (missing.length > 0) {
+        prerequisiteError = new Error(
+          `PREREQUISITE UNAVAILABLE: TEST_DATABASE_URL is configured but the IAM-02 test database is not ready: ${missing.join("; ")}. ` +
+            "Run migrate:up (001-072) and apply infra/grants/{fnd,iam,iam2}_runtime_grants.sql; this test refuses to pass without running.",
+        );
+        return;
+      }
+      await verifyPool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${RUNTIME_ROLE_USER}') THEN CREATE ROLE ${RUNTIME_ROLE_USER} LOGIN; END IF; END $$;`);
+      await verifyPool.query(`GRANT role_iam2_runtime TO ${RUNTIME_ROLE_USER}`);
+      runtimePool = new Pool({ connectionString: (TEST_DB as string).replace(/^postgres:\/\/[^@]+@/, `postgres://${RUNTIME_ROLE_USER}@`) });
+      const who = await runtimePool.query(`SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user`);
+      expect(who.rows[0]).toMatchObject({ rolsuper: false, rolbypassrls: false });
+    } catch (err) {
+      const e = err as { code?: string; message?: string };
+      prerequisiteError = new Error(
+        `PREREQUISITE UNAVAILABLE: TEST_DATABASE_URL is configured but the test environment could not be prepared: [${e.code ?? "no sqlstate"}] ${e.message ?? String(err)}. ` +
+          "Use a superuser (or CREATEROLE) URL to a migrated database; this test refuses to pass without running.",
+      );
+    }
+  }, 60_000);
   afterAll(async () => {
     if (runtimePool) await runtimePool.end();
     if (verifyPool) await verifyPool.end();
   });
 
   it("control (the F07 defect without the SAVEPOINT): a duplicate aborts the transaction and COMMIT becomes ROLLBACK, discarding the same-transaction evidence", async () => {
-    if (!schemaReady) return;
+    assertPrerequisites();
     const approvalId = await newApproval();
     const tag = "rem_ctl_" + randomUUID();
     const c = await runtimePool.connect();
@@ -102,7 +163,7 @@ describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOIN
   });
 
   it("T-24: with the SAVEPOINT a duplicate (approval_id, approver_user_id) is detected, and the surrounding sod_check / decision-log evidence is COMMITTED", async () => {
-    if (!schemaReady) return;
+    assertPrerequisites();
     const approvalId = await newApproval();
     const tag = "rem_t24_" + randomUUID();
     const c = await runtimePool.connect();
@@ -128,7 +189,7 @@ describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOIN
   });
 
   it("T-25: ONLY the named (approval_id, approver_user_id) constraint is a duplicate; a decision_id collision and any other error abort fail-closed; both constraint names exist", async () => {
-    if (!schemaReady) return;
+    assertPrerequisites();
     const names = await verifyPool.query<{ conname: string }>(
       `SELECT conname FROM pg_constraint WHERE conrelid = 'iam2.approval_decision'::regclass AND contype = 'u'`,
     );
@@ -170,7 +231,7 @@ describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOIN
   });
 
   it("T-44: three simultaneous same-approver transactions -> exactly one decision row, two 'duplicate' outcomes, and ALL surrounding evidence persisted", async () => {
-    if (!schemaReady) return;
+    assertPrerequisites();
     const approvalId = await newApproval();
     const tag = "rem_t44_" + randomUUID();
     const run = async (n: number): Promise<"inserted" | "duplicate"> => {
@@ -195,7 +256,7 @@ describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — duplicate decision / SAVEPOIN
   });
 
   it("T-44: the runtime role still lacks ON CONFLICT / RETURNING on approval_decision (the reason the SAVEPOINT strategy is used) and holds no DELETE", async () => {
-    if (!schemaReady) return;
+    assertPrerequisites();
     const approvalId = await newApproval();
     await expect(
       runtimePool.query(`INSERT INTO iam2.approval_decision (decision_id, approval_id, approver_user_id, decision) VALUES ($1,$2,'u','approve') ON CONFLICT (approval_id, approver_user_id) DO NOTHING`, ["apprdec_rem_" + randomUUID(), approvalId]),

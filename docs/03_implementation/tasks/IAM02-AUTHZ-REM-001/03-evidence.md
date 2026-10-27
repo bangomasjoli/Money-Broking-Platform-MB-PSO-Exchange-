@@ -3,6 +3,7 @@
 > Facts read from the repository and check output collected for this documentation checkpoint. Reference commits and files; no source copies, no large logs. Reproduction code lived outside the repository (session scratch) and is described, not stored; the implementer converts it into repository tests (plan §8).
 
 - **Collected:** revision 1 2026-10-21T18:46Z; revision 2 2026-10-22 (Asia/Kuching); revision 3 2026-10-22 (Asia/Kuching, documentation-only). Revision-1 sections below are kept as recorded (§1–§6, §7 rev-1 text); revision-2 additions are §8–§10 and the entries E-10…E-15, and carry the label *rev-2*; revision-3 additions are §11–§14 and the entries E-16…E-22, and carry the label *rev-3 re-read* (Sonnet re-read source or the Issue) or *Opus reported* (focused Opus verification, not re-run).
+- **Revision 6 (2026-10-28, Asia/Kuching, documentation-only):** governance records `02-implementation-report.md`, `04-review.md` and `05-remediation.md` added retrospectively and stale wording corrected; see §17. Statements below that the branch is "not pushed" or "local" describe the position when they were written: the branch was later pushed and draft PR #7 opened (§17.2).
 - **Revision 4 (2026-10-28, Asia/Kuching):** implementation committed locally on `task/IAM02-AUTHZ-REM-001-impl` as `39639c0b6c5cc45b7e9012680cfd5268e037b318` (parent `a892bf374de2bf1291f7ba269d69bcfde9a9d66c`, not pushed); evidence in §15. The bullets below record revisions 1–3 as written; where they say "uncommitted" or "no commit" they predate `a892bf3` and this implementation commit.
 - **Baseline commit (code):** `effcdf39c6666f014ce7c9776f83903f6263381f` (`main` = `origin/main`); `git diff --stat effcdf39..fd94dc97 -- platform` is empty (rev-2 verified), so every code fact below holds at the record commit as well.
 - **Record base for revisions 2 and 3:** `fd94dc97a2676443e130289d71cb1a535006dad1` on local `docs/IAM02-AUTHZ-REM-001` (not pushed; working tree was clean before the revision-2 edits). Revision 3 is cumulative over revision 2; a copy of the revision-2 files was kept outside the repository for diffing.
@@ -237,7 +238,7 @@ None is promoted to `docs/OPEN_FINDINGS.md`, accepted or closed. F09 remains cro
 | Pre-fix file, same empty database | **54 passed** (the false-green) |
 | Pre-fix file, migrations 001–071 / grants missing | 45 / 51 failed with unactionable errors (`Cannot read properties of undefined`) |
 
-- **Sibling files, NOT remediated (outside the authorised scope; follow-up needs owner authorisation):** `platform/tests/integration/iam2-authz-rem-decision-db.test.ts` (5 test blocks plus `beforeAll`) and `platform/tests/integration/iam2-authz-rem-consumers-real.test.ts` (3 test blocks plus `beforeAll`) still use `if (!schemaReady) return;` and can pass without running against an unmigrated configured database. The independent review reported N-1 for `iam2-authz-rem-db.test.ts` only; these two were found while implementing N-1. Not registered as a finding.
+- **Sibling files, NOT remediated (outside the authorised scope; follow-up needs owner authorisation):** `platform/tests/integration/iam2-authz-rem-decision-db.test.ts` (5 test blocks plus `beforeAll`) and `platform/tests/integration/iam2-authz-rem-consumers-real.test.ts` (3 test blocks plus `beforeAll`) still use `if (!schemaReady) return;` and can pass without running against an unmigrated configured database. The independent review reported N-1 for `iam2-authz-rem-db.test.ts` only; these two were found while implementing N-1. Not registered as a finding. **[Forward reference, added 2026-10-28: this sentence records the position when §15 was written. Both sibling files were corrected afterwards in commit `928c828`; see §16.2–§16.5.]**
 
 ### 15.3 Checks run in this checkpoint (VERIFIED)
 Environment: PostgreSQL 17.10, localhost only, throwaway cluster with its own data directory; no shared, staging or production database; migrations `001`…`072` applied from scratch with `npx node-pg-migrate -m infra/migrations --no-check-order up` after creating the nine `role_*_runtime` roles; all nine `infra/grants/*.sql` files applied; every run used a fresh database cloned from that migrated template.
@@ -280,7 +281,7 @@ Environment: PostgreSQL 17.10, localhost only, throwaway cluster with its own da
 - **Policy and grants (OD-3, OD-4):** no `approval_policy` row exists and migration 073 is not authored, so with the fail-closed behaviour no protected action can complete an approval until policy configuration is separately reviewed and authorised; no role grants or checker roster were added.
 - **Multi-approver (OD-5):** policies requiring more than one approver remain refused (AZ-18) until a separate task lifts it.
 - **Deployment/integration:** migration 072 was applied only to disposable local databases; an IAM-01 without the additive fields makes every approval fail closed (T-50). Nothing was executed against a shared, staging or production database.
-- **Not done:** push, merge, UAT, production-readiness or regulatory claim, owner acceptance (`06-acceptance.md` does not exist), `OPEN_FINDINGS.md` / `DECISION_LOG.md` / register edits. `01-plan.md` is intentionally unchanged and still describes the pre-implementation contract; the sections above supersede its "unimplemented" wording for implementation status only. `02-implementation-report.md` and `04-review.md` were not created: no conductor execution records exist, and the review is recorded here from the reviewer's chat report.
+- **Not done:** push, merge, UAT, production-readiness or regulatory claim, owner acceptance (`06-acceptance.md` does not exist), `OPEN_FINDINGS.md` / `DECISION_LOG.md` / register edits. `01-plan.md` is intentionally unchanged and still describes the pre-implementation contract; the sections above supersede its "unimplemented" wording for implementation status only. `02-implementation-report.md` and `04-review.md` were not created: no conductor execution records exist, and the review is recorded here from the reviewer's chat report. **[Update, added 2026-10-28: `02-implementation-report.md`, `04-review.md` and `05-remediation.md` were later created as retrospective records, not conductor executions; see §17.]**
 - **Next checkpoint (owner):** whether to authorise remediation of the two sibling N-1 files, whether to track O-1, whether to push or merge the branch, and, separately, controlled task acceptance.
 
 ## 16. Addendum (2026-10-28, Asia/Kuching): sibling test-reliability correction
@@ -333,12 +334,13 @@ No suite-level or `afterAll` errors in the runs checked (empty, 072-missing, gra
 ### 16.6 Wider verification and baseline comparison (VERIFIED)
 - Two full-suite runs were **discarded as invalid** (158 failures each): my harness created a database whose name contained an uppercase letter, so the tests connected to a database that did not exist. They say nothing about the code.
 - **Valid full runs on this tree (5589 tests, 53 skipped each):** failures 4, 7, 3, 4, 3. **Same suite at the pre-change commit `6488978`:** failures 3, 3, 3, 3, 6.
-  - `perf-m2a-observe.test.ts` ×3: present in every run on both (baseline).
+  - `perf-m2a-observe.test.ts` ×3: observed failing in every valid full run recorded in this section, on both trees (baseline). This is an observation of those runs, not a claim that the tests always fail; see the note below.
   - `clt1-db.test.ts` ×1 (`expected 8 to be +0`): in 2 of 5 tree runs, 0 of 5 at `6488978` here; also seen at `a892bf3` in §15.3. Shared-database CLT-01 race.
   - `wlt1-sensitive-read-route.test.ts` (count mismatches such as `expected 78 to be 76`): tree 3 failures in one run and 1 in another; baseline 3 in one run. Passes alone, 3 of 3. Shared-database count race.
   - **Neither changed file failed in any valid run.** With five runs each I cannot show the intermittent failure rates are equal, and I do not claim it; I observed no failure traceable to this change, and the changed files are test-only.
   - 53 skipped = the live edge / UAT files (23 + 22 + 8).
-- **Known baseline issues, kept separate:** (1) the 3 `perf-m2a-observe` failures; (2) `iam-db` + `iam-session-introspection` fails deterministically (`expected 2 to be 1`, `iam-db.test.ts:179`), 3 of 3 again here, identical at `a892bf3` per the independent review; (3) the CLT-01 `clt1-db` ↔ `clt1-principal-membership-route` race (6 of 6 at `a892bf3` and on the tree per §15.3; not re-run here). None was modified or remediated.
+- **Known baseline issues, kept separate:** (1) the 3 `perf-m2a-observe` failures observed in the runs recorded in §15.3 and §16.6; (2) `iam-db` + `iam-session-introspection` fails deterministically (`expected 2 to be 1`, `iam-db.test.ts:179`), 3 of 3 again here, identical at `a892bf3` per the independent review; (3) the CLT-01 `clt1-db` ↔ `clt1-principal-membership-route` race (6 of 6 at `a892bf3` and on the tree per §15.3; not re-run here). None was modified or remediated.
+- **Note added 2026-10-28 (§17): a later run did not show the `perf-m2a-observe` failures.** The PR #7 self-check (`04-review.md` round D; **same-conversation and not independent; reviewer-reported, not re-run by the record writer**) reported one further full-suite run of 5589 tests: 5535 passed, 1 failed (`clt1-db`, the known shared-database race), 53 skipped, in which all three `perf-m2a-observe` tests passed. The failures are therefore run- or environment-dependent, and their cause has not been investigated. The results recorded above are unchanged.
 
 ### 16.7 Remaining false-green limitations (VERIFIED by reading the files)
 - The pattern `if (!schemaReady) return;` remains in **pre-existing, accepted-baseline suites outside the authorised paths, unchanged**: `platform/tests/integration/iam2-db.test.ts` (48 occurrences including setup; one test, line 278, is fail-visible), `aml1-iam2-guard-real.test.ts` (18; one fail-loud canary), `cfg1-iam2-guard-real.test.ts` (17) and `clt1-iam2-guard-real.test.ts` (25). Against a configured but unmigrated database most tests in these files pass without executing assertions. Other modules' suites were **not audited**. Not remediated; not registered as a finding; a further correction needs separate owner authorisation.
@@ -351,6 +353,36 @@ No suite-level or `afterAll` errors in the runs checked (empty, 072-missing, gra
 - **Status:** `IMPLEMENTATION_COMPLETE` / `NOT_ACCEPTED`. `task.json.roundCounts.remediation` is raised from 3 to 4 (manual tally; this authorisation, Issue #6 comment `6448938869`); `findingsSummary`, `acceptanceStatus`, `resultingCommit` (the implementation commit `39639c0`) and `state` are unchanged.
 - **Next owner checkpoint:** push or merge review; whether to authorise the remaining silent-return suites (§16.7); whether to track O-1; and, separately, controlled task acceptance.
 
+## 17. Governance record completion (2026-10-28, Asia/Kuching): documentation-only checkpoint
+
+> Additive and dated; §1–§16 are not rewritten (the corrections above are bracketed or minimal). Written by the Sonnet checkpoint writer. **VERIFIED** = checked against git or GitHub when written. Nothing here is acceptance, a finding closure or a production-readiness claim.
+
+### 17.1 Authority and baseline (VERIFIED)
+- **Authority:** Issue #6 comment `6450001986`, read in full: Option A, acceptance-before-merge; this checkpoint prepares missing governance records and corrects stale documentation only. It grants no acceptance, no push, no merge, no ready-for-review and no D-7 exception.
+- **Preflight:** branch `task/IAM02-AUTHZ-REM-001-impl`, HEAD `5969c2cb606dcb2476f514fd124853db0577e79e`, clean tree, no other writer; PR #7 open, draft, unmerged, head `5969c2c`, base `main` `effcdf39c6666f014ce7c9776f83903f6263381f`; the task folder held only `01-plan.md`, `03-evidence.md`, `task.json`.
+
+### 17.2 Status since §16 (VERIFIED against GitHub)
+The branch was pushed (Issue #6 comment `6449571186`) and draft PR #7 was opened against `main`; remote branch head equals `5969c2c`. The earlier "not pushed" / "local" wording in §15–§16 was true when written and is superseded for repository status only.
+
+### 17.3 Records created (retrospective; not conductor executions)
+- `02-implementation-report.md` — the implementer's account of commit `39639c0`, its scope, files and limits, with results tagged implementer-reported or reviewer-reported.
+- `04-review.md` — an archival summary of review rounds A–D. Round C is the Opus **ACCEPT WITH CONDITIONS** technical verdict; round D is the PR #7 self-check, which declared itself **not independent**. Original reports, execution identifiers and harness files are **not on file** and are not invented. No round-specific files were created because no round's original evidence is recoverable.
+- `05-remediation.md` — IMPL-01…04 and X-3, D7-01 and D7-02, N-1 and the two sibling test fixes, each with its Issue #6 authority, the commit it was first committed in, before/after effect and who verified it.
+
+### 17.4 Corrections made (VERIFIED by diff)
+`task.json`: title no longer says "not pushed" or that the sibling tests are unresolved, and `relevantRecordPaths` lists the new records. `03-evidence.md`: header bullet, a forward reference from §15.2 to §16, an update note on the "were not created" sentence in §15.6, the §16.6 `perf-m2a-observe` wording and a dated note on the later run, and this section. No test result was altered.
+
+### 17.5 Review provenance and its limits (read with `04-review.md`)
+- The strict **clean-context D-7 condition is not established** by anything on file. "Independent" in §15.4 and §16.8 means only "run in a session other than the implementer's"; it does not assert that condition.
+- The round-C reviewer ran in a new session but **automatically inherited project-memory material** and read a prior session's scratch snapshot. The same conversation later hosted the N-1 correction, the sibling fixes, the evidence commits, the push, the draft PR and the round-D self-check; the post-review changes were authored in the reviewer's own conversation. No uninvolved session has reviewed them.
+- Resolving this needs a genuine clean-context review or a separate, explicit, human-approved exception (Issue #6 comment `6450001986`). None is granted here.
+
+### 17.6 Still open and unchanged
+`state` `IMPLEMENTATION_COMPLETE`; `acceptanceStatus` `NOT_ACCEPTED`; no `acceptance` object; no `06-acceptance.md`. `resultingCommit` remains the code commit `39639c0`; `roundCounts` remain a manual tally. F01…F11 proposed and open; `IAM2-FIND-001…004` open; R-1…R-7; O-1 (checker comprehension, a UAT dependency); OD-2 consumer payload delivery; OD-3 approval-policy matrix (no live policy rows); OD-4 checker roles and grants; migration 073 not authored; multi-approver fail-closed; legacy silent-return suites disclosed (§16.7). No production, UAT or regulatory claim. `docs/OPEN_FINDINGS.md`, `DECISION_LOG.md`, `DOCUMENT_REGISTER.md`, `MODULE_STATUS.md` and `CURRENT_STATE.md` are unchanged.
+
+### 17.7 Next owner checkpoint
+Resolve the D-7 review-provenance condition (clean-context review or human-approved exception); assess findings and dependencies; take a separate human acceptance decision **before** any owner-authorised merge of PR #7 (Option A). Push of this checkpoint's commit is not authorised.
+
 ## Changed files
 - `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md` (revision 1 new at `fd94dc9`; revisions 2 and 3 modified, uncommitted)
 - `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md` (revision 1 new at `fd94dc9`; revisions 2 and 3 modified, uncommitted)
@@ -359,6 +391,8 @@ No suite-level or `afterAll` errors in the runs checked (empty, 072-missing, gra
 - Revision 4: `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md` (new §15 and one header bullet) and `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/task.json` (state, title, `resultingCommit`, `updatedAt`, review/remediation round tally). `01-plan.md` unchanged. The implementation files are listed in §15.1 (commit `39639c0`).
 
 - Revision 5 addendum (§16): `03-evidence.md` (new §16) and `task.json` (`roundCounts.remediation`, `updatedAt`); test-only commit `928c828` changes the two files named in §16.2.
+
+- Revision 6 (§17): `02-implementation-report.md`, `04-review.md` and `05-remediation.md` added; `03-evidence.md` and `task.json` corrected as listed in §17.4.
 
 ## Targeted evidence references
 - `docs/OPEN_FINDINGS.md` 105–117 — registered state, unchanged by this task.

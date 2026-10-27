@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "IAM02-AUTHZ-REM-001",
-  "title": "IAM-02 approval-authorisation remediation - implementation committed locally (39639c0, not pushed); independent technical review ACCEPT WITH CONDITIONS (not governance acceptance); NOT_ACCEPTED; findings F01-F11 PROPOSED and open, none promoted or closed; residuals R-1..R-7 open; O-1 and two N-1 sibling test files unresolved",
+  "title": "IAM-02 approval-authorisation remediation - implementation complete (code commit 39639c0); records 01-05 on file (02, 04, 05 retrospective); NOT_ACCEPTED; findings F01-F11 PROPOSED and open, none promoted or closed; residuals R-1..R-7 and O-1 open; strict D-7 review independence not established",
   "state": "IMPLEMENTATION_COMPLETE",
   "risk": "CRITICAL",
   "category": "IAM-02 security remediation / authorisation / maker-checker",
@@ -50,8 +50,11 @@
   "acceptanceStatus": "NOT_ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md",
-    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md"
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/02-implementation-report.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/04-review.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/05-remediation.md"
   ],
   "createdAt": "2026-10-21T18:46:00.000Z",
-  "updatedAt": "2026-10-27T17:48:47.000Z"
+  "updatedAt": "2026-10-27T18:21:44.000Z"
 }

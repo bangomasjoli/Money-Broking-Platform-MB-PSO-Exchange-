@@ -125,6 +125,29 @@ export const IAM2_ERROR_CODES = {
   // Bespoke addition (not in blueprint catalogue) — see class-level comment. Deliberately the
   // SAME generic message/code for every failure mode of the bootstrap-transition endpoint.
   IAM2_BOOTSTRAP_TRANSITION_UNAVAILABLE: { http: 403, message: "This operation is not available." },
+
+  // ---- IAM02-AUTHZ-REM-001 additions (AZ-11; owner decision C-10, X-3). Generic messages,
+  // fail-closed semantics. `IAM2_APPROVER_NOT_ELIGIBLE` (High) and
+  // `IAM2_SERVICE_ACCOUNT_APPROVER_BLOCKED` (Critical) are blueprint-catalogued codes
+  // (`09_Error_Handling.md` §2) that were missing here; the rest are implementer-proposed
+  // (reviewer validates). ----
+  // High. The approver's verified identity is not an eligible human checker (wrong class,
+  // non-active, missing/conflicting identity evidence) or lacks a required checker role.
+  IAM2_APPROVER_NOT_ELIGIBLE: { http: 403, message: "You are not eligible to perform this action." },
+  // Critical, "Blocked". A service-class principal presented itself as a human approver.
+  IAM2_SERVICE_ACCOUNT_APPROVER_BLOCKED: { http: 403, message: "This action cannot be completed due to control restrictions." },
+  // No single active policy governs the requested action: absent policy fails closed.
+  IAM2_APPROVAL_POLICY_MISSING: { http: 403, message: "Approval is required before this action can proceed." },
+  // The pinned policy was emergency-revoked (D-2): blocks pending approvals and unredeemed tokens.
+  IAM2_APPROVAL_POLICY_REVOKED: { http: 403, message: "This action cannot be completed due to control restrictions." },
+  // A legacy (pre-072) request carries no policy snapshot and is refused.
+  IAM2_APPROVAL_SNAPSHOT_MISSING: { http: 409, message: "This approval must be requested again." },
+  // The policy/snapshot requires more than one approver; multi-approver activation is gated.
+  IAM2_APPROVAL_MULTI_APPROVER_UNSUPPORTED: { http: 403, message: "This action cannot be completed due to control restrictions." },
+  // The request's resource does not equal the registered permission's resource.
+  IAM2_APPROVAL_RESOURCE_MISMATCH: { http: 400, message: "The request could not be processed." },
+  // Execution-time re-read of the real approval failed (not approved, wrong maker, binding differs).
+  IAM2_APPROVAL_PROVENANCE_INVALID: { http: 409, message: "Please retry; re-authentication may be required." },
 } as const satisfies Record<string, Iam2ErrorSpec>;
 
 export type Iam2ErrorCode = keyof typeof IAM2_ERROR_CODES;

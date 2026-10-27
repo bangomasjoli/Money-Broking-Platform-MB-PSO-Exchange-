@@ -338,7 +338,7 @@ describe("Error-code completeness (guard.ts / routes reason vocabulary vs. IAM2_
     }
   });
 
-  it("the catalogue contains exactly the Phase 0-2 codes plus the Phase 3-5 additions this stage's brief specifies (no premature Phase 6/7 codes invented)", () => {
+  it("the catalogue contains exactly the Phase 0-2 codes, the Phase 3-5 additions and the IAM02-AUTHZ-REM-001 approval-authorisation codes (no premature Phase 6/7 codes invented)", () => {
     expect(Object.keys(IAM2_ERROR_CODES).sort()).toEqual(
       [
         // Phase 0-2 (unchanged).
@@ -359,6 +359,18 @@ describe("Error-code completeness (guard.ts / routes reason vocabulary vs. IAM2_
         "IAM2_DECISION_TOKEN_STALE",
         "IAM2_APPROVAL_ALREADY_DECIDED",
         "IAM2_BOOTSTRAP_TRANSITION_UNAVAILABLE",
+        // IAM02-AUTHZ-REM-001 additions (AZ-11, owner decisions C-10 and X-3, Issue #6 comment
+        // 6345549226): the approved approval-authorisation security codes. The two
+        // blueprint-catalogued ones (09_Error_Handling.md §2) are IAM2_APPROVER_NOT_ELIGIBLE and
+        // IAM2_SERVICE_ACCOUNT_APPROVER_BLOCKED; the rest are implementer-proposed.
+        "IAM2_APPROVER_NOT_ELIGIBLE",
+        "IAM2_SERVICE_ACCOUNT_APPROVER_BLOCKED",
+        "IAM2_APPROVAL_POLICY_MISSING",
+        "IAM2_APPROVAL_POLICY_REVOKED",
+        "IAM2_APPROVAL_SNAPSHOT_MISSING",
+        "IAM2_APPROVAL_MULTI_APPROVER_UNSUPPORTED",
+        "IAM2_APPROVAL_RESOURCE_MISMATCH",
+        "IAM2_APPROVAL_PROVENANCE_INVALID",
       ].sort(),
     );
   });

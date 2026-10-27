@@ -22,7 +22,7 @@
     "planning": 3,
     "architecture": 2,
     "review": 2,
-    "remediation": 3,
+    "remediation": 4,
     "escalation": 0
   },
   "findingsSummary": {
@@ -53,5 +53,5 @@
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md"
   ],
   "createdAt": "2026-10-21T18:46:00.000Z",
-  "updatedAt": "2026-10-27T17:17:57.000Z"
+  "updatedAt": "2026-10-27T17:48:47.000Z"
 }

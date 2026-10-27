@@ -283,12 +283,82 @@ Environment: PostgreSQL 17.10, localhost only, throwaway cluster with its own da
 - **Not done:** push, merge, UAT, production-readiness or regulatory claim, owner acceptance (`06-acceptance.md` does not exist), `OPEN_FINDINGS.md` / `DECISION_LOG.md` / register edits. `01-plan.md` is intentionally unchanged and still describes the pre-implementation contract; the sections above supersede its "unimplemented" wording for implementation status only. `02-implementation-report.md` and `04-review.md` were not created: no conductor execution records exist, and the review is recorded here from the reviewer's chat report.
 - **Next checkpoint (owner):** whether to authorise remediation of the two sibling N-1 files, whether to track O-1, whether to push or merge the branch, and, separately, controlled task acceptance.
 
+## 16. Addendum (2026-10-28, Asia/Kuching): sibling test-reliability correction
+
+> Additive and dated; §1–§15 are not rewritten. Written by the Sonnet checkpoint writer. **VERIFIED** = observed by running the command or reading the file in this checkpoint. Nothing here is acceptance, a finding closure or a production-readiness claim.
+
+### 16.1 Authority and baseline (VERIFIED)
+- **Authority:** Issue #6 comment `6448938869` (2026-10-27T17:30:47Z), read in full: correct the two remaining false-green test files, one local test-only commit, one local evidence addendum, no push or merge.
+- **Preflight:** branch `task/IAM02-AUTHZ-REM-001-impl`; HEAD `64889785888b68107ed58517c827b3ca9edcaced`; working tree clean; no upstream; the branch is not on the remote; ancestry `a892bf3` → `39639c0` → `6488978` confirmed; no stash.
+
+### 16.2 Test-only commit (VERIFIED)
+- **Commit:** `928c828cc67b56ccac756070188a0ae4a8a2e760`, `test(iam2): fail visibly when security test prerequisites are missing`; parent `64889785888b68107ed58517c827b3ca9edcaced`; local, **not pushed**; 2 files, +161 / −36.
+- **Files (the only paths changed):** `platform/tests/integration/iam2-authz-rem-decision-db.test.ts`, `platform/tests/integration/iam2-authz-rem-consumers-real.test.ts`.
+- **Change:** the same approach as N-1 (§15.2). `beforeAll` records a prerequisite error (missing schema `foundation`/`iam`/`iam2`, missing `role_iam2_runtime`, migration 072 not applied, runtime grants missing, including `INSERT` on `iam2.approval_decision` and `iam2.sod_check` for the decision file and on `iam2.approval_decision` and `iam2.permission_decision_token` for the consumers file, unreachable database, or a test login role / listening app that cannot be prepared); every database-dependent test calls `assertPrerequisites()` and fails with that evidence; with `TEST_DATABASE_URL` unset a named `it.skip` states the reason. 5 + 3 guard blocks replaced (the consumers file generates 11 tests from 3 blocks and a loop); the `beforeAll` guards were folded into the new setup.
+- **Not weakened:** with the guard substitution reversed, each file differs from its pre-fix version in exactly three hunks (header comment, declarations, `beforeAll`); no test body changed. The decision file's runtime-role assertion (not superuser, not `BYPASSRLS`) is preserved inside the new setup and, if it fails, now fails every test. Neither file contains a test that legitimately needs no database, so none is exempted. `git diff --check` clean; `tsc` on the two files exits 0 (a planted type error is caught by the same check).
+- **Not touched:** production code, migrations, grants, policies, consumer code, other tests, registers.
+
+### 16.3 False-green reproduction on the pre-fix files (VERIFIED)
+Run from an untouched scratch mirror holding the old files, on fresh clones of disposable databases (16 tests in total: decision-db 5, consumers-real 11).
+
+| Scenario | Pre-fix result |
+|---|---|
+| Healthy | 16 passed |
+| **Empty database** | **16 passed, 0 failed: no assertion executed** |
+| Migrations 001–071 only | decision-db 5 **passed** (they do not need 072, so the missing migration went unnoticed); consumers 11 skipped because `beforeAll` threw |
+| Grants not applied | 16 failed with unactionable errors (`current transaction is aborted`, HTTP 500) |
+| Unreachable server | 16 reported **skipped**, not failed |
+
+### 16.4 Post-fix prerequisite results (VERIFIED)
+`npx vitest run` on both files, fresh clone of a disposable database per run:
+
+| Scenario | Result |
+|---|---|
+| Healthy (001–072 + all grant files), 3 runs | 16 passed, 0 failed, 0 skipped each |
+| Empty database | 16 failed: `schema foundation/iam/iam2 is missing (run migrate:up)` |
+| Migrations 001–071 only | 16 failed: `migration 072 is not applied (iam2.approval_request.snapshot_taken_at_utc is missing)` |
+| Full migrations, grants not applied | 16 failed: `iam2_runtime_grants.sql is not applied (role_iam2_runtime lacks SELECT on iam2.approval_request; … INSERT on …)` |
+| Unreachable server | 16 failed: `[ECONNREFUSED] connect ECONNREFUSED 127.0.0.1:1` |
+| `TEST_DATABASE_URL` unset | 18 reported skipped (the 16 plus the two named skips), the named reason first; 0 passed |
+
+No suite-level or `afterAll` errors in the runs checked (empty, 072-missing, grants-missing, unreachable, unset, healthy). A wrongly named database also produced a precise `[3D000] database … does not exist` prerequisite failure in a discarded run (see §16.6).
+
+### 16.5 Targeted and regression results (VERIFIED)
+- **IAM-02 / IAM-01 / consumer batch** (16 files: `iam2-db`, the four `iam2-authz-rem-*` integration files including the N-1 file and the real-IAM-01 e2e, `iam2-migration-072`, `iam-verify-assertion-runtime-role`, `aml1`/`cfg1`/`clt1-iam2-guard-real`, `iam-app`, `iam2-app`, `iam2-authz-rem`, `iam2-decision-token`, `iam2-guard`, `iam2-import-boundary`): **257 passed, 0 failed, 0 skipped**, three runs (same count as §15.3).
+- **D7-01 role-substitution subset:** 8 passed (46 deselected).
+- **D7-02 pairing `iam-db` + the e2e file:** 41 passed, 0 failed, three runs; no `aix_e2e_*` database left behind.
+- **Typecheck:** `npm run typecheck` exit 0 (incremental state); the two changed test files separately exit 0 (test files are outside `tsc -b`).
+- **Consumer IAM-02 contracts:** `iam2-authz-rem-consumers-real` (CLT-01, KYC-01, AML-01, CFG-01, SEC-01, WLT-01 clients against a real listening IAM-02) and the three `*-iam2-guard-real` files are in the batch above; SEC-01 and WLT-01 route suites are in the full suite.
+
+### 16.6 Wider verification and baseline comparison (VERIFIED)
+- Two full-suite runs were **discarded as invalid** (158 failures each): my harness created a database whose name contained an uppercase letter, so the tests connected to a database that did not exist. They say nothing about the code.
+- **Valid full runs on this tree (5589 tests, 53 skipped each):** failures 4, 7, 3, 4, 3. **Same suite at the pre-change commit `6488978`:** failures 3, 3, 3, 3, 6.
+  - `perf-m2a-observe.test.ts` ×3: present in every run on both (baseline).
+  - `clt1-db.test.ts` ×1 (`expected 8 to be +0`): in 2 of 5 tree runs, 0 of 5 at `6488978` here; also seen at `a892bf3` in §15.3. Shared-database CLT-01 race.
+  - `wlt1-sensitive-read-route.test.ts` (count mismatches such as `expected 78 to be 76`): tree 3 failures in one run and 1 in another; baseline 3 in one run. Passes alone, 3 of 3. Shared-database count race.
+  - **Neither changed file failed in any valid run.** With five runs each I cannot show the intermittent failure rates are equal, and I do not claim it; I observed no failure traceable to this change, and the changed files are test-only.
+  - 53 skipped = the live edge / UAT files (23 + 22 + 8).
+- **Known baseline issues, kept separate:** (1) the 3 `perf-m2a-observe` failures; (2) `iam-db` + `iam-session-introspection` fails deterministically (`expected 2 to be 1`, `iam-db.test.ts:179`), 3 of 3 again here, identical at `a892bf3` per the independent review; (3) the CLT-01 `clt1-db` ↔ `clt1-principal-membership-route` race (6 of 6 at `a892bf3` and on the tree per §15.3; not re-run here). None was modified or remediated.
+
+### 16.7 Remaining false-green limitations (VERIFIED by reading the files)
+- The pattern `if (!schemaReady) return;` remains in **pre-existing, accepted-baseline suites outside the authorised paths, unchanged**: `platform/tests/integration/iam2-db.test.ts` (48 occurrences including setup; one test, line 278, is fail-visible), `aml1-iam2-guard-real.test.ts` (18; one fail-loud canary), `cfg1-iam2-guard-real.test.ts` (17) and `clt1-iam2-guard-real.test.ts` (25). Against a configured but unmigrated database most tests in these files pass without executing assertions. Other modules' suites were **not audited**. Not remediated; not registered as a finding; a further correction needs separate owner authorisation.
+- The prerequisite check proves the presence of the schemas, role, migration-072 column and the named table privileges. It does not prove every grant or every later migration is applied.
+- The named skip hides nothing but also proves nothing: an unset `TEST_DATABASE_URL` run is skipped, not passed.
+
+### 16.8 Provenance and open items (carried forward, unchanged)
+- **Independent Opus verdict (2026-10-28), ACCEPT WITH CONDITIONS, REVIEWER-REPORTED:** as in §15.4: a new session that independently reproduced D7-01/D7-02 results but **automatically inherited the project-memory summary** and read a prior session's scratch snapshot; a technical verdict, not owner or governance acceptance. Its condition "fix or record N-1" is now met for the three IAM-02 remediation database files that had the pattern (`iam2-authz-rem-db`, `-decision-db`, `-consumers-real`; the e2e and migration-072 files already failed visibly); this addendum's two commits have **not** been re-reviewed by an independent session (both are test-only).
+- **R-1…R-7** remain open, exactly as in §15.6. **O-1** remains an unresolved checker-comprehension observation and a dependency for real-approval UAT; it is not a registered finding. `IAM2-FIND-001…004` and F01…F11 are unchanged; nothing is closed.
+- **Status:** `IMPLEMENTATION_COMPLETE` / `NOT_ACCEPTED`. `task.json.roundCounts.remediation` is raised from 3 to 4 (manual tally; this authorisation, Issue #6 comment `6448938869`); `findingsSummary`, `acceptanceStatus`, `resultingCommit` (the implementation commit `39639c0`) and `state` are unchanged.
+- **Next owner checkpoint:** push or merge review; whether to authorise the remaining silent-return suites (§16.7); whether to track O-1; and, separately, controlled task acceptance.
+
 ## Changed files
 - `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md` (revision 1 new at `fd94dc9`; revisions 2 and 3 modified, uncommitted)
 - `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md` (revision 1 new at `fd94dc9`; revisions 2 and 3 modified, uncommitted)
 - `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/task.json` (revision 1 new at `fd94dc9`; revisions 2 and 3 modified, uncommitted)
 
 - Revision 4: `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md` (new §15 and one header bullet) and `docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/task.json` (state, title, `resultingCommit`, `updatedAt`, review/remediation round tally). `01-plan.md` unchanged. The implementation files are listed in §15.1 (commit `39639c0`).
+
+- Revision 5 addendum (§16): `03-evidence.md` (new §16) and `task.json` (`roundCounts.remediation`, `updatedAt`); test-only commit `928c828` changes the two files named in §16.2.
 
 ## Targeted evidence references
 - `docs/OPEN_FINDINGS.md` 105–117 — registered state, unchanged by this task.

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "taskId": "IAM02-AUTHZ-REM-001",
-  "title": "IAM-02 approval-authorisation remediation - documentation checkpoint rev 3 (C-1..C-11, D-1..D-8, OD-1 Option A and the two binding clarifications per Issue #6 recorded; focused-Opus NF-1..NF-9 folded in; unimplemented; NOT_ACCEPTED; findings F01-F11 PROPOSED for human triage, none promoted; F09 cross-referenced to IAM2-FIND-001, not equated)",
-  "state": "PLANNING",
+  "title": "IAM-02 approval-authorisation remediation - implementation committed locally (39639c0, not pushed); independent technical review ACCEPT WITH CONDITIONS (not governance acceptance); NOT_ACCEPTED; findings F01-F11 PROPOSED and open, none promoted or closed; residuals R-1..R-7 open; O-1 and two N-1 sibling test files unresolved",
+  "state": "IMPLEMENTATION_COMPLETE",
   "risk": "CRITICAL",
   "category": "IAM-02 security remediation / authorisation / maker-checker",
   "baselineCommit": "effcdf39c6666f014ce7c9776f83903f6263381f",
-  "resultingCommit": null,
+  "resultingCommit": "39639c0b6c5cc45b7e9012680cfd5268e037b318",
   "planner": {
     "role": "planner",
     "provider": "claude_code",
@@ -21,8 +21,8 @@
   "roundCounts": {
     "planning": 3,
     "architecture": 2,
-    "review": 0,
-    "remediation": 0,
+    "review": 2,
+    "remediation": 3,
     "escalation": 0
   },
   "findingsSummary": {
@@ -53,5 +53,5 @@
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md"
   ],
   "createdAt": "2026-10-21T18:46:00.000Z",
-  "updatedAt": "2026-10-22T12:50:47.000Z"
+  "updatedAt": "2026-10-27T17:17:57.000Z"
 }

@@ -20,7 +20,7 @@
 import { randomBytes, createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { publishAudit, systemTime } from "@aix/foundation";
-import { lookupCacheVersion } from "./guard.js";
+import { evaluateEntitlement, lookupCacheVersion } from "./guard.js";
 
 /** Fresh IAM-02-owned copy of IAM-01's opaque-token pattern — see file header comment. */
 function generateOpaqueToken(): string {
@@ -112,6 +112,16 @@ export type DecisionTokenFailureReason =
   | "IAM2_PAYLOAD_HASH_MISMATCH"
   | "IAM2_DECISION_TOKEN_STALE";
 
+/** Extra refusal reasons the central execution wrapper can return (AZ-02, AZ-14, AZ-17). */
+export type ExecutionFailureReason =
+  | DecisionTokenFailureReason
+  | "IAM2_PERMISSION_DENIED"
+  | "IAM2_PERMISSION_UNKNOWN"
+  | "IAM2_LICENCE_LOCKED_PERMISSION"
+  | "IAM2_APPROVAL_PROVENANCE_INVALID"
+  | "IAM2_APPROVAL_POLICY_REVOKED"
+  | "IAM2_APPROVAL_SNAPSHOT_MISSING";
+
 export type DecisionTokenVerifyResult =
   | {
       ok: true;
@@ -140,6 +150,10 @@ export type DecisionTokenVerifyResult =
       verifiedCacheVersion: boolean;
     }
   | { ok: false; reasonCode: DecisionTokenFailureReason };
+
+export type ExecutionVerifyResult =
+  | Extract<DecisionTokenVerifyResult, { ok: true }>
+  | { ok: false; reasonCode: ExecutionFailureReason };
 
 export interface VerifyDecisionTokenInput {
   tokenRaw: string;
@@ -170,6 +184,27 @@ export interface VerifyDecisionTokenInput {
    * invalidation blocks execution", §2.2 rule 4) — a token issued under one session cannot be
    * redeemed while presenting a different session_id. */
   sessionId?: string | null;
+  /**
+   * AZ-14 (F08) — the approval id the CALLER claims authorised this execution. Absent/null
+   * means "none presented" and is not compared here (the execution wrapper separately refuses
+   * a token with no approval for a permission flagged as approval-gated). When PRESENTED it
+   * must equal the token's bound `approval_id`; a token bound to NO approval (a guard-issued
+   * token) never matches a presented id, so a fabricated id cannot satisfy a consumer's
+   * approval requirement. A mismatch revokes the token and writes the Critical
+   * `iam2.decision_token_binding_mismatch` audit, exactly like the other binding mismatches.
+   */
+  approvalId?: string | null;
+  /**
+   * D7-01 — a payload hash the CALLER claims describes this execution, for callers (roles.ts)
+   * whose `currentPayloadHash` is derived by the SERVER from the operation it is about to perform.
+   * The caller's value is never authoritative: when present (non-null) it must equal
+   * `currentPayloadHash`, otherwise it is treated exactly like a payload-hash mismatch (token
+   * revoked, Critical `iam2.approval_payload_hash_mismatch` audit, `IAM2_PAYLOAD_HASH_MISMATCH`),
+   * with `reason: caller_hash_differs_from_server_derived` in the audit metadata (never either
+   * hash value). Absent/null = the caller asserted nothing; consumers that do not use this
+   * field are unaffected.
+   */
+  assertedPayloadHash?: string | null;
 }
 
 interface DecisionTokenRow {
@@ -187,25 +222,25 @@ interface DecisionTokenRow {
   expires_at_utc: string;
 }
 
+type CheckedToken = { ok: true; row: DecisionTokenRow } | { ok: false; reasonCode: DecisionTokenFailureReason };
+
 /**
- * §2.2 / §9 execute-verify binding check, single-use. Resolves BY HASH (no RLS on this table —
- * see file header). Order: existence/status/expiry -> binding fields
- * (actor/action/resource/entity/client, F1 fix) -> payload hash -> cache version -> consume.
- * Binding checks are placed right after existence/status/expiry and BEFORE the payload-hash
- * check because a binding mismatch (this token was never issued for this actor/action/
- * resource/entity/client at all) is the more fundamental failure — no point comparing a
- * payload hash for an execution the token was never bound to in the first place.
+ * Existence/status/expiry -> binding fields (actor/action/resource/entity/client, F1 fix, and
+ * the AZ-14 presented approval id) -> payload hash -> cache version. Does NOT consume.
+ *
+ * AZ-15 (F09, D-1): the token row is read `FOR UPDATE`, so concurrent redemptions of one
+ * token serialise on the row lock; the loser re-reads the committed row, sees it
+ * `consumed`/`revoked`, and gets `IAM2_DECISION_TOKEN_INVALID`. The lock is held until the
+ * transaction ends, i.e. across the execution wrapper's remaining checks.
  */
-export async function verifyAndConsumeDecisionToken(
-  client: PoolClient,
-  input: VerifyDecisionTokenInput,
-): Promise<DecisionTokenVerifyResult> {
+async function checkDecisionToken(client: PoolClient, input: VerifyDecisionTokenInput): Promise<CheckedToken> {
   const tokenHash = sha256Hex(input.tokenRaw);
   const rows = await client.query<DecisionTokenRow>(
     `SELECT decision_token_id, actor_user_id, session_id, action, resource, entity_id, client_id,
             payload_hash, approval_id, cache_version, status, expires_at_utc
        FROM iam2.permission_decision_token
-      WHERE token_hash = $1`,
+      WHERE token_hash = $1
+      FOR UPDATE`,
     [tokenHash],
   );
   const row = rows.rows[0];
@@ -227,12 +262,14 @@ export async function verifyAndConsumeDecisionToken(
   // redeemed for a completely different one as long as the (optional) payload hash matched.
   const presentedEntityId = input.entityId ?? null;
   const presentedClientId = input.clientId ?? null;
+  const presentedApprovalId = input.approvalId ?? null;
   const bindingMismatch =
     row!.actor_user_id !== input.actorUserId ||
     row!.action !== input.action ||
     row!.resource !== input.resource ||
     row!.entity_id !== presentedEntityId ||
-    row!.client_id !== presentedClientId;
+    row!.client_id !== presentedClientId ||
+    (presentedApprovalId !== null && row!.approval_id !== presentedApprovalId);
   if (bindingMismatch) {
     // Same discipline as the payload-hash-mismatch branch below (Critical, token revoked so
     // it can never be retried) but a DISTINCT event type — this is a binding mismatch, not
@@ -256,7 +293,9 @@ export async function verifyAndConsumeDecisionToken(
 
   const tokenPayloadHash = row!.payload_hash ?? null;
   const presentedPayloadHash = input.currentPayloadHash ?? null;
-  if (tokenPayloadHash !== presentedPayloadHash) {
+  const assertedPayloadHash = input.assertedPayloadHash ?? null;
+  const callerHashDiffers = assertedPayloadHash !== null && assertedPayloadHash !== presentedPayloadHash;
+  if (tokenPayloadHash !== presentedPayloadHash || callerHashDiffers) {
     // §9 rule 3 / brief: Critical, and the token can never be retried after a mismatch.
     await client.query(`UPDATE iam2.permission_decision_token SET status = 'revoked' WHERE decision_token_id = $1`, [
       row!.decision_token_id,
@@ -268,7 +307,11 @@ export async function verifyAndConsumeDecisionToken(
       actor_type: "user",
       entity_type: row!.resource,
       entity_id: row!.entity_id ?? row!.action,
-      metadata: { action: row!.action, approval_id: row!.approval_id ?? null },
+      metadata: {
+        action: row!.action,
+        approval_id: row!.approval_id ?? null,
+        ...(callerHashDiffers ? { reason: "caller_hash_differs_from_server_derived" } : {}),
+      },
     });
     return { ok: false, reasonCode: "IAM2_PAYLOAD_HASH_MISMATCH" };
   }
@@ -290,24 +333,188 @@ export async function verifyAndConsumeDecisionToken(
     return { ok: false, reasonCode: "IAM2_DECISION_TOKEN_STALE" };
   }
 
-  await client.query(`UPDATE iam2.permission_decision_token SET status = 'consumed' WHERE decision_token_id = $1`, [
-    row!.decision_token_id,
-  ]);
+  return { ok: true, row: row! };
+}
 
+/**
+ * AZ-15: single-use consumption. The UPDATE is conditional on `status = 'active'` and the
+ * affected-row count is checked, so even if a caller somehow reached here without the row
+ * lock, only one transaction can ever flip the token (the loser sees 0 rows).
+ */
+async function consumeCheckedToken(client: PoolClient, row: DecisionTokenRow): Promise<boolean> {
+  const res = await client.query(
+    `UPDATE iam2.permission_decision_token SET status = 'consumed' WHERE decision_token_id = $1 AND status = 'active'`,
+    [row.decision_token_id],
+  );
+  return (res.rowCount ?? 0) === 1;
+}
+
+function toVerifiedResult(row: DecisionTokenRow, input: VerifyDecisionTokenInput): Extract<DecisionTokenVerifyResult, { ok: true }> {
   return {
     ok: true,
-    decisionTokenId: row!.decision_token_id,
-    actorUserId: row!.actor_user_id,
-    sessionId: row!.session_id,
-    action: row!.action,
-    resource: row!.resource,
-    entityId: row!.entity_id,
-    clientId: row!.client_id,
-    approvalId: row!.approval_id,
+    decisionTokenId: row.decision_token_id,
+    actorUserId: row.actor_user_id,
+    sessionId: row.session_id,
+    action: row.action,
+    resource: row.resource,
+    entityId: row.entity_id,
+    clientId: row.client_id,
+    approvalId: row.approval_id,
     // F1 fix — real flags, not hardcoded true (see DecisionTokenVerifyResult's header comment
     // for exactly what "verified" means for each).
-    verifiedPayloadHash: tokenPayloadHash !== null,
-    verifiedSession: row!.session_id !== null && input.sessionId !== undefined && input.sessionId !== null,
+    verifiedPayloadHash: (row.payload_hash ?? null) !== null,
+    verifiedSession: row.session_id !== null && input.sessionId !== undefined && input.sessionId !== null,
     verifiedCacheVersion: true,
   };
+}
+
+/**
+ * §2.2 / §9 execute-verify binding check, single-use. Resolves BY HASH (no RLS on this table —
+ * see file header). Order: existence/status/expiry -> binding fields
+ * (actor/action/resource/entity/client/approval id) -> payload hash -> cache version ->
+ * consume. Binding checks are placed right after existence/status/expiry and BEFORE the
+ * payload-hash check because a binding mismatch (this token was never issued for this actor/
+ * action/resource/entity/client at all) is the more fundamental failure — no point comparing
+ * a payload hash for an execution the token was never bound to in the first place.
+ *
+ * This is the BASE verifier (token mechanics only). Protected-action execution must go
+ * through `verifyAndConsumeForExecution` below, which adds the maker-entitlement recheck and
+ * the approval-provenance recheck before consuming.
+ */
+export async function verifyAndConsumeDecisionToken(
+  client: PoolClient,
+  input: VerifyDecisionTokenInput,
+): Promise<DecisionTokenVerifyResult> {
+  const checked = await checkDecisionToken(client, input);
+  if (!checked.ok) return checked;
+  if (!(await consumeCheckedToken(client, checked.row))) {
+    return { ok: false, reasonCode: "IAM2_DECISION_TOKEN_INVALID" };
+  }
+  return toVerifiedResult(checked.row, input);
+}
+
+type ProvenanceOutcome = { ok: true } | { ok: false; reasonCode: ExecutionFailureReason; detail: string };
+
+interface ApprovalProvenanceRow {
+  policy_id: string | null;
+  maker_user_id: string;
+  action: string;
+  resource: string;
+  entity_id: string | null;
+  client_id: string | null;
+  payload_hash: string | null;
+  status: string;
+  required_count: number;
+  approved_count: number;
+  snapshot_taken_at_utc: string | null;
+}
+
+/**
+ * AZ-14 / AZ-17 — the token's approval must be a REAL, APPROVED request for exactly this
+ * execution, and its pinned policy must not have been emergency-revoked (D-2). A `revoked`
+ * policy refuses outstanding unredeemed tokens; an `inactive` (retired) one does not.
+ */
+async function checkApprovalProvenance(client: PoolClient, token: DecisionTokenRow): Promise<ProvenanceOutcome> {
+  const res = await client.query<ApprovalProvenanceRow>(
+    `SELECT policy_id, maker_user_id, action, resource, entity_id, client_id, payload_hash, status,
+            required_count, approved_count, snapshot_taken_at_utc
+       FROM iam2.approval_request
+      WHERE approval_id = $1`,
+    [token.approval_id],
+  );
+  const approval = res.rows[0];
+  if (!approval) return { ok: false, reasonCode: "IAM2_APPROVAL_PROVENANCE_INVALID", detail: "approval_not_found" };
+  if (approval.status !== "approved" || approval.approved_count < approval.required_count) {
+    return { ok: false, reasonCode: "IAM2_APPROVAL_PROVENANCE_INVALID", detail: "approval_not_approved" };
+  }
+  if (
+    approval.maker_user_id !== token.actor_user_id ||
+    approval.action !== token.action ||
+    approval.resource !== token.resource ||
+    approval.entity_id !== token.entity_id ||
+    approval.client_id !== token.client_id ||
+    (approval.payload_hash ?? null) !== (token.payload_hash ?? null)
+  ) {
+    return { ok: false, reasonCode: "IAM2_APPROVAL_PROVENANCE_INVALID", detail: "approval_binding_differs" };
+  }
+  if (approval.snapshot_taken_at_utc === null || approval.policy_id === null) {
+    return { ok: false, reasonCode: "IAM2_APPROVAL_SNAPSHOT_MISSING", detail: "legacy_request_without_snapshot" };
+  }
+  const policy = await client.query<{ status: string }>(`SELECT status FROM iam2.approval_policy WHERE policy_id = $1`, [
+    approval.policy_id,
+  ]);
+  if (!policy.rows[0] || policy.rows[0].status === "revoked") {
+    return { ok: false, reasonCode: "IAM2_APPROVAL_POLICY_REVOKED", detail: "policy_revoked_or_missing" };
+  }
+  return { ok: true };
+}
+
+/**
+ * CENTRAL EXECUTION WRAPPER (AZ-02, AZ-03, AZ-14, AZ-15, AZ-17) — the only entry point for
+ * `execute-verify` and the in-process `roles.ts` redemption. One transaction (the caller's):
+ *   1. token row `FOR UPDATE` + existence/status/expiry/session, binding (incl. the presented
+ *      approval id), payload hash, cache version                       [checkDecisionToken]
+ *   2. `aix.user_id` := the token's bound actor (RLS scope for the reads below, NF-7)
+ *   3. the actor's UNDERLYING entitlement re-evaluated LIVE (unknown permission, licence lock,
+ *      prohibited, explicit deny, role grant, default deny — steps 6/7 skipped): approval is
+ *      additional to, never a substitute for, the grant. Revocation, a new deny override or a
+ *      lock therefore take effect immediately, with no cache-version bump.
+ *   4. provenance: a token that carries an approval must trace to a real approved request for
+ *      exactly this execution under a non-revoked policy; a token with NO approval is refused
+ *      when the permission is flagged approval-/step-up-gated (a fabricated id can never
+ *      stand in for an approval)
+ *   5. atomic single-use consumption (conditional UPDATE + row-count check)
+ * A refusal leaves the token unconsumed except where step 1 revokes it (binding/payload
+ * mismatch). Denials write their evidence in this same transaction; the CALLER must commit
+ * and throw afterwards (outcome-then-throw), never throw inside `withTransaction`.
+ *
+ * Residual (plan §4B R-1/R-3/R-4): maker account status and CFG-01 capability gates are not
+ * checked here; a revocation committed after this transaction commits is not retroactive.
+ */
+export async function verifyAndConsumeForExecution(
+  client: PoolClient,
+  input: VerifyDecisionTokenInput,
+): Promise<ExecutionVerifyResult> {
+  const checked = await checkDecisionToken(client, input);
+  if (!checked.ok) return checked;
+  const row = checked.row;
+
+  await client.query("SELECT set_config('aix.user_id', $1, true)", [row.actor_user_id]);
+  const entitlement = await evaluateEntitlement(client, {
+    actorId: row.actor_user_id,
+    action: row.action,
+    resource: row.resource,
+    ...(row.entity_id !== null ? { entityId: row.entity_id } : {}),
+    ...(row.client_id !== null ? { clientId: row.client_id } : {}),
+  });
+  if (entitlement.result.decision !== "allow") {
+    const reason = entitlement.result.reason;
+    const reasonCode: ExecutionFailureReason =
+      reason === "IAM2_PERMISSION_UNKNOWN" || reason === "IAM2_LICENCE_LOCKED_PERMISSION" ? reason : "IAM2_PERMISSION_DENIED";
+    return { ok: false, reasonCode };
+  }
+
+  let provenance: ProvenanceOutcome = { ok: true };
+  if (row.approval_id !== null) {
+    provenance = await checkApprovalProvenance(client, row);
+  } else if (entitlement.permission && (entitlement.permission.requiresApproval || entitlement.permission.requiresStepUp)) {
+    provenance = { ok: false, reasonCode: "IAM2_APPROVAL_PROVENANCE_INVALID", detail: "approval_required_but_token_has_none" };
+  }
+  if (!provenance.ok) {
+    await publishAudit(client, {
+      event_type: "iam2.execution_provenance_blocked",
+      source_module: "IAM-02",
+      actor_id: row.actor_user_id,
+      actor_type: "user",
+      entity_type: row.resource,
+      entity_id: row.entity_id ?? row.action,
+      metadata: { action: row.action, approval_id: row.approval_id ?? null, reason: provenance.detail },
+    });
+    return { ok: false, reasonCode: provenance.reasonCode };
+  }
+
+  if (!(await consumeCheckedToken(client, row))) {
+    return { ok: false, reasonCode: "IAM2_DECISION_TOKEN_INVALID" };
+  }
+  return toVerifiedResult(row, input);
 }

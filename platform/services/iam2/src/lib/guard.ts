@@ -15,6 +15,14 @@
  * (freeze) and 5 (SoD) remain documented no-op fall-throughs in this function — see their
  * inline comments below for exactly why each stays that way.
  *
+ * IAM02-AUTHZ-REM-001 UPDATE: the chain below is now parameterised (`evaluateChain`) behind three
+ * entry points — `evaluatePermission` (behaviour and result shape UNCHANGED),
+ * `evaluatePermissionWithStepUp` (step 6 satisfied only by a registry-checked `VerifiedStepUp`
+ * bound to the actor and an expected purpose; lib/iam01-client.ts) and `evaluateEntitlement`
+ * (the UNDERLYING grant only — steps 6/7 skipped, no token — used to re-check the maker at
+ * request, approval and execution). Step 3 (account/session freeze) is STILL a no-op, so a
+ * suspended maker/rejecter/acting admin is not refused here (plan §4B R-1).
+ *
  * ---------------------------------------------------------------------------------------
  * JUDGMENT CALL — what does the request's `action` field mean as a lookup key?
  * ---------------------------------------------------------------------------------------
@@ -50,6 +58,7 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { publishAudit } from "@aix/foundation";
 import { issueDecisionToken } from "./decision-token.js";
+import { isVerifiedStepUp } from "./iam01-client.js";
 
 export type PermissionDecision = "allow" | "deny" | "approval_required" | "step_up_required" | "licence_locked";
 
@@ -252,10 +261,56 @@ async function recordDecision(
   });
 }
 
-export async function evaluatePermission(
+/**
+ * IAM02-AUTHZ-REM-001 (C-1, AZ-02, AZ-04, AZ-05). The 11-step chain, parameterised. The three
+ * public entry points below differ ONLY in these options:
+ *   - `evaluatePermission`            : no options — behaviour and result shape UNCHANGED.
+ *   - `evaluatePermissionWithStepUp`  : step 6 is satisfied by an unforgeable `VerifiedStepUp`
+ *                                       bound to the actor and the expected purpose.
+ *   - `evaluateEntitlement`           : steps 6/7 (flag-only step-up/approval signals) are
+ *                                       deliberately skipped — the caller is checking the
+ *                                       UNDERLYING grant (maker entitlement, C-2 B) because an
+ *                                       approval is additional to, never a substitute for, it —
+ *                                       and no decision token is ever issued.
+ * Every other step (unknown permission, licence lock, prohibited, explicit deny override, role
+ * grant, default deny) and every audit/decision-log write is the same code path.
+ */
+interface ChainOptions {
+  skipApprovalSteps?: boolean;
+  suppressToken?: boolean;
+  stepUp?: { evidence: unknown; expectedPurpose: string };
+}
+
+export interface ResolvedPermissionFlags {
+  permissionCode: string;
+  requiresStepUp: boolean;
+  requiresApproval: boolean;
+}
+
+interface ChainOutcome {
+  result: PermissionCheckResult;
+  /** Present once the permission code resolved to an active catalogue row. */
+  permission?: ResolvedPermissionFlags;
+}
+
+function stepUpSatisfies(
+  option: ChainOptions["stepUp"],
+  actorId: string,
+): boolean {
+  if (!option || !isVerifiedStepUp(option.evidence)) return false;
+  const evidence = option.evidence;
+  return (
+    evidence.userId === actorId &&
+    evidence.purpose === option.expectedPurpose &&
+    evidence.freshUntilMs > Date.now()
+  );
+}
+
+async function evaluateChain(
   client: PoolClient,
   input: PermissionCheckInput,
-): Promise<PermissionCheckResult> {
+  options: ChainOptions,
+): Promise<ChainOutcome> {
   const cacheVersion = await lookupCacheVersion(client, input.actorId);
 
   const finish = async (
@@ -280,15 +335,21 @@ export async function evaluatePermission(
   // 11-step chain even starts — there is nothing to evaluate a precedence rule against.
   const permission = await lookupPermission(client, input.action);
   if (!permission) {
-    return finish("deny", "IAM2_PERMISSION_UNKNOWN", "unknown_permission_code");
+    return { result: await finish("deny", "IAM2_PERMISSION_UNKNOWN", "unknown_permission_code") };
   }
+  const flags: ResolvedPermissionFlags = {
+    permissionCode: permission.permission_code,
+    requiresStepUp: permission.requires_step_up,
+    requiresApproval: permission.requires_approval,
+  };
+  const out = async (result: PermissionCheckResult): Promise<ChainOutcome> => ({ result, permission: flags });
 
   // ---- Step 1: licence-lock deny (§7 rule 1 / §5.12 / §5.14 interim contract). ----
   // `iam2.permission.licence_locked` is the cached/index flag; source of truth is the
   // config-sealed list matching Document 00 v1.3 until CFG-01 exists. This IS real
   // enforcement this stage (not a stub) — see the task brief's Phase 2 spec for step 1.
   if (permission.licence_locked) {
-    return finish("licence_locked", "IAM2_LICENCE_LOCKED_PERMISSION", "licence_lock_deny");
+    return out(await finish("licence_locked", "IAM2_LICENCE_LOCKED_PERMISSION", "licence_lock_deny"));
   }
 
   // ---- Step 2: prohibited permission deny (§7 rule 2 / §5.12). ----
@@ -296,7 +357,7 @@ export async function evaluatePermission(
   // can run, exactly as required by §2A ("cannot be overridden by user override, delegation,
   // temporary permission, or break-glass").
   if (permission.prohibited) {
-    return finish("licence_locked", "IAM2_LICENCE_LOCKED_PERMISSION", "prohibited_deny");
+    return out(await finish("licence_locked", "IAM2_LICENCE_LOCKED_PERMISSION", "prohibited_deny"));
   }
 
   // ---- Step 3: account/session freeze deny — STILL a documented no-op fall-through. ----
@@ -311,11 +372,14 @@ export async function evaluatePermission(
   // through and note why"). So this step remains exactly what it was in Phase 2: the chain
   // proceeds to step 4 rather than blocking or erroring. Flagged as a Phase 6/7-adjacent gap
   // (needs a new IAM-01-side endpoint, which is IAM-01's call to make, not IAM-02's).
+  // IAM02-AUTHZ-REM-001 (plan §4B R-1): still NOT enforced for makers after OD-1 Option A —
+  // the new IAM-01 fields cover only the step-up ASSERTION OWNER (the approver) at approval
+  // time. A suspended/frozen maker, rejecter or acting admin is not refused here.
 
   // ---- Step 4: explicit deny override (§7 rule 4 / §05.2.5 rule 1). Real check. ----
   const denied = await lookupActiveDenyOverride(client, input.actorId, permission.permission_id);
   if (denied) {
-    return finish("deny", "IAM2_PERMISSION_DENIED", "explicit_deny_override");
+    return out(await finish("deny", "IAM2_PERMISSION_DENIED", "explicit_deny_override"));
   }
 
   // ---- Step 5: SoD block — STILL a no-op fall-through IN THIS FUNCTION, by design. ----
@@ -332,18 +396,19 @@ export async function evaluatePermission(
   // no-op: the chain proceeds to step 6 without querying sod_rule/sod_check here.
 
   // ---- Step 6: missing step-up -> step_up_required. Real BLOCKING decision. ----
-  // No IAM-01 HTTP verify-assertion integration yet (Phase 5) — this stage does not attempt
-  // to verify any assertion; it correctly gates on the permission's own flag per
-  // 07_Permission_Rules.md §7 rule 6.
-  if (permission.requires_step_up) {
-    return finish("step_up_required", "IAM2_STEP_UP_REQUIRED", "step_up_required");
+  // `evaluatePermission` never verifies an assertion itself; it gates on the permission's own
+  // flag per 07_Permission_Rules.md §7 rule 6. `evaluatePermissionWithStepUp` lets a caller
+  // that ALREADY verified an assertion (lib/iam01-client.ts `verifyApproverStepUp`) satisfy
+  // this step with unforgeable evidence bound to the actor and the expected purpose.
+  if (permission.requires_step_up && !options.skipApprovalSteps && !stepUpSatisfies(options.stepUp, input.actorId)) {
+    return out(await finish("step_up_required", "IAM2_STEP_UP_REQUIRED", "step_up_required"));
   }
 
   // ---- Step 7: approval required. Real BLOCKING decision. ----
   // Actual approval-request creation/maker-checker lifecycle is Phase 3/4 (later stage) —
   // this stage only signals that approval is needed, per 07_Permission_Rules.md §7 rule 7.
-  if (permission.requires_approval) {
-    return finish("approval_required", "IAM2_APPROVAL_REQUIRED", "approval_required");
+  if (permission.requires_approval && !options.skipApprovalSteps) {
+    return out(await finish("approval_required", "IAM2_APPROVAL_REQUIRED", "approval_required"));
   }
 
   // ---- Step 8: temporary permission — NO-OP FALL-THROUGH THIS STAGE. ----
@@ -363,7 +428,7 @@ export async function evaluatePermission(
     );
     // Phase 3: a check with no payloadHash (e.g. a simple read action) needs no execution
     // binding — only issue a decision token when the caller supplied a payload to bind.
-    if (input.payloadHash) {
+    if (input.payloadHash && !options.suppressToken) {
       const issued = await issueDecisionToken(client, {
         actorUserId: input.actorId,
         sessionId: input.sessionId ?? null,
@@ -376,11 +441,48 @@ export async function evaluatePermission(
         stepUpAssertionRef: null,
         cacheVersion,
       });
-      return { ...result, decisionToken: issued.rawToken };
+      return out({ ...result, decisionToken: issued.rawToken });
     }
-    return result;
+    return out(result);
   }
 
   // ---- Step 11: default deny. Structural fail-closed default. ----
-  return finish("deny", "IAM2_PERMISSION_DENIED", "default_deny_no_assignment");
+  return out(await finish("deny", "IAM2_PERMISSION_DENIED", "default_deny_no_assignment"));
+}
+
+/** Unchanged public behaviour: the flag-only guard (callers: permission/check, roles.ts). */
+export async function evaluatePermission(
+  client: PoolClient,
+  input: PermissionCheckInput,
+): Promise<PermissionCheckResult> {
+  return (await evaluateChain(client, input, {})).result;
+}
+
+/**
+ * C-1 / AZ-04 / AZ-05. Same chain as `evaluatePermission`, except step 6 passes when
+ * `stepUp.evidence` is a registry-checked `VerifiedStepUp` for THIS actor and
+ * `stepUp.expectedPurpose` that has not expired. Anything else (absent, forged, other user,
+ * other purpose, stale) leaves the blocking `step_up_required` decision in force. The caller
+ * must have set `aix.user_id` to the actor first (RLS-protected reads in steps 4 and 10).
+ */
+export async function evaluatePermissionWithStepUp(
+  client: PoolClient,
+  input: PermissionCheckInput,
+  stepUp: { evidence: unknown; expectedPurpose: string } | undefined,
+): Promise<PermissionCheckResult> {
+  return (await evaluateChain(client, input, { suppressToken: true, ...(stepUp ? { stepUp } : {}) })).result;
+}
+
+/**
+ * C-2 B / AZ-01 / AZ-02. Is the actor entitled to the UNDERLYING permission? Used for the
+ * maker at approval-request time, at approval time and at execution. Skips the flag-only
+ * step-up/approval signals (an approval is additional to the grant, never a replacement for
+ * it), records its decision like every other evaluation, and never issues a token. The caller
+ * must have set `aix.user_id` to the actor first.
+ */
+export async function evaluateEntitlement(
+  client: PoolClient,
+  input: Omit<PermissionCheckInput, "payloadHash">,
+): Promise<ChainOutcome> {
+  return evaluateChain(client, input, { skipApprovalSteps: true, suppressToken: true });
 }

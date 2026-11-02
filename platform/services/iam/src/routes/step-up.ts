@@ -364,9 +364,29 @@ export async function registerStepUpRoutes(app: FastifyInstance): Promise<void> 
           });
         }
 
-        return valid && assertion
-          ? { valid: true as const, userId: assertion.user_id, authLevel: assertion.auth_level, freshUntilUtc: assertion.expires_at_utc }
-          : { valid: false as const };
+        if (!(valid && assertion)) return { valid: false as const };
+
+        // IAM02-AUTHZ-REM-001 (OD-1 Option A, AZ-19) — ADDITIVE. Report the assertion owner's
+        // CURRENT identity classification from the canonical `iam.user_identity` record so the
+        // IAM-02 approval flow can refuse a service/client-class or non-active approver. This
+        // adds NO condition to `valid` (the accepted contract is unchanged: a suspended user's
+        // assertion is still reported `valid` here; IAM-02 decides), reads no RLS-protected
+        // table, and writes nothing. An unreadable/absent identity row yields null fields,
+        // which the caller must treat as fail-closed.
+        const identityRows = await client.query<{ user_type: string; user_class: string; status: string }>(
+          `SELECT user_type, user_class, status FROM iam.user_identity WHERE user_id = $1`,
+          [assertion.user_id],
+        );
+        const identity = identityRows.rows[0];
+        return {
+          valid: true as const,
+          userId: assertion.user_id,
+          authLevel: assertion.auth_level,
+          freshUntilUtc: assertion.expires_at_utc,
+          userType: identity?.user_type ?? null,
+          userClass: identity?.user_class ?? null,
+          userStatus: identity?.status ?? null,
+        };
       });
 
       if (!result.valid) {
@@ -374,7 +394,15 @@ export async function registerStepUpRoutes(app: FastifyInstance): Promise<void> 
       }
       return reply.send(
         successEnvelope(
-          { valid: true, user_id: result.userId, auth_level: result.authLevel, fresh_until_utc: result.freshUntilUtc },
+          {
+            valid: true,
+            user_id: result.userId,
+            auth_level: result.authLevel,
+            fresh_until_utc: result.freshUntilUtc,
+            user_type: result.userType,
+            user_class: result.userClass,
+            user_status: result.userStatus,
+          },
           meta(request),
         ),
       );

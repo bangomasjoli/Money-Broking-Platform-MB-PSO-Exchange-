@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "taskId": "IAM02-AUTHZ-REM-001",
+  "title": "IAM-02 approval-authorisation remediation - ACCEPTED WITH CONTROLLED CARRY-FORWARDS (source code only) at b468c5d, owner decision 2026-11-02; F01-F11 (5 HIGH) and IAM2-FIND-001..004 remain open; code commit 39639c0; not UAT or production ready",
+  "state": "ACCEPTED",
+  "risk": "CRITICAL",
+  "category": "IAM-02 security remediation / authorisation / maker-checker",
+  "baselineCommit": "effcdf39c6666f014ce7c9776f83903f6263381f",
+  "resultingCommit": "39639c0b6c5cc45b7e9012680cfd5268e037b318",
+  "planner": null,
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": {
+    "planning": 3,
+    "architecture": 2,
+    "review": 2,
+    "remediation": 4,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 5,
+      "MEDIUM": 4,
+      "LOW": 2
+    },
+    "openFindingIds": [
+      "IAM02-AUTHZ-REM-001-F01",
+      "IAM02-AUTHZ-REM-001-F02",
+      "IAM02-AUTHZ-REM-001-F03",
+      "IAM02-AUTHZ-REM-001-F04",
+      "IAM02-AUTHZ-REM-001-F05",
+      "IAM02-AUTHZ-REM-001-F06",
+      "IAM02-AUTHZ-REM-001-F07",
+      "IAM02-AUTHZ-REM-001-F08",
+      "IAM02-AUTHZ-REM-001-F09",
+      "IAM02-AUTHZ-REM-001-F10",
+      "IAM02-AUTHZ-REM-001-F11"
+    ],
+    "carryForwardIds": []
+  },
+  "acceptanceStatus": "ACCEPTED",
+  "acceptance": {
+    "acceptedBy": "Aiman",
+    "acceptedAt": "2026-11-02T08:05:46.000Z",
+    "acceptedCommit": "b468c5ddaaeafa118685f35a4104c5261c1963d4",
+    "reviewExecutionId": null
+  },
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/02-implementation-report.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/04-review.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/05-remediation.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/06-acceptance.md"
+  ],
+  "createdAt": "2026-10-21T18:46:00.000Z",
+  "updatedAt": "2026-11-02T08:51:49.000Z"
+}

@@ -149,6 +149,68 @@ async function seedApprovalPolicy(input: {
   return policyId;
 }
 
+// ---- IAM02-AUTHZ-REM-001 fixture helpers (plan §8.1 rule 2: justified fixture updates). ----
+// The remediation adds PRECONDITIONS to the approval flow that the pre-existing tests did not
+// satisfy because the flow did not enforce them: the maker must hold the UNDERLYING permission
+// and iam2.approval.create (C-2 B), a policy must exist (C-6), the approver must hold
+// iam2.approval.approve and present an IAM-01 assertion for a live active staff/admin identity
+// (C-3, C-4, OD-1 Option A). These helpers provision exactly those preconditions; no assertion
+// of any pre-existing test is changed by them.
+
+/** An IAM-01 verify-assertion body for an eligible, active staff/admin human approver. */
+function eligibleIam01Body(userId: string, overrides: Record<string, unknown> = {}): { success: true; data: Record<string, unknown> } {
+  return {
+    success: true,
+    data: {
+      valid: true,
+      user_id: userId,
+      auth_level: "mfa",
+      fresh_until_utc: new Date(Date.now() + 600_000).toISOString(),
+      user_type: "staff",
+      user_class: "staff",
+      user_status: "active",
+      ...overrides,
+    },
+  };
+}
+
+async function permissionIdByCode(code: string): Promise<string | undefined> {
+  const r = await verifyPool.query<{ permission_id: string }>(`SELECT permission_id FROM iam2.permission WHERE permission_code = $1`, [code]);
+  return r.rows[0]?.permission_id;
+}
+
+/** Give `userId` a fresh role holding each of `codes` (registering a normal permission first if the code is not seeded). */
+async function grantPermissions(userId: string, codes: Array<{ code: string; resource: string }>): Promise<void> {
+  const roleId = await seedRole("role_fx_" + randomUUID().slice(0, 10));
+  for (const c of codes) {
+    const permissionId = (await permissionIdByCode(c.code)) ?? (await seedPermission({ code: c.code, resource: c.resource, action: "fx" }));
+    await assignRolePermission(roleId, permissionId);
+  }
+  await assignUserRole(userId, roleId);
+}
+
+/** C-2 B: the maker holds iam2.approval.create AND the underlying permission for `action`. */
+async function provisionMaker(userId: string, action: string, resource: string): Promise<void> {
+  await grantPermissions(userId, [
+    { code: "iam2.approval.create", resource: "approval" },
+    { code: action, resource },
+  ]);
+}
+
+/** The approver (and rejecter) hold iam2.approval.approve and iam2.approval.reject. */
+async function provisionApprover(userId: string): Promise<void> {
+  await grantPermissions(userId, [
+    { code: "iam2.approval.approve", resource: "approval" },
+    { code: "iam2.approval.reject", resource: "approval" },
+  ]);
+}
+
+/** C-6: exactly one ACTIVE policy per (action, resource) — idempotent for a shared test DB. */
+async function ensureApprovalPolicy(action: string, resource: string): Promise<void> {
+  const existing = await verifyPool.query(`SELECT 1 FROM iam2.approval_policy WHERE action = $1 AND resource = $2 AND status = 'active'`, [action, resource]);
+  if ((existing.rowCount ?? 0) === 0) await seedApprovalPolicy({ action, resource });
+}
+
 /** Look up a real seeded-in-006 permission's permission_id by code (e.g. 'iam2.sod.manage'). */
 async function seededPermissionId(code: string): Promise<string> {
   const rows = await verifyPool.query<{ permission_id: string }>(
@@ -954,6 +1016,11 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       const makerUserId = "user_it_f1nopaymaker_" + randomUUID();
       const approverUserId = "user_it_f1nopayapprover_" + randomUUID();
+      // Fixture (plan §8.1 rule 2): policy, maker underlying grant, approver grant + step-up.
+      await provisionMaker(makerUserId, action, resource);
+      await provisionApprover(approverUserId);
+      await seedApprovalPolicy({ action, resource });
+      config.iam01FetchImpl = makeFakeIam01Fetch(() => ({ ok: true, body: eligibleIam01Body(approverUserId) })).fetchImpl;
 
       const requestRes = await app.inject({
         method: "POST",
@@ -969,8 +1036,9 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: approverUserId },
+        payload: { approver_user_id: approverUserId, recent_auth_assertion: "fake-assertion-token" },
       });
+      config.iam01FetchImpl = undefined;
       expect(approveRes.statusCode).toBe(200);
       expect(approveRes.json().data.status).toBe("approved");
       expect("decision_token" in approveRes.json().data).toBe(false);
@@ -1105,6 +1173,9 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const makerUserId = "user_it_maker_" + randomUUID();
       const approverUserId = "user_it_approver_" + randomUUID();
       const payload = { withdrawal_amount: "5000.00" };
+      // Fixture (plan §8.1 rule 2): maker underlying grant, approver grant.
+      await provisionMaker(makerUserId, action, resource);
+      await provisionApprover(approverUserId);
 
       const requestRes = await app.inject({
         method: "POST",
@@ -1119,7 +1190,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
 
       const { fetchImpl, calls } = makeFakeIam01Fetch(() => ({
         ok: true,
-        body: { success: true, data: { valid: true, user_id: approverUserId, auth_level: "mfa", fresh_until_utc: new Date(Date.now() + 600_000).toISOString() } },
+        body: eligibleIam01Body(approverUserId),
       }));
       config.iam01FetchImpl = fetchImpl;
 
@@ -1140,7 +1211,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       expect(calls[0]!.init.headers?.["x-internal-service-token"]).toBe(config.iam01InternalServiceToken);
       const sentBody = JSON.parse(calls[0]!.init.body ?? "{}");
       expect(sentBody.recent_auth_assertion).toBe("fake-assertion-token");
-      expect(sentBody.required_purpose).toBe("iam2_approval");
+      expect(sentBody.required_purpose).toBe(`iam2_approval:${approvalId}`); // X-1 (plan §8.1): owner decision C-4
 
       const verifyRes = await app.inject({
         method: "POST",
@@ -1164,6 +1235,12 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const action = "iam2.test.self_approve_" + randomUUID().slice(0, 8);
       const resource = "test_resource";
       const makerUserId = "user_it_selfmaker_" + randomUUID();
+      // Fixture (plan §8.1 rule 2): the self-approver holds the maker grants AND the approver
+      // grant, a policy exists, and IAM-01 vouches for the (same) user's assertion.
+      await provisionMaker(makerUserId, action, resource);
+      await provisionApprover(makerUserId);
+      await seedApprovalPolicy({ action, resource });
+      config.iam01FetchImpl = makeFakeIam01Fetch(() => ({ ok: true, body: eligibleIam01Body(makerUserId) })).fetchImpl;
 
       const requestRes = await app.inject({
         method: "POST",
@@ -1177,7 +1254,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: makerUserId },
+        payload: { approver_user_id: makerUserId, recent_auth_assertion: "fake-assertion-token" },
       });
       expect(approveRes.statusCode).not.toBe(200);
       expect(approveRes.json().error.code).toBe("IAM2_SELF_APPROVAL_BLOCKED");
@@ -1199,11 +1276,14 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         [approvalId, "user_it_expiry_maker_" + randomUUID()],
       );
 
+      // Fixture (plan §8.1 rule 2): every rejecter now needs iam2.approval.reject (D-3).
+      const expiryRejecter = "user_it_expiry_approver_" + randomUUID();
+      await provisionApprover(expiryRejecter);
       const rejectRes = await app.inject({
         method: "POST",
         url: `/iam2/approvals/${approvalId}/reject`,
         headers: internal,
-        payload: { approver_user_id: "user_it_expiry_approver_" + randomUUID() },
+        payload: { approver_user_id: expiryRejecter },
       });
       expect(rejectRes.statusCode).not.toBe(200);
       expect(rejectRes.json().error.code).toBe("IAM2_APPROVAL_EXPIRED");
@@ -1218,9 +1298,15 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       const makerUserId = "user_it_dupmaker_" + randomUUID();
       const approverUserId = "user_it_dupapprover_" + randomUUID();
-      // required_count 2 so the FIRST approval doesn't flip status to 'approved' and reject
-      // the second attempt for the wrong reason.
-      await seedApprovalPolicy({ action, resource, requiredCount: 2 });
+      // X-2 (plan §8.1; owner clarification, Issue #6 comment 6340858922): multi-approver
+      // activation is gated (AZ-18), so this test runs at count 1 — the ACTUAL count-1
+      // status-path response of the application. The `23505` / SAVEPOINT constraint behaviour
+      // it used to reach at count 2 is covered at the database level as the runtime role in
+      // tests/integration/iam2-authz-rem-db.test.ts (T-24, T-25, T-44).
+      await seedApprovalPolicy({ action, resource });
+      await provisionMaker(makerUserId, action, resource);
+      await provisionApprover(approverUserId);
+      config.iam01FetchImpl = makeFakeIam01Fetch(() => ({ ok: true, body: eligibleIam01Body(approverUserId) })).fetchImpl;
 
       const requestRes = await app.inject({
         method: "POST",
@@ -1234,16 +1320,16 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: approverUserId },
+        payload: { approver_user_id: approverUserId, recent_auth_assertion: "fake-assertion-token" },
       });
       expect(first.statusCode).toBe(200);
-      expect(first.json().data.status).toBe("pending"); // 1 of 2 required
+      expect(first.json().data.status).toBe("approved"); // X-2: was "pending" (1 of 2) at count 2
 
       const second = await app.inject({
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: approverUserId },
+        payload: { approver_user_id: approverUserId, recent_auth_assertion: "fake-assertion-token" },
       });
       expect(second.statusCode).not.toBe(200);
       expect(second.json().error.code).toBe("IAM2_APPROVAL_ALREADY_DECIDED");
@@ -1255,6 +1341,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       await seedApprovalPolicy({ action, resource, requiresStepUp: true });
       const makerUserId = "user_it_netm_" + randomUUID();
+      await provisionMaker(makerUserId, action, resource); // fixture (plan §8.1 rule 2): C-2 B maker preconditions
       const approverUserId = "user_it_neta_" + randomUUID();
 
       const requestRes = await app.inject({ method: "POST", url: "/iam2/approvals/request", headers: internal, payload: { maker_user_id: makerUserId, action, resource } });
@@ -1283,6 +1370,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       await seedApprovalPolicy({ action, resource, requiresStepUp: true });
       const makerUserId = "user_it_non2xxm_" + randomUUID();
+      await provisionMaker(makerUserId, action, resource); // fixture (plan §8.1 rule 2): C-2 B maker preconditions
       const approverUserId = "user_it_non2xxa_" + randomUUID();
 
       const requestRes = await app.inject({ method: "POST", url: "/iam2/approvals/request", headers: internal, payload: { maker_user_id: makerUserId, action, resource } });
@@ -1307,6 +1395,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       await seedApprovalPolicy({ action, resource, requiresStepUp: true });
       const makerUserId = "user_it_invfm_" + randomUUID();
+      await provisionMaker(makerUserId, action, resource); // fixture (plan §8.1 rule 2): C-2 B maker preconditions
       const approverUserId = "user_it_invfa_" + randomUUID();
 
       const requestRes = await app.inject({ method: "POST", url: "/iam2/approvals/request", headers: internal, payload: { maker_user_id: makerUserId, action, resource } });
@@ -1331,6 +1420,7 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       const resource = "test_resource";
       await seedApprovalPolicy({ action, resource, requiresStepUp: true });
       const makerUserId = "user_it_missm_" + randomUUID();
+      await provisionMaker(makerUserId, action, resource); // fixture (plan §8.1 rule 2): C-2 B maker preconditions
       const approverUserId = "user_it_missa_" + randomUUID();
 
       const requestRes = await app.inject({ method: "POST", url: "/iam2/approvals/request", headers: internal, payload: { maker_user_id: makerUserId, action, resource } });
@@ -1383,6 +1473,13 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
       // verifyAndConsumeDecisionToken now binds the token to that specific payload too.
       const approverUserId = "user_it_sodapprover_" + randomUUID();
       const rolePayload = { role_code: roleR2Code, target_user_id: targetUserId };
+      // Fixture (plan §8.1 rule 2): the acting admin now needs iam2.approval.create AND the
+      // underlying iam2.role.assign_user grant (C-2 B; this test previously relied on the
+      // very gap F01/N3 describes), a policy exists (C-6), and the approver is provisioned.
+      await provisionMaker(actingAdminUserId, "iam2.role.assign_user", "role");
+      await ensureApprovalPolicy("iam2.role.assign_user", "role");
+      await provisionApprover(approverUserId);
+      config.iam01FetchImpl = makeFakeIam01Fetch(() => ({ ok: true, body: eligibleIam01Body(approverUserId) })).fetchImpl;
       const requestRes = await app.inject({
         method: "POST",
         url: "/iam2/approvals/request",
@@ -1400,8 +1497,9 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: approverUserId },
+        payload: { approver_user_id: approverUserId, recent_auth_assertion: "fake-assertion-token" },
       });
+      config.iam01FetchImpl = undefined;
       expect(approveRes.statusCode).toBe(200);
       const decisionToken = approveRes.json().data.decision_token as string;
       expect(decisionToken).toBeTruthy();
@@ -1512,6 +1610,12 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
 
       const action = "iam2.test.f2_sod_conflict_" + randomUUID().slice(0, 8);
       const resource = "test_resource";
+      // Fixture (plan §8.1 rule 2): maker underlying grant + create; approver additionally
+      // holds iam2.approval.approve; a policy exists; IAM-01 vouches for the approver.
+      await provisionMaker(makerUserId, action, resource);
+      await grantPermissions(approverUserId, [{ code: "iam2.approval.approve", resource: "approval" }]);
+      await seedApprovalPolicy({ action, resource });
+      config.iam01FetchImpl = makeFakeIam01Fetch(() => ({ ok: true, body: eligibleIam01Body(approverUserId) })).fetchImpl;
       const requestRes = await app.inject({
         method: "POST",
         url: "/iam2/approvals/request",
@@ -1525,8 +1629,9 @@ describe.skipIf(!TEST_DB)("IAM-02 integration (DB)", () => {
         method: "POST",
         url: `/iam2/approvals/${approvalId}/approve`,
         headers: internal,
-        payload: { approver_user_id: approverUserId },
+        payload: { approver_user_id: approverUserId, recent_auth_assertion: "fake-assertion-token" },
       });
+      config.iam01FetchImpl = undefined;
       // NOT a false "success" — this is the exact outcome that was silently bypassed before
       // the F2 fix (both effective-grant lookups would have returned empty, sod.blocked would
       // have been false, and this would have returned 200 status:'approved').

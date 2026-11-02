@@ -201,3 +201,27 @@ export async function checkApprovalSodConflict(client: PoolClient, input: Approv
   const matched = crossMatches(rules, maker, approver);
   return { blocked: matched.length > 0, matchedRuleIds: [...new Set(matched)] };
 }
+
+/**
+ * IAM02-AUTHZ-REM-001 (AZ-07, AZ-08) — the role codes a user CURRENTLY holds, for the
+ * snapshot's required-checker-role test. Same active-role filters as `effectiveGrants`
+ * (status, revocation, effective/expiry window, role status); scopes `aix.user_id` to
+ * `userId` first (RLS on `iam2.user_role`). Sequential by construction — the caller must
+ * never run this concurrently with another scope-changing query on the same client.
+ */
+export async function lookupActiveRoleCodes(client: PoolClient, userId: string): Promise<Set<string>> {
+  await client.query("SELECT set_config('aix.user_id', $1, true)", [userId]);
+  const rows = await client.query<{ role_code: string }>(
+    `SELECT DISTINCT r.role_code
+       FROM iam2.user_role ur
+       JOIN iam2.role r ON r.role_id = ur.role_id
+      WHERE ur.user_id = $1
+        AND ur.status = 'active'
+        AND ur.revoked_at_utc IS NULL
+        AND ur.effective_from_utc <= now()
+        AND (ur.expires_at_utc IS NULL OR ur.expires_at_utc > now())
+        AND r.status = 'active'`,
+    [userId],
+  );
+  return new Set(rows.rows.map((r) => r.role_code));
+}

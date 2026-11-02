@@ -42,20 +42,24 @@
  * non-null `payload_hash` and actually mints a redeemable token. This has a second, deliberate
  * benefit beyond "a token exists at all": the payload-hash binding now also protects the
  * SPECIFIC role code being granted — a token minted to authorise granting role X can no longer
- * be replayed against this endpoint to grant role Y, because `verifyAndConsumeDecisionToken`
- * compares the caller's `current_payload_hash` (which must be `fingerprint({ role_code,
- * target_user_id })` for the assignment actually being performed) against the token's bound
- * hash. Callers of this endpoint must pass the matching `current_payload_hash` accordingly.
+ * be replayed against this endpoint to grant role Y.
+ *
+ * D7-01 CORRECTION — that protection only held if the CALLER's `current_payload_hash` was honest:
+ * it was compared as given, so presenting role X's approved hash while asking for role Y assigned
+ * Y. The server now DERIVES `fingerprint({ role_code, target_user_id })` from the role and target
+ * it is actually about to assign and compares THAT to the token's bound hash. `current_payload_hash`
+ * is optional and, when supplied, must equal the server-derived value (otherwise the token is
+ * revoked and a Critical `iam2.approval_payload_hash_mismatch` audit is committed).
  */
 import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import type { FastifyInstance } from "fastify";
-import { publishAudit, successEnvelope, withTransaction } from "@aix/foundation";
+import { fingerprint, publishAudit, successEnvelope, withTransaction } from "@aix/foundation";
 import { meta } from "../plugins/request-context.js";
 import { makeIam2InternalIdentityGuard } from "../plugins/internal-identity.js";
 import { Iam2Error, type Iam2ErrorCode } from "../lib/errors.js";
 import { evaluatePermission } from "../lib/guard.js";
-import { verifyAndConsumeDecisionToken } from "../lib/decision-token.js";
+import { verifyAndConsumeForExecution } from "../lib/decision-token.js";
 import { checkRoleAssignmentSodConflict } from "../lib/sod.js";
 import { bumpCacheVersion } from "../lib/cache-version.js";
 
@@ -133,25 +137,40 @@ export async function registerRoleRoutes(app: FastifyInstance): Promise<void> {
           return { performed: false, guardResult };
         }
 
-        // F1 fix: verifyAndConsumeDecisionToken now performs the actor/action/resource/entity/
-        // client binding check itself (07_Permission_Rules.md §9) — pass the FULL context so
-        // that check actually fires here with everything it needs, not a partial subset.
-        const verified = await verifyAndConsumeDecisionToken(client, {
+        // IAM02-AUTHZ-REM-001 (AZ-03, F01 / R1 / N3): the token is NOT a substitute for the
+        // acting admin's own entitlement. The central execution wrapper — the same one
+        // `execute-verify` uses — binds the token (actor/action/resource/entity/payload and,
+        // when the caller presents one, the approval id), RE-EVALUATES the acting admin's
+        // underlying `iam2.role.assign_user` entitlement live (explicit deny, default deny,
+        // zero-role, revocation, locks all refuse), re-reads the real approval for
+        // provenance under a non-revoked policy, and consumes the token atomically.
+        //
+        // D7-01 (role substitution): the payload hash compared against the token's bound hash is
+        // DERIVED HERE, by the server, from the operation actually about to be performed — the
+        // role being assigned and the resolved target — using the same canonical `fingerprint` and
+        // field names the approval request was hashed with. The caller's `current_payload_hash` is
+        // no longer the authoritative fingerprint: if supplied it must EQUAL the server value (a
+        // difference is a payload-hash mismatch: token revoked, Critical audit, nothing assigned).
+        // An approval for role A therefore cannot assign role B, nor a different target, by
+        // presenting A's approved hash.
+        const operationPayloadHash = fingerprint({ role_code: body.role_code, target_user_id: targetUserId });
+        const verified = await verifyAndConsumeForExecution(client, {
           tokenRaw: body.decision_token,
           actorUserId: body.acting_admin_user_id,
           action: "iam2.role.assign_user",
           resource: "role",
           entityId: targetUserId,
-          currentPayloadHash: body.current_payload_hash ?? null,
+          currentPayloadHash: operationPayloadHash,
+          assertedPayloadHash: body.current_payload_hash ?? null,
+          approvalId: body.approval_id ?? null,
         });
         if (!verified.ok) {
           return { performed: false, errorCode: verified.reasonCode };
         }
-        // Defense-in-depth only at this point — verifyAndConsumeDecisionToken above already
-        // rejected any actor/action/entity mismatch (it was given the exact same values), so
-        // this re-check can never actually fire in a way the shared verifier didn't already
-        // catch. Left in place deliberately (belt-and-braces on a security-critical control)
-        // rather than deleted for the sake of it.
+        // Defense-in-depth only at this point — the wrapper already rejected any actor/action/
+        // entity mismatch (it was given the exact same values), so this re-check can never
+        // actually fire in a way the shared verifier didn't already catch. Left in place
+        // deliberately (belt-and-braces on a security-critical control).
         if (
           verified.action !== "iam2.role.assign_user" ||
           verified.actorUserId !== body.acting_admin_user_id ||
@@ -198,7 +217,7 @@ export async function registerRoleRoutes(app: FastifyInstance): Promise<void> {
         await client.query(
           `INSERT INTO iam2.user_role (user_id, role_id, status, assigned_by, approval_id, effective_from_utc)
            VALUES ($1,$2,'active',$3,$4, now())`,
-          [targetUserId, role.role_id, body.acting_admin_user_id, verified.approvalId ?? body.approval_id ?? null],
+          [targetUserId, role.role_id, body.acting_admin_user_id, verified.approvalId],
         );
         await publishAudit(client, {
           event_type: "iam2.role_assigned",
@@ -207,7 +226,7 @@ export async function registerRoleRoutes(app: FastifyInstance): Promise<void> {
           actor_type: "user",
           entity_type: "role",
           entity_id: targetUserId,
-          metadata: { role_code: role.role_code, approval_id: verified.approvalId ?? body.approval_id ?? null },
+          metadata: { role_code: role.role_code, approval_id: verified.approvalId },
         });
         await bumpCacheVersion(client, targetUserId, "role_assigned");
 

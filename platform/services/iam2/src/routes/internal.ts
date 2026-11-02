@@ -18,7 +18,7 @@ import { successEnvelope, withTransaction } from "@aix/foundation";
 import { meta } from "../plugins/request-context.js";
 import { makeIam2InternalIdentityGuard } from "../plugins/internal-identity.js";
 import { evaluatePermission } from "../lib/guard.js";
-import { verifyAndConsumeDecisionToken } from "../lib/decision-token.js";
+import { verifyAndConsumeForExecution } from "../lib/decision-token.js";
 import { Iam2Error } from "../lib/errors.js";
 
 const PermissionCheckBody = Type.Object(
@@ -141,10 +141,15 @@ export async function registerInternalRoutes(app: FastifyInstance): Promise<void
       };
 
       // F1 fix: pass every presented binding field through — actor/action/resource/entity/
-      // client are compared against the token's stored bound values inside
-      // verifyAndConsumeDecisionToken itself (07_Permission_Rules.md §9), not left unchecked.
+      // client are compared against the token's stored bound values (07_Permission_Rules.md
+      // §9), not left unchecked. IAM02-AUTHZ-REM-001: execution goes through the CENTRAL
+      // wrapper (AZ-02/AZ-14/AZ-15/AZ-17): the presented `approval_id` is bound to the token
+      // (F08), the maker's underlying entitlement is re-evaluated live (deny/revocation/lock
+      // precedence over any token), the approval is re-read for real provenance under a
+      // non-revoked policy, and the token is consumed atomically (F09). The refusal's evidence
+      // is written in this transaction, which COMMITS; the error is thrown only afterwards.
       const result = await withTransaction((client) =>
-        verifyAndConsumeDecisionToken(client, {
+        verifyAndConsumeForExecution(client, {
           tokenRaw: body.decision_token,
           actorUserId: body.actor_id,
           action: body.action,
@@ -153,6 +158,7 @@ export async function registerInternalRoutes(app: FastifyInstance): Promise<void
           clientId: body.client_id ?? null,
           currentPayloadHash: body.current_payload_hash ?? null,
           sessionId: body.session_id ?? null,
+          approvalId: body.approval_id ?? null,
         }),
       );
 

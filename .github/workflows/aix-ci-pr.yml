@@ -1,0 +1,196 @@
+# AIX-CI-001 — first fail-loud pull-request verification pipeline (pilot).
+#
+# Scope: static/frontend checks, the unit suite, and ONE targeted PostgreSQL regression
+# (platform/tests/integration/iam2-migration-072.test.ts). It is NOT the full integration suite,
+# and it is NOT evidence that every runtime role or RLS policy has been independently tested:
+# the migration-072 suite uses privileged (superuser) setup on a disposable database.
+#
+# Fail-loud rule: a green Vitest exit code is never trusted on its own. Each test job writes a
+# JSON report and platform/ci/verify-vitest-report.mjs must confirm real passed tests, no
+# failures, no skips, and that the intended file ran. Self-skipped database tests therefore FAIL.
+#
+# No secrets are used. The PostgreSQL service is a throwaway container with a literal CI-only
+# password, reachable only from the runner, holding no real or operational data.
+name: AIX CI PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aix-ci-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: platform
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # ---------------------------------------------------------------------------------------------
+  # A. Static and frontend checks
+  # ---------------------------------------------------------------------------------------------
+  static-web:
+    name: A. Static and frontend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run typecheck:web
+      - run: npm run lint:web
+      - run: npm run build:web
+
+  # ---------------------------------------------------------------------------------------------
+  # Validation of the verifier itself (positive and negative controls, real Vitest reports)
+  # ---------------------------------------------------------------------------------------------
+  verifier-selftest:
+    name: CI verifier self-test (negative controls)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - name: Verifier controls (all-skipped, failed, missing and malformed reports must be rejected)
+        run: node --test ci/verify-vitest-report.selftest.mjs ci/assert-disposable-database.selftest.mjs
+
+  # ---------------------------------------------------------------------------------------------
+  # B. Unit tests — no PostgreSQL service, TEST_DATABASE_URL not provided
+  # ---------------------------------------------------------------------------------------------
+  unit-tests:
+    name: B. Unit tests (tests/unit, no database)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Floor = number of unit tests at the AIX-CI-001 baseline (dd73096). A PR that removes unit
+      # tests must raise this knowingly; it makes silently omitted tests fail the job.
+      UNIT_MIN_PASSED: "2705"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - name: Run unit tests (JSON report written outside the working tree)
+        run: |
+          mkdir -p "$RUNNER_TEMP/ci-results"
+          rm -f "$RUNNER_TEMP/ci-results/unit.json"
+          npx vitest run tests/unit --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/ci-results/unit.json"
+      - name: Verify unit results (no failures, no skips, no omissions)
+        run: node ci/verify-vitest-report.mjs --report "$RUNNER_TEMP/ci-results/unit.json" --only-under tests/unit --min-passed "$UNIT_MIN_PASSED"
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-test-report
+          path: ${{ runner.temp }}/ci-results/unit.json
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------------------------
+  # C. Targeted PostgreSQL regression — migration 072 only (not the full integration suite)
+  # ---------------------------------------------------------------------------------------------
+  pg-migration-072:
+    name: C. PostgreSQL 16 regression (iam2-migration-072)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-throwaway-password
+          POSTGRES_DB: aix_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d aix_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      # Literal, CI-only, loopback-only. The guard below refuses anything else.
+      TEST_DATABASE_URL: postgres://postgres:ci-throwaway-password@localhost:5432/aix_ci
+      MIGRATION_TEST_FILE: tests/integration/iam2-migration-072.test.ts
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - name: Database safety guard (must be local, empty, throwaway PostgreSQL 16 — else abort)
+        run: node ci/assert-disposable-database.mjs --expect-major 16
+      - name: Run migration-072 suite (JSON report written outside the working tree)
+        run: |
+          mkdir -p "$RUNNER_TEMP/ci-results"
+          rm -f "$RUNNER_TEMP/ci-results/pg-migration-072.json"
+          npx vitest run "$MIGRATION_TEST_FILE" --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/ci-results/pg-migration-072.json"
+      - name: Verify results (file ran, >=5 passed, nothing failed, nothing skipped)
+        # 5 = the number of tests in the suite's configured run (the unconfigured run registers a
+        # separate skipped placeholder, which this verifier rejects).
+        run: node ci/verify-vitest-report.mjs --report "$RUNNER_TEMP/ci-results/pg-migration-072.json" --expect-file "$MIGRATION_TEST_FILE" --only-expected --min-passed 5
+      - name: Upload migration-072 report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pg-migration-072-report
+          path: ${{ runner.temp }}/ci-results/pg-migration-072.json
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------------------------
+  # Aggregate gate: fails if ANY job failed, was cancelled or was skipped. A skipped job is not a
+  # pass. (Branch protection is deliberately not touched by this task.)
+  # ---------------------------------------------------------------------------------------------
+  pr-verification-result:
+    name: PR verification result
+    if: always()
+    needs: [static-web, verifier-selftest, unit-tests, pg-migration-072]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: .
+    env:
+      R_STATIC: ${{ needs.static-web.result }}
+      R_SELFTEST: ${{ needs.verifier-selftest.result }}
+      R_UNIT: ${{ needs.unit-tests.result }}
+      R_PG: ${{ needs.pg-migration-072.result }}
+    steps:
+      - name: Require every job to have succeeded
+        run: |
+          echo "static-web=$R_STATIC verifier-selftest=$R_SELFTEST unit-tests=$R_UNIT pg-migration-072=$R_PG"
+          for r in "$R_STATIC" "$R_SELFTEST" "$R_UNIT" "$R_PG"; do
+            if [ "$r" != "success" ]; then
+              echo "::error::At least one required job did not succeed (result: $r)"
+              exit 1
+            fi
+          done

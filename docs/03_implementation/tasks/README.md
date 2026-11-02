@@ -84,11 +84,18 @@ Machine state and references only — never long Markdown.
 | `state` | conductor task state (`IDLE` … `ACCEPTED`, `FAILED`) |
 | `risk` | `ROUTINE` / `MODERATE` / `HIGH` / `CRITICAL` |
 | `baselineCommit`, `resultingCommit` | full or ≥7-char hashes, or `null` |
-| `planner`, `implementer`, `reviewer` | `{ role, provider, model, effort }` of the latest execution in that capacity, or `null` |
-| `selectedEfforts` | latest effective effort per logical role |
+| `planner`, `implementer`, `reviewer` | `{ role, provider, model, effort }` of the latest execution in that capacity, or `null` (use `null` when no conductor execution exists). `role` must be a conductor logical-agent role: one of the values of `LOGICAL_AGENT_ROLES` in the conductor repository (`src/types.ts`); do not invent labels. `effort` is a conductor logical effort (`LOGICAL_EFFORTS`, same file) |
+| `selectedEfforts` | latest effective effort per logical role; keys are the same conductor logical-agent roles (`{}` when no conductor execution exists) |
 | `roundCounts` | planning / architecture / review / remediation / escalation |
 | `findingsSummary` | open counts by severity, open finding IDs, carry-forward IDs |
 | `acceptanceStatus` | `NOT_ACCEPTED` / `ACCEPTED` / `FAILED` |
-| `acceptance` | optional; present only after human acceptance: `{ acceptedBy, acceptedAt, acceptedCommit, reviewExecutionId }` |
+| `acceptance` | optional; present only after human acceptance: `{ acceptedBy, acceptedAt, acceptedCommit, reviewExecutionId }`. All four keys must be present. `reviewExecutionId` is the genuine, non-empty conductor review execution ID (the conductor writes `REV-…`) when a conductor review execution exists, or `null` when none does (a human acceptance made outside the conductor). No placeholder, empty-string or fictional ID is permitted |
 | `relevantRecordPaths` | repo-relative paths of this task's records |
 | `createdAt`, `updatedAt` | ISO-8601 UTC |
+
+### Validation scope and historical records
+
+- **The conductor validates its own managed write paths only.** The conductor's task-manifest validator runs when the conductor itself writes a manifest (implementation, planning checkpoint, acceptance). It is not applied universally, and task records created outside the conductor were not routinely validated against it.
+- **Historical records may not conform.** Task records created outside the conductor may use descriptive role labels, extra keys or paths that the conductor validator does not support. As of conductor commit `f6a6571`, `MIG-004`, `MIG-005` and `DEC-015` do not validate for such reasons (the conductor keeps a frozen, read-only matrix of these files under `tests/fixtures/aix-task-manifests/`). Allowing `reviewExecutionId: null` does not change that. These records are preserved unchanged unless a separately authorised task addresses them.
+- **New or corrected records** use only the conductor's logical-agent roles and efforts (or `null`), and never a placeholder execution ID.
+- **Why `IAM02-AUTHZ-REM-001/task.json` was corrected.** Its `planner` carried the label `planner`, with a matching `selectedEfforts.planner` key. Neither is a conductor role, so the record failed validation independently of its acceptance object. Under the owner-approved correction (Issue #6 comment `6572633532`, option R1) both were reset to `planner: null` and `selectedEfforts: {}`. It was deliberately **not** relabelled `routine_planner`, because that would claim a conductor execution role that was never used. The planning author and model remain documented in that task's `01-plan.md`; the planner effort previously recorded in `task.json` (`HIGH`) is preserved in the earlier committed versions of that file (first recorded at `fd94dc9`), not in `01-plan.md`. The task's `acceptance` object, including `reviewExecutionId: null`, and every other field are unchanged.

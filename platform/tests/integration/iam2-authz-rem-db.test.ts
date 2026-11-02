@@ -350,6 +350,71 @@ describe.skipIf(!TEST_DB)("IAM02-AUTHZ-REM-001 — approval authorisation (integ
       expect(log[0]!.decision).toBe("deny");
     });
 
+    it("T-01b (IAM2-FIND-002): a maker holding the UNDERLYING action permission and one ACTIVE policy, but NOT iam2.approval.create, is refused — the create permission is enforced independently", async () => {
+      assertPrerequisites();
+      // Fixture: a policy exists (newScenario seeds exactly one ACTIVE policy for the action/resource); the maker starts with NO
+      // grants, then receives ONLY the underlying business-action permission. Unlike T-01 (create held, underlying missing) and
+      // T-02 (nothing held), the underlying-entitlement check cannot be what refuses this request.
+      const s = await newScenario({ makerGrants: "none" });
+      await grant(s.maker, [{ code: s.action, resource: s.resource }]);
+
+      // --- Prove the scenario from the actual database state, not from the fixture's intent. ---
+      const held = await verifyPool.query<{ permission_code: string }>(
+        `SELECT DISTINCT p.permission_code
+           FROM iam2.user_role ur
+           JOIN iam2.role_permission rp ON rp.role_id = ur.role_id AND rp.status = 'active' AND rp.revoked_at_utc IS NULL AND rp.effective_from_utc <= now()
+           JOIN iam2.permission p ON p.permission_id = rp.permission_id AND p.status = 'active'
+          WHERE ur.user_id = $1 AND ur.status = 'active' AND ur.revoked_at_utc IS NULL AND ur.effective_from_utc <= now()
+          ORDER BY p.permission_code`,
+        [s.maker],
+      );
+      expect(held.rows.map((r) => r.permission_code)).toEqual([s.action]); // the underlying action ONLY: no iam2.approval.create
+      const overrides = await verifyPool.query(`SELECT 1 FROM iam2.user_permission_override WHERE user_id = $1`, [s.maker]);
+      expect(overrides.rowCount).toBe(0); // the refusal below is not an explicit deny override
+      const flags = await verifyPool.query<{ licence_locked: boolean; prohibited: boolean; requires_approval: boolean; requires_step_up: boolean; status: string }>(
+        `SELECT licence_locked, prohibited, requires_approval, requires_step_up, status FROM iam2.permission WHERE permission_id = $1`,
+        [s.actionPermissionId],
+      );
+      expect(flags.rows[0]).toEqual({ licence_locked: false, prohibited: false, requires_approval: false, requires_step_up: false, status: "active" });
+      const policies = await verifyPool.query<{ n: string }>(
+        `SELECT count(*)::text AS n FROM iam2.approval_policy WHERE action = $1 AND resource = $2 AND status = 'active'`,
+        [s.action, s.resource],
+      );
+      expect(policies.rows[0]!.n).toBe("1"); // exactly one valid ACTIVE policy
+      // The REAL guard agrees the underlying grant is effective (this logs a decision for the underlying action only).
+      const underlying = await app.inject({
+        method: "POST",
+        url: "/internal/iam2/permission/check",
+        headers: internal,
+        payload: { actor_id: s.maker, action: s.action, resource: s.resource },
+      });
+      expect(underlying.statusCode).toBe(200);
+      expect(underlying.json().data.decision).toBe("allow");
+      // No decision for iam2.approval.create exists yet, so the denial asserted below can only come from the create handler.
+      expect(await decisionLog(s.maker, "iam2.approval.create")).toEqual([]);
+
+      // --- The create request is refused on the create permission alone. ---
+      const res = await request(s);
+      expect(res.statusCode, JSON.stringify(res.json())).toBe(403);
+      expect(res.json().error.code).toBe("IAM2_PERMISSION_DENIED");
+      const createLog = await decisionLog(s.maker, "iam2.approval.create");
+      expect(createLog.length).toBeGreaterThan(0);
+      expect(createLog.every((l) => l.decision === "deny")).toBe(true);
+      expect(createLog.some((l) => l.reason_code === "default_deny_no_assignment")).toBe(true);
+      // Nothing was created: no request row (by maker and by action/entity) and no approval_requested audit event.
+      const byMaker = await verifyPool.query(`SELECT 1 FROM iam2.approval_request WHERE maker_user_id = $1`, [s.maker]);
+      expect(byMaker.rowCount).toBe(0);
+      const byEntity = await verifyPool.query(`SELECT 1 FROM iam2.approval_request WHERE action = $1 AND entity_id = $2`, [s.action, s.entityId]);
+      expect(byEntity.rowCount).toBe(0);
+      expect(await outbox("iam2.approval_requested", s.entityId)).toBe(0);
+
+      // --- Control: the SAME maker, scenario and request succeed once ONLY iam2.approval.create is added. ---
+      await grant(s.maker, [{ code: "iam2.approval.create", resource: "approval" }]);
+      const control = await request(s);
+      expect(control.statusCode, JSON.stringify(control.json())).toBe(200);
+      expect(await approvalStatus(control.json().data.approval_id as string)).toBe("pending");
+    });
+
     it("T-15: an ABSENT policy fails closed (never the silent 1-approval/no-step-up/24h default), with audit evidence and no request row", async () => {
       assertPrerequisites();
       const s = await newScenario({ policy: false });

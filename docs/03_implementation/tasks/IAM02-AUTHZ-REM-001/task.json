@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "taskId": "IAM02-AUTHZ-REM-001",
-  "title": "IAM-02 approval-authorisation remediation - implementation complete (code commit 39639c0); records 01-05 on file (02, 04, 05 retrospective); NOT_ACCEPTED; findings F01-F11 PROPOSED and open, none promoted or closed; residuals R-1..R-7 and O-1 open; strict D-7 review independence not established",
-  "state": "IMPLEMENTATION_COMPLETE",
+  "title": "IAM-02 approval-authorisation remediation - ACCEPTED WITH CONTROLLED CARRY-FORWARDS (source code only) at b468c5d, owner decision 2026-11-02; F01-F11 (5 HIGH) and IAM2-FIND-001..004 remain open; code commit 39639c0; not UAT or production ready",
+  "state": "ACCEPTED",
   "risk": "CRITICAL",
   "category": "IAM-02 security remediation / authorisation / maker-checker",
   "baselineCommit": "effcdf39c6666f014ce7c9776f83903f6263381f",
@@ -47,14 +47,21 @@
     ],
     "carryForwardIds": []
   },
-  "acceptanceStatus": "NOT_ACCEPTED",
+  "acceptanceStatus": "ACCEPTED",
+  "acceptance": {
+    "acceptedBy": "Aiman",
+    "acceptedAt": "2026-11-02T08:05:46.000Z",
+    "acceptedCommit": "b468c5ddaaeafa118685f35a4104c5261c1963d4",
+    "reviewExecutionId": null
+  },
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/01-plan.md",
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/02-implementation-report.md",
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/03-evidence.md",
     "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/04-review.md",
-    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/05-remediation.md"
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/05-remediation.md",
+    "docs/03_implementation/tasks/IAM02-AUTHZ-REM-001/06-acceptance.md"
   ],
   "createdAt": "2026-10-21T18:46:00.000Z",
-  "updatedAt": "2026-10-27T18:21:44.000Z"
+  "updatedAt": "2026-11-02T08:08:45.000Z"
 }

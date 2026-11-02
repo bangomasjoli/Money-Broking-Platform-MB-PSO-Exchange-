@@ -387,3 +387,12 @@ Later implementation task (separately authorised):
 - [ ] Multi-approver activation remains blocked **fail-closed with the true count preserved** (AZ-18); service-class, client-class and non-active approvers are refused (AZ-16, T-46, T-47, T-52); residuals R-1 (maker status), R-2 (L3) and R-3 (CFG-01 gates) are reported as **open**, not hidden or claimed closed.
 - [ ] The IAM-01 change is additive only: existing fields, status codes, validity rules and tests unchanged (T-51); it is reviewed with the IAM-02 change.
 - [ ] A genuine fresh-context independent Opus security review that did not inherit implementer reasoning (D-7) and explicit human acceptance are recorded before any finding is closed.
+
+## Historical provenance note (added 2026-11-02; the plan above is unchanged)
+
+This note records provenance only. The plan text above remains the historical snapshot it was when written; it is not edited, and its status (`PLANNING`, `NOT_ACCEPTED` at the time) is not restated here.
+
+- **Original planner:** Claude Sonnet 5.5 (`claude-sonnet-5-5`), as stated in the header above.
+- **Historical selected effort:** `HIGH`. The plan text above does not state it. It was recorded in the original task record: `task.json` at commit `fd94dc97a2676443e130289d71cb1a535006dad1` holds `planner.model = claude-sonnet-5-5`, `planner.effort = HIGH` and `selectedEfforts.planner = HIGH`.
+- **Why current machine state differs:** that `planner` entry used the label `planner`, which is not a conductor logical-agent role. Under the owner-approved correction (Issue #6 comment `6572633532`, option R1; AIX commit `e0507855737185d33fe829e80106bd368e8af196`), the current `task.json` carries `planner: null` and `selectedEfforts: {}`. The entry was deliberately not relabelled `routine_planner`.
+- **No conductor execution is claimed.** No conductor planner execution took place for this task; the former `planner` entry was a hand-written record, not the output of a conductor execution.

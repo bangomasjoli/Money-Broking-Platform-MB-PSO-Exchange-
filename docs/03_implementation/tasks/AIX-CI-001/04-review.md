@@ -2,7 +2,7 @@
 
 - **Reviewer:** independent fresh-context Claude Opus review, supplied by owner (no conductor review execution or GitHub-submitted PR review).
 - **Verdict:** ACCEPT — READY FOR OWNER PUBLICATION DECISION (code-quality conclusion only).
-- **Final human task acceptance:** PENDING.
+- **Final human task acceptance:** APPROVED, CI PILOT ONLY, on 2026-11-03 (Asia/Kuching) in this governance session; documented in `06-acceptance.md`. Independent review verdict and human acceptance are separate.
 - **Evidence:** independently reproduced local checks, implementation commit `f35ae84bf738dca61a9e53874e983dd85c56dcf9`, hosted verification recorded in `03-evidence.md`.
 
 ## Reviewer findings
@@ -13,9 +13,9 @@
 | L-1 | LOW | **OPEN #15** | Guard misses table contamination in `template1` and `postgres` (independently reproduced) | Defer for clean-ephemeral CI pilot only; harden before broader/reused DB use |
 | L-2 | LOW | **OPEN #15** | Floating `postgres:16` tag | Defer for pilot; pin digest for stable mandatory gate maintenance |
 | L-3 | LOW | **OPEN #15** | Unit count floor does not cover file identity/ratchet | Defer for pilot; track inventory verification |
-| I-1 | INFORMATIONAL | OPEN | PR workflow advisory until required status and codeowner/human review configured | Separate branch protection decision |
+| I-1 | INFORMATIONAL | PARTIAL | Required status check is now configured and verified (Issue #17); **zero GitHub PR approvals and no CODEOWNERS requirement** remain | Independent review of CI-control changes is separate follow-up (#15) |
 | I-2 | INFORMATIONAL | OPEN | Selected DB test is 1 of 81 integration files | Expand in controlled future batches |
-| I-3/I-4/I-5 | INFORMATIONAL | OPEN | PR-only trigger, guard comment discrepancy, canonical record absent before this checkpoint | Track as needed; no production claims |
+| I-3/I-4/I-5 | INFORMATIONAL | OPEN / RECORD IN DRAFT | PR-only trigger, guard comment discrepancy, canonical governance packet now exists on separate documentation PR #16 (not merged at acceptance-record preparation) | Track as needed; no production claims |
 
 ## Additional confirmation
 
@@ -23,4 +23,4 @@ Hosted Actions run `41497209788` subsequently completed SUCCESS (unit, targeted 
 
 ## Governance
 
-The owner separately authorised initial implementation, branch push/DRAFT PR, Ready-for-Review, merge commit, and on 2026-11-03 instructed preparation of acceptance documentation and mandatory CI. That last instruction **does not by itself certify final human task acceptance**. Preserve all open findings; prepare `06-acceptance.md` only after a distinct owner acceptance decision. No application or regulatory scope changed.
+The owner separately authorised initial implementation, branch push/DRAFT PR, Ready-for-Review and merge commit. On 2026-11-03, the owner then instructed governance documentation and mandatory CI, and subsequently gave a **distinct explicit approval to formally accept the narrow CI pilot**, carrying G-1 and LOW L-1/L-2/L-3 forward as OPEN. The resulting `06-acceptance.md` is a human decision record, not evidence of full application, security, UAT or production acceptance. PR #16 is a separate documentation PR and remains unmerged until separately authorised.

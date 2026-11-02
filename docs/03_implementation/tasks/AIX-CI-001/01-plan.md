@@ -8,7 +8,7 @@
 - **Implementation baseline:** `dd730962860d9e3e1e2469b37b4303b57d9f865c`
 - **Owner implementation approval:** 2026-11-03 (Asia/Kuching), GitHub Issue #11 comment `6583611337`.
 - **Publication approval:** Issue #11 comment `6584399766`; Ready-for-Review and merge permissions were separately granted later.
-- **Governance checkpoint:** owner instruction 2026-11-03 to prepare CI acceptance documentation and mandatory CI protection; **final human task acceptance not yet recorded**.
+- **Governance checkpoint:** owner authorised the evidence and mandatory CI configuration on 2026-11-03; the owner separately **APPROVED formal acceptance of the CI pilot only** on 2026-11-03 (Asia/Kuching). See `06-acceptance.md` and `task.json`.
 
 ## Objective
 
@@ -50,5 +50,5 @@ Establish the smallest useful pull-request CI pilot that refuses to pass on miss
 - [x] Hosted static/web, unit, verifier and selected PostgreSQL regression checks completed successfully with no unexpected skipped tests.
 - [x] Independent review found no BLOCKER/HIGH defects; all residual findings documented.
 - [x] G-1 and LOW findings preserved OPEN in separate follow-up issues (#14, #15).
-- [ ] Owner explicitly accepts the **CI pilot scope only** and authorises final `06-acceptance.md` / `task.json` transition.
-- [ ] Mandatory CI status check applied in branch ruleset and verified (separate governance action).
+- [x] Owner explicitly accepted the **CI pilot scope only** and authorised final `06-acceptance.md` / `task.json` transition.
+- [x] Mandatory CI status check applied in branch ruleset and verified by API read-back (Issue #17; check `PR verification result`, GitHub Actions integration 15368, strict=true).

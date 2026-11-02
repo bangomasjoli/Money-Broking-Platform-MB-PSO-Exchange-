@@ -34,7 +34,7 @@ No tests outside this pilot's focused suites are claimed as hosted verified. The
 
 ## Open controls
 
-- GitHub ruleset `AIX Main Branch Protection` (ID `26356065`) is enforced for default branch but currently has **no required-status-check rule**.
-- `PR verification result` is the exact successful GitHub Actions check name observed on the implementation head.
+- **Updated governance evidence (2026-11-03):** GitHub ruleset `AIX Main Branch Protection` (ID `26356065`) is ACTIVE and now requires the exact `PR verification result` GitHub Actions check (`integration_id=15368`), with `strict_required_status_checks_policy=true`, default-branch target and no bypass actors. Verified via GitHub API read-back; [Issue #17 evidence](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/issues/17#issuecomment-6585449486). This proves the requirement is configured, **not** that a deliberately failing/missing check has been tested against merge denial.
+- `PR verification result` is the exact GitHub Actions required check. The documentation PR [#16](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/pull/16) hosted run [41501459493](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/actions/runs/41501459493) completed SUCCESS with 5 successful check runs before this acceptance-record revision. A new CI run on the revised PR head must be reviewed separately before any merge.
 - G-1 issue [#14](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/issues/14) remains OPEN.
 - L-1/L-2/L-3 hardening issue [#15](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/issues/15) remains OPEN.

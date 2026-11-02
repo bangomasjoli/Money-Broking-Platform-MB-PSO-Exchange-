@@ -898,7 +898,9 @@ Future decisions should be appended below this line, oldest first, using the sam
     (`ledger_account_id`) are different dimensions and some tables need more than one.
   - **Enforcement dependency:** subaccount-scoped permissions cannot be *enforced* until
     `iam2.role_permission` has rows; it currently has zero, so no identity holds an effective
-    permission (`OPEN_FINDINGS.md` `IAM2-FIND-002`).
+    permission (`OPEN_FINDINGS.md` `IAM2-FIND-005`; reference corrected 2026-11-02 — it previously
+    cited `IAM2-FIND-002`, whose source-code defect is now CLOSED, with the provisioning
+    dependency transferred to `IAM2-FIND-005`).
   - **Open, non-blocking:** whether institutional subaccounts attract distinct KYC, reporting
     or safeguarding treatment (`A2-Q1`), and whether subaccount segregation affects
     client-money safeguarding obligations (`A2-Q2`). Neither blocks the architecture; both must

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "taskId": "AIX-CI-001",
+  "title": "Fail-loud GitHub Actions pull request verification pilot — merged; formal human acceptance pending",
+  "state": "REVIEWING",
+  "risk": "HIGH",
+  "category": "CI assurance / test integrity",
+  "baselineCommit": "dd730962860d9e3e1e2469b37b4303b57d9f865c",
+  "resultingCommit": "f35ae84bf738dca61a9e53874e983dd85c56dcf9",
+  "planner": null,
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": {
+    "planning": 1,
+    "architecture": 0,
+    "review": 1,
+    "remediation": 0,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 1,
+      "LOW": 3
+    },
+    "openFindingIds": [
+      "G-1",
+      "L-1",
+      "L-2",
+      "L-3"
+    ],
+    "carryForwardIds": [
+      "G-1",
+      "L-1",
+      "L-2",
+      "L-3"
+    ]
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/AIX-CI-001/01-plan.md",
+    "docs/03_implementation/tasks/AIX-CI-001/02-implementation-report.md",
+    "docs/03_implementation/tasks/AIX-CI-001/03-evidence.md",
+    "docs/03_implementation/tasks/AIX-CI-001/04-review.md",
+    "docs/03_implementation/tasks/AIX-CI-001/task.json"
+  ],
+  "createdAt": "2026-11-02T18:30:55.560Z",
+  "updatedAt": "2026-11-02T18:30:55.560Z"
+}

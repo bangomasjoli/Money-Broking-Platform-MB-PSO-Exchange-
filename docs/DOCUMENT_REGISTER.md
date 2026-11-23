@@ -216,6 +216,16 @@ precedent for creating a governed tier when a subject fits no existing one.
 
 ---
 
+## 4e. Project-State Controlled Documents
+
+Added by PAR-N13 Part A (`AIX-PAR-001`). `STATE-006` is registered at §4d. `STATE-001` (`PROJECT_HANDOVER.md`), `STATE-002` (`MODULE_STATUS.md`), `STATE-003` (`SESSION_START_PROMPT.md`) and `STATE-005` (`CURRENT_STATE.md`) have no register row; that gap is tracked as `GOV-FIND-003` in [OPEN_FINDINGS.md](OPEN_FINDINGS.md), not resolved here. The values below are copied from the file's own front matter; the row does not accept, certify or approve any amendment to the document, and `effective_date` / `last_reviewed` remain UNKNOWN (`GOV-FIND-002`).
+
+| Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| STATE-004 | AIX Platform — Claude Code Usage Rules | N/A (platform-wide) | Model selection and working-discipline rules (front-matter `control`). **Pending, not accepted:** draft PR #19 proposes a conditional, one-time two-worktree pilot exception (`AIX-PAR-001`, policy **NOT_ACCEPTED**, pilot **NOT_ACTIVE**); that text is not on `main`, and this row describes the file as it stands on `main`. Task record: [`03_implementation/tasks/AIX-PAR-001/`](03_implementation/tasks/AIX-PAR-001/) | N/A | APPROVED (per the file's front matter; not re-certified here) | N/A | [`00_project_state/CLAUDE_CODE_USAGE_RULES.md`](00_project_state/CLAUDE_CODE_USAGE_RULES.md) | Unassigned | UNKNOWN | UNKNOWN | none | 780e116 |
+
+---
+
 ## 5. Cross-Module Documents
 
 | Doc ID | Title | Module | Control / Subject | Version | Document Status | Implementation Status | Authoritative Path | Owner | Effective Date | Last Reviewed | Supersedes | Baseline Commit |

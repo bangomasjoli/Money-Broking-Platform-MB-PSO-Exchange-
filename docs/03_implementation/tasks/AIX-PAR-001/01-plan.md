@@ -1,6 +1,14 @@
 # 01 Plan — AIX-PAR-001
 
-> **Status: NOT_ACCEPTED. Pilot: NOT_ACTIVE.** This is a canonical history record prepared under PAR-N13 Part A. It records the objective, scope and approvals as GitHub and repository evidence show them. It accepts nothing, merges nothing and activates nothing. The policy text described here is **not on `main`**: it exists only on draft PR #19.
+> **Status (Part B, 2026-11-25):** the policy text was merged to protected `main` at `26558507055533dcf439eaf8cf44f9a31c6631a9` (PR #19). Owner acceptance of that text is recorded in [06-acceptance.md](06-acceptance.md), **effective only once that record is on protected `main` through PR #20**. **Pilot: NOT_ACTIVE.** This plan is a canonical history record prepared under PAR-N13 Part A and reconciled in Part B. It accepts nothing, merges nothing and activates nothing. *(Part A wording, superseded: "Status: NOT_ACCEPTED … The policy text described here is not on `main`: it exists only on draft PR #19.")*
+
+- **Task ID:** AIX-PAR-001
+- **Risk:** HIGH — reason: governs concurrency, Git write authority and activation of a second writer (proposed in this record; see "Risk")
+- **Category:** Governance control / concurrency policy
+- **Planner:** not recorded; no conductor execution (`task.json` `planner: null`)
+- **Selected implementer:** not recorded for commits 1 to 5; `Co-Authored-By: Claude Sonnet 5.5` trailer on commits 6 to 9 ([02-implementation-report.md](02-implementation-report.md))
+- **Baseline commit:** `c995e0fc420a09d1437ebfd4e333029871496085`
+- **Human approval:** owner approval to prepare the amendment, Issue #18 comment `6586056937` (agent-authored account); full history below
 
 ## Objective
 
@@ -24,7 +32,7 @@ HIGH (proposed in this record; no preserved source assigns a conductor risk clas
 
 ## Approval history (sources)
 
-All Issue #18 and PR #19 comments in this record's period were posted through the `chatgpt-codex-connector` GitHub app, so none is browser-posted owner text. Each is an agent-authored account of an owner approval. **SESSION-RELAYED** means the approval is known only from the implementer's or the preparation session's own account of an owner instruction; no GitHub or repository text records it.
+All Issue #18 and PR #19 comments up to 2026-11-03 were posted through the `chatgpt-codex-connector` GitHub app, so none of them is browser-posted owner text. Each is an agent-authored account of an owner approval. **SESSION-RELAYED** means the approval is known only from the implementer's or the preparation session's own account of an owner instruction; no GitHub or repository text records it.
 
 | Date (Asia/Kuching) | Approval | Source | Status |
 |---|---|---|---|
@@ -36,8 +44,14 @@ All Issue #18 and PR #19 comments in this record's period were posted through th
 | 2026-11-23 | Commit `10f63bba` (PAR-N15 to N17, with owner-authorised O1 and O6): local commit, then push | Preserved implementer evidence draft (`04-review-r6.md`, `05-remediation-r6.md`); CI run `45129087716` | **SESSION-RELAYED** (no GitHub record) |
 | 2026-11-23 | Commit `2eb8e14f` (PAR-N18 to N21 and acceptance-head binding, with the pinned-fetch extension): local commit, then an explicit written push authorisation | Preserved implementer evidence draft, Addenda A and B; CI run `45151125787` | **SESSION-RELAYED** (no GitHub record) |
 | 2026-11-23 | PAR-N13 Part A preparation only (no commit, push or PR) | Owner instruction in the preparation session | **SESSION-RELAYED** (not on GitHub) |
+| 2026-11-23 to 2026-11-25 | Part A local commit `8945de0`, push of `docs/AIX-PAR-001-canonical-records` and creation of draft PR #20 (2026-11-25T07:03:08Z). The approvals expressly named `DOCUMENT_REGISTER.md` and `OPEN_FINDINGS.md` as authorised paths (tasks README record-checkpoint rule) | Owner instructions in the preparation sessions, as restated in the Part B authorisation | **SESSION-RELAYED** (no GitHub or repository text records them). PR #20 was created through the owner's stored GitHub credential, not personally in the browser. The preparation session reported this; the owner acknowledged it in comment `7155988583` §4 (`PAR-N29`) |
+| 2026-11-25 | Independent review of Part A (PR #20 at `8945de0`): REMEDIATE, all fixes deferred to Part B | Chat report ([03-evidence.md](03-evidence.md) §13) | Review report not on GitHub |
+| 2026-11-25 (07:33:17Z) | **Owner policy decision** on `accepted_head_sha=2eb8e14ffcaeed76cf37835399346375ee38ea26`; two-stage acceptance procedure adopted; carry-forwards, O2 to O5 dispositions, `PAR-N29` and the credential restriction, merge freeze | [Issue #18 comment `7155988583`](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/issues/18#issuecomment-7155988583) | **On GitHub**; `performed_via_github_app` null, not edited; owner personally confirmed posting it in a supervised session (SESSION-RELAYED) |
+| 2026-11-25 | PR #19 Ready for Review and merge (merge commit `2655850`, 07:35:39Z) | Merge commit on protected `main` | Authorisation text **SESSION-RELAYED**; who performed the action is **UNVERIFIED** |
+| 2026-11-25 | PAR-N13 Part B preparation only: no-commit integration of `main` and the documentation changes, naming `DOCUMENT_REGISTER.md`, `OPEN_FINDINGS.md` and `CURRENT_STATE.md`; no commit, push, Ready-for-Review or merge | Owner instruction in the Part B session | **SESSION-RELAYED** |
+| 2026-11-26 | Two local commits only: (1) the integration merge of `main`, (2) the Part B documentation commit. **No** push, PR update, Ready-for-Review, merge or comment; pilot NOT_ACTIVE. Also authorised: a `CURRENT_STATE` discrepancy note and the Opus/Sonnet deviation record | Owner instruction in the commit session | **SESSION-RELAYED** |
 
-No source preserved in the repository or on GitHub records owner policy acceptance, Ready-for-Review, merge or pilot activation.
+*Part A wording, superseded:* "No source preserved in the repository or on GitHub records owner policy acceptance, Ready-for-Review, merge or pilot activation." Now the owner's policy decision is on GitHub (comment `7155988583`) and the merge is on `main`. The authorisations for Ready-for-Review and merge are not preserved. **No pilot activation exists.**
 
 ## Acceptance criteria (contract)
 
@@ -45,6 +59,8 @@ No source preserved in the repository or on GitHub records owner policy acceptan
 2. The accepted PR head is bound by `accepted_head_sha` as drafted in the policy (candidate value only: `2eb8e14ffcaeed76cf37835399346375ee38ea26`, not yet a recorded owner acceptance). The proposed two-part acceptance process (decision comment before merge, canonical record after merge) is in [03-evidence.md](03-evidence.md) and [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md) `PAR-N27`; it is a **proposal**, not an accepted decision.
 3. Merge of PR #19 with a merge commit whose second parent equals `accepted_head_sha`, then the post-merge binding checks.
 4. Separately: owner-posted `AIX-PAR-001 STATE: ACTIVE` comment, `UI` and `CI` task approvals and an explicit pilot-start decision. None exists.
+
+**Status of the criteria at Part B (2026-11-25):** (1) the round-8 review recommended ACCEPT, but it was not fully unprimed. The owner decision is comment `7155988583`; the canonical record is [06-acceptance.md](06-acceptance.md), **effective once on protected `main`**. (2) `accepted_head_sha` is recorded by the owner; the two-stage process was adopted. (3) Met: merge `2655850`, second parent `2eb8e14`, `PAR-N23` exact-file check passed ([03-evidence.md](03-evidence.md) §12). (4) Not met: **pilot NOT_ACTIVE**.
 
 ## Related records (not part of this task)
 

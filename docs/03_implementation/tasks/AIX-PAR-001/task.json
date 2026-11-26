@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "taskId": "AIX-PAR-001",
-  "title": "Limited two-worktree implementation pilot policy (draft PR #19) - canonical history record; policy NOT_ACCEPTED, pilot NOT_ACTIVE",
-  "state": "IDLE",
+  "title": "Limited two-worktree implementation pilot policy - policy text accepted (accepted head 2eb8e14, merged 2655850); pilot NOT_ACTIVE; acceptance effective once this record is on main (PR #20)",
+  "state": "ACCEPTED",
   "risk": "HIGH",
   "category": "Governance control / concurrency policy",
   "baselineCommit": "c995e0fc420a09d1437ebfd4e333029871496085",
-  "resultingCommit": null,
+  "resultingCommit": "26558507055533dcf439eaf8cf44f9a31c6631a9",
   "planner": null,
   "implementer": null,
   "reviewer": null,
@@ -22,10 +22,11 @@
     "open": {
       "BLOCKER": 0,
       "HIGH": 0,
-      "MEDIUM": 0,
+      "MEDIUM": 1,
       "LOW": 6
     },
     "openFindingIds": [
+      "PAR-N29",
       "PAR-N13",
       "PAR-N22",
       "PAR-N23",
@@ -34,6 +35,7 @@
       "PAR-N28"
     ],
     "carryForwardIds": [
+      "PAR-N29",
       "PAR-N13",
       "PAR-N22",
       "PAR-N23",
@@ -42,6 +44,10 @@
       "PAR-N26",
       "PAR-N27",
       "PAR-N28",
+      "PAR-O2",
+      "PAR-O3",
+      "PAR-O4",
+      "PAR-O5",
       "PAR-INFO-c",
       "PAR-INFO-d",
       "PAR-INFO-e",
@@ -49,7 +55,7 @@
       "PAR-INFO-3"
     ]
   },
-  "acceptanceStatus": "NOT_ACCEPTED",
+  "acceptanceStatus": "ACCEPTED",
   "relevantRecordPaths": [
     "docs/03_implementation/tasks/AIX-PAR-001/01-plan.md",
     "docs/03_implementation/tasks/AIX-PAR-001/02-implementation-report.md",
@@ -69,8 +75,15 @@
     "docs/03_implementation/tasks/AIX-PAR-001/05-remediation-r5.md",
     "docs/03_implementation/tasks/AIX-PAR-001/05-remediation-r6.md",
     "docs/03_implementation/tasks/AIX-PAR-001/05-remediation-r7.md",
+    "docs/03_implementation/tasks/AIX-PAR-001/06-acceptance.md",
     "docs/03_implementation/tasks/AIX-PAR-001/task.json"
   ],
   "createdAt": "2026-11-02T19:05:57.000Z",
-  "updatedAt": "2026-11-23T11:30:00.000Z"
+  "updatedAt": "2026-11-25T07:46:33Z",
+  "acceptance": {
+    "acceptedBy": "Aiman (project owner; GitHub bangomasjoli; Issue #18 comment 7155988583)",
+    "acceptedAt": "2026-11-25T07:33:17Z",
+    "acceptedCommit": "2eb8e14ffcaeed76cf37835399346375ee38ea26",
+    "reviewExecutionId": null
+  }
 }

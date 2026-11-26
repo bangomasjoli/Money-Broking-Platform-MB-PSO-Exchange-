@@ -1,5 +1,8 @@
 # 05 Remediation — AIX-PAR-001 (round 3)
 
+- **Approved by:** owner, 2026-11-03, as recorded in agent-authored PR #19 comment `6600328132` and Issue #18 comment `6600329893`
+- **Baseline commit:** `868f18bc163cf9b4622bfe79f8c683f474ab56ca`
+- **Resulting commit:** `a9ea48f40da40bac135d399bfa83946bbb5d1fbd`
 - **Findings remediated:** PAR-N8 to PAR-N11 (LOW), from [04-review-r3.md](04-review-r3.md).
 - **Approved scope:** one final single-file docs-only correction, then exact-head CI and a diff-focused independent re-review. **Not** policy acceptance, Ready-for-Review, merge, pilot start or writers. Sources: PR #19 comment `6600328132`; Issue #18 comment `6600329893` (agent-authored).
 - **Implementing agent:** not recorded.

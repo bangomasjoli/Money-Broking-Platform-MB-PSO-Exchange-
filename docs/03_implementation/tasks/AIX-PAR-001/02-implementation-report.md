@@ -1,9 +1,12 @@
 # 02 Implementation Report — AIX-PAR-001
 
-> **This records what the implementers' commits and messages say. It does not prove correctness.** Evidence is in [03-evidence.md](03-evidence.md); review is in `04-review*.md`. **Status: NOT_ACCEPTED. Pilot: NOT_ACTIVE.**
+> **This records what the implementers' commits and messages say. It does not prove correctness.** Evidence is in [03-evidence.md](03-evidence.md); review is in `04-review*.md`. **Status: policy merged at `2655850`; acceptance in [06-acceptance.md](06-acceptance.md), effective once on protected `main`. Pilot: NOT_ACTIVE.** *(Part A: "Status: NOT_ACCEPTED".)*
 
+- **Implementation model / effort:** see "Implementer model" below; effort not recorded.
+- **Round:** 1 plus remediation rounds 1 to 7 ([05-remediation.md](05-remediation.md) to [05-remediation-r7.md](05-remediation-r7.md)).
 - **Baseline:** `main` `c995e0fc420a09d1437ebfd4e333029871496085`.
-- **Resulting head (draft PR #19):** `2eb8e14ffcaeed76cf37835399346375ee38ea26`. Nine commits, one changed file in every commit: `docs/00_project_state/CLAUDE_CODE_USAGE_RULES.md`; PR total +48/−0.
+- **Resulting head (PR #19):** `2eb8e14ffcaeed76cf37835399346375ee38ea26`, merged into protected `main` by `26558507055533dcf439eaf8cf44f9a31c6631a9` on 2026-11-25. Nine commits, one changed file in every commit: `docs/00_project_state/CLAUDE_CODE_USAGE_RULES.md`; PR total +48/−0.
+- **Commit author names (VERIFIED):** commits 1 to 5 are authored as "Mohd Aiman Rahimi", commits 6 to 9 as "AimanRahimi". The differing Git author configuration supports, but does not prove, the use of different tooling (finding N-4).
 - **Implementer model:** recorded only by the `Co-Authored-By: Claude Sonnet 5.5` trailer on commits 6 to 9. Commits 1 to 5 carry no model trailer, and no preserved source names the model or tool that wrote them. The GitHub comments describing them were posted through the `chatgpt-codex-connector` app, which suggests but does not prove that connector's involvement. **UNVERIFIED; none is inferred here.**
 - **Conductor execution records:** none exist (`planner`, `implementer` and `reviewer` are `null` in `task.json`).
 
@@ -31,4 +34,4 @@ Commit 9 also extends the pinned operator `fetch` with `--no-replace-objects -c 
 
 ## Known issues and carried items
 
-See [04-review-r8.md](04-review-r8.md) (open findings `PAR-N22` to `PAR-N28`, `PAR-INFO-c`, `-d`, `-e`, `-f`, `-3`) and `PAR-N13` (this canonical-record gap) in [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md).
+See [04-review-r8.md](04-review-r8.md) (open findings `PAR-N22` to `PAR-N28`, `PAR-INFO-c`, `-d`, `-e`, `-f`, `-3`), `PAR-N13` (this canonical-record gap), `PAR-O2` to `PAR-O5` (round-6 observations) and `PAR-N29` (action attribution) in [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md).

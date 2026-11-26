@@ -30,4 +30,4 @@ The draft also records, as implementer-identified residual risks, PAR-N18 (versi
 none
 
 ## Rationale
-Findings and dispositions are carried from the implementer's draft. Remediation: [05-remediation-r6.md](05-remediation-r6.md). O2 to O5 remain pending owner decisions (carried in `task.json`, not in the findings register).
+Findings and dispositions are carried from the implementer's draft. Remediation: [05-remediation-r6.md](05-remediation-r6.md). *Part A wording, corrected in Part B (finding N-1):* "O2 to O5 remain pending owner decisions (carried in `task.json`, not in the findings register)". In fact Part A tracked them nowhere. Owner dispositions (Issue #18 comment `7155988583` §3): O2 and O3 remain documented fail-closed limitations; O4 requires a later canonical-path clarification; O5 is accepted as a non-blocking false-positive limitation. They are now registered as `PAR-O2`..`PAR-O5` in [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md) and listed in `task.json`.

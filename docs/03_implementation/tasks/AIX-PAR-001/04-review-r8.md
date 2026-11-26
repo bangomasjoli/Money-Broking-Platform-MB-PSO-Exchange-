@@ -1,6 +1,6 @@
 # 04 Review — AIX-PAR-001 (round 8: delta review of `2eb8e14f`)
 
-- **Reviewer:** fresh-context Claude Opus 5.5 (model per the session transcript), read-only, 2026-11-23, in a separate session. The report was delivered in chat only; **no GitHub comment, no GitHub-submitted review and no execution ID**. The reviewer stated that it shares a model family with earlier reviewers, and that only Git 2.50.1 (Apple Git-155) was available. The preserved text is a reconstruction from the transcript (SECONDARY; labelled as such in the private archive).
+- **Reviewer:** Claude Opus 5.5 (model per the session transcript), read-only, 2026-11-23, in a separate session, but **not fully unprimed**: previous project context was available to it. The owner acknowledged this limitation in Issue #18 comment `7155988583` §1. *(Part A wording, superseded: "fresh-context Claude Opus 5.5"; the Part A record gave no memory-context disclosure, finding F03 in [03-evidence.md](03-evidence.md) §13.)* The report was delivered in chat only; **no GitHub comment, no GitHub-submitted review and no execution ID**. The reviewer stated that it shares a model family with earlier reviewers, and that only Git 2.50.1 (Apple Git-155) was available. The preserved text is a reconstruction from the transcript (SECONDARY; labelled as such in the private archive).
 - **Source class:** **DERIVED.** The review was delivered in chat only. The text in the private archive is a reconstruction from the session transcript, labelled as such; the implementer's Addendum B (SECONDARY) restates its outcome. No original report file exists.
 - **Decision:** ACCEPT as a recommendation. **Not owner acceptance.** Commit `2eb8e14f` reported suitable for an owner-authorised push.
 - **Human approval required:** true
@@ -26,4 +26,4 @@ Other items: lane-branch server-side protection absent, so PAR-N20 protection is
 none
 
 ## Rationale
-This is the "R8" of the PAR-N13 planning table (the chat label). The review recommends but does not accept; owner acceptance is a separate act, recorded only in `06-acceptance.md`, which does not exist.
+This is the "R8" of the PAR-N13 planning table (the chat label). The review recommends but does not accept; owner acceptance is a separate act, recorded only in [06-acceptance.md](06-acceptance.md). *(Part A wording: "which does not exist". In Part B it was prepared after the PR #19 merge; it takes effect once on protected `main`.)* `PAR-N27` was settled by the owner's adoption of the two-stage process (comment `7155988583` §2).

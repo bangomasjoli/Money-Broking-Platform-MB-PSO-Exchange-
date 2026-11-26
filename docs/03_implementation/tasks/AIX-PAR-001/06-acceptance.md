@@ -4,7 +4,7 @@
 
 - **Final decision:** **ACCEPTED — POLICY DOCUMENT TEXT ONLY.** The accepted object is the AIX-PAR-001 amendment to [`CLAUDE_CODE_USAGE_RULES.md`](../../../00_project_state/CLAUDE_CODE_USAGE_RULES.md) (`STATE-004`) at the exact head below. Nothing else is accepted.
 - **Accepted commit (`accepted_head_sha`):** `2eb8e14ffcaeed76cf37835399346375ee38ea26` (PR #19 head; policy blob `83d5cf1ddc16228b2d0ca8648e7b00b1bf882805`).
-- **Policy merge commit (`policy_merge_sha`):** `26558507055533dcf439eaf8cf44f9a31c6631a9` (merge of PR #19 into protected `main`, committed by GitHub 2026-11-25T07:35:39Z). `task.json` records it as `resultingCommit`.
+- **Policy merge commit (`policy_merge_sha`):** `26558507055533dcf439eaf8cf44f9a31c6631a9` (merge of PR #19 into protected `main`, committed by GitHub 2026-11-25T07:35:39Z). `task.json.resultingCommit` is **not** this merge: following the repository convention (the implementation commit; see [03-evidence.md](03-evidence.md) §15), it records the accepted implementation head `2eb8e14ffcaeed76cf37835399346375ee38ea26`. The merge is recorded here and in [03-evidence.md](03-evidence.md) §12.
 - **Accepted by (human):** Aiman, project owner (GitHub `bangomasjoli`). Decision: [Issue #18 comment `7155988583`](https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/issues/18#issuecomment-7155988583).
 - **Origin of the timestamp:** `acceptedAt` = `2026-11-25T07:33:17Z`, the comment's GitHub `created_at`. It is not the time this file was written.
 - **Origin evidence for the decision comment (VERIFIED by REST read-back, 2026-11-25):** `created_at` equals `updated_at` (not edited); `author_association` `OWNER`; `performed_via_github_app` `null`. **A null app marker does not prove personal human authorship** (`PAR-N29`). Personal authorship rests on the owner's own confirmation, given in the preceding supervised session, that they posted comment `7155988583` (**SESSION-RELAYED**; not on GitHub).
@@ -18,7 +18,7 @@ The owner adopted it in comment `7155988583` §2. Each step and its evidence:
 | Step | Requirement | Evidence | Result |
 |---|---|---|---|
 | 1 | Owner decision on the exact reviewed head | Comment `7155988583` records `accepted_head_sha=2eb8e14ffcaeed76cf37835399346375ee38ea26` and evidence snapshot `8945de01…` | VERIFIED (REST) |
-| 2 | Separate authorisation to mark PR #19 Ready for Review and to merge it | Not preserved in the repository or on GitHub | **SESSION-RELAYED / UNVERIFIED** (see §"Limitations") |
+| 2 | Separate authorisation to mark PR #19 Ready for Review and to merge it | Not preserved in the repository or on GitHub | **SESSION-RELAYED / UNVERIFIED** (owner-stated since: executed through the connected GitHub integration; see §"Limitations" and [03-evidence.md](03-evidence.md) §15) |
 | 3 | Normal two-parent merge commit; second parent = accepted head | `2655850…` parents: (1) `c995e0fc420a09d1437ebfd4e333029871496085`, the previous protected `main`; (2) `2eb8e14ffcaeed76cf37835399346375ee38ea26`. Exactly two parents | VERIFIED (Git) |
 | 4a | Accepted policy content unchanged | Policy blob at `2eb8e14` and at `2655850` are both `83d5cf1d…`; `git diff 2eb8e14 2655850` is empty (merge tree equals accepted head tree) | VERIFIED (Git) |
 | 4b | **`PAR-N23` exact-file check** (owner-required) | `git diff --name-status c995e0f 2655850` lists exactly one path: `M docs/00_project_state/CLAUDE_CODE_USAGE_RULES.md` | VERIFIED (Git) |
@@ -53,7 +53,7 @@ Details and state: [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md). Retained by ow
 
 - Round 8 was not fully unprimed (acknowledged by the owner). Rounds 2, 3 and 8 and the Part A records review were Claude Opus 5.5 sessions; rounds 6 and 7 are described only as "Opus" reviews in implementer drafts. Round 1 (GPT) is the only review recorded from a different model family.
 - Rounds 4 and 5 are unrecovered (existence INFERRED); rounds 6 and 7 are known only from implementer drafts.
-- Owner approvals after 2026-11-03, including the PR #19 Ready-for-Review and merge authorisations, are SESSION-RELAYED. Whether the PR #19 merge was performed personally in the browser or by an agent session using the owner's account is **UNVERIFIED** (merge commit author: the owner's GitHub identity; committer: GitHub).
+- Owner approvals after 2026-11-03, including the PR #19 Ready-for-Review and merge authorisations, are SESSION-RELAYED. Whether the PR #19 merge was performed personally in the browser or by an agent session using the owner's account is **not verifiable from Git or REST** (owner-stated, SESSION-RELAYED: the Ready-for-Review transition and merge were executed through the connected GitHub integration after separate owner instructions; [03-evidence.md](03-evidence.md) §15, `PAR-N29`) (merge commit author: the owner's GitHub identity; committer: GitHub).
 - Ruleset bypass actors remain UNVERIFIED (not visible anonymously).
 - Policy behaviour was exercised on Git 2.50.1 only.
 

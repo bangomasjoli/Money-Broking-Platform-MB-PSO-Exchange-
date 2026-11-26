@@ -6,7 +6,7 @@
   "risk": "HIGH",
   "category": "Governance control / concurrency policy",
   "baselineCommit": "c995e0fc420a09d1437ebfd4e333029871496085",
-  "resultingCommit": "26558507055533dcf439eaf8cf44f9a31c6631a9",
+  "resultingCommit": "2eb8e14ffcaeed76cf37835399346375ee38ea26",
   "planner": null,
   "implementer": null,
   "reviewer": null,
@@ -79,7 +79,7 @@
     "docs/03_implementation/tasks/AIX-PAR-001/task.json"
   ],
   "createdAt": "2026-11-02T19:05:57.000Z",
-  "updatedAt": "2026-11-25T07:46:33Z",
+  "updatedAt": "2026-11-26T10:26:09Z",
   "acceptance": {
     "acceptedBy": "Aiman (project owner; GitHub bangomasjoli; Issue #18 comment 7155988583)",
     "acceptedAt": "2026-11-25T07:33:17Z",

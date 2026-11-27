@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "AIX-PAR-001",
-  "title": "Limited two-worktree implementation pilot policy - policy text accepted (accepted head 2eb8e14, merged 2655850); pilot NOT_ACTIVE; acceptance effective once this record is on main (PR #20)",
+  "title": "Limited two-worktree implementation pilot policy - policy text accepted (accepted head 2eb8e14, merged 2655850); acceptance record on protected main since PR #20 (merge 57242a6, 2026-11-27); pilot NOT_ACTIVE",
   "state": "ACCEPTED",
   "risk": "HIGH",
   "category": "Governance control / concurrency policy",
@@ -23,26 +23,22 @@
       "BLOCKER": 0,
       "HIGH": 0,
       "MEDIUM": 1,
-      "LOW": 6
+      "LOW": 4
     },
     "openFindingIds": [
       "PAR-N29",
-      "PAR-N13",
       "PAR-N22",
       "PAR-N23",
       "PAR-N24",
-      "PAR-N27",
       "PAR-N28"
     ],
     "carryForwardIds": [
       "PAR-N29",
-      "PAR-N13",
       "PAR-N22",
       "PAR-N23",
       "PAR-N24",
       "PAR-N25",
       "PAR-N26",
-      "PAR-N27",
       "PAR-N28",
       "PAR-O2",
       "PAR-O3",
@@ -79,7 +75,7 @@
     "docs/03_implementation/tasks/AIX-PAR-001/task.json"
   ],
   "createdAt": "2026-11-02T19:05:57.000Z",
-  "updatedAt": "2026-11-26T10:26:09Z",
+  "updatedAt": "2026-11-27T05:24:35Z",
   "acceptance": {
     "acceptedBy": "Aiman (project owner; GitHub bangomasjoli; Issue #18 comment 7155988583)",
     "acceptedAt": "2026-11-25T07:33:17Z",

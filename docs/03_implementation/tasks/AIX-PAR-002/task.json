@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "AIX-PAR-002",
+  "title": "AIX-PAR-001 pilot pre-activation supplement - STATE-007 DRAFT with a narrow STATE-004 amendment draft; independent review 1 REMEDIATE, remediation R1 prepared; not accepted; pilot NOT_ACTIVE",
+  "state": "IDLE",
+  "risk": "HIGH",
+  "category": "Governance control / pilot pre-activation",
+  "baselineCommit": "6d875ead5c8f6ec9d42902a67fef695ff7eb595e",
+  "resultingCommit": null,
+  "planner": null,
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": {
+    "planning": 1,
+    "architecture": 0,
+    "review": 1,
+    "remediation": 1,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
+    "openFindingIds": [],
+    "carryForwardIds": [
+      "PAR-N22",
+      "PAR-N23",
+      "PAR-N24",
+      "PAR-N28",
+      "PAR-N29",
+      "GOV-FIND-001"
+    ]
+  },
+  "acceptanceStatus": "NOT_ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/AIX-PAR-002/01-plan.md",
+    "docs/03_implementation/tasks/AIX-PAR-002/02-implementation-report.md",
+    "docs/03_implementation/tasks/AIX-PAR-002/03-evidence.md",
+    "docs/03_implementation/tasks/AIX-PAR-002/task.json"
+  ],
+  "createdAt": "2026-11-27T07:20:18Z",
+  "updatedAt": "2026-11-27T08:51:29Z"
+}

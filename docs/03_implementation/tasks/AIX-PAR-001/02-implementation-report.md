@@ -35,3 +35,9 @@ Commit 9 also extends the pinned operator `fetch` with `--no-replace-objects -c 
 ## Known issues and carried items
 
 See [04-review-r8.md](04-review-r8.md) (open findings `PAR-N22` to `PAR-N28`, `PAR-INFO-c`, `-d`, `-e`, `-f`, `-3`), `PAR-N13` (this canonical-record gap), `PAR-O2` to `PAR-O5` (round-6 observations) and `PAR-N29` (action attribution) in [OPEN_FINDINGS.md](../../../OPEN_FINDINGS.md).
+
+---
+
+## Status addendum, 2026-11-28 (AIX-PAR-003)
+
+The owner withdrew the AIX-PAR-001 pilot on 2026-11-28 (Issue #18 comment `7235586939`). Nothing above is rewritten: the policy-text acceptance in [06-acceptance.md](06-acceptance.md) is historical, the pilot was never activated, and no finding is closed or waived. Record of the withdrawal: [../AIX-PAR-003/02-implementation-report.md](../AIX-PAR-003/02-implementation-report.md).

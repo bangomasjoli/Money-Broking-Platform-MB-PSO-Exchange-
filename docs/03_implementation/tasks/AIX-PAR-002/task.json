@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "AIX-PAR-002",
-  "title": "AIX-PAR-001 pilot pre-activation supplement - STATE-007 DRAFT with a narrow STATE-004 amendment draft; independent review 1 REMEDIATE, remediation R1 prepared; not accepted; pilot NOT_ACTIVE",
+  "title": "AIX-PAR-001 pilot pre-activation supplement - STATE-007 DRAFT with a narrow conditional STATE-004 amendment; PR #22 merged as 4e14d27 but never operative (S7 not completed); activation work discontinued by the owner 2026-11-28 (Issue #18 comment 7235586939); not accepted; pilot withdrawn, NOT_ACTIVE",
   "state": "IDLE",
   "risk": "HIGH",
   "category": "Governance control / pilot pre-activation",
@@ -43,5 +43,5 @@
     "docs/03_implementation/tasks/AIX-PAR-002/task.json"
   ],
   "createdAt": "2026-11-27T07:20:18Z",
-  "updatedAt": "2026-11-27T08:51:29Z"
+  "updatedAt": "2026-11-28T06:58:10Z"
 }

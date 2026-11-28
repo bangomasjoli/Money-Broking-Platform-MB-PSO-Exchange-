@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "taskId": "AIX-PAR-003",
+  "title": "Parallel pilot retirement and serial development restoration - documentation-only alignment with the owner withdrawal decision (Issue #18 comment 7235586939); ACCEPTED as documentation alignment only (diff digest d8c91b01, session-relayed); no finding closed or waived",
+  "state": "ACCEPTED",
+  "risk": "MODERATE",
+  "category": "Governance records / documentation alignment",
+  "baselineCommit": "4e14d27316bb55338db7d538fc47e102af13222d",
+  "resultingCommit": "4fdd96d8584705333888193e2b81727b4214f200",
+  "planner": null,
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": {
+    "planning": 0,
+    "architecture": 0,
+    "review": 0,
+    "remediation": 0,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
+    "openFindingIds": [],
+    "carryForwardIds": [
+      "PAR-N22",
+      "PAR-N23",
+      "PAR-N24",
+      "PAR-N28",
+      "PAR-N29",
+      "GOV-FIND-001"
+    ]
+  },
+  "acceptanceStatus": "ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/AIX-PAR-003/02-implementation-report.md",
+    "docs/03_implementation/tasks/AIX-PAR-003/06-acceptance.md",
+    "docs/03_implementation/tasks/AIX-PAR-003/task.json"
+  ],
+  "createdAt": "2026-11-28T06:58:10Z",
+  "updatedAt": "2026-11-28T07:26:36Z",
+  "acceptance": {
+    "acceptedBy": "Aiman (project owner; session-relayed owner instruction; no GitHub comment)",
+    "acceptedAt": "2026-11-28T07:26:36Z",
+    "acceptedCommit": "4fdd96d8584705333888193e2b81727b4214f200",
+    "reviewExecutionId": null
+  }
+}

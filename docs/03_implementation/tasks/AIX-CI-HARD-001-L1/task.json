@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "taskId": "AIX-CI-HARD-001-L1",
+  "title": "AIX-CI-HARD-001 L1 - disposable-database guard: inspect postgres and template1, reject unexpected databases including template-flagged; ACCEPTED (implementation scope only; L2/L3 not covered); hosted CI NOT_RUN; CI-FIND-001 stays OPEN",
+  "state": "ACCEPTED",
+  "risk": "HIGH",
+  "category": "CI assurance / test integrity",
+  "baselineCommit": "f57084d7e2789062edd8e1d740066ffc0b123c91",
+  "resultingCommit": "2e15878815a064f837596716d37896477f33409d",
+  "planner": null,
+  "implementer": null,
+  "reviewer": null,
+  "selectedEfforts": {},
+  "roundCounts": {
+    "planning": 0,
+    "architecture": 0,
+    "review": 2,
+    "remediation": 1,
+    "escalation": 0
+  },
+  "findingsSummary": {
+    "open": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 1
+    },
+    "openFindingIds": [
+      "CI-FIND-001"
+    ],
+    "carryForwardIds": [
+      "CI-FIND-001"
+    ]
+  },
+  "acceptanceStatus": "ACCEPTED",
+  "relevantRecordPaths": [
+    "docs/03_implementation/tasks/AIX-CI-HARD-001-L1/06-acceptance.md",
+    "docs/03_implementation/tasks/AIX-CI-HARD-001-L1/task.json"
+  ],
+  "createdAt": "2026-11-28T08:40:03Z",
+  "updatedAt": "2026-11-28T08:40:03Z",
+  "acceptance": {
+    "acceptedBy": "Aiman (project owner; session-relayed owner instruction; no GitHub comment)",
+    "acceptedAt": "2026-11-28T08:40:03Z",
+    "acceptedCommit": "2e15878815a064f837596716d37896477f33409d",
+    "reviewExecutionId": null
+  }
+}

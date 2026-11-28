@@ -57,3 +57,77 @@ Labels: **OBSERVED** = run or read by a session in this conversation; **RELAYED*
 ## Not accepted, authorised or implied
 
 Publication, push, pull request or merge; hosted-CI success; closure of any finding; `AIX-CI-HARD-001` L2, L3 or any other slice; UI V2; general reused-database safety; production readiness; regulatory approval. Navigation text elsewhere (for example `CURRENT_STATE.md` §5, which still lists `AIX-CI-HARD-001` L-1 as planned and not started) is **not reconciled by this record**; that needs a separate controlled checkpoint.
+
+---
+
+## Post-merge verification and canonical closure addendum (2026-11-28)
+
+> **Prepared documentation record; not yet canonical.** This addendum is part of a documentation-only closure change prepared on branch `docs/AIX-CI-HARD-001-L1-closure` from baseline `fc2985cb31007bc06417722801b2d015e2d2e6e1`. It becomes canonical only when the separately authorised closure PR merges into protected `main`. Everything above this line is the original acceptance record and is preserved unchanged; where this addendum conflicts with a historical statement above, this addendum supersedes it **for that statement only**, and only from the merge of the closure PR.
+
+### Provenance labels
+
+- **VERIFIED (LOCAL GIT)**: read or computed from the local Git object database by the preparing session (Claude Sonnet 5.5, effort Low) on 2026-11-28.
+- **RELAYED FROM CONNECTED INTEGRATION**: stated in the owner's closure instruction as independently verified through a connected GitHub integration. The preparing session did **not** read it from GitHub and does not claim independent verification of it.
+- **IMPLEMENTER-REPORTED**: stated by the implementing session in a report to the owner. It is not independently reproduced, and local Git state does not record it.
+- **SESSION-RELAYED**: an owner instruction given to a Claude Code session; no GitHub comment or other durable external record exists.
+
+### Superseded historical statements
+
+| Historical statement (above) | Superseded by |
+|---|---|
+| Hosted CI **NOT_RUN**; "No push, pull request or workflow run exists for this commit." | Hosted CI run `46127452734` passed all five jobs on publication head `f40fd55…` (below). |
+| "Not accepted, authorised or implied: publication, push, pull request or merge; hosted-CI success; closure of any finding" | The implementation was published and merged through PR #24, and hosted CI succeeded (below). Closure of `CI-FIND-001` only is owner-authorised for preparation (below). Nothing else in that list is changed. |
+| "`CI-FIND-001` … **remains canonically OPEN** pending hosted CI and a separately authorised closure" | Hosted CI has passed and closure is authorised for preparation; the row is `CLOSED` in the prepared register change, canonical only when the closure PR merges. |
+| "`OPEN_FINDINGS.md`, `CURRENT_STATE.md` … are **not modified** by this record" and "`CURRENT_STATE.md` §5 … is **not reconciled by this record**" | The closure change modifies `OPEN_FINDINGS.md` (the `CI-FIND-001` row only), `CURRENT_STATE.md` §5, §6 and §8, and `task.json`. |
+
+The original accepted implementation commit (`2e15878815a064f837596716d37896477f33409d`), `acceptedAt` (`2026-11-28T08:40:03Z`) and acceptance provenance are **unchanged**.
+
+### Owner approval to retain HIGH risk
+
+The owner approved retaining the **HIGH** risk classification for this task (SESSION-RELAYED, stated in the closure instruction; the instruction's own timestamp is not preserved). `task.json.risk` remains `HIGH`.
+
+### Publication and merge evidence
+
+| Item | Value | Provenance |
+|---|---|---|
+| Original baseline | `f57084d7e2789062edd8e1d740066ffc0b123c91` | VERIFIED (LOCAL GIT): present; first parent of the merge |
+| Accepted implementation commit | `2e15878815a064f837596716d37896477f33409d` | VERIFIED (LOCAL GIT): ancestor of the publication head; parent `f57084d…` |
+| Implementation diff SHA-256 | `49858ce856a8e0960de93dc1e40fb298b8c1d5cd7aa6d3b4533f0ef2a78b404d` (`git diff f57084d… 2e15878…`; +334 / −23; two files) | VERIFIED (LOCAL GIT): re-computed, equals the accepted digest |
+| Publication head | `f40fd55a32d1f1452a9337a429254ce10cc3bd4d` (the implementation commit plus the acceptance-record commit `docs(governance): record AIX-CI-HARD-001 L1 acceptance`) | VERIFIED (LOCAL GIT); equals `origin/task/AIX-CI-HARD-001-L1` as fetched locally |
+| PR #24 | `https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/pull/24` | RELAYED FROM CONNECTED INTEGRATION (the merge commit subject "Merge pull request #24 from bangomasjoli/task/AIX-CI-HARD-001-L1" is VERIFIED locally) |
+| Merge commit | `fc2985cb31007bc06417722801b2d015e2d2e6e1` | VERIFIED (LOCAL GIT): the commit exists locally and equals the local `origin/main` ref. Separately, **IMPLEMENTER-REPORTED**: credential helpers and authentication prompts were disabled during the narrow fetch of `main` that updated that ref. The local reflog records the fetch but not its configuration overrides, so this is not independently verified. |
+| Merge parents | `f57084d7e2789062edd8e1d740066ffc0b123c91` (first) and `f40fd55a32d1f1452a9337a429254ce10cc3bd4d` (second) | VERIFIED (LOCAL GIT) |
+| Merge-tree check | Merge tree `445fb28a417950f4d26dca4b79aa9a35aa8f0cce` equals the publication head tree `445fb28a417950f4d26dca4b79aa9a35aa8f0cce` | VERIFIED (LOCAL GIT) |
+| Merge timestamp | `2026-11-28T08:58:14Z` | RELAYED FROM CONNECTED INTEGRATION. The local merge-commit committer time is `2026-11-28T16:58:13+08:00` (= `08:58:13Z`), one second earlier; the difference is not investigated and does not affect any conclusion. |
+| Changed paths, baseline to merge | Exactly the two CI files (modified) and the two task-record files (added) | VERIFIED (LOCAL GIT) |
+| Source branch preserved | The branch is preserved at `f40fd55…` | RELAYED FROM CONNECTED INTEGRATION. Locally, only the remote-tracking ref `origin/task/AIX-CI-HARD-001-L1` was read (it points at `f40fd55…`); it was not refreshed by the narrow `main` fetch, so it does not independently prove the current remote state. |
+| Hosted CI run | `https://github.com/bangomasjoli/Money-Broking-Platform-MB-PSO-Exchange-/actions/runs/46127452734`, completed `2026-11-28T08:49:28Z` | RELAYED FROM CONNECTED INTEGRATION |
+| Hosted CI jobs on the publication head | All five passed: (1) static and frontend checks; (2) unit tests; (3) PostgreSQL 16 regression; (4) CI verifier self-test; (5) PR verification result | RELAYED FROM CONNECTED INTEGRATION |
+
+The hosted run exercised the floating `postgres:16` service image; digest pinning remains `CI-FIND-002`.
+
+### Procedural disclosure: additional `ls-remote` (owner-accepted deviation)
+
+- **Operation (IMPLEMENTER-REPORTED, disclosed by the implementer):** during closure preparation, one additional **read-only** `git ls-remote` operation was run outside the narrowly authorised synchronisation scope (the fetch of `main`).
+- **Credential helpers (IMPLEMENTER-REPORTED):** they were **not** disabled for that operation. Credential access by the helper was therefore **possible but is not established**.
+- **Credential retrieval or use:** **none confirmed.** No credential was retrieved, inspected or used by the closure review, and no secret store was read.
+- **Repository mutation:** none attributable to that operation. `ls-remote` writes no local refs or objects, and the independent closure review's read-only inspection of the local reflogs found no ref update that it explains. The local ref updates in the preparation window are the authorised branch creation, the narrow `main` fetch and the earlier task-branch push.
+- **Owner disposition (SESSION-RELAYED, 2026-11-28; the instruction's own timestamp is not preserved):** the owner accepted this disclosed read-only scope deviation **without waiving or relaxing any existing control**, including the owner credential restriction recorded at `PAR-N29`. The operation is **not** described as authorised in advance or retrospectively authorised.
+- **Register:** no finding identifier is assigned and none is invented here. Any registration needs a separate owner decision.
+
+### Owner-authorised `CI-FIND-001` closure scope
+
+The owner authorised preparation of the canonical closure of `CI-FIND-001` only (SESSION-RELAYED, 2026-11-28; the instruction's own timestamp is not preserved). The authorisation permits preparing the documentation diff, not committing, publishing or merging it.
+
+- **Closed (prepared):** the verified L1 defect (the guard did not inspect `postgres` or `template1`) and its owner-approved inventory correction (template-flagged databases were invisible to the database inventory). The additional template-flagged gap has no register identifier; none is registered or invented.
+- **Not closed, not waived, not changed:** `CI-FIND-002`, `CI-FIND-003` (the L2 and L3 slices, planned and not started), `GOV-FIND-001` and every other finding row.
+- **Not established:** that the guard makes any general, reused or shared database safe. The register row keeps the requirement for a separate safety evaluation before broader database use.
+- **Effective only on merge:** the `CLOSED` state is canonical only when the separately authorised closure PR merges into protected `main`. Until then `main` records `CI-FIND-001` as OPEN.
+
+### Retained observations and limitations (unchanged by this addendum)
+
+- **INFO-A and INFO-B** (above) are retained with no remediation.
+- **Scratch evidence:** the fixture outputs, the pre-remediation snapshot and the mutants remain in session scratch directories and are not claimed to be durably preserved.
+- **Review provenance:** the original independent review text is not preserved in the repository; the final delta review is a chat-only report; this record and the closure preparation were written by Claude Sonnet 5.5 and are **not independent** of the earlier checks. The recording of review outcomes here does not certify them. No review execution identifier exists (`task.json.acceptance.reviewExecutionId` stays `null`) and none is invented.
+- **Migration-072 regression (5/5)** remains RELAYED from the implementer, as stated above; hosted CI's PostgreSQL 16 regression job result is RELAYED FROM CONNECTED INTEGRATION.
+- **Still not accepted or implied:** L2, L3, the wider `AIX-CI-HARD-001` programme, general reused-database safety, production readiness, regulatory approval. A focused independent documentation review of this closure change is still required before any commit, push or merge, and mandatory hosted CI applies after publication.

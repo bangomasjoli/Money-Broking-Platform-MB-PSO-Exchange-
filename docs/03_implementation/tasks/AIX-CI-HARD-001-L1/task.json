@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "taskId": "AIX-CI-HARD-001-L1",
-  "title": "AIX-CI-HARD-001 L1 - disposable-database guard: inspect postgres and template1, reject unexpected databases including template-flagged; ACCEPTED (implementation scope only; L2/L3 not covered); hosted CI NOT_RUN; CI-FIND-001 stays OPEN",
+  "title": "AIX-CI-HARD-001 L1 - disposable-database guard (postgres, template1, template-flagged databases); ACCEPTED, merged via PR #24, hosted CI passed; CI-FIND-001 closure prepared, canonical only when closure PR merges; L2/L3 not covered",
   "state": "ACCEPTED",
   "risk": "HIGH",
   "category": "CI assurance / test integrity",
@@ -23,14 +23,10 @@
       "BLOCKER": 0,
       "HIGH": 0,
       "MEDIUM": 0,
-      "LOW": 1
+      "LOW": 0
     },
-    "openFindingIds": [
-      "CI-FIND-001"
-    ],
-    "carryForwardIds": [
-      "CI-FIND-001"
-    ]
+    "openFindingIds": [],
+    "carryForwardIds": []
   },
   "acceptanceStatus": "ACCEPTED",
   "relevantRecordPaths": [
@@ -38,7 +34,7 @@
     "docs/03_implementation/tasks/AIX-CI-HARD-001-L1/task.json"
   ],
   "createdAt": "2026-11-28T08:40:03Z",
-  "updatedAt": "2026-11-28T08:40:03Z",
+  "updatedAt": "2026-11-28T09:01:39Z",
   "acceptance": {
     "acceptedBy": "Aiman (project owner; session-relayed owner instruction; no GitHub comment)",
     "acceptedAt": "2026-11-28T08:40:03Z",

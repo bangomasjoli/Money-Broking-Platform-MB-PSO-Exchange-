@@ -6,7 +6,7 @@
   "risk": "MODERATE",
   "category": "Governance records / documentation alignment",
   "baselineCommit": "4e14d27316bb55338db7d538fc47e102af13222d",
-  "resultingCommit": null,
+  "resultingCommit": "4fdd96d8584705333888193e2b81727b4214f200",
   "planner": null,
   "implementer": null,
   "reviewer": null,
@@ -46,7 +46,7 @@
   "acceptance": {
     "acceptedBy": "Aiman (project owner; session-relayed owner instruction; no GitHub comment)",
     "acceptedAt": "2026-11-28T07:26:36Z",
-    "acceptedCommit": "4e14d27316bb55338db7d538fc47e102af13222d",
+    "acceptedCommit": "4fdd96d8584705333888193e2b81727b4214f200",
     "reviewExecutionId": null
   }
 }
